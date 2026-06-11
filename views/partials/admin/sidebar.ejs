@@ -1,0 +1,195 @@
+    <aside
+        class="flex flex-col w-[250px] max-w-full h-full self-stretch items-start px-0 py-6 relative bg-[#0c0c10e6] border-r [border-right-style:solid] border-[#ffffff0f]"
+        aria-label="Primary sidebar">
+        <header
+            class="flex min-h-[58px] items-center justify-center pt-4 pb-3.5 px-[18px] relative self-stretch w-full flex-[0_0_auto] border-b [border-bottom-style:solid] border-[#00000014]">
+            <a href="#"
+                class="relative block w-[131px] h-[87px] aspect-[1.5] bg-[url(legacy:image:md5:I109:3427;315:3121-no-children)] bg-cover bg-[50%_50%]"
+                aria-label="PixelPlay home"></a>
+        </header>
+        <div
+            class="flex flex-col items-start gap-1 px-4 py-0 relative flex-1 self-stretch w-full grow overflow-y-auto overflow-x-hidden">
+            <nav class="flex flex-col items-start self-stretch w-full" aria-label="Main navigation">
+                <ul class="flex flex-col items-start self-stretch w-full">
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded shadow-[inset_0px_0px_12px_#0ea5e91a] <%= activeTab === 'dashboard' ? 'bg-[#0ea5e926] border-l-[3px] [border-left-style:solid] border-sky-500' : '' %>"
+                            aria-label="Dashboard"
+                            <%= activeTab === 'dashboard' ? 'aria-current="page"' : '' %>>
+                            <img class="relative flex-[0_0_auto]" src="img/iconify-icon-5.svg" alt=""
+                                aria-hidden="true" />
+                            <span
+                                class="mt-[-2.00px] <%= activeTab === 'dashboard' ? 'text-sky-500' : 'text-[#9aa6ab]' %> text-[13px] relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium tracking-[0] leading-[normal]">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded <%= activeTab === 'listed-games' ? 'bg-[#0ea5e926] border-l-[3px] [border-left-style:solid] border-sky-500' : '' %>"
+                            aria-label="Listed Games"
+                            <%= activeTab === 'listed-games' ? 'aria-current="page"' : '' %>>
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <span class="relative w-[18px] h-[18px]">
+                                    <img class="absolute w-[91.67%] h-[79.17%] top-[20.83%] left-[8.33%]"
+                                        src="img/image.svg" alt="" />
+                                </span>
+                            </span>
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'listed-games' ? 'text-sky-500' : 'text-[#9aa6ab]' %> text-[13px] tracking-[0] leading-[normal]">Listed
+                                Games</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded <%= activeTab === 'order-management' ? 'bg-[#0ea5e926] border-l-[3px] [border-left-style:solid] border-sky-500' : '' %>"
+                            aria-label="Order Management"
+                            <%= activeTab === 'order-management' ? 'aria-current="page"' : '' %>>
+                            <img class="relative flex-[0_0_auto]" src="img/iconify-icon-2.svg" alt=""
+                                aria-hidden="true" />
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'order-management' ? 'text-sky-500' : 'text-[#9aa6ab]' %> text-[13px] tracking-[0] leading-[normal]">Order
+                                Management</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded <%= activeTab === 'customer-management' ? 'bg-[#0ea5e926] border-l-[3px] [border-left-style:solid] border-sky-500' : '' %>"
+                            aria-label="Customers"
+                            <%= activeTab === 'customer-management' ? 'aria-current="page"' : '' %>>
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <span class="relative w-[18px] h-[18px]">
+                                    <span
+                                        class="relative w-[83.33%] h-[75.00%] top-[12.50%] left-[8.33%] flex bg-[url(legacy:image:md5:I109:3427;100:505)] bg-[100%_100%]">
+                                        <img class="flex-1 w-1.5" src="img/vector.svg" alt="" />
+                                    </span>
+                                </span>
+                            </span>
+                            <span
+                                class="mt-[-2.00px] <%= activeTab === 'customer-management' ? 'text-sky-500' : 'text-[#9aa6ab]' %> text-[13px] relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium tracking-[0] leading-[normal]">Customers</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded <%= activeTab === 'reviews' ? 'bg-[#0ea5e926] border-l-[3px] [border-left-style:solid] border-sky-500' : '' %>"
+                            aria-label="Reviews"
+                            <%= activeTab === 'reviews' ? 'aria-current="page"' : '' %>>
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <span class="relative w-[18px] h-[18px]">
+                                    <img class="absolute w-[91.67%] h-[91.67%] top-[8.33%] left-[8.33%]"
+                                        src="img/vector-4.svg" alt="" />
+                                </span>
+                            </span>
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'reviews' ? 'text-sky-500' : 'text-[#9aa6ab]' %> text-[13px] tracking-[0] leading-[normal]">Reviews</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded <%= activeTab === 'offers' ? 'bg-[#0ea5e926] border-l-[3px] [border-left-style:solid] border-sky-500' : '' %>"
+                            aria-label="Offers"
+                            <%= activeTab === 'offers' ? 'aria-current="page"' : '' %>>
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <span class="relative w-[18px] h-[18px]">
+                                    <span
+                                        class="relative w-[83.31%] h-[83.31%] top-[8.33%] left-[8.33%] flex bg-[url(legacy:image:md5:I109:3427;100:519)] bg-[100%_100%]">
+                                        <img class="flex-1 w-px" src="img/vector-3.svg" alt="" />
+                                    </span>
+                                </span>
+                            </span>
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'offers' ? 'text-sky-500' : 'text-[#9aa6ab]' %> text-[13px] tracking-[0] leading-[normal]">Offers</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded <%= activeTab === 'banners' ? 'bg-[#0ea5e926] border-l-[3px] [border-left-style:solid] border-sky-500' : '' %>"
+                            aria-label="Banners"
+                            <%= activeTab === 'banners' ? 'aria-current="page"' : '' %>>
+                            <img class="relative flex-[0_0_auto]" src="img/iconify-icon-3.svg" alt=""
+                                aria-hidden="true" />
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'banners' ? 'text-sky-500' : 'text-[#9aa6ab]' %> text-[13px] tracking-[0] leading-[normal]">Banners</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded <%= activeTab === 'coupons' ? 'bg-[#0ea5e926] border-l-[3px] [border-left-style:solid] border-sky-500' : '' %>"
+                            aria-label="Coupons"
+                            <%= activeTab === 'coupons' ? 'aria-current="page"' : '' %>>
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <span class="relative w-[18px] h-[18px]">
+                                    <img class="absolute w-[91.67%] h-[79.17%] top-[20.83%] left-[8.33%]"
+                                        src="img/vector-5.svg" alt="" />
+                                </span>
+                            </span>
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'coupons' ? 'text-sky-500' : 'text-[#9aa6ab]' %> text-[13px] tracking-[0] leading-[normal]">Coupons</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded <%= activeTab === 'categories' ? 'bg-[#0ea5e926] border-l-[3px] [border-left-style:solid] border-sky-500' : '' %>"
+                            aria-label="Categories"
+                            <%= activeTab === 'categories' ? 'aria-current="page"' : '' %>>
+                            <img class="relative flex-[0_0_auto]" src="img/iconify-icon-4.svg" alt=""
+                                aria-hidden="true" />
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'categories' ? 'text-sky-500' : 'text-[#9aa6ab]' %> text-[13px] tracking-[0] leading-[normal]">Categories</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded <%= activeTab === 'wallet-oversight' ? 'bg-[#0ea5e926] border-l-[3px] [border-left-style:solid] border-sky-500' : '' %>"
+                            aria-label="Wallet Oversight"
+                            <%= activeTab === 'wallet-oversight' ? 'aria-current="page"' : '' %>>
+                            <img class="relative flex-[0_0_auto]" src="img/iconify-icon.svg" alt=""
+                                aria-hidden="true" />
+                            <span
+                                class="relative flex items-center w-fit mt-[-2.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'wallet-oversight' ? 'text-sky-500' : 'text-[#9aa6ab]' %> text-[13px] tracking-[0] leading-[normal]">Wallet
+                                Oversight</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <footer
+            class="flex flex-col items-start px-2.5 py-3.5 relative self-stretch w-full flex-[0_0_auto] border-t [border-top-style:solid] border-[#00000014]">
+            <form method="post" action="/admin/logout" class="flex w-[calc(100%_-_12px)] absolute top-[-67px] left-3">
+                <button type="submit"
+                    class="flex w-full items-center gap-3 px-6 py-3 bg-transparent border-none cursor-pointer text-left"
+                    aria-label="Sign Out">
+                    <span class="flex w-[18px] h-[18px] items-center justify-center relative" aria-hidden="true">
+                        <span class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                            <span class="relative w-[18px] h-[18px]">
+                                <img class="absolute w-[91.67%] h-[91.67%] top-[8.33%] left-[8.33%]" src="img/vector-2.svg"
+                                    alt="" />
+                            </span>
+                        </span>
+                    </span>
+                    <span
+                        class="mt-[-0.50px] text-red-500 text-sm relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium tracking-[0] leading-[normal]">Sign
+                        Out</span>
+                </button>
+            </form>
+            <section
+                class="flex items-center gap-2.5 p-2.5 relative self-stretch w-full flex-[0_0_auto] bg-[#111113] rounded-md border border-solid border-[#00000014]"
+                aria-label="Current user profile">
+                <div
+                    class="flex flex-col w-[30px] h-[30px] items-start justify-center relative rounded-[15px] overflow-hidden border border-solid border-[#d4af37]">
+                    <div class="relative flex-1 self-stretch w-full grow bg-[url(legacy:image:md5:I109:3427;315:3259-no-children)] bg-cover bg-[50%_50%]"
+                        role="img" aria-label="Kira Nova profile photo"></div>
+                </div>
+                <div class="flex flex-col items-start relative flex-1 grow">
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <div
+                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-white text-xs tracking-[0] leading-[normal]">
+                            Kira Nova</div>
+                    </div>
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <div
+                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#d4af37] text-[10px] tracking-[0] leading-[normal]">
+                            System Administrator</div>
+                    </div>
+                </div>
+            </section>
+        </footer>
+    </aside>

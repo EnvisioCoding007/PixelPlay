@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title>Login</title>
+    <link rel="stylesheet" href="/css/globals.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        /** @type {import('tailwindcss').Config} */
+        tailwind.config = {
+            theme: {
+                extend: {
+                },
+            },
+            plugins: [],
+        }
+    </script>
+</head>
+
+<body>
+    <div
+        class="flex min-h-screen items-start justify-center relative [background:linear-gradient(0deg,rgba(19,19,21,1)_0%,rgba(19,19,21,1)_100%),linear-gradient(0deg,rgba(255,255,255,1)_0%,rgba(255,255,255,1)_100%)]">
+        <div class="flex min-h-[1024px] items-start justify-center relative flex-1 self-stretch grow">
+            <aside class="flex min-h-[1024px] items-start justify-center relative flex-1 self-stretch grow"
+                aria-label="Brand panel">
+                <div class="relative flex-1 grow h-[994px] bg-[#0a0a0d]">
+                    <div class="absolute top-[calc(50.00%_-_127px)] left-[calc(50.00%_-_247px)] w-[494px] h-[355px]">
+                        <div class="inline-flex items-center justify-center absolute top-0 left-[calc(50.00%_-_108px)]">
+                            <div class="relative w-[217px] h-[145px] aspect-[1.5] bg-[url(legacy:image:md5:366:1615-no-children)] bg-cover bg-[50%_50%]"
+                                aria-hidden="true"></div>
+                        </div>
+                        <div class="flex flex-col w-[213px] h-px items-center px-[86.41px] py-0 absolute top-[84px] left-[calc(50.00%_-_106px)]"
+                            aria-hidden="true">
+                            <div
+                                class="relative w-10 h-px [background:linear-gradient(90deg,rgba(14,165,233,0)_0%,rgba(14,165,233,0.4)_50%,rgba(14,165,233,0)_100%)]">
+                            </div>
+                        </div>
+                        <div
+                            class="inline-flex flex-col items-start gap-[6.59px] absolute top-28 left-[calc(50.00%_-_106px)]">
+                            <h1
+                                class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-zinc-100 text-[28px] text-center tracking-[1.68px] leading-[33.6px] whitespace-nowrap">
+                                THE LEGENDS</h1>
+                            <div
+                                class="inline-flex flex-col items-center pl-[63.16px] pr-[63.17px] py-0 relative flex-[0_0_auto]">
+                                <p
+                                    class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#d4af37] text-lg text-center tracking-[3.24px] leading-[21.6px] whitespace-nowrap">
+                                    LEGION</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col w-[213px] h-px items-center px-[86.41px] py-0 absolute top-[202px] left-[calc(50.00%_-_106px)]"
+                            aria-hidden="true">
+                            <div
+                                class="relative w-10 h-px [background:linear-gradient(90deg,rgba(14,165,233,0)_0%,rgba(14,165,233,0.4)_50%,rgba(14,165,233,0)_100%)]">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="absolute w-full h-full top-0 left-0 [background:linear-gradient(180deg,rgba(14,165,233,0.04)_3%,rgba(14,165,233,0)_3%),linear-gradient(90deg,rgba(14,165,233,0.04)_3%,rgba(14,165,233,0)_3%)]"
+                        aria-hidden="true"></div>
+                    <div class="absolute top-[calc(50.00%_-_160px)] left-[calc(50.00%_-_160px)] w-80 h-80 [background:radial-gradient(50%_50%_at_50%_50%,rgba(14,165,233,0.07)_0%,rgba(14,165,233,0)_70%)]"
+                        aria-hidden="true"></div>
+                    <div class="absolute h-full top-0 right-0 w-px [background:linear-gradient(180deg,rgba(14,165,233,0)_0%,rgba(14,165,233,0.2)_50%,rgba(14,165,233,0)_100%)]"
+                        aria-hidden="true"></div>
+                </div>
+            </aside>
+            <main class="flex items-center justify-center p-10 relative flex-1 self-stretch grow bg-[#131315]">
+                <section
+                    class="flex flex-col max-w-[440px] w-full items-start gap-8 p-8 relative bg-[#18181bcc] rounded-lg overflow-hidden border border-solid border-[#3b494b] shadow-[0px_8px_32px_#00000066] backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)]"
+                    aria-labelledby="auth-heading">
+                    <h2 id="auth-heading" class="sr-only">Account access</h2>
+                    <div class="flex items-start justify-center relative self-stretch w-full flex-[0_0_auto] border-b [border-bottom-style:solid] border-[#353437]"
+                        role="tablist" aria-label="Authentication options">
+                        <button
+                            class="all-[unset] box-border flex flex-col items-center justify-center pt-0 pb-4 px-0 relative flex-1 grow z-[1] border-b-2 [border-bottom-style:solid] border-[#00f0ff]"
+                            type="button" role="tab" aria-selected="true" aria-controls="login-panel" id="login-tab">
+                            <div
+                                class="relative flex items-center justify-center w-[43.66px] h-3 mt-[-2.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#00f0ff] text-xs text-center tracking-[1.20px] leading-3 whitespace-nowrap">
+                                LOG IN</div>
+                            <div class="absolute w-[50.00%] left-[25.00%] bottom-0 h-0.5 bg-[#00f0ff] shadow-[0px_0px_8px_#00f0ff99]"
+                                aria-hidden="true"></div>
+                        </button>
+                        <a href="/auth/signup"
+                            class="all-[unset] box-border flex flex-col pt-0 pb-4 px-0 relative flex-1 grow z-0 border-b-2 [border-bottom-style:solid] border-transparent items-center justify-center cursor-pointer decoration-transparent"
+                            role="tab" aria-selected="false" aria-controls="signup-panel" id="signup-tab">
+                            <div
+                                class="justify-center w-[53.11px] mt-[-2.00px] text-[#b9cacb] text-center relative flex items-center h-3 [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-xs tracking-[1.20px] leading-3 whitespace-nowrap">
+                                SIGN UP</div>
+                        </a>
+                    </div>
+                    <div id="login-panel"
+                        class="flex flex-col items-start gap-6 relative self-stretch w-full flex-[0_0_auto]"
+                        role="tabpanel" aria-labelledby="login-tab">
+
+                        <%# Bug 4 Fix: removed HTML `required` attributes — JS validation handles all checks.
+                            Bug 7 Fix: #alert-message container is shared; focus listeners clear it. %>
+                        <form id="loginForm" class="flex flex-col items-start gap-6 relative self-stretch w-full flex-[0_0_auto]"
+                            action="#" method="post" novalidate>
+                            <div class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                    <label
+                                        class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#b9cacb] text-xs tracking-[1.20px] leading-3"
+                                        for="input-1">EMAIL ADDRESS</label>
+                                </div>
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                    <div
+                                        class="flex items-start justify-center pl-12 pr-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] border border-solid border-[#3b494b] shadow-[inset_0px_2px_4px_1px_#0000000d]">
+                                        <input
+                                            class="relative grow border-[none] [background:none] self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#849495] text-base tracking-[0] leading-[normal] p-0"
+                                            placeholder="operator@codex.arc" type="email" id="input-1" name="email"
+                                            autocomplete="email" inputmode="email" />
+                                    </div>
+                                    <div class="inline-flex flex-col h-[56.00%] items-start absolute top-[22.00%] left-4"
+                                        aria-hidden="true">
+                                        <img class="relative w-[16.67px] h-[13.33px]" src="img/icon-4.svg" alt="" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                    <label
+                                        class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#b9cacb] text-xs tracking-[1.20px] leading-3"
+                                        for="input-2">PASSWORD</label>
+                                </div>
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                    <div
+                                        class="flex items-start justify-center px-12 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] border border-solid border-[#3b494b] shadow-[inset_0px_2px_4px_1px_#0000000d]">
+                                        <div class="flex flex-col items-start relative flex-1 grow">
+                                            <input
+                                                class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#849495] text-base tracking-[0] leading-[normal] [background:transparent] border-[none] p-0"
+                                                placeholder="••••••••••••" type="password" id="input-2" name="password"
+                                                autocomplete="current-password" />
+                                        </div>
+                                    </div>
+                                    <div class="inline-flex flex-col h-[56.00%] items-start absolute top-[22.00%] left-4"
+                                        aria-hidden="true">
+                                        <img class="relative w-[13.33px] h-[17.5px]" src="img/icon-3.svg" alt="" />
+                                    </div>
+                                    <button
+                                        class="inline-flex flex-col absolute h-[25.51%] top-[37.24%] right-4 items-center justify-center all-[unset] box-border cursor-pointer"
+                                        type="button" aria-label="Show password">
+                                        <div class="inline-flex items-start justify-center relative flex-[0_0_auto]">
+                                            <img class="relative w-[18.33px] h-[12.5px]" src="img/image.svg" alt="" />
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                            <div
+                                class="flex items-center justify-between pt-2 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                    <a href="/auth/forgot-password"
+                                        class="w-[136.66px] mt-[-1.00px] text-[#00f0ff] relative flex items-center h-3 [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-xs tracking-[1.20px] leading-3 whitespace-nowrap">FORGOT
+                                        PASSWORD?</a>
+                                </div>
+                            </div>
+
+                            <%# Bug 4 & 7 Fix: standardised #alert-message element, rendered inside
+                                the form so it's visually contextual and cleared on any input focus. %>
+                            <p id="alert-message" class="hidden text-red-500 text-sm text-center w-full"></p>
+
+                            <button
+                                class="flex items-center justify-center gap-2 px-0 py-4 relative self-stretch w-full flex-[0_0_auto] bg-[#00f0ff]"
+                                type="submit">
+                                <div
+                                    class="justify-center w-[43.73px] text-[#002022] text-center relative flex items-center h-3 [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-xs tracking-[1.20px] leading-3 whitespace-nowrap">
+                                    LOG IN</div>
+                                <div class="inline-flex flex-col items-center relative flex-[0_0_auto]">
+                                    <img class="relative w-4 h-4" src="img/icon.svg" alt="" />
+                                </div>
+                            </button>
+                        </form>
+                        <div class="flex items-center gap-4 relative self-stretch w-full flex-[0_0_auto]">
+                            <div class="relative flex-1 grow h-px bg-[#353437]" aria-hidden="true"></div>
+                            <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                <div
+                                    class="w-[126.39px] mt-[-1.00px] text-[#b9cacb] relative flex items-center h-3 [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-xs tracking-[1.20px] leading-3 whitespace-nowrap">
+                                    OR CONTINUE WITH</div>
+                            </div>
+                            <div class="relative flex-1 grow h-px bg-[#353437]" aria-hidden="true"></div>
+                        </div>
+                        <div class="grid grid-cols-1 grid-rows-[50px] h-fit gap-4 self-stretch w-full">
+                            <a href="/auth/google"
+                                class="all-[unset] box-border cursor-pointer relative row-[1_/_2] col-[1_/_2] justify-self-center w-[250px] h-fit flex gap-[7.99px] pl-[46.27px] pr-[46.28px] py-3 bg-[#1c1b1d] border border-solid border-[#3b494b] items-center justify-center transition-colors hover:bg-[#201f22]">
+                                <div class="inline-flex flex-col items-center relative flex-[0_0_auto]">
+                                    <img class="relative w-5 h-5" src="img/icon-2.svg" alt="" />
+                                </div>
+                                <div
+                                    class="justify-center w-[52.44px] text-[#e5e1e4] text-center relative flex items-center h-3 [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-xs tracking-[1.20px] leading-3 whitespace-nowrap">
+                                    GOOGLE</div>
+                            </a>
+                        </div>
+                    </div>
+                    <div id="signup-panel" class="hidden" role="tabpanel" aria-labelledby="signup-tab"></div>
+                </section>
+            </main>
+        </div>
+    </div>
+    <script>
+        // ── Bug 5 Fix: password complexity regex ─────────────────────────────────
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
+        const alertEl = document.getElementById('alert-message');
+
+        function showAlert(msg) {
+            alertEl.textContent = msg;
+            alertEl.classList.remove('hidden');
+        }
+
+        // ── Bug 7 Fix: clear alert on any input focus or change ──────────────────
+        document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]')
+            .forEach(function (input) {
+                ['focus', 'input'].forEach(function (evt) {
+                    input.addEventListener(evt, function () {
+                        alertEl.classList.add('hidden');
+                    });
+                });
+            });
+
+        // ── Form submit handler with JS validation (Bugs 4 & 5) ─────────────────
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const email    = document.getElementById('input-1').value.trim();
+            const password = document.getElementById('input-2').value;
+
+            if (!email) {
+                showAlert('Email address is required.');
+                return;
+            }
+            if (!password) {
+                showAlert('Password is required.');
+                return;
+            }
+            if (!passwordRegex.test(password)) {
+                showAlert('Password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    window.location.href = data.redirectUrl || '/home';
+                    return;
+                }
+
+                if (data.redirectUrl) {
+                    window.location.href = data.redirectUrl;
+                } else {
+                    showAlert(data.message || 'Invalid email or password.');
+                }
+            } catch (error) {
+                showAlert('Network error. Please try again.');
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title>User Intelligence Dossier</title>
+    <link rel="stylesheet" href="globals.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        /** @type {import('tailwindcss').Config} */
+        tailwind.config = {
+            theme: {
+                extend: {
+                },
+            },
+            plugins: [],
+        }
+    </script>
+</head>
+
+<body class="bg-[#0a0a0a] text-zinc-100">
+    <main class="flex min-h-screen justify-center">
+        <div class="flex w-full max-w-[1440px] flex-col items-start gap-6 px-12 py-10 relative">
+            <header class="flex items-center gap-3 relative self-stretch w-full flex-[0_0_auto]">
+                <a href="#" aria-label="Go back" class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                    <span class="relative w-5 h-5" aria-hidden="true">
+                        <img class="absolute w-[79.17%] h-[79.17%] top-[20.83%] left-[20.83%]" src="img/vector-10.svg"
+                            alt="" />
+                    </span>
+                </a>
+                <h1
+                    class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-100 text-2xl tracking-[0] relative w-fit leading-[normal]">
+                    User Intelligence Dossier</h1>
+            </header>
+            <section aria-labelledby="profile-heading"
+                class="flex flex-col gap-6 relative self-stretch w-full flex-[0_0_auto] bg-[#121215a6] rounded-2xl border border-solid border-zinc-700 shadow-[inset_0px_1px_0px_1px_#ffffff0d,0px_16px_40px_#00000066] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)] p-8 lg:flex-row lg:items-start lg:justify-between">
+                <div class="inline-flex items-center gap-6 relative flex-[0_0_auto]">
+                    <div
+                        class="flex flex-col w-[66.94px] h-20 items-start justify-center relative bg-[#ffffff01] rounded-[36.74px] overflow-hidden border-[3px] border-solid border-[#d4af37] shadow-[0px_0px_20px_#d4af3740]">
+                        <div class="relative flex-1 self-stretch w-full grow bg-[url(legacy:image:md5:123:2002-no-children)] bg-cover bg-[50%_50%]"
+                            role="img" aria-label="User portrait"></div>
+                    </div>
+                    <div class="inline-flex flex-col items-start gap-1 relative flex-[0_0_auto]">
+                        <div class="flex items-center gap-[7.99px] relative self-stretch w-full flex-[0_0_auto]">
+                            <h2 id="profile-heading"
+                                class="flex items-center mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-100 text-2xl tracking-[0] relative w-fit leading-[normal]">
+                                Alex Mercer</h2>
+                            <div
+                                class="inline-flex flex-col items-start px-2 py-[3.2px] relative flex-[0_0_auto] bg-[#d4af371a] rounded border border-solid border-[#d4af3740]">
+                                <span
+                                    class="flex items-center [font-family:'Inter-Bold',Helvetica] font-bold text-[#d4af37] text-[10.4px] tracking-[1.00px] relative w-fit leading-[normal]">VIP
+                                    ACCESS</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                            <p
+                                class="flex items-center mt-[-1.00px] [font-family:'JetBrains_Mono-Regular',Helvetica] font-normal text-zinc-400 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                alex.mercer.88@netrunner.com</p>
+                        </div>
+                        <dl
+                            class="flex flex-wrap items-center gap-4 pt-3 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                            <div
+                                class="inline-flex items-center gap-1.5 pl-3 pr-[41.25px] py-1 relative flex-[0_0_auto] bg-[#10b9811a] rounded-[20px] border border-solid border-[#10b98140]">
+                                <div class="relative w-[6.33px] h-2 bg-emerald-500 rounded-[3.58px]" aria-hidden="true">
+                                </div>
+                                <div
+                                    class="[font-family:'Inter-SemiBold',Helvetica] font-semibold text-emerald-500 text-xs tracking-[0.60px] relative w-fit leading-[normal]">
+                                    <dt class="sr-only">Status</dt>
+                                    <dd>STATUS:<br />ACTIVE</dd>
+                                </div>
+                            </div>
+                            <div
+                                class="inline-flex items-center gap-1.5 pl-0 pr-[7.19px] py-0 relative flex-[0_0_auto]">
+                                <img class="relative flex-[0_0_auto]" src="img/iconify-icon.svg" alt=""
+                                    aria-hidden="true" />
+                                <div
+                                    class="relative w-fit mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-sm tracking-[0] leading-[normal]">
+                                    <dt class="sr-only">Joined</dt>
+                                    <dd>Joined: Oct 12,<br />2022</dd>
+                                </div>
+                            </div>
+                            <div
+                                class="inline-flex items-center gap-1.5 pl-0 pr-[35.45px] py-0 relative flex-[0_0_auto]">
+                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                    aria-hidden="true">
+                                    <div class="relative w-3.5 h-3.5">
+                                        <div
+                                            class="relative w-[83.33%] h-[83.33%] top-[8.33%] left-[8.33%] flex bg-[url(legacy:image:md5:123:2026)] bg-[100%_100%]">
+                                            <img class="flex-1 w-[2.33px]" src="img/vector-6.svg" alt="" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="relative w-fit mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-sm tracking-[0] leading-[normal]">
+                                    <dt class="sr-only">Last login</dt>
+                                    <dd>Last Login: 2<br />hours ago</dd>
+                                </div>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+                <div class="relative w-full max-w-[506.97px] h-auto min-h-[86.38px] lg:w-[506.97px] lg:h-[86.38px]">
+                    <div class="flex flex-wrap justify-start gap-4 lg:block">
+                        <button type="button"
+                            class="all-[unset] box-border inline-flex items-center gap-2 px-5 py-[9.6px] bg-[#ef44441a] rounded-md border border-solid border-red-500 shadow-[0px_0px_15px_#ef444440] lg:absolute lg:top-[calc(50.00%_-_43px)] lg:right-[161px] cursor-pointer">
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                <span class="relative w-4 h-4" aria-hidden="true">
+                                    <img class="absolute w-[83.33%] h-[91.67%] top-[8.33%] left-[16.67%]"
+                                        src="img/vector-3.svg" alt="" />
+                                </span>
+                            </span>
+                            <span
+                                class="flex items-center justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-red-500 text-sm text-center tracking-[0] relative w-fit leading-[normal]">Block
+                                User</span>
+                        </button>
+                        <button type="button"
+                            class="all-[unset] box-border inline-flex items-center gap-2 px-5 py-[9.6px] bg-sky-500 rounded-md shadow-[0px_0px_15px_#0ea5e940] lg:absolute lg:top-[calc(50.00%_-_42px)] lg:right-[-13px] cursor-pointer">
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                <span class="relative w-4 h-4" aria-hidden="true">
+                                    <img class="absolute w-[91.67%] h-[91.67%] top-[8.33%] left-[8.33%]"
+                                        src="img/vector-9.svg" alt="" />
+                                </span>
+                            </span>
+                            <span
+                                class="flex items-center justify-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-950 text-sm text-center tracking-[0] relative w-fit leading-[normal]">Edit
+                                Profile</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+            <section aria-label="User summary metrics"
+                class="grid grid-cols-1 md:grid-cols-3 grid-rows-[116px] h-fit gap-6 pt-2 pb-0 px-0 w-full">
+                <article
+                    class="relative row-[1_/_2] col-[1_/_2] w-full h-fit flex flex-col items-start gap-2 p-6 bg-[#121215a6] rounded-xl overflow-hidden border border-solid border-zinc-700">
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <h3
+                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-400 text-xs tracking-[0.60px] leading-[normal]">
+                            LIFETIME SPENDING</h3>
+                    </div>
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <p
+                            class="relative flex items-center self-stretch mt-[-1.00px] [text-shadow:0px_0px_20px_#d4af3740] [font-family:'JetBrains_Mono-Medium',Helvetica] font-medium text-[#d4af37] text-[32px] tracking-[0] leading-[normal]">
+                            $1,450.00</p>
+                    </div>
+                    <div class="absolute h-[calc(100%_-_2px)] top-px left-px w-1 bg-[#d4af37] shadow-[0px_0px_15px_#d4af37]"
+                        aria-hidden="true"></div>
+                </article>
+                <article
+                    class="relative row-[1_/_2] col-[2_/_3] w-full h-fit flex flex-col items-start gap-2 p-6 bg-[#121215a6] rounded-xl overflow-hidden border border-solid border-zinc-700">
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <h3
+                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-400 text-xs tracking-[0.60px] leading-[normal]">
+                            TOTAL ORDERS</h3>
+                    </div>
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <p
+                            class="relative flex items-center self-stretch mt-[-1.00px] [text-shadow:0px_0px_20px_#0ea5e940] [font-family:'JetBrains_Mono-Medium',Helvetica] font-medium text-sky-500 text-[32px] tracking-[0] leading-[normal]">
+                            24</p>
+                    </div>
+                    <div class="absolute h-[calc(100%_-_2px)] top-px left-px w-1 bg-sky-500 shadow-[0px_0px_15px_#0ea5e9]"
+                        aria-hidden="true"></div>
+                </article>
+                <article
+                    class="relative row-[1_/_2] col-[3_/_4] w-full h-fit flex flex-col items-start gap-2 p-6 bg-[#121215a6] rounded-xl overflow-hidden border border-solid border-zinc-700">
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <h3
+                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-400 text-xs tracking-[0.60px] leading-[normal]">
+                            TOTAL PLAYTIME</h3>
+                    </div>
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <p
+                            class="relative flex items-center self-stretch mt-[-1.00px] [text-shadow:0px_0px_20px_#0ea5e940] [font-family:'JetBrains_Mono-Medium',Helvetica] font-medium text-sky-500 text-[32px] tracking-[0] leading-[normal]">
+                            438 hrs</p>
+                    </div>
+                    <div class="absolute h-[calc(100%_-_2px)] top-px left-px w-1 bg-sky-500 shadow-[0px_0px_15px_#0ea5e9]"
+                        aria-hidden="true"></div>
+                </article>
+            </section>
+            <section
+                class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.30fr)_minmax(0,1fr)] grid-rows-[auto] xl:grid-rows-[463px] h-fit gap-8 pt-2 pb-0 px-0 w-full">
+                <section aria-labelledby="order-history-heading"
+                    class="relative row-[1_/_2] col-[1_/_2] w-full h-fit flex flex-col items-start bg-[#121215] rounded-xl overflow-hidden border border-solid border-zinc-800">
+                    <header
+                        class="flex items-center justify-between pl-6 pr-[23.99px] py-5 relative self-stretch w-full flex-[0_0_auto] border-b [border-bottom-style:solid] border-zinc-800">
+                        <div class="inline-flex items-center gap-2 relative flex-[0_0_auto]">
+                            <div class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <div class="relative w-[18px] h-[18px]">
+                                    <div class="relative w-[66.67%] h-[83.37%] top-[8.31%] left-[16.67%]">
+                                        <img class="absolute w-[75.00%] h-[74.99%] top-[25.01%] left-[25.00%]"
+                                            src="img/image.svg" alt="" />
+                                        <img class="absolute w-full h-full top-0 left-0" src="img/vector-7.svg"
+                                            alt="" />
+                                    </div>
+                                </div>
+                            </div>
+                            <h2 id="order-history-heading"
+                                class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-100 text-base tracking-[0] relative w-fit leading-[normal]">
+                                Order History</h2>
+                        </div>
+                        <a href="#" class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                            <span
+                                class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-sky-500 text-sm tracking-[0] relative w-fit leading-[normal]">View
+                                All Orders</span>
+                        </a>
+                    </header>
+                    <div
+                        class="flex flex-col items-start pt-0 pb-[99px] px-0 relative self-stretch w-full flex-[0_0_auto] overflow-x-auto overflow-y-auto">
+                        <div
+                            class="flex min-w-[592px] flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                            <div class="flex items-start justify-center relative self-stretch w-full flex-[0_0_auto]">
+                                <div class="flex flex-col w-[170.19px] items-start px-6 py-4 relative bg-[#ffffff05]">
+                                    <div
+                                        class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-400 text-xs tracking-[0.60px] relative w-fit leading-[normal]">
+                                        ORDER ID</div>
+                                </div>
+                                <div class="w-[159.69px] flex flex-col items-start px-6 py-4 relative bg-[#ffffff05]">
+                                    <div
+                                        class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-400 text-xs tracking-[0.60px] relative w-fit leading-[normal]">
+                                        DATE</div>
+                                </div>
+                                <div class="w-[124.52px] flex flex-col items-start px-6 py-4 relative bg-[#ffffff05]">
+                                    <div
+                                        class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-400 text-xs tracking-[0.60px] relative w-fit leading-[normal]">
+                                        AMOUNT</div>
+                                </div>
+                                <div class="w-[138.2px] flex flex-col items-start px-6 py-4 relative bg-[#ffffff05]">
+                                    <div
+                                        class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-400 text-xs tracking-[0.60px] relative w-fit leading-[normal]">
+                                        STATUS</div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <article
+                                    class="flex items-start justify-center relative self-stretch w-full flex-[0_0_auto]">
+                                    <div
+                                        class="flex flex-col w-[170.19px] items-start px-6 py-4 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="flex items-center gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                            <div class="relative w-1.5 h-1.5 bg-[#d4af37] rounded-[3px] shadow-[0px_0px_8px_#d4af37]"
+                                                aria-hidden="true"></div>
+                                            <div
+                                                class="flex items-center mt-[-1.00px] [font-family:'JetBrains_Mono-Regular',Helvetica] font-normal text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                                #ORD-8902A</div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[159.69px] items-start px-6 py-4 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                            Nov 15, 2024</div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[124.52px] items-start px-6 py-4 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'JetBrains_Mono-Medium',Helvetica] font-medium text-[#d4af37] text-sm tracking-[0] relative w-fit leading-[normal]">
+                                            $120.00</div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[138.2px] items-start pt-[14.31px] pb-[13.81px] px-6 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="inline-flex items-start px-2 py-[3.2px] relative flex-[0_0_auto] bg-[#10b9811a] rounded">
+                                            <div
+                                                class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-emerald-500 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                                Complete</div>
+                                        </div>
+                                    </div>
+                                </article>
+                                <article
+                                    class="items-start flex justify-center relative self-stretch w-full flex-[0_0_auto]">
+                                    <div
+                                        class="flex flex-col w-[170.19px] items-start px-6 py-4 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="flex items-center gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                            <div class="relative w-1.5 h-1.5 bg-sky-500 rounded-[3px]"
+                                                aria-hidden="true"></div>
+                                            <div
+                                                class="flex items-center mt-[-1.00px] [font-family:'JetBrains_Mono-Regular',Helvetica] font-normal text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                                #ORD-8874C</div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[159.69px] items-start pt-[17px] pb-4 px-6 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                            Oct 02, 2024</div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[124.52px] items-start px-6 py-4 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'JetBrains_Mono-Medium',Helvetica] font-medium text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                            $59.99</div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[138.2px] items-start pt-[14.81px] pb-[13.81px] px-6 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="inline-flex items-start px-2 py-[3.2px] relative flex-[0_0_auto] bg-[#10b9811a] rounded">
+                                            <div
+                                                class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-emerald-500 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                                Complete</div>
+                                        </div>
+                                    </div>
+                                </article>
+                                <article
+                                    class="items-start flex justify-center relative self-stretch w-full flex-[0_0_auto]">
+                                    <div
+                                        class="flex flex-col w-[170.19px] items-start px-6 py-4 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="flex items-center gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                            <div class="relative w-1.5 h-1.5 bg-sky-500 rounded-[3px]"
+                                                aria-hidden="true"></div>
+                                            <div
+                                                class="flex items-center mt-[-1.00px] [font-family:'JetBrains_Mono-Regular',Helvetica] font-normal text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                                #ORD-8711X</div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[159.69px] items-start pt-[17px] pb-4 px-6 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                            Sep 14, 2024</div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[124.52px] items-start px-6 py-4 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'JetBrains_Mono-Medium',Helvetica] font-medium text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                            $29.50</div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[138.2px] items-start pt-[14.81px] pb-[13.81px] px-6 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="inline-flex items-start px-2 py-[3.2px] relative flex-[0_0_auto] bg-[#10b9811a] rounded">
+                                            <div
+                                                class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-emerald-500 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                                Complete</div>
+                                        </div>
+                                    </div>
+                                </article>
+                                <article
+                                    class="items-start flex justify-center relative self-stretch w-full flex-[0_0_auto]">
+                                    <div
+                                        class="flex flex-col w-[170.19px] items-start px-6 py-4 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="flex items-center gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                            <div class="relative w-1.5 h-1.5 bg-[#d4af37] rounded-[3px] shadow-[0px_0px_8px_#d4af37]"
+                                                aria-hidden="true"></div>
+                                            <div
+                                                class="flex items-center mt-[-1.00px] [font-family:'JetBrains_Mono-Regular',Helvetica] font-normal text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                                #ORD-8400B</div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[159.69px] items-start pt-[17px] pb-4 px-6 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                            Jul 22, 2024</div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[124.52px] items-start px-6 py-4 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'JetBrains_Mono-Medium',Helvetica] font-medium text-[#d4af37] text-sm tracking-[0] relative w-fit leading-[normal]">
+                                            $240.00</div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[138.2px] items-start pt-[14.81px] pb-[13.81px] px-6 relative border-b [border-bottom-style:solid] border-zinc-800">
+                                        <div
+                                            class="inline-flex items-start px-2 py-[3.2px] relative flex-[0_0_auto] bg-[#10b9811a] rounded">
+                                            <div
+                                                class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-emerald-500 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                                Complete</div>
+                                        </div>
+                                    </div>
+                                </article>
+                                <article
+                                    class="items-center pr-[1.14e-13px] pl-6 py-0 flex justify-center relative self-stretch w-full flex-[0_0_auto]">
+                                    <div class="flex w-[122.19px] items-center gap-2 relative">
+                                        <div class="relative w-1.5 h-1.5 bg-sky-500 rounded-[3px]" aria-hidden="true">
+                                        </div>
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'JetBrains_Mono-Regular',Helvetica] font-normal text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                            #ORD-8299K</div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[183.69px] items-start pl-12 pr-6 pt-[17px] pb-[16.5px] relative">
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                            May 10, 2024</div>
+                                    </div>
+                                    <div class="flex flex-col w-[124.52px] items-start px-6 py-4 relative">
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'JetBrains_Mono-Medium',Helvetica] font-medium text-zinc-100 text-sm tracking-[0] relative w-fit leading-[normal]">
+                                            $19.99</div>
+                                    </div>
+                                    <div
+                                        class="flex flex-col w-[138.2px] items-start pt-[14.81px] pb-[14.31px] px-6 relative">
+                                        <div
+                                            class="inline-flex items-start px-2 py-[3.2px] relative flex-[0_0_auto] bg-[#10b9811a] rounded">
+                                            <div
+                                                class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-emerald-500 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                                Complete</div>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section aria-labelledby="owned-library-heading"
+                    class="relative row-[1_/_2] col-[2_/_3] w-full h-fit flex flex-col items-start bg-[#121215] rounded-xl overflow-hidden border border-solid border-zinc-800">
+                    <header
+                        class="flex items-center justify-between px-6 py-5 relative self-stretch w-full flex-[0_0_auto] border-b [border-bottom-style:solid] border-zinc-800">
+                        <div class="inline-flex items-center gap-2 relative flex-[0_0_auto]">
+                            <div class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <div class="relative w-[18px] h-[18px]">
+                                    <img class="absolute w-[83.33%] h-[83.33%] top-[16.67%] left-[16.67%]"
+                                        src="img/vector-2.svg" alt="" />
+                                </div>
+                            </div>
+                            <h2 id="owned-library-heading"
+                                class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-100 text-base tracking-[0] relative w-fit leading-[normal]">
+                                Owned Library</h2>
+                        </div>
+                        <a href="#" class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                            <span
+                                class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-sky-500 text-sm tracking-[0] relative w-fit leading-[normal]">View
+                                Grid</span>
+                        </a>
+                    </header>
+                    <div class="relative self-stretch w-full max-h-[400px] h-[400px] overflow-x-hidden overflow-y-auto">
+                        <article
+                            class="flex w-[calc(100%_-_47px)] items-center gap-4 p-3 absolute top-6 left-6 rounded-lg border-solid border-t border-r border-b border-l-[3px] [background:linear-gradient(90deg,rgba(212,175,55,0.05)_0%,rgba(212,175,55,0)_100%)] border-[none]">
+                            <div class="relative w-12 h-16 rounded" aria-hidden="true"></div>
+                            <div class="flex flex-col items-start gap-1 relative flex-1 grow">
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                    <h3
+                                        class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-100 text-sm tracking-[0] leading-[normal]">
+                                        Elden Ring: Collector&#39;s Edition</h3>
+                                </div>
+                                <div class="flex items-center gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                    <div class="inline-flex items-center gap-1 relative flex-[0_0_auto]">
+                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                            aria-hidden="true">
+                                            <div class="relative w-3 h-3">
+                                                <div
+                                                    class="relative w-[83.33%] h-[83.33%] top-[8.33%] left-[8.33%] flex bg-[url(legacy:image:md5:123:2177)] bg-[100%_100%]">
+                                                    <img class="flex-1 w-0.5" src="img/vector-8.svg" alt="" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                            Physical</div>
+                                    </div>
+                                    <div
+                                        class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                        • 120 hrs</div>
+                                </div>
+                            </div>
+                        </article>
+                        <article
+                            class="flex w-[calc(100%_-_47px)] items-center gap-4 p-3 absolute top-[130px] left-6 bg-[#ffffff05] rounded-lg border-solid border-t border-r border-b border-l-[3px] border-[none]">
+                            <div class="relative w-12 h-16 rounded bg-[url(legacy:image:md5:123:2182-no-children)] bg-cover bg-[50%_50%]"
+                                aria-hidden="true"></div>
+                            <div class="flex flex-col items-start gap-1 relative flex-1 grow">
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                    <h3
+                                        class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-100 text-sm tracking-[0] leading-[normal]">
+                                        Neon Override 2077</h3>
+                                </div>
+                                <div class="flex items-center gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                    <div class="inline-flex items-center gap-1 relative flex-[0_0_auto]">
+                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                            aria-hidden="true">
+                                            <div class="relative w-3 h-3">
+                                                <div
+                                                    class="relative w-[75.00%] h-[75.00%] top-[12.50%] left-[12.50%] flex bg-[url(legacy:image:md5:123:2191)] bg-[100%_100%]">
+                                                    <img class="flex-1 w-[5px]" src="img/vector-4.svg" alt="" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                            Digital</div>
+                                    </div>
+                                    <div
+                                        class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                        • 84 hrs</div>
+                                </div>
+                            </div>
+                        </article>
+                        <article
+                            class="flex w-[calc(100%_-_47px)] items-center gap-4 p-3 absolute top-[236px] left-6 bg-[#ffffff05] rounded-lg border-solid border-t border-r border-b border-l-[3px] border-[none]">
+                            <div class="relative w-12 h-16 rounded bg-[url(legacy:image:md5:123:2196-no-children)] bg-cover bg-[50%_50%]"
+                                aria-hidden="true"></div>
+                            <div class="flex flex-col items-start gap-1 relative flex-1 grow">
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                    <h3
+                                        class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-100 text-sm tracking-[0] leading-[normal]">
+                                        Astro Drift VR</h3>
+                                </div>
+                                <div class="flex items-center gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                    <div class="inline-flex items-center gap-1 relative flex-[0_0_auto]">
+                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                            aria-hidden="true">
+                                            <div class="relative w-3 h-3">
+                                                <div
+                                                    class="relative w-[75.00%] h-[75.00%] top-[12.50%] left-[12.50%] flex bg-[url(legacy:image:md5:123:2205)] bg-[100%_100%]">
+                                                    <img class="flex-1 w-[5px]" src="img/vector-5.svg" alt="" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                            Digital</div>
+                                    </div>
+                                    <div
+                                        class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                        • 12 hrs</div>
+                                </div>
+                            </div>
+                        </article>
+                        <article
+                            class="flex w-[calc(100%_-_47px)] items-center gap-4 p-3 absolute top-[342px] left-6 rounded-lg border-solid border-t border-r border-b border-l-[3px] [background:linear-gradient(90deg,rgba(212,175,55,0.05)_0%,rgba(212,175,55,0)_100%)] border-[none]">
+                            <div class="relative w-12 h-16 rounded bg-[url(legacy:image:md5:123:2210-no-children)] bg-cover bg-[50%_50%]"
+                                aria-hidden="true"></div>
+                            <div class="flex flex-col items-start gap-1 relative flex-1 grow">
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                    <h3
+                                        class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-100 text-sm tracking-[0] leading-[normal]">
+                                        Chrono Relic: Original Cartridge</h3>
+                                </div>
+                                <div class="flex items-center gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                    <div class="inline-flex items-center gap-1 relative flex-[0_0_auto]">
+                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                            aria-hidden="true">
+                                            <div class="relative w-3 h-3">
+                                                <div
+                                                    class="relative w-[83.33%] h-[83.33%] top-[8.33%] left-[8.33%] flex bg-[url(legacy:image:md5:123:2219)] bg-[100%_100%]">
+                                                    <img class="flex-1 w-0.5" src="img/vector.svg" alt="" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                            Physical</div>
+                                    </div>
+                                    <div
+                                        class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-xs tracking-[0] relative w-fit leading-[normal]">
+                                        • Unplayed</div>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </main>
+</body>
+
+</html>

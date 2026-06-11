@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title>Customer Management · PixelPlay Admin</title>
+    <meta name="description" content="Manage, search and moderate customer accounts on the PixelPlay platform." />
+    <link rel="stylesheet" href="/globals.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: {} }, plugins: [] };
+    </script>
+</head>
+
+<body class="bg-zinc-950 text-white">
+    <div class="flex h-screen w-full bg-[#09090b] overflow-hidden">
+        <%- include('../partials/admin/sidebar', { activeTab: 'customer-management' }) %>
+
+        <main class="relative flex-1 h-full overflow-y-auto flex flex-col p-10 gap-6" aria-label="Customer Management Dashboard">
+
+            <!-- ── Page Header ──────────────────────────────────────────── -->
+            <header class="flex w-full items-center bg-transparent">
+                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                    <h1 class="relative flex w-fit items-center mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] text-2xl font-bold tracking-[-0.50px] leading-[normal] text-[#e6eef2]">
+                        Customer Management
+                    </h1>
+                </div>
+            </header>
+
+            <!-- ── KPI Stat Cards ───────────────────────────────────────── -->
+            <section class="grid h-[167px] w-full grid-cols-3 grid-rows-[167px] gap-5" aria-label="Customer overview metrics">
+                <article class="relative row-[1_/_2] col-[1_/_2] flex h-fit w-full flex-col items-start gap-3 overflow-hidden rounded-md border border-solid border-[#ffffff0f] bg-[#121215a6] px-6 pt-5 pb-[74px] backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)]">
+                    <div class="relative flex w-full flex-[0_0_auto] flex-col items-start self-stretch">
+                        <h2 class="relative mt-[-1.00px] flex items-center self-stretch [font-family:'Inter-SemiBold',Helvetica] text-[13px] font-semibold tracking-[0.50px] leading-[normal] text-[#9aa6ab]">TOTAL REGISTERED USERS</h2>
+                    </div>
+                    <div class="relative flex w-full flex-[0_0_auto] flex-col items-start self-stretch">
+                        <p class="relative mt-[-1.00px] flex items-center self-stretch [font-family:'JetBrains_Mono-Bold',Helvetica] text-[32px] font-bold tracking-[0] leading-[normal] text-[#e6eef2]">
+                            <%= totalCount.toLocaleString() %>
+                        </p>
+                    </div>
+                    <div class="absolute right-[-19px] bottom-[-19px] h-[100px] w-[100px] rounded-[50px] bg-sky-500 opacity-15 blur-[25px]" aria-hidden="true"></div>
+                </article>
+                <article class="relative row-[1_/_2] col-[2_/_3] flex h-fit w-full flex-col items-center gap-3 overflow-hidden rounded-md border border-solid border-[#ffffff0f] bg-[#121215a6] px-6 pt-5 pb-[72px] backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)]">
+                    <div class="relative flex w-full flex-[0_0_auto] flex-col items-start self-stretch">
+                        <h2 class="relative mt-[-1.00px] flex items-center self-stretch [font-family:'Inter-SemiBold',Helvetica] text-[13px] font-semibold tracking-[0.50px] leading-[normal] text-[#9aa6ab]">CURRENT PAGE</h2>
+                    </div>
+                    <div class="relative flex w-full flex-[0_0_auto] flex-col items-start">
+                        <div class="relative inline-flex flex-[0_0_auto] flex-col items-start rounded border border-solid border-[#0ea5e94c] bg-[#0ea5e91a] px-3 py-1.5 shadow-[0px_0px_12px_#0ea5e94c]">
+                            <p class="relative flex w-fit items-center [font-family:'JetBrains_Mono-Bold',Helvetica] text-2xl font-bold tracking-[0] leading-[normal] text-sky-500">
+                                <%= currentPage %> / <%= totalPages %>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="absolute right-[-19px] bottom-[-19px] h-[100px] w-[100px] rounded-[50px] bg-sky-500 opacity-15 blur-[25px]" aria-hidden="true"></div>
+                </article>
+                <article class="relative row-[1_/_2] col-[3_/_4] flex h-fit w-full flex-col items-start gap-3 overflow-hidden rounded-md border border-solid border-[#ffffff0f] bg-[#121215a6] px-6 py-5 backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)]">
+                    <div class="relative flex w-full flex-[0_0_auto] flex-col items-start self-stretch">
+                        <h2 class="relative mt-[-1.00px] flex items-center self-stretch [font-family:'Inter-SemiBold',Helvetica] text-[13px] font-semibold tracking-[0.50px] leading-[normal] text-[#9aa6ab]">SEARCH QUERY</h2>
+                    </div>
+                    <div class="relative flex w-full flex-[0_0_auto] flex-col items-start">
+                        <% if (search) { %>
+                        <div class="relative inline-flex flex-[0_0_auto] flex-col items-start rounded border border-solid border-[#d4af374c] bg-[#d4af371a] px-3 py-1.5 shadow-[0px_0px_12px_#d4af374c]">
+                            <p class="relative flex w-fit items-center [font-family:'JetBrains_Mono-Bold',Helvetica] text-base font-bold tracking-[0] leading-[normal] text-[#d4af37] break-all">
+                                "<%= search %>"
+                            </p>
+                        </div>
+                        <% } else { %>
+                        <p class="[font-family:'Inter-Regular',Helvetica] text-sm text-[#9aa6ab]">No active filter</p>
+                        <% } %>
+                    </div>
+                    <div class="absolute right-[-19px] bottom-[-19px] h-[100px] w-[100px] rounded-[50px] bg-[#d4af37] opacity-15 blur-[25px]" aria-hidden="true"></div>
+                </article>
+            </section>
+
+            <!-- ── Search & Filter Bar ──────────────────────────────────── -->
+            <section class="flex h-auto w-full items-center rounded-md border border-solid border-[#ffffff0f] bg-[#121215a6] shadow-[0px_4px_24px_#00000033] backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)] px-5 py-4 gap-3" aria-label="Customer filters">
+                <form id="search-form" class="flex flex-wrap w-full items-center gap-3" action="/admin/users" method="get">
+                    <!-- Search Input -->
+                    <div class="relative flex-1 min-w-[200px]">
+                        <label for="customer-search" class="sr-only">Search by Name or Email</label>
+                        <div class="relative flex items-center overflow-hidden rounded border border-solid border-[#ffffff1f] bg-[#00000066] py-2.5 pl-9 pr-4">
+                            <svg class="absolute left-3 w-4 h-4 text-[#9aa6ab] pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                            </svg>
+                            <input id="customer-search" name="search"
+                                class="w-full border-none bg-transparent p-0 [font-family:'Inter-Regular',Helvetica] text-[13px] font-normal tracking-[0] leading-[normal] text-[#e6eef2] placeholder:text-[#757575] outline-none"
+                                placeholder="Search by name or email..."
+                                type="search"
+                                autocomplete="off"
+                                value="<%= search %>" />
+                        </div>
+                    </div>
+
+                    <!-- Submit / Clear -->
+                    <button type="submit"
+                        class="flex items-center gap-2 px-4 py-2.5 rounded border border-solid border-sky-500 bg-sky-500/10 hover:bg-sky-500/20 transition-colors cursor-pointer [font-family:'Inter-Medium',Helvetica] text-[13px] text-sky-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                        Search
+                    </button>
+                    <% if (search) { %>
+                    <a href="/admin/users"
+                        class="flex items-center gap-1.5 px-4 py-2.5 rounded border border-solid border-[#ffffff1f] bg-[#00000066] hover:bg-[#ffffff0f] transition-colors cursor-pointer [font-family:'Inter-Medium',Helvetica] text-[13px] text-[#9aa6ab]">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        Clear
+                    </a>
+                    <% } %>
+
+                    <!-- Preserve pagination limit on search -->
+                    <input type="hidden" name="limit" value="<%= limit %>" />
+                </form>
+            </section>
+
+            <!-- ── Customer Data Table ──────────────────────────────────── -->
+            <section class="flex flex-col items-start gap-4 w-full" aria-labelledby="customers-heading">
+                <h2 id="customers-heading" class="sr-only">Customer list</h2>
+
+                <!-- Table header row -->
+                <div class="grid h-fit w-full grid-cols-[50px_minmax(0,1.50fr)_minmax(0,1.50fr)_120px_100px_60px] gap-4 border-b border-[#ffffff0f] px-5 pt-0 pb-3 [border-bottom-style:solid]" role="row">
+                    <div class="col-[1_/_2] flex h-fit w-full flex-col items-start self-center">
+                        <div class="[font-family:'Inter-SemiBold',Helvetica] text-xs font-semibold tracking-[0.50px] leading-[normal] text-[#9aa6ab]">AVATAR</div>
+                    </div>
+                    <div class="col-[2_/_3] flex h-fit w-full flex-col items-start self-center">
+                        <div class="[font-family:'Inter-SemiBold',Helvetica] text-xs font-semibold tracking-[0.50px] leading-[normal] text-[#9aa6ab]">CUSTOMER NAME</div>
+                    </div>
+                    <div class="col-[3_/_4] flex h-fit w-full flex-col items-start self-center">
+                        <div class="[font-family:'Inter-SemiBold',Helvetica] text-xs font-semibold tracking-[0.50px] leading-[normal] text-[#9aa6ab]">EMAIL ADDRESS</div>
+                    </div>
+                    <div class="col-[4_/_5] flex h-fit w-full flex-col items-start self-center">
+                        <div class="[font-family:'Inter-SemiBold',Helvetica] text-xs font-semibold tracking-[0.50px] leading-[normal] text-[#9aa6ab]">JOIN DATE</div>
+                    </div>
+                    <div class="col-[5_/_6] flex h-fit w-full flex-col items-start self-center">
+                        <div class="[font-family:'Inter-SemiBold',Helvetica] text-xs font-semibold tracking-[0.50px] leading-[normal] text-[#9aa6ab]">STATUS</div>
+                    </div>
+                    <div class="col-[6_/_7] flex h-fit w-full flex-col items-end self-center">
+                        <div class="[font-family:'Inter-SemiBold',Helvetica] text-xs font-semibold tracking-[0.50px] leading-[normal] text-[#9aa6ab] text-right">ACTIONS</div>
+                    </div>
+                </div>
+
+                <!-- ── Dynamic Customer Rows ──────────────────────────── -->
+                <div class="relative flex w-full flex-[0_0_auto] flex-col items-start gap-2 self-stretch" role="list" aria-label="Customers">
+
+                    <% if (users && users.length > 0) { %>
+                        <% users.forEach(function(customer) { %>
+                        <article id="customer-row-<%= customer._id %>"
+                            class="grid h-fit w-full grid-cols-[50px_minmax(0,1.50fr)_minmax(0,1.50fr)_120px_100px_60px] grid-rows-[36px] gap-4 overflow-hidden rounded border border-solid border-[#ffffff0f] bg-[#121215a6] px-5 py-4 transition-colors hover:bg-[#1a1a1f]"
+                            role="listitem" aria-label="<%= customer.username %> customer record">
+
+                            <!-- Avatar -->
+                            <div class="relative row-[1_/_2] col-[1_/_2] flex h-9 w-full items-center justify-center self-center">
+                                <% if (customer.profile_image) { %>
+                                <img src="<%= customer.profile_image %>"
+                                    alt="<%= customer.username %>'s avatar"
+                                    class="h-9 w-9 rounded-full object-cover border border-[#ffffff1f]" />
+                                <% } else { %>
+                                <div class="relative flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800 border border-[#ffffff1f]">
+                                    <span class="[font-family:'Inter-SemiBold',Helvetica] text-center text-[13px] font-semibold text-[#e6eef2]">
+                                        <%= customer.username.charAt(0).toUpperCase() %>
+                                    </span>
+                                </div>
+                                <% } %>
+                            </div>
+
+                            <!-- Customer Name -->
+                            <div class="relative row-[1_/_2] col-[2_/_3] flex h-fit w-full flex-col items-start self-center">
+                                <h3 class="relative mt-[-1.00px] flex w-fit items-center [font-family:'Inter-Medium',Helvetica] text-sm font-medium tracking-[0] leading-[normal] text-[#e6eef2] truncate max-w-full">
+                                    <%= customer.username %>
+                                </h3>
+                            </div>
+
+                            <!-- Email Address -->
+                            <div class="relative row-[1_/_2] col-[3_/_4] flex h-fit w-full flex-col items-start self-center">
+                                <p class="relative mt-[-1.00px] flex w-fit items-center [font-family:'Inter-Regular',Helvetica] text-[13px] font-normal tracking-[0] leading-[normal] text-[#9aa6ab] truncate max-w-full">
+                                    <%= customer.email %>
+                                </p>
+                            </div>
+
+                            <!-- Join Date -->
+                            <div class="relative row-[1_/_2] col-[4_/_5] flex h-fit w-full flex-col items-start self-center">
+                                <p class="relative mt-[-1.00px] flex w-fit items-center [font-family:'Inter-Regular',Helvetica] text-[13px] font-normal tracking-[0] leading-[normal] text-[#9aa6ab]">
+                                    <%= new Date(customer.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) %>
+                                </p>
+                            </div>
+
+                            <!-- Status Badge -->
+                            <div class="relative row-[1_/_2] col-[5_/_6] flex h-6 w-full items-center self-center" id="status-cell-<%= customer._id %>">
+                                <% if (customer.is_blocked) { %>
+                                <div class="status-badge relative inline-flex flex-[0_0_auto] items-center gap-1.5 rounded-lg border border-solid border-[#ef444433] bg-[#ef44441a] px-2.5 py-1">
+                                    <div class="relative h-1.5 w-1.5 rounded-[3px] bg-red-500 shadow-[0px_0px_6px_#ef444466]" aria-hidden="true"></div>
+                                    <div class="status-text relative flex w-fit items-center [font-family:'Inter-SemiBold',Helvetica] text-[11px] font-semibold tracking-[0.50px] leading-[normal] text-red-500">SUSPENDED</div>
+                                </div>
+                                <% } else { %>
+                                <div class="status-badge relative inline-flex flex-[0_0_auto] items-center gap-1.5 rounded-lg border border-solid border-[#0ea5e933] bg-[#0ea5e91a] px-2.5 py-1">
+                                    <div class="relative h-1.5 w-1.5 rounded-[3px] bg-sky-500 shadow-[0px_0px_6px_#0ea5e94c]" aria-hidden="true"></div>
+                                    <div class="status-text relative flex w-fit items-center [font-family:'Inter-SemiBold',Helvetica] text-[11px] font-semibold tracking-[0.50px] leading-[normal] text-sky-500">ACTIVE</div>
+                                </div>
+                                <% } %>
+                            </div>
+
+                            <!-- Three-dot action menu -->
+                            <div class="relative row-[1_/_2] col-[6_/_7] flex h-full w-full items-center justify-end self-center">
+                                <div class="relative">
+                                    <button type="button"
+                                        class="action-menu-trigger flex h-8 w-8 items-center justify-center rounded border border-solid border-[#ffffff0f] bg-[#121215] hover:bg-[#1e1e24] transition-colors cursor-pointer text-[#9aa6ab] hover:text-[#e6eef2]"
+                                        aria-label="Actions for <%= customer.username %>"
+                                        aria-expanded="false"
+                                        data-customer-id="<%= customer._id %>"
+                                        data-is-blocked="<%= customer.is_blocked %>">
+                                        <svg class="w-4 h-4 pointer-events-none" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                                        </svg>
+                                    </button>
+
+                                    <!-- Dropdown Menu
+                                         Fixed-positioned by JS so it escapes the article's
+                                         overflow:hidden clipping context entirely. -->
+                                    <div class="action-dropdown hidden fixed w-48 bg-[#201f22] border border-[#353437] z-[9999] rounded-md shadow-xl overflow-hidden"
+                                        role="menu" aria-label="Customer actions">
+                                        <a href="#"
+                                            class="flex items-center gap-2.5 px-4 py-2.5 [font-family:'Inter-Regular',Helvetica] text-[13px] text-[#9aa6ab] hover:bg-[#2a2a2f] hover:text-[#e6eef2] transition-colors cursor-not-allowed opacity-60"
+                                            aria-disabled="true" role="menuitem" tabindex="-1">
+                                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            View Details <span class="ml-auto text-[10px] text-zinc-600">Soon</span>
+                                        </a>
+                                        <button type="button"
+                                            class="toggle-block-btn w-full flex items-center gap-2.5 px-4 py-2.5 [font-family:'Inter-Regular',Helvetica] text-[13px] hover:bg-[#2a2a2f] transition-colors cursor-pointer"
+                                            role="menuitem"
+                                            data-customer-id="<%= customer._id %>"
+                                            data-is-blocked="<%= customer.is_blocked %>">
+                                            <% if (customer.is_blocked) { %>
+                                            <svg class="w-3.5 h-3.5 shrink-0 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+                                            <span class="toggle-label text-green-400">Unblock User</span>
+                                            <% } else { %>
+                                            <svg class="w-3.5 h-3.5 shrink-0 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                                            <span class="toggle-label text-red-400">Block User</span>
+                                            <% } %>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </article>
+                        <% }); %>
+                    <% } else { %>
+                    <!-- Empty state -->
+                    <div class="flex flex-col items-center justify-center w-full py-16 gap-4">
+                        <div class="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-[#9aa6ab]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <p class="[font-family:'Inter-Regular',Helvetica] text-sm text-[#9aa6ab]">
+                            <% if (search) { %>No customers match "<%= search %>". <a href="/admin/users" class="text-sky-400 hover:underline">Clear filter</a><% } else { %>No customers found.<% } %>
+                        </p>
+                    </div>
+                    <% } %>
+                </div>
+
+                <!-- ── Pagination Controls ────────────────────────────── -->
+                <% if (totalPages > 1) { %>
+                <nav class="relative flex w-full flex-[0_0_auto] flex-col items-start self-stretch px-0 pt-2 pb-0" aria-label="Customer pagination">
+                    <div class="relative flex w-full flex-[0_0_auto] items-center justify-between self-stretch border-t border-[#ffffff1f] px-0 pt-4 pb-0">
+                        <p class="relative mt-[-1.00px] flex w-fit items-center [font-family:'Inter-Regular',Helvetica] text-[13px] font-normal tracking-[0] leading-[normal] text-[#9aa6ab]">
+                            Showing <%= (currentPage - 1) * limit + 1 %>–<%= Math.min(currentPage * limit, totalCount) %> of <%= totalCount.toLocaleString() %> users
+                        </p>
+                        <div class="relative inline-flex flex-[0_0_auto] items-center gap-2">
+                            <!-- Previous -->
+                            <% if (currentPage > 1) { %>
+                            <a href="/admin/users?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(search) %>&limit=<%= limit %>"
+                                class="inline-flex items-center justify-center rounded border border-solid border-[#ffffff0f] bg-[#121215a6] px-3 py-1.5 text-[#9aa6ab] hover:bg-[#1e1e24] transition-colors"
+                                aria-label="Previous page">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+                            </a>
+                            <% } else { %>
+                            <span class="inline-flex items-center justify-center rounded border border-solid border-[#ffffff0f] bg-[#121215a6] px-3 py-1.5 text-[#404040] cursor-not-allowed" aria-disabled="true" aria-label="Previous page">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+                            </span>
+                            <% } %>
+
+                            <!-- Page number pills (show up to 5 around current page) -->
+                            <%
+                            const maxPills = 5;
+                            let startPill = Math.max(1, currentPage - Math.floor(maxPills / 2));
+                            let endPill   = Math.min(totalPages, startPill + maxPills - 1);
+                            if (endPill - startPill < maxPills - 1) {
+                                startPill = Math.max(1, endPill - maxPills + 1);
+                            }
+                            %>
+                            <% for (let p = startPill; p <= endPill; p++) { %>
+                            <% if (p === currentPage) { %>
+                            <span class="inline-flex items-center justify-center rounded border border-solid border-sky-500 bg-[#0ea5e91a] px-3 py-1.5" aria-current="page">
+                                <span class="[font-family:'Inter-Regular',Helvetica] text-center text-[13px] font-normal text-sky-500"><%= p %></span>
+                            </span>
+                            <% } else { %>
+                            <a href="/admin/users?page=<%= p %>&search=<%= encodeURIComponent(search) %>&limit=<%= limit %>"
+                                class="inline-flex items-center justify-center rounded border border-solid border-[#ffffff0f] bg-[#121215a6] px-3 py-1.5 hover:bg-[#1e1e24] transition-colors">
+                                <span class="[font-family:'Inter-Regular',Helvetica] text-center text-[13px] font-normal text-[#e6eef2]"><%= p %></span>
+                            </a>
+                            <% } %>
+                            <% } %>
+
+                            <!-- Next -->
+                            <% if (currentPage < totalPages) { %>
+                            <a href="/admin/users?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(search) %>&limit=<%= limit %>"
+                                class="inline-flex items-center justify-center rounded border border-solid border-[#ffffff0f] bg-[#121215a6] px-3 py-1.5 text-[#9aa6ab] hover:bg-[#1e1e24] transition-colors"
+                                aria-label="Next page">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                            </a>
+                            <% } else { %>
+                            <span class="inline-flex items-center justify-center rounded border border-solid border-[#ffffff0f] bg-[#121215a6] px-3 py-1.5 text-[#404040] cursor-not-allowed" aria-disabled="true" aria-label="Next page">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                            </span>
+                            <% } %>
+                        </div>
+                    </div>
+                </nav>
+                <% } %>
+            </section>
+        </main>
+    </div>
+
+    <!-- ── Block/Unblock Confirmation Modal ──────────────────────────────── -->
+    <div id="block-confirm-modal"
+        class="fixed inset-0 z-[100] hidden items-center justify-center bg-zinc-950/80 backdrop-blur-sm"
+        role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="relative bg-[#141418] border border-[#353437] rounded-xl max-w-sm w-full mx-4 p-6 shadow-2xl">
+            <!-- Warning icon -->
+            <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 mx-auto mb-4">
+                <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                </svg>
+            </div>
+            <h3 id="modal-title" class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#e6eef2] text-lg text-center mb-2">
+                Confirm Access Change
+            </h3>
+            <p class="[font-family:'Inter-Regular',Helvetica] text-[#9aa6ab] text-sm text-center leading-relaxed mb-6">
+                Are you sure you want to alter the access state for this user account? This action can be reversed at any time.
+            </p>
+            <div class="flex gap-3 justify-center">
+                <button id="modal-cancel-btn" type="button"
+                    class="flex-1 py-2.5 px-4 rounded border border-solid border-[#ffffff1f] bg-transparent [font-family:'Inter-Medium',Helvetica] text-sm text-[#9aa6ab] hover:bg-[#2a2a2f] hover:text-[#e6eef2] transition-colors cursor-pointer">
+                    Cancel
+                </button>
+                <button id="modal-confirm-btn" type="button"
+                    class="flex-1 py-2.5 px-4 rounded border border-solid border-red-500/30 bg-red-500/10 [font-family:'Inter-Medium',Helvetica] text-sm text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-colors cursor-pointer">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Toast Container ────────────────────────────────────────────────── -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[200] flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+    (function () {
+        // ── Toast ─────────────────────────────────────────────────────────
+        function showToast(msg, type) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = [
+                'pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg border text-sm transition-all duration-300 opacity-0 translate-y-2 shadow-lg',
+                type === 'success'
+                    ? 'bg-[#072412] text-green-400 border-green-500/30'
+                    : 'bg-[#2a080c] text-red-400 border-red-500/30'
+            ].join(' ');
+            toast.textContent = msg;
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('opacity-0', 'translate-y-2');
+            });
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // ── Dropdown Menus ─────────────────────────────────────────────────
+        // Dropdowns use position:fixed + getBoundingClientRect so they escape
+        // the article's overflow:hidden clipping context completely.
+        let openDropdown   = null;
+        let openTrigger    = null;
+
+        function positionDropdown(trigger, dropdown) {
+            const rect = trigger.getBoundingClientRect();
+            // Prefer right-aligned; if there's not enough room on the right side,
+            // the dropdown is still 192 px wide so guard against viewport edge.
+            const dropdownWidth = 192;
+            const gap = 4;
+            let top  = rect.bottom + gap;
+            let left = rect.right - dropdownWidth;
+            // Clamp to viewport
+            if (left < 4) left = 4;
+            if (top + 100 > window.innerHeight) top = rect.top - 100 - gap;
+            dropdown.style.top  = top  + 'px';
+            dropdown.style.left = left + 'px';
+        }
+
+        function closeOpenDropdown() {
+            if (openDropdown) {
+                openDropdown.classList.add('hidden');
+                if (openTrigger) openTrigger.setAttribute('aria-expanded', 'false');
+                openDropdown = null;
+                openTrigger  = null;
+            }
+        }
+
+        document.addEventListener('click', function (e) {
+            const trigger = e.target.closest('.action-menu-trigger');
+
+            if (trigger) {
+                e.stopPropagation();
+                const parent   = trigger.closest('.relative');
+                const dropdown = parent.querySelector('.action-dropdown');
+
+                // If a different dropdown is already open, close it first
+                if (openDropdown && openDropdown !== dropdown) {
+                    closeOpenDropdown();
+                }
+
+                const isCurrentlyOpen = !dropdown.classList.contains('hidden');
+                if (isCurrentlyOpen) {
+                    closeOpenDropdown();
+                } else {
+                    positionDropdown(trigger, dropdown);
+                    dropdown.classList.remove('hidden');
+                    trigger.setAttribute('aria-expanded', 'true');
+                    openDropdown = dropdown;
+                    openTrigger  = trigger;
+                }
+                return;
+            }
+
+            // Click outside any dropdown or trigger → close
+            if (openDropdown && !e.target.closest('.action-dropdown')) {
+                closeOpenDropdown();
+            }
+        });
+
+        // Reposition on scroll / resize so the fixed dropdown tracks correctly
+        window.addEventListener('scroll', closeOpenDropdown, true);
+        window.addEventListener('resize', closeOpenDropdown);
+
+        // ── Block / Unblock Flow ──────────────────────────────────────────
+        const modal         = document.getElementById('block-confirm-modal');
+        const cancelBtn     = document.getElementById('modal-cancel-btn');
+        const confirmBtn    = document.getElementById('modal-confirm-btn');
+        let pendingCustomerId  = null;
+        let pendingIsBlocked   = null;
+
+        function openModal(customerId, isBlocked) {
+            pendingCustomerId = customerId;
+            pendingIsBlocked  = isBlocked;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            confirmBtn.focus();
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            pendingCustomerId = null;
+            pendingIsBlocked  = null;
+        }
+
+        cancelBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Delegated handler for "Block/Unblock User" buttons in dropdowns
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.toggle-block-btn');
+            if (!btn) return;
+            e.stopPropagation();
+
+            const customerId = btn.dataset.customerId;
+            const isBlocked  = btn.dataset.isBlocked === 'true';
+
+            // Close the dropdown first
+            if (openDropdown) {
+                openDropdown.classList.add('hidden');
+                openDropdown = null;
+            }
+
+            openModal(customerId, isBlocked);
+        });
+
+        confirmBtn.addEventListener('click', async function () {
+            if (!pendingCustomerId) return;
+
+            const customerId = pendingCustomerId;
+            const wasBlocked = pendingIsBlocked;
+            closeModal();
+
+            try {
+                const res  = await fetch('/admin/users/toggle-block/' + customerId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'   // lets isAdminAuth return JSON on auth failure
+                    }
+                });
+
+                // Session expired mid-session: redirect to login
+                if (res.status === 401) {
+                    showToast('Session expired. Redirecting to login…', 'error');
+                    setTimeout(() => { window.location.href = '/admin/login'; }, 1500);
+                    return;
+                }
+
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    showToast(data.message || 'Action failed.', 'error');
+                    return;
+                }
+
+                const nowBlocked = data.is_blocked;
+
+                // ── Update status badge inline ─────────────────────────
+                const statusCell = document.getElementById('status-cell-' + customerId);
+                if (statusCell) {
+                    if (nowBlocked) {
+                        statusCell.innerHTML = `
+                            <div class="status-badge relative inline-flex flex-[0_0_auto] items-center gap-1.5 rounded-lg border border-solid border-[#ef444433] bg-[#ef44441a] px-2.5 py-1">
+                                <div class="relative h-1.5 w-1.5 rounded-[3px] bg-red-500 shadow-[0px_0px_6px_#ef444466]" aria-hidden="true"></div>
+                                <div class="status-text relative flex w-fit items-center [font-family:'Inter-SemiBold',Helvetica] text-[11px] font-semibold tracking-[0.50px] leading-[normal] text-red-500">SUSPENDED</div>
+                            </div>`;
+                    } else {
+                        statusCell.innerHTML = `
+                            <div class="status-badge relative inline-flex flex-[0_0_auto] items-center gap-1.5 rounded-lg border border-solid border-[#0ea5e933] bg-[#0ea5e91a] px-2.5 py-1">
+                                <div class="relative h-1.5 w-1.5 rounded-[3px] bg-sky-500 shadow-[0px_0px_6px_#0ea5e94c]" aria-hidden="true"></div>
+                                <div class="status-text relative flex w-fit items-center [font-family:'Inter-SemiBold',Helvetica] text-[11px] font-semibold tracking-[0.50px] leading-[normal] text-sky-500">ACTIVE</div>
+                            </div>`;
+                    }
+                }
+
+                // ── Update the dropdown toggle label + icon inline ──────
+                const toggleBtn = document.querySelector(`.toggle-block-btn[data-customer-id="${customerId}"]`);
+                if (toggleBtn) {
+                    toggleBtn.dataset.isBlocked = String(nowBlocked);
+                    if (nowBlocked) {
+                        toggleBtn.innerHTML = `
+                            <svg class="w-3.5 h-3.5 shrink-0 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+                            <span class="toggle-label text-green-400">Unblock User</span>`;
+                    } else {
+                        toggleBtn.innerHTML = `
+                            <svg class="w-3.5 h-3.5 shrink-0 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                            <span class="toggle-label text-red-400">Block User</span>`;
+                    }
+                    // Also sync the trigger button's dataset
+                    const triggerBtn = document.querySelector(`.action-menu-trigger[data-customer-id="${customerId}"]`);
+                    if (triggerBtn) triggerBtn.dataset.isBlocked = String(nowBlocked);
+                }
+
+                showToast(data.message, 'success');
+            } catch (err) {
+                showToast('Network error. Please try again.', 'error');
+            }
+        });
+        // ── bfcache guard (Bug #1 – back button after logout) ────────────────
+        // If the browser restores this page from the back-forward cache the
+        // server never gets a request and isAdminAuth cannot redirect. Force a
+        // live reload so the middleware runs and can kick the admin out.
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+    })();
+    </script>
+</body>
+
+</html>

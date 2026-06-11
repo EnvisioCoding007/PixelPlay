@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="/css/globals.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        /** @type {import('tailwindcss').Config} */
+        tailwind.config = {
+            theme: {
+                extend: {},
+            },
+            plugins: [],
+        }
+    </script>
+</head>
+
+<body>
+    <div
+        class="flex min-h-screen items-start relative [background:linear-gradient(0deg,rgba(19,19,21,1)_0%,rgba(19,19,21,1)_100%),linear-gradient(0deg,rgba(255,255,255,1)_0%,rgba(255,255,255,1)_100%)]">
+        <section aria-label="Brand panel" class="relative flex-1 grow min-h-screen bg-[#0a0a0d] overflow-hidden">
+            <div class="absolute top-[calc(50.00%_-_129px)] left-[calc(50.00%_-_249px)] w-[494px] h-[355px]">
+                <div class="inline-flex items-center justify-center absolute top-0 left-[calc(50.00%_-_108px)]">
+                    <div class="relative w-[217px] h-[145px] aspect-[1.5] bg-[url(legacy:image:md5:366:1595-no-children)] bg-cover bg-[50%_50%]"
+                        aria-hidden="true"></div>
+                </div>
+                <div
+                    class="flex flex-col w-[213px] h-px items-center px-[86.41px] py-0 absolute top-[84px] left-[calc(50.00%_-_106px)]">
+                    <div
+                        class="relative w-10 h-px [background:linear-gradient(90deg,rgba(14,165,233,0)_0%,rgba(14,165,233,0.4)_50%,rgba(14,165,233,0)_100%)]">
+                    </div>
+                </div>
+                <div class="inline-flex flex-col items-start gap-[6.59px] absolute top-28 left-[calc(50.00%_-_106px)]">
+                    <h1
+                        class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-zinc-100 text-[28px] text-center tracking-[1.68px] leading-[33.6px] whitespace-nowrap">
+                        THE LEGENDS</h1>
+                    <div
+                        class="inline-flex flex-col items-center pl-[63.16px] pr-[63.17px] py-0 relative flex-[0_0_auto]">
+                        <p
+                            class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#d4af37] text-lg text-center tracking-[3.24px] leading-[21.6px] whitespace-nowrap">
+                            LEGION</p>
+                    </div>
+                </div>
+                <div
+                    class="flex flex-col w-[213px] h-px items-center px-[86.41px] py-0 absolute top-[202px] left-[calc(50.00%_-_106px)]">
+                    <div
+                        class="relative w-10 h-px [background:linear-gradient(90deg,rgba(14,165,233,0)_0%,rgba(14,165,233,0.4)_50%,rgba(14,165,233,0)_100%)]">
+                    </div>
+                </div>
+            </div>
+            <div class="absolute w-full h-full top-0 left-0 [background:linear-gradient(180deg,rgba(14,165,233,0.04)_3%,rgba(14,165,233,0)_3%),linear-gradient(90deg,rgba(14,165,233,0.04)_3%,rgba(14,165,233,0)_3%)]"
+                aria-hidden="true"></div>
+            <div class="absolute top-[calc(50.00%_-_160px)] left-[calc(50.00%_-_160px)] w-80 h-80 [background:radial-gradient(50%_50%_at_50%_50%,rgba(14,165,233,0.07)_0%,rgba(14,165,233,0)_70%)]"
+                aria-hidden="true"></div>
+            <div class="absolute h-full top-0 right-0 w-px [background:linear-gradient(180deg,rgba(14,165,233,0)_0%,rgba(14,165,233,0.2)_50%,rgba(14,165,233,0)_100%)]"
+                aria-hidden="true"></div>
+        </section>
+        <main class="flex items-center justify-center p-10 relative flex-1 self-stretch grow bg-[#131315]">
+            <section aria-labelledby="signup-heading"
+                class="flex flex-col max-w-md w-full items-start gap-8 p-8 relative bg-[#18181bcc] rounded border border-solid border-[#3b494b80] backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)]">
+                <div class="flex items-start justify-center relative self-stretch w-full flex-[0_0_auto] border-b [border-bottom-style:solid] border-[#3b494b]"
+                    role="tablist" aria-label="Authentication options">
+                    <a href="/auth/login"
+                        class="flex flex-col items-center pt-0 pb-4 px-0 relative flex-1 self-stretch grow" role="tab"
+                        aria-selected="false">
+                        <span
+                            class="relative flex items-center justify-center w-[70.13px] h-8 mt-[-1.00px] [font-family:'Space_Grotesk-Medium',Helvetica] font-medium text-[#b9cacb] text-2xl text-center tracking-[0] leading-[31.2px] whitespace-nowrap">Log
+                            In</span>
+                    </a>
+                    <button type="button"
+                        class="flex flex-col items-center pt-0 pb-4 px-0 relative flex-1 self-stretch grow border-b-2 [border-bottom-style:solid] border-[#00f0ff]"
+                        role="tab" aria-selected="true" id="signup-heading">
+                        <span
+                            class="justify-center w-[88.45px] h-8 mt-[-2.00px] [font-family:'Space_Grotesk-Medium',Helvetica] font-medium text-[#00f0ff] text-2xl text-center tracking-[0] leading-[31.2px] whitespace-nowrap relative flex items-center">Sign
+                            Up</span>
+                    </button>
+                </div>
+
+                <%# Bug 4 & 5 Fix: #alert-message replaces the old #errorMessage element.
+                    All forms share this standardised container ID so the validation
+                    engine and the focus-clear listener (Bug 7) use one consistent target. %>
+                <p id="alert-message" class="hidden text-red-500 text-sm w-full text-center"></p>
+
+                <%# Bug 4 Fix: removed `required` and `pattern` HTML attributes from every
+                    input — validation is now handled exclusively by the JS block below. %>
+                <form id="signupForm"
+                    class="flex flex-col items-start gap-6 relative self-stretch w-full flex-[0_0_auto]" action="#"
+                    method="post" novalidate>
+                    <div class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                        <label
+                            class="relative flex items-center w-[66.11px] h-3 mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#e5e1e4] text-xs tracking-[1.20px] leading-3 whitespace-nowrap"
+                            for="username">Full Name</label>
+                        <div
+                            class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b]">
+                            <div class="flex flex-col items-start relative flex-1 grow">
+                                <input
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb80] text-base tracking-[0] leading-[normal] [background:transparent] border-[none] p-0 outline-none"
+                                    placeholder="Enter your Name" type="text" id="username" name="username"
+                                    autocomplete="name" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                        <label
+                            class="relative flex items-center w-[95.63px] h-3 mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#e5e1e4] text-xs tracking-[1.20px] leading-3 whitespace-nowrap"
+                            for="email">Email Address</label>
+                        <div
+                            class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b]">
+                            <input
+                                class="relative grow border-[none] [background:none] self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb80] text-base tracking-[0] leading-[normal] p-0 outline-none"
+                                placeholder="transmission@node.net" type="email" id="email" name="email"
+                                autocomplete="email" />
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                        <label
+                            class="relative flex items-center w-[65.08px] h-3 mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#e5e1e4] text-xs tracking-[1.20px] leading-3 whitespace-nowrap"
+                            for="password">Password</label>
+                        <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto] rounded-sm">
+                            <div
+                                class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b]">
+                                <input
+                                    class="relative grow border-[none] [background:none] self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb80] text-base tracking-[0] leading-[normal] p-0 pr-10 outline-none"
+                                    placeholder="Enter your password" type="password" id="password" name="password"
+                                    autocomplete="new-password" />
+                            </div>
+                            <button type="button"
+                                class="inline-flex flex-col items-center justify-center absolute h-[30.61%] top-[34.69%] right-3"
+                                aria-label="Show password">
+                                <span class="inline-flex items-start justify-center relative flex-[0_0_auto]">
+                                    <img class="relative w-[22px] h-[15px]" src="img/icon-2.svg" alt="" />
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                        <label
+                            class="relative flex items-center w-[123.03px] h-3 mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#e5e1e4] text-xs tracking-[1.20px] leading-3 whitespace-nowrap"
+                            for="confirmPassword">Confirm Password</label>
+                        <div
+                            class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b]">
+                            <input
+                                class="relative grow border-[none] [background:none] self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb80] text-base tracking-[0] leading-[normal] p-0 pr-10 outline-none"
+                                placeholder="Confirm Password" type="password" id="confirmPassword"
+                                name="confirmPassword" autocomplete="new-password" />
+                            <button type="button"
+                                class="inline-flex flex-col items-center justify-center absolute h-[30.61%] top-[34.69%] right-3"
+                                aria-label="Show confirm password">
+                                <span class="inline-flex items-start justify-center relative flex-[0_0_auto]">
+                                    <img class="relative w-[22px] h-[15px]" src="img/icon.svg" alt="" />
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                        <label
+                            class="relative flex items-center w-[172px] h-3 mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#e5e1e4] text-xs tracking-[1.20px] leading-3 whitespace-nowrap"
+                            for="referralCode">Referral Code (Optional)</label>
+                        <div
+                            class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b]">
+                            <div class="flex flex-col items-start relative flex-1 grow">
+                                <input
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb80] text-base tracking-[0] leading-[normal] [background:transparent] border-[none] p-0 outline-none"
+                                    placeholder="Referral Code" type="text" id="referralCode" name="referralCode"
+                                    autocomplete="off" />
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit"
+                        class="flex items-center justify-center gap-2 px-0 py-4 relative self-stretch w-full flex-[0_0_auto] bg-[#00f0ff] rounded-sm">
+                        <span
+                            class="justify-center w-[116.38px] h-3 mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-black text-xs text-center tracking-[1.20px] leading-3 whitespace-nowrap relative flex items-center">CREATE
+                            ACCOUNT</span>
+                        <span class="inline-flex flex-col items-center relative flex-[0_0_auto]">
+                            <img class="relative w-3 h-3" src="img/image.svg" alt="" />
+                        </span>
+                    </button>
+                </form>
+                <div class="flex items-center relative self-stretch w-full flex-[0_0_auto]"
+                    aria-label="Alternative sign up methods">
+                    <div class="relative flex-1 grow h-px bg-[#3b494b]"></div>
+                    <div class="inline-flex flex-col items-start px-4 py-0 relative flex-[0_0_auto]">
+                        <div
+                            class="w-[114.72px] h-3 mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#b9cacb] text-xs tracking-[1.20px] leading-3 whitespace-nowrap relative flex items-center">
+                            or continue with</div>
+                    </div>
+                    <div class="relative flex-1 grow h-px bg-[#3b494b]"></div>
+                </div>
+                <div class="w-full flex justify-center">
+                    <a href="/auth/google"
+                        class="all-[unset] box-border w-[244px] h-[46px] relative flex items-center justify-center gap-[7.99px] pl-[48.27px] pr-[48.28px] py-3 bg-[#1c1b1d] rounded-sm border border-solid border-[#3b494b] cursor-pointer decoration-transparent"
+                        aria-label="Continue with Google">
+                        <span class="inline-flex flex-col items-center relative flex-[0_0_auto]">
+                            <img class="relative w-5 h-5" src="img/icon-3.svg" alt="" />
+                        </span>
+                        <span
+                            class="justify-center w-[52.44px] h-3 [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#e5e1e4] text-xs text-center tracking-[1.20px] leading-3 whitespace-nowrap relative flex items-center">GOOGLE</span>
+                    </a>
+                </div>
+                <p class="flex items-start justify-center gap-1 relative self-stretch w-full flex-[0_0_auto]">
+                    <span
+                        class="justify-center w-[199.86px] h-6 mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb] text-base text-center tracking-[0] leading-6 whitespace-nowrap relative flex items-center">Already
+                        have an account?</span>
+                    <a href="/auth/login"
+                        class="relative flex items-center justify-center w-[46.7px] h-6 mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#00f0ff] text-base text-center tracking-[0] leading-6 whitespace-nowrap">Log
+                        In</a>
+                </p>
+            </section>
+        </main>
+    </div>
+    <script>
+        // ── Bug 5 Fix: JS validation engine ──────────────────────────────────────
+        // Username: first char must be a letter (no leading digits/symbols/spaces).
+        // Pure numeric strings are also rejected.
+        const usernameRegex = /^[a-zA-Z][a-zA-Z0-9 _-]*$/;
+
+        // Password complexity: ≥8 chars, ≥1 uppercase, ≥1 lowercase, ≥1 digit, ≥1 special char.
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
+        const alertEl = document.getElementById('alert-message');
+
+        function showAlert(msg) {
+            alertEl.textContent = msg;
+            alertEl.classList.remove('hidden');
+        }
+
+        // ── Bug 7 Fix: focus/input listeners clear the alert state immediately ──
+        document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]')
+            .forEach(function (input) {
+                ['focus', 'input'].forEach(function (evt) {
+                    input.addEventListener(evt, function () {
+                        alertEl.classList.add('hidden');
+                    });
+                });
+            });
+
+        // ── Form submit handler ───────────────────────────────────────────────────
+        document.getElementById('signupForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const username        = document.getElementById('username').value.trim();
+            const email           = document.getElementById('email').value.trim();
+            const password        = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const referralCode    = document.getElementById('referralCode').value.trim();
+
+            // — Client-side validation (Bug 4 & 5) —
+            if (!username) {
+                showAlert('Username is required.');
+                return;
+            }
+            if (!usernameRegex.test(username)) {
+                showAlert('Username must start with a letter and cannot be purely numeric or begin with a symbol/space.');
+                return;
+            }
+            if (!email) {
+                showAlert('Email address is required.');
+                return;
+            }
+            if (!password) {
+                showAlert('Password is required.');
+                return;
+            }
+            if (!passwordRegex.test(password)) {
+                showAlert('Password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character.');
+                return;
+            }
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password, confirmPassword, referralCode })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    window.location.href = data.redirectUrl || `/auth/verify-email?email=${encodeURIComponent(email)}`;
+                } else {
+                    showAlert(data.message || 'An error occurred during sign up.');
+                }
+            } catch (error) {
+                showAlert('Network error. Please try again.');
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title><%= user.username %> — Edit Profile · PixelPlay</title>
+    <link rel="stylesheet" href="globals.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        /** @type {import('tailwindcss').Config} */
+        tailwind.config = {
+            theme: {
+                extend: {},
+            },
+            plugins: [],
+        }
+    </script>
+</head>
+
+<body>
+    <div class="flex flex-col min-h-screen items-start relative bg-zinc-950">
+        <header
+            class="flex h-[72px] items-center justify-between px-10 py-0 relative self-stretch w-full z-[1] bg-[#09090be6] border-b [border-bottom-style:solid] border-[#00000014] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
+            <nav class="flex items-center justify-between w-full gap-6" aria-label="Primary">
+                <div class="inline-flex items-center gap-10 relative flex-[0_0_auto]">
+                    <a href="#"
+                        class="relative w-[129px] h-12 aspect-[2.68] bg-[url(legacy:image:md5:I144:2444;273:1230-no-children)] bg-cover bg-[50%_50%] block"
+                        aria-label="PixelPlay home"></a>
+                    <ul class="inline-flex items-center gap-[7.6px] relative flex-[0_0_auto]">
+                        <li><a href="#"
+                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
+                                    class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] leading-[normal]">Home</span></a>
+                        </li>
+                        <li><a href="#"
+                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
+                                    class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Browse</span></a>
+                        </li>
+                        <li><a href="#"
+                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
+                                    class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Wishlist</span></a>
+                        </li>
+                        <li><a href="#"
+                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
+                                    class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Offers</span></a>
+                        </li>
+                        <li><a href="#"
+                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
+                                    class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] leading-[normal]">Library</span></a>
+                        </li>
+                        <li><a href="#"
+                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
+                                    class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] leading-[normal]">Wallet</span></a>
+                        </li>
+                        <li><a href="#"
+                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
+                                    class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Support</span></a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="inline-flex items-center gap-5 relative flex-[0_0_auto]">
+                    <form
+                        class="flex w-60 items-center gap-3 px-4 py-2 relative bg-[#0f1113] rounded-full border border-solid border-[#00000014]"
+                        role="search">
+                        <label for="store-search" class="sr-only">Search store</label>
+                        <img class="relative w-4 h-4" src="img/container.svg" alt="" />
+                        <div class="flex flex-col items-start relative flex-1 grow">
+                            <input id="store-search"
+                                class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-sm tracking-[0] leading-[normal] bg-transparent border-0 p-0 outline-none placeholder:text-[#9aa6b3]"
+                                placeholder="Search store..." type="search" />
+                        </div>
+                    </form>
+                    <button type="button" class="flex w-10 h-10 items-center justify-center relative rounded-[20px]"
+                        aria-label="Cart">
+                        <img class="relative flex-[0_0_auto]" src="img/iconify-icon.svg" alt="" />
+                    </button>
+                    <button type="button" class="flex w-10 h-10 items-center justify-center relative rounded-[20px]"
+                        aria-label="Notifications">
+                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                            <div class="relative w-5 h-5">
+                                <img class="absolute w-[91.66%] h-[95.83%] top-[4.17%] left-[8.34%]"
+                                    src="img/vector-2.svg" alt="" />
+                            </div>
+                        </div>
+                    </button>
+                    <a href="#"
+                        class="relative w-9 h-9 rounded-[18px] border-2 border-solid border-[#00000014] bg-[url(legacy:image:md5:I144:2444;10:45-no-children)] bg-cover bg-[50%_50%] block"
+                        aria-label="Profile"></a>
+                </div>
+            </nav>
+        </header>
+        <main class="flex items-start justify-center px-8 py-16 relative self-stretch w-full flex-[0_0_auto] z-0">
+            <div class="flex flex-col max-w-[860px] w-full items-start gap-10 relative self-stretch">
+                <section class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <h1
+                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-100 text-[32px] tracking-[0] leading-[normal]">
+                            Profile Settings</h1>
+                    </div>
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <p
+                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-base tracking-[0] leading-[normal]">
+                            Manage your identity, personal details, and account security.</p>
+                    </div>
+                </section>
+                <form
+                    method="post" action="/auth/profile/edit"
+                    class="flex flex-col items-start gap-14 p-12 relative self-stretch w-full flex-[0_0_auto] bg-[#121215bf] rounded-xl border border-solid border-zinc-700 shadow-[inset_0px_1px_0px_1px_#ffffff0d,0px_8px_32px_#00000066] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
+                    <section class="flex items-center gap-8 relative self-stretch w-full flex-[0_0_auto]">
+                        <img class="relative w-[152px] h-[152px] mt-[-20.00px] mb-[-20.00px] ml-[-20.00px]"
+                            src="img/image.svg" alt="Alex Vance avatar" />
+                        <div class="inline-flex flex-col items-start gap-3 relative flex-[0_0_auto]">
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <h2
+                                    class="mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-100 text-2xl tracking-[0] relative flex items-center w-fit leading-[normal]">
+                                    <%= user.username %></h2>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="flex flex-col items-start gap-6 relative self-stretch w-full flex-[0_0_auto]">
+                        <div class="flex items-center gap-4 relative self-stretch w-full flex-[0_0_auto]">
+                            <h3
+                                class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-400 text-[13px] tracking-[1.50px] leading-[normal]">
+                                PERSONAL INFORMATION</h3>
+                            <div class="relative flex-1 grow h-px bg-zinc-800"></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 pt-2 w-full">
+                            <!-- Full Name -->
+                            <div class="relative w-full h-fit flex flex-col items-start gap-3">
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                    <label
+                                        class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#c0c0c8] text-sm tracking-[0] leading-[normal]"
+                                        for="full-name">Full Name</label>
+                                </div>
+                                <div
+                                    class="flex flex-col items-start px-5 py-4 relative self-stretch w-full flex-[0_0_auto] bg-[#121215] rounded-lg overflow-hidden border border-solid border-zinc-700">
+                                    <input id="full-name"
+                                        class="relative self-stretch w-full border-[none] [background:none] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-[15px] tracking-[0] leading-[normal] p-0 outline-none"
+                                        type="text" name="username" value="<%= user.username %>" />
+                                </div>
+                            </div>
+                            <!-- Email Address (click pencil to edit) -->
+                            <div class="relative w-full h-fit flex flex-col items-start gap-3">
+                                <div class="flex items-center justify-between self-stretch">
+                                    <label
+                                        class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#c0c0c8] text-sm tracking-[0] leading-[normal]"
+                                        for="email-address">Email Address</label>
+                                    <button type="button" id="email-edit-btn"
+                                        title="Edit email address"
+                                        class="flex items-center gap-1 text-zinc-500 hover:text-sky-400 transition-colors text-xs [font-family:'Inter-Medium',Helvetica]">
+                                        <!-- Pencil icon -->
+                                        <svg id="email-pen-icon" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828A2 2 0 019.5 16.5H8v-1.5a2 2 0 01.586-1.414z" />
+                                        </svg>
+                                        <span id="email-edit-label">Change</span>
+                                    </button>
+                                </div>
+                                <div id="email-input-wrapper"
+                                    class="flex items-center px-5 py-4 relative self-stretch w-full flex-[0_0_auto] bg-[#121215] rounded-lg overflow-hidden border border-solid border-zinc-700 opacity-60 transition-all duration-200">
+                                    <input id="email-address"
+                                        class="relative flex-1 border-[none] [background:none] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[15px] tracking-[0] leading-[normal] p-0 outline-none cursor-not-allowed transition-colors duration-200"
+                                        type="email" name="email" value="<%= user.email %>" readonly />
+                                    <!-- Lock icon shown when field is locked -->
+                                    <svg id="email-lock-icon" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-zinc-600 shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <rect x="3" y="11" width="18" height="11" rx="2"/>
+                                        <path d="M7 11V7a5 5 0 0110 0v4"/>
+                                    </svg>
+                                </div>
+                                <p id="email-edit-hint" class="hidden text-xs text-sky-400 [font-family:'Inter-Regular',Helvetica]">
+                                    A verification code will be sent to your new address when you save.
+                                </p>
+                            </div>
+                            <!-- Phone Number -->
+                            <div class="relative w-full h-fit flex flex-col items-start gap-3 md:col-span-2">
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                    <label
+                                        class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#c0c0c8] text-sm tracking-[0] leading-[normal]"
+                                        for="phone-number">Phone Number</label>
+                                </div>
+                                <div
+                                    class="flex flex-col items-start px-5 py-4 relative self-stretch w-full flex-[0_0_auto] bg-[#121215] rounded-lg overflow-hidden border border-solid border-zinc-700">
+                                    <input id="phone-number"
+                                        class="relative self-stretch w-full border-[none] [background:none] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-[15px] tracking-[0] leading-[normal] p-0 outline-none"
+                                        type="tel" name="phone" value="<%= user.phone || '' %>" placeholder="Add a phone number" />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <% if (user.password_hash) { %>
+                    <section class="flex flex-col items-start gap-8 relative self-stretch w-full flex-[0_0_auto]">
+                        <div class="flex items-center gap-4 relative self-stretch w-full flex-[0_0_auto]">
+                            <h3
+                                class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-400 text-[13px] tracking-[1.50px] leading-[normal]">
+                                SECURITY QUICK-ACTIONS</h3>
+                            <div class="relative flex-1 grow h-px bg-zinc-800"></div>
+                        </div>
+                        <div class="flex items-start gap-6 relative self-stretch w-full flex-[0_0_auto]">
+                            <a href="/auth/profile/password"
+                                class="all-[unset] box-border inline-flex items-center justify-center gap-2.5 px-8 py-3.5 relative flex-[0_0_auto] bg-[#121215] rounded-lg border border-solid border-zinc-700 cursor-pointer hover:bg-zinc-800 transition-colors">
+                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                    <div class="relative w-[18px] h-[18px]">
+                                        <div class="relative w-[81.61%] h-[79.17%] top-[8.33%] left-[8.33%]">
+                                            <img class="absolute w-[57.11%] h-[105.26%] top-[-5.26%] left-[42.89%]"
+                                                src="img/vector-3.svg" alt="" />
+                                            <img class="absolute w-[105.11%] h-[63.16%] top-[36.84%] left-[-5.11%]"
+                                                src="img/vector.svg" alt="" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-100 text-[15px] text-center tracking-[0] relative flex items-center w-fit leading-[normal]">
+                                    Change Password</div>
+                            </a>
+                        </div>
+                    </section>
+                    <% } %>
+                    <div
+                        class="flex items-center justify-between pt-8 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto] border-t [border-top-style:solid] border-zinc-800">
+                        <a href="/auth/profile"
+                            class="all-[unset] box-border border border-solid border-zinc-400 inline-flex items-center justify-center px-8 py-3.5 relative flex-[0_0_auto] rounded-lg shadow-[0px_0px_15px_#0ea5e940] cursor-pointer">
+                            <div
+                                class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-400 text-[15px] text-center tracking-[0] leading-[normal] whitespace-nowrap">
+                                Cancel &amp; Return</div>
+                        </a>
+                        <button type="submit"
+                            class="all-[unset] box-border bg-sky-500 inline-flex items-center justify-center px-8 py-3.5 relative flex-[0_0_auto] rounded-lg shadow-[0px_0px_15px_#0ea5e940] cursor-pointer">
+                            <div
+                                class="justify-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-950 text-[15px] text-center tracking-[0] relative flex items-center w-fit leading-[normal]">
+                                Update Profile</div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</body>
+
+<script>
+    (function () {
+        const editBtn    = document.getElementById('email-edit-btn');
+        const editLabel  = document.getElementById('email-edit-label');
+        const penIcon    = document.getElementById('email-pen-icon');
+        const lockIcon   = document.getElementById('email-lock-icon');
+        const wrapper    = document.getElementById('email-input-wrapper');
+        const input      = document.getElementById('email-address');
+        const hint       = document.getElementById('email-edit-hint');
+        const originalEmail = input.value;
+
+        let isEditing = false;
+
+        function enableEdit() {
+            isEditing = true;
+            input.readOnly = false;
+            input.classList.remove('text-zinc-400', 'cursor-not-allowed');
+            input.classList.add('text-zinc-100', 'cursor-text');
+            wrapper.classList.remove('opacity-60', 'border-zinc-700');
+            wrapper.classList.add('border-sky-500', 'shadow-[0px_0px_0px_1px_#0ea5e9]');
+            lockIcon.classList.add('hidden');
+            penIcon.classList.add('text-sky-400');
+            editLabel.textContent = 'Cancel';
+            hint.classList.remove('hidden');
+            input.focus();
+        }
+
+        function disableEdit() {
+            isEditing = false;
+            input.readOnly = true;
+            input.value = originalEmail;
+            input.classList.remove('text-zinc-100', 'cursor-text');
+            input.classList.add('text-zinc-400', 'cursor-not-allowed');
+            wrapper.classList.remove('border-sky-500', 'shadow-[0px_0px_0px_1px_#0ea5e9]');
+            wrapper.classList.add('opacity-60', 'border-zinc-700');
+            lockIcon.classList.remove('hidden');
+            penIcon.classList.remove('text-sky-400');
+            editLabel.textContent = 'Change';
+            hint.classList.add('hidden');
+        }
+
+        editBtn.addEventListener('click', () => {
+            isEditing ? disableEdit() : enableEdit();
+        });
+    })();
+</script>
+
+</html>

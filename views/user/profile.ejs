@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title><%= user.username %> — Profile · PixelPlay</title>
+    <meta name="description" content="Manage your PixelPlay account settings and view your gaming history." />
+    <link rel="stylesheet" href="/globals.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: {} }, plugins: [] };
+    </script>
+</head>
+
+<body class="bg-zinc-950 text-white min-h-screen flex flex-col">
+    <%- include('../partials/user/navbar', { activeTab: 'profile' }) %>
+
+    <div class="[background:radial-gradient(50%_50%_at_50%_75%,rgba(14,165,233,0.15)_0%,rgba(14,165,233,0)_60%)] fixed inset-0 pointer-events-none" aria-hidden="true"></div>
+
+    <main class="relative z-10 flex-1 flex flex-col">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-10">
+            <div class="flex items-start gap-8">
+
+                <!-- ── Sidebar ───────────────────────────────────────────── -->
+                <aside class="flex flex-col w-72 shrink-0 items-start gap-5">
+
+                    <!-- Profile summary card -->
+                    <section aria-label="Profile summary"
+                        class="relative w-full bg-[#071827] rounded-xl overflow-hidden border border-solid border-[#00000014] pt-1">
+                        <!-- Sky accent bar -->
+                        <div class="absolute w-full h-1 top-0 left-0 bg-sky-500 shadow-[0px_0px_15px_#0ea5e9]"></div>
+
+                        <div class="flex flex-col items-center gap-3 px-6 pt-8 pb-6">
+                            <!-- Avatar -->
+                            <div class="relative w-24 h-24 rounded-full border-[3px] border-solid border-[#071827] shadow-[0px_0px_20px_#0ea5e966,0px_0px_0px_2px_#0ea5e9] overflow-hidden bg-[#1a2a3a]">
+                                <% if (user.profile_image) { %>
+                                    <img src="<%= user.profile_image %>" alt="<%= user.username %>'s avatar" class="w-full h-full object-cover" />
+                                <% } else { %>
+                                    <!-- Initials fallback -->
+                                    <div class="w-full h-full flex items-center justify-center [font-family:'Inter-Bold',Helvetica] font-bold text-sky-400 text-3xl select-none">
+                                        <%= user.username.charAt(0).toUpperCase() %>
+                                    </div>
+                                <% } %>
+                                <!-- Online indicator -->
+                                <span class="absolute right-1 bottom-1 w-4 h-4 bg-green-500 rounded-full border-[3px] border-solid border-[#071827]" aria-label="Online"></span>
+                            </div>
+
+                            <!-- Username & handle -->
+                            <div class="flex flex-col items-center gap-0.5">
+                                <h1 class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#e6f7fb] text-xl text-center tracking-[0] leading-[normal]">
+                                    <%= user.username %>
+                                </h1>
+                                <p class="[font-family:'Inter-Regular',Helvetica] font-normal text-[#98bfc9] text-sm text-center">
+                                    <%= user.email %>
+                                </p>
+                            </div>
+
+                        </div>
+                    </section>
+
+                    <!-- Account navigation -->
+                    <nav aria-label="Account sections"
+                        class="flex flex-col w-full py-3 bg-[#071827] rounded-xl border border-solid border-[#00000014]">
+                        <a href="/auth/profile" aria-current="page"
+                            class="flex items-center gap-3 pl-[21px] pr-6 py-3 self-stretch bg-[#0ea5e91a] border-l-[3px] border-l-sky-500">
+                            <svg class="w-[18px] h-[18px] text-sky-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-sky-500 text-sm">Account Overview</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-6 py-3 self-stretch">
+                            <svg class="w-[18px] h-[18px] text-[#bfeaf6] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                            <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-sm">My Library</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-6 py-3 self-stretch">
+                            <svg class="w-[18px] h-[18px] text-[#bfeaf6] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v5"/><path d="M14 21l2 2 4-4"/></svg>
+                            <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-sm">Order History</span>
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-6 py-3 self-stretch">
+                            <svg class="w-[18px] h-[18px] text-[#bfeaf6] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+                            <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-sm">Billing &amp; Payment</span>
+                        </a>
+                        <a href="/auth/profile/addresses" class="flex items-center gap-3 px-6 py-3 self-stretch hover:bg-[#0ea5e90d] transition-colors">
+                            <svg class="w-[18px] h-[18px] text-[#bfeaf6] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-sm">Saved Addresses</span>
+                        </a>
+                        <% if (user.password_hash) { %>
+                        <a href="/auth/profile/password" class="flex items-center gap-3 px-6 py-3 self-stretch hover:bg-[#0ea5e90d] transition-colors">
+                            <svg class="w-[18px] h-[18px] text-[#bfeaf6] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                            <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-sm">Password</span>
+                        </a>
+                        <% } %>
+                        <!-- Sign out via POST to destroy session server-side -->
+                        <form action="/auth/logout" method="post" class="self-stretch">
+                            <button type="submit"
+                                class="all-[unset] box-border flex items-center gap-3 px-6 py-3 w-full cursor-pointer">
+                                <svg class="w-[18px] h-[18px] text-red-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-red-500 text-sm">Sign Out</span>
+                            </button>
+                        </form>
+                    </nav>
+
+                    <!-- Refer & Earn card -->
+                    <% if (user.referral_code) { %>
+                    <section aria-label="Refer and earn"
+                        class="flex flex-col items-start gap-3 px-5 py-[18px] w-full bg-[#071827] rounded-xl border border-solid border-[#00000014]">
+                        <div class="flex items-center gap-2 w-full">
+                            <svg class="w-6 h-6 text-green-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <h2 class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#e6f7fb] text-[13px] leading-[16.9px]">Refer &amp; Earn</h2>
+                        </div>
+                        <p class="[font-family:'Inter-Regular',Helvetica] font-normal text-[#98bfc9] text-xs leading-[18px]">
+                            Refer PixelPlay to friends and earn <span class="text-sky-400 font-semibold">$10 PixelWallet</span> credit when they purchase a game.
+                        </p>
+                        <div class="inline-flex items-center gap-[5px] px-2.5 py-1 bg-[#22c55e14] rounded-full border border-solid border-[#22c55e33]">
+                            <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 12 12" aria-hidden="true"><path d="M10 2L4.5 8 2 5.5"/></svg>
+                            <span class="[font-family:'Inter-SemiBold',Helvetica] font-semibold text-green-500 text-[11px]">+$10 PixelWallet Credit</span>
+                        </div>
+                        <div class="flex items-center gap-2 w-full">
+                            <div class="flex items-center gap-2 px-3 py-2 flex-1 bg-[#0f0f11] rounded border border-solid border-[#0ea5e940]">
+                                <span class="[font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#98bfc9] text-[10px] tracking-[0.60px] shrink-0">YOUR CODE</span>
+                                <span class="[font-family:'Liberation_Mono-Bold',Helvetica] font-bold text-sky-500 text-[13px] tracking-[0.65px]">
+                                    <%= user.referral_code.toUpperCase() %>
+                                </span>
+                            </div>
+                            <button type="button" id="copy-referral-btn" aria-label="Copy referral code"
+                                class="flex items-center justify-center w-8 h-8 bg-[#0ea5e91a] rounded border border-solid border-[#0ea5e933] cursor-pointer hover:bg-[#0ea5e933] transition-colors">
+                                <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                            </button>
+                        </div>
+                    </section>
+                    <% } %>
+                </aside>
+
+                <!-- ── Main content ──────────────────────────────────────── -->
+                <div class="flex flex-col items-start gap-8 flex-1 min-w-0">
+
+                    <!-- Player profile stats -->
+                    <section class="flex flex-col items-start gap-4 w-full" aria-labelledby="profile-stats-heading">
+                        <div class="flex items-center gap-3 w-full">
+                            <svg class="w-5 h-5 text-sky-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <h2 id="profile-stats-heading"
+                                class="[font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6f7fb] text-xl leading-[normal]">
+                                Player Profile
+                            </h2>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 w-full">
+                            <div class="flex flex-col items-start gap-2 p-5 bg-[#071827] rounded-md border border-solid border-[#00000014]">
+                                <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#98bfc9] text-[13px] tracking-[0.50px]">GAMES OWNED</span>
+                                <span class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#e6f7fb] text-[32px] leading-[normal]"><%= user.gamesCount || 0 %></span>
+                            </div>
+                            <div class="flex flex-col items-start gap-2 p-5 bg-[#071827] rounded-md border border-solid border-[#00000014]">
+                                <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#98bfc9] text-[13px] tracking-[0.50px]">LEGENDS UNLOCKED</span>
+                                <span class="[text-shadow:0px_0px_10px_#0ea5e966] [font-family:'Inter-Bold',Helvetica] font-bold text-sky-500 text-[32px] leading-[normal]">12</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Recently Viewed -->
+                    <section class="flex flex-col items-start gap-4 w-full" aria-labelledby="recent-viewed-heading">
+                        <div class="flex items-center gap-3 w-full">
+                            <svg class="w-5 h-5 text-sky-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                            <h2 id="recent-viewed-heading"
+                                class="[font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6f7fb] text-xl leading-[normal]">
+                                Recently Viewed
+                            </h2>
+                        </div>
+                        <div class="flex flex-col gap-3 w-full">
+                            <article class="flex items-center gap-4 p-3 w-full bg-[#071827] rounded-md border border-solid border-[#00000014]">
+                                <div class="relative w-16 h-16 rounded bg-[url(legacy:image:md5:29:1241-no-children)] bg-cover bg-[50%_50%] shrink-0"></div>
+                                <div class="flex flex-col gap-1 flex-1 min-w-0">
+                                    <h3 class="[font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6f7fb] text-[15px] leading-[normal]">Neon Override 2077</h3>
+                                </div>
+                                <button type="button" class="all-[unset] box-border inline-flex items-center justify-center px-4 py-2 bg-[#071019] rounded border border-solid border-[#00000014] cursor-pointer hover:bg-[#0a1828] transition-colors shrink-0">
+                                    <span class="[font-family:'Alegreya_Sans-Regular',Helvetica] font-normal text-[#bfeaf6] text-[13px] text-center">View Page</span>
+                                </button>
+                            </article>
+                            <article class="flex items-center gap-4 p-3 w-full bg-[#071827] rounded-md border border-solid border-[#00000014]">
+                                <div class="relative w-16 h-16 rounded bg-[url(legacy:image:md5:29:1259-no-children)] bg-cover bg-[50%_50%] shrink-0"></div>
+                                <div class="flex flex-col gap-1 flex-1 min-w-0">
+                                    <h3 class="[font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6f7fb] text-[15px] leading-[normal]">Apex Velocity</h3>
+                                </div>
+                                <button type="button" class="all-[unset] box-border inline-flex items-center justify-center px-4 py-2 bg-[#071019] rounded border border-solid border-[#00000014] cursor-pointer hover:bg-[#0a1828] transition-colors shrink-0">
+                                    <span class="[font-family:'Alegreya_Sans-Regular',Helvetica] font-normal text-[#bfeaf6] text-[13px] text-center">View Page</span>
+                                </button>
+                            </article>
+                            <article class="flex items-center gap-4 p-3 w-full bg-[#071827] rounded-md border border-solid border-[#00000014]">
+                                <div class="relative w-16 h-16 rounded bg-[url(legacy:image:md5:29:1273-no-children)] bg-cover bg-[50%_50%] shrink-0"></div>
+                                <div class="flex flex-col gap-1 flex-1 min-w-0">
+                                    <h3 class="[font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6f7fb] text-[15px] leading-[normal]">Chronicles of Aethelgard</h3>
+                                </div>
+                                <button type="button" class="all-[unset] box-border inline-flex items-center justify-center px-4 py-2 bg-[#071019] rounded border border-solid border-[#00000014] cursor-pointer hover:bg-[#0a1828] transition-colors shrink-0">
+                                    <span class="[font-family:'Alegreya_Sans-Regular',Helvetica] font-normal text-[#bfeaf6] text-[13px] text-center">View Page</span>
+                                </button>
+                            </article>
+                        </div>
+                    </section>
+
+                    <!-- Personal Information -->
+                    <section class="flex flex-col items-start gap-4 w-full" aria-labelledby="personal-info-heading">
+                        <div class="flex items-center gap-3 w-full">
+                            <svg class="w-5 h-5 text-sky-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <h2 id="personal-info-heading"
+                                class="[font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6f7fb] text-xl leading-[normal]">
+                                Personal Information
+                            </h2>
+                        </div>
+                        <div class="grid grid-cols-2 gap-5 p-6 w-full bg-[#071827] rounded-md border border-solid border-[#00000014]">
+                            <!-- Email — full width -->
+                            <div class="col-span-2 flex flex-col gap-2">
+                                <label for="profile-email"
+                                    class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-[13px]">Email Address</label>
+                                <input id="profile-email" name="email-address" type="email"
+                                    value="<%= user.email %>"
+                                    readonly
+                                    class="px-3 py-2.5 bg-[#27272a80] rounded border border-solid border-[#00000014] [font-family:'Inter-Regular',Helvetica] font-normal text-[#98bfc9] text-sm outline-none" />
+                            </div>
+                            <!-- Location -->
+                            <div class="flex flex-col gap-2">
+                                <label for="profile-location"
+                                    class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-[13px]">Location</label>
+                                <input id="profile-location" name="location" type="text"
+                                    value="<%= user.location || 'Not Specified' %>"
+                                    readonly
+                                    class="px-3 py-2.5 bg-[#0d1720] rounded border border-solid border-[#00000014] [font-family:'Inter-Regular',Helvetica] font-normal text-[#e6f7fb] text-sm outline-none" />
+                            </div>
+                            <!-- Member since (createdAt from timestamps:true) -->
+                            <div class="flex flex-col gap-2">
+                                <label for="profile-member-since"
+                                    class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-[13px]">Member Since</label>
+                                <input id="profile-member-since" name="member-since" type="text"
+                                    value="<%= user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Not available' %>"
+                                    readonly
+                                    class="px-3 py-2.5 bg-[#27272a80] rounded border border-solid border-[#00000014] [font-family:'Inter-Regular',Helvetica] font-normal text-[#98bfc9] text-sm outline-none" />
+                            </div>
+                            <!-- CTA -->
+                            <div class="col-span-2 pt-2">
+                                <a href="/auth/profile/edit" class="all-[unset] box-border inline-flex items-center justify-center px-4 py-2 bg-sky-500 rounded shadow-[0px_0px_15px_#0ea5e966] cursor-pointer hover:bg-sky-400 transition-colors">
+                                    <span class="[font-family:'Alegreya_Sans-Regular',Helvetica] font-normal text-[#001217] text-[13px] text-center">Edit Profile Details</span>
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Copy referral code to clipboard
+        const copyBtn = document.getElementById('copy-referral-btn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', async () => {
+                const code = '<%= user.referral_code ? user.referral_code.toUpperCase() : "" %>';
+                try {
+                    await navigator.clipboard.writeText(code);
+                    copyBtn.setAttribute('aria-label', 'Copied!');
+                    setTimeout(() => copyBtn.setAttribute('aria-label', 'Copy referral code'), 2000);
+                } catch (_) { /* silent fail on insecure context */ }
+            });
+        }
+    </script>
+</body>
+
+</html>

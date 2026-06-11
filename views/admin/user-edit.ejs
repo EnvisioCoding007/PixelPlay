@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title>Customer Details</title>
+    <link rel="stylesheet" href="globals.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        /** @type {import('tailwindcss').Config} */
+        tailwind.config = {
+            theme: {
+                extend: {
+                },
+            },
+            plugins: [],
+        }
+    </script>
+</head>
+
+<body class="bg-zinc-950 text-white">
+    <div class="flex min-h-screen items-start relative bg-zinc-950">
+        <aside
+            class="flex flex-col w-[250px] items-start px-0 py-6 relative self-stretch bg-[#0c0c10e6] border-r [border-right-style:solid] border-[#ffffff0f] backdrop-blur-[10px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(10px)_brightness(100%)]"
+            aria-label="Sidebar navigation">
+            <div
+                class="flex min-h-[58px] items-center justify-center pt-4 pb-3.5 px-[18px] relative self-stretch w-full flex-[0_0_auto] border-b [border-bottom-style:solid] border-[#00000014]">
+                <div class="relative w-[131px] h-[87px] aspect-[1.5] bg-[url(legacy:image:md5:I139:2222;315:3121-no-children)] bg-cover bg-[50%_50%]"
+                    aria-label="PixelPlay logo" role="img"></div>
+            </div>
+            <nav class="flex flex-col items-start gap-1 px-4 py-0 relative flex-1 self-stretch w-full grow overflow-scroll"
+                aria-label="Primary">
+                <ul class="flex flex-col items-start gap-0.5 relative self-stretch w-full flex-[0_0_auto]">
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded shadow-[inset_0px_0px_12px_#0ea5e91a]">
+                            <img class="relative flex-[0_0_auto]" src="img/iconify-icon-4.svg" alt="" />
+                            <span
+                                class="mt-[-2.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6ab] text-[13px] tracking-[0] relative flex items-center w-fit leading-[normal]">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="pt-0 pb-0.5 px-0 flex-[0_0_auto] flex flex-col items-start relative self-stretch w-full">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded">
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <span class="relative w-[18px] h-[18px]">
+                                    <img class="absolute w-[91.67%] h-[79.17%] top-[20.83%] left-[8.33%]"
+                                        src="img/image.svg" alt="" />
+                                </span>
+                            </span>
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6ab] text-[13px] tracking-[0] leading-[normal]">Listed
+                                Games</span>
+                        </a>
+                    </li>
+                    <li class="pt-0 pb-0.5 px-0 flex-[0_0_auto] flex flex-col items-start relative self-stretch w-full">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded">
+                            <img class="relative flex-[0_0_auto]" src="img/iconify-icon-5.svg" alt="" />
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6ab] text-[13px] tracking-[0] leading-[normal]">Order
+                                Management</span>
+                        </a>
+                    </li>
+                    <li class="pt-0 pb-0.5 px-0 flex-[0_0_auto] flex flex-col items-start relative self-stretch w-full">
+                        <a href="#" aria-current="page"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] bg-[#0ea5e926] rounded border-l-[3px] [border-left-style:solid] border-sky-500">
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <span class="relative w-[18px] h-[18px]">
+                                    <span
+                                        class="relative w-[83.33%] h-[75.00%] top-[12.50%] left-[8.33%] flex bg-[url(legacy:image:md5:I139:2222;100:505)] bg-[100%_100%]">
+                                        <img class="flex-1 w-1.5" src="img/vector-4.svg" alt="" />
+                                    </span>
+                                </span>
+                            </span>
+                            <span
+                                class="mt-[-2.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-sky-500 text-[13px] tracking-[0] relative flex items-center w-fit leading-[normal]">Customers</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded">
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <span class="relative w-[18px] h-[18px]">
+                                    <img class="absolute w-[91.67%] h-[91.67%] top-[8.33%] left-[8.33%]"
+                                        src="img/vector-5.svg" alt="" />
+                                </span>
+                            </span>
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6ab] text-[13px] tracking-[0] leading-[normal]">Reviews</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded">
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <span class="relative w-[18px] h-[18px]">
+                                    <span
+                                        class="w-[83.31%] h-[83.31%] top-[8.33%] left-[8.33%] relative flex bg-[url(legacy:image:md5:I139:2222;100:519)] bg-[100%_100%]">
+                                        <img class="flex-1 w-px" src="img/vector-8.svg" alt="" />
+                                    </span>
+                                </span>
+                            </span>
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6ab] text-[13px] tracking-[0] leading-[normal]">Offers</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded">
+                            <img class="relative flex-[0_0_auto]" src="img/iconify-icon-2.svg" alt="" />
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6ab] text-[13px] tracking-[0] leading-[normal]">Banners</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded">
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <span class="relative w-[18px] h-[18px]">
+                                    <img class="absolute w-[91.67%] h-[79.17%] top-[20.83%] left-[8.33%]"
+                                        src="img/vector-6.svg" alt="" />
+                                </span>
+                            </span>
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6ab] text-[13px] tracking-[0] leading-[normal]">Coupons</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded">
+                            <img class="relative flex-[0_0_auto]" src="img/iconify-icon-3.svg" alt="" />
+                            <span
+                                class="relative flex items-center w-fit [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6ab] text-[13px] tracking-[0] leading-[normal]">Categories</span>
+                        </a>
+                    </li>
+                    <li class="flex flex-col items-start pt-0 pb-0.5 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                        <a href="#"
+                            class="flex items-center gap-3 px-3.5 py-2.5 relative self-stretch w-full flex-[0_0_auto] rounded">
+                            <img class="relative flex-[0_0_auto]" src="img/iconify-icon.svg" alt="" />
+                            <span
+                                class="relative flex items-center w-fit mt-[-2.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6ab] text-[13px] tracking-[0] leading-[normal]">Wallet
+                                Oversight</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <div
+                class="flex flex-col items-start px-2.5 py-3.5 relative self-stretch w-full flex-[0_0_auto] border-t [border-top-style:solid] border-[#00000014]">
+                <button type="button"
+                    class="flex w-[calc(100%_-_12px)] items-center gap-3 px-6 py-3 absolute top-[-67px] left-3 text-left">
+                    <span class="flex w-[18px] h-[18px] items-center justify-center relative" aria-hidden="true">
+                        <span class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                            <span class="relative w-[18px] h-[18px]">
+                                <img class="absolute w-[91.67%] h-[91.67%] top-[8.33%] left-[8.33%]"
+                                    src="img/vector-3.svg" alt="" />
+                            </span>
+                        </span>
+                    </span>
+                    <span
+                        class="mt-[-0.50px] [font-family:'Inter-Medium',Helvetica] font-medium text-red-500 text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Sign
+                        Out</span>
+                </button>
+                <section
+                    class="items-center gap-2.5 p-2.5 self-stretch w-full flex-[0_0_auto] bg-[#111113] rounded-md border border-solid border-[#00000014] flex relative"
+                    aria-label="Current user">
+                    <div
+                        class="flex flex-col w-[30px] h-[30px] items-start justify-center relative rounded-[15px] overflow-hidden border border-solid border-[#d4af37]">
+                        <div class="relative flex-1 self-stretch w-full grow bg-[url(legacy:image:md5:I139:2222;315:3259-no-children)] bg-cover bg-[50%_50%]"
+                            aria-hidden="true"></div>
+                    </div>
+                    <div class="flex flex-col items-start relative flex-1 grow">
+                        <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                            <div
+                                class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-white text-xs tracking-[0] leading-[normal]">
+                                Kira Nova</div>
+                        </div>
+                        <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                            <div
+                                class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#d4af37] text-[10px] tracking-[0] leading-[normal]">
+                                System Administrator</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </aside>
+        <main
+            class="flex flex-col max-w-[1440px] items-start gap-10 px-16 py-12 relative flex-1 grow self-stretch overflow-scroll">
+            <header class="flex items-center gap-6 relative self-stretch w-full flex-[0_0_auto]">
+                <div
+                    class="flex-col w-[72px] h-[72px] items-start justify-center rounded-[36px] overflow-hidden border-2 border-solid border-[#d4af37] shadow-[0px_0px_15px_#d4af3740] flex relative bg-[#121215]">
+                    <div class="relative flex-1 self-stretch w-full grow bg-[url(legacy:image:md5:139:2144-no-children)] bg-cover bg-[50%_50%]"
+                        aria-hidden="true"></div>
+                </div>
+                <div class="inline-flex flex-col items-start gap-[5.6px] relative flex-[0_0_auto]">
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <h1
+                            class="mt-[-1.00px] [font-family:'JetBrains_Mono-Bold',Helvetica] font-bold text-[#d4af37] text-[28px] tracking-[-0.50px] relative flex items-center w-fit leading-[normal]">
+                            Sarah Jenkins</h1>
+                    </div>
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <p
+                            class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[15px] tracking-[0] relative flex items-center w-fit leading-[normal]">
+                            System Administrator • ID: #ADM-77492</p>
+                    </div>
+                </div>
+            </header>
+            <form
+                class="flex flex-col w-full max-w-[1040px] items-start gap-12 p-10 relative flex-[0_0_auto] bg-[#121215bf] rounded-xl border-solid border-t-2 border-r border-b border-l border-[#d4af37] shadow-[inset_0px_1px_0px_#ffffff0d,0px_8px_32px_#00000066] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]"
+                action="#" method="post">
+                <div class="grid grid-cols-2 grid-rows-[381px] h-fit gap-12 w-full">
+                    <section class="relative row-[1_/_2] col-[1_/_2] w-full h-fit flex flex-col items-start gap-8"
+                        aria-labelledby="identity-details-heading">
+                        <div
+                            class="flex flex-col items-start pt-0 pb-6 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                            <div class="flex items-center gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                <h2 id="identity-details-heading"
+                                    class="mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-400 text-xs tracking-[1.50px] relative flex items-center w-fit leading-[normal]">
+                                    IDENTITY DETAILS</h2>
+                                <div class="relative flex-1 grow h-px bg-zinc-800"></div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-start gap-3 relative self-stretch w-full flex-[0_0_auto]">
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <label
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-zinc-100 text-sm tracking-[0] leading-[normal]"
+                                    for="full-name">Full Name</label>
+                            </div>
+                            <div
+                                class="flex flex-col items-start px-5 py-4 relative self-stretch w-full flex-[0_0_auto] bg-[#121215] rounded-md overflow-hidden border border-solid border-[#d4af37] shadow-[inset_0px_0px_10px_1px_#d4af3740,0px_0px_0px_1px_#d4af37]">
+                                <input
+                                    class="relative self-stretch w-full overflow-scroll border-[none] [background:none] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-[15px] tracking-[0] leading-[normal] p-0 outline-none"
+                                    type="text" id="full-name" name="full-name" value="Sarah Jenkins" />
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-start gap-3 relative self-stretch w-full flex-[0_0_auto]">
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <label
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-zinc-100 text-sm tracking-[0] leading-[normal]"
+                                    for="username">Username</label>
+                            </div>
+                            <div
+                                class="flex flex-col items-start px-5 py-4 relative self-stretch w-full flex-[0_0_auto] bg-[#121215] rounded-md overflow-hidden border border-solid border-zinc-700">
+                                <input
+                                    class="relative self-stretch w-full overflow-scroll border-[none] [background:none] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-[15px] tracking-[0] leading-[normal] p-0 outline-none"
+                                    type="text" id="username" name="username" value="sjenkins_admin" />
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-start gap-3 relative self-stretch w-full flex-[0_0_auto]">
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <label
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-zinc-100 text-sm tracking-[0] leading-[normal]"
+                                    for="input-1">Email Address</label>
+                            </div>
+                            <div
+                                class="flex flex-col items-start px-5 py-4 relative self-stretch w-full flex-[0_0_auto] bg-[#121215] rounded-md overflow-hidden border border-solid border-zinc-700">
+                                <input
+                                    class="relative self-stretch w-full overflow-scroll border-[none] [background:none] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-[15px] tracking-[0] leading-[normal] p-0 outline-none"
+                                    placeholder="sarah.jenkins@pixelplay.io" type="email" id="input-1" name="email"
+                                    value="sarah.jenkins@pixelplay.io" />
+                            </div>
+                        </div>
+                    </section>
+                    <section class="relative row-[1_/_2] col-[2_/_3] w-full h-fit flex flex-col items-start gap-8"
+                        aria-labelledby="authorization-status-heading">
+                        <div
+                            class="flex flex-col items-start pt-0 pb-6 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                            <div class="flex items-center gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                <h2 id="authorization-status-heading"
+                                    class="mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-400 text-xs tracking-[1.50px] relative flex items-center w-fit leading-[normal]">
+                                    AUTHORIZATION &amp; STATUS</h2>
+                                <div class="relative flex-1 grow h-px bg-zinc-800"></div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-start gap-3 relative self-stretch w-full flex-[0_0_auto]">
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <label
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-zinc-100 text-sm tracking-[0] leading-[normal]"
+                                    for="account-permissions">Account Permissions</label>
+                            </div>
+                            <div
+                                class="flex flex-col items-start justify-center pl-5 pr-10 py-4 relative self-stretch w-full flex-[0_0_auto] bg-[#121215] rounded-md border border-solid border-[#d4af37] shadow-[inset_0px_0px_10px_1px_#d4af3740,0px_0px_0px_1px_#d4af37]">
+                                <div class="pointer-events-none flex flex-col w-full h-full items-start justify-center pl-[418px] pr-[21px] py-[18.5px] absolute top-0 left-0"
+                                    aria-hidden="true">
+                                    <div class="relative w-4 h-4">
+                                        <img class="absolute w-[75.00%] h-[68.83%] top-[31.17%] left-[25.00%]"
+                                            src="img/vector-2.svg" alt="" />
+                                    </div>
+                                </div>
+                                <select id="account-permissions" name="account-permissions"
+                                    class="relative z-[1] flex items-center self-stretch [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-[15px] tracking-[0] leading-[19px] border-[none] [background:none] p-0 pr-6 appearance-none outline-none">
+                                    <option selected>System Administrator</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div
+                            class="h-[196px] justify-end pt-[109px] pb-0 px-0 flex flex-col items-start relative self-stretch w-full">
+                            <div class="flex flex-col items-start gap-3 relative self-stretch w-full flex-[0_0_auto]">
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                    <label
+                                        class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-zinc-100 text-sm tracking-[0] leading-[normal]"
+                                        for="account-status">Account Status</label>
+                                </div>
+                                <div
+                                    class="items-center justify-between px-5 py-4 self-stretch w-full flex-[0_0_auto] rounded-md border border-solid border-zinc-700 flex relative bg-[#121215]">
+                                    <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                        <div
+                                            class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-zinc-100 text-[15px] tracking-[0] relative flex items-center w-fit leading-[normal]">
+                                            Active</div>
+                                    </div>
+                                    <label
+                                        class="flex-col w-11 h-6 items-end pl-[23px] pr-[3px] py-[3px] bg-[#d4af37] rounded-xl shadow-[0px_0px_10px_#d4af3740] flex relative cursor-pointer"
+                                        for="account-status" aria-label="Toggle account status">
+                                        <input class="sr-only" type="checkbox" id="account-status" name="account-status"
+                                            checked />
+                                        <span class="relative w-[18px] h-[18px] bg-zinc-950 rounded-[9px]"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <div
+                    class="flex items-center justify-between pt-10 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto] border-t [border-top-style:solid] border-zinc-800">
+                    <a href="#" class="inline-flex items-center gap-2 relative flex-[0_0_auto]">
+                        <span class="flex w-4 h-4 items-center justify-center relative" aria-hidden="true">
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                <span class="relative w-4 h-4">
+                                    <img class="absolute w-[79.17%] h-[79.17%] top-[20.83%] left-[20.83%]"
+                                        src="img/vector.svg" alt="" />
+                                </span>
+                            </span>
+                        </span>
+                        <span
+                            class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-zinc-400 text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Return
+                            to User Listing</span>
+                    </a>
+                    <div class="inline-flex items-start gap-4 relative flex-[0_0_auto]">
+                        <button type="submit"
+                            class="all-[unset] box-border inline-flex items-center justify-center gap-2 px-8 py-3.5 relative flex-[0_0_auto] bg-[#d4af37] rounded-md border border-solid shadow-[0px_0px_15px_#d4af3740] cursor-pointer">
+                            <span class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
+                                <span class="relative w-[18px] h-[18px]">
+                                    <span
+                                        class="w-[75.00%] h-[75.00%] top-[12.50%] left-[12.50%] relative flex bg-[url(legacy:image:md5:139:2218)] bg-[100%_100%]">
+                                        <img class="flex-1 w-[7.5px]" src="img/vector-7.svg" alt="" />
+                                    </span>
+                                </span>
+                            </span>
+                            <span
+                                class="justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-950 text-[15px] text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Commit
+                                Changes</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </main>
+    </div>
+</body>
+
+</html>

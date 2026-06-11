@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title>Establish New Delivery Terminal</title>
+    <link rel="stylesheet" href="globals.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        /** @type {import('tailwindcss').Config} */
+        tailwind.config = {
+            theme: {
+                extend: {},
+            },
+            plugins: [],
+        }
+    </script>
+</head>
+
+<body>
+    <main
+        class="flex flex-col min-h-screen items-start relative [background:linear-gradient(180deg,rgba(14,165,233,0.03)_2%,rgba(14,165,233,0)_2%),linear-gradient(90deg,rgba(14,165,233,0.03)_2%,rgba(14,165,233,0)_2%),linear-gradient(0deg,rgba(9,9,11,1)_0%,rgba(9,9,11,1)_100%)]">
+        <section
+            class="flex items-center justify-center px-6 py-[60px] relative self-stretch w-full flex-[0_0_auto] min-h-screen">
+            <div aria-hidden="true"
+                class="absolute top-[calc(50.00%_-_350px)] left-[calc(50.00%_-_350px)] w-[700px] h-[700px] [background:radial-gradient(50%_50%_at_50%_50%,rgba(14,165,233,0.1)_0%,rgba(14,165,233,0)_60%)]">
+            </div>
+            <div
+                class="flex flex-col max-w-[720px] w-full items-start gap-8 px-12 py-10 relative bg-[#121215bf] rounded-2xl border border-solid border-zinc-800 shadow-[0px_0px_20px_#0ea5e91a,0px_16px_40px_#00000099] backdrop-blur-[10px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(10px)_brightness(100%)]">
+                <div aria-hidden="true"
+                    class="absolute w-full h-full top-0 left-0 rounded-2xl [background:linear-gradient(141deg,rgba(14,165,233,0.35)_0%,rgba(14,165,233,0)_30%,rgba(14,165,233,0)_70%,rgba(14,165,233,0.35)_100%)]">
+                </div>
+                <header class="flex flex-col items-start gap-[7px] relative self-stretch w-full flex-[0_0_auto]">
+                    <div class="flex items-center gap-3 relative self-stretch w-full flex-[0_0_auto]">
+                        <img class="relative flex-[0_0_auto]" src="img/container.svg" alt="" aria-hidden="true" />
+                        <h1
+                            class="mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-100 text-2xl tracking-[-0.50px] relative flex items-center w-fit leading-[normal]">
+                            Establish New Delivery Terminal</h1>
+                    </div>
+                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                        <p
+                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[15px] tracking-[0] leading-[22.5px]">
+                            Input details for physical product transmissions.</p>
+                    </div>
+                </header>
+                <form class="relative self-stretch w-full min-h-[780px]" action="#" method="post">
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-2 md:grid-rows-[71px_71px_71px_71px_71px] w-full md:h-[443px] gap-5 pt-0 pb-2 px-0 absolute md:top-0 md:left-0 static md:absolute">
+                        <div
+                            class="relative md:row-[1_/_2] md:col-[1_/_2] w-full h-fit flex flex-col items-start gap-2">
+                            <label for="full-name"
+                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <span
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'JetBrains_Mono-Bold',Helvetica] font-bold text-zinc-300 text-xs tracking-[1.00px] leading-[normal]">FULL
+                                    NAME</span>
+                            </label>
+                            <div
+                                class="items-center relative self-stretch flex-[0_0_auto] overflow-hidden border-sky-500 shadow-[inset_0px_0px_10px_1px_#0ea5e91a,0px_0px_0px_1px_#0ea5e9] flex justify-center w-full bg-zinc-950 rounded-lg border border-solid">
+                                <input id="full-name" name="fullName" type="text" value="Alex Mercer"
+                                    class="flex flex-col items-start pl-11 pr-4 py-[13px] relative flex-1 grow bg-transparent [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-[15px] tracking-[0] leading-[normal] outline-none border-0 min-w-0" />
+                                <img class="absolute top-3.5 left-[17px] w-[18px] h-[18px]" src="img/container-6.svg"
+                                    alt="" aria-hidden="true" />
+                            </div>
+                        </div>
+                        <div
+                            class="relative md:row-[1_/_2] md:col-[2_/_3] w-full h-fit flex flex-col items-start gap-2">
+                            <label for="delivery-contact"
+                                class="flex-col flex items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <span
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'JetBrains_Mono-Bold',Helvetica] font-bold text-zinc-300 text-xs tracking-[1.00px] leading-[normal]">DELIVERY
+                                    CONTACT</span>
+                            </label>
+                            <div
+                                class="items-center justify-center self-stretch w-full flex-[0_0_auto] bg-zinc-950 rounded-lg overflow-hidden border border-solid border-zinc-800 flex relative">
+                                <input id="delivery-contact" name="deliveryContact" type="tel" value="+1 (555) 019-2834"
+                                    class="flex flex-col items-start pl-11 pr-4 py-[13px] relative flex-1 grow bg-transparent [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[15px] tracking-[0] leading-[normal] outline-none border-0 min-w-0" />
+                                <div aria-hidden="true" class="inline-flex items-center absolute top-3.5 left-[17px]">
+                                    <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                        <div class="relative w-[18px] h-[18px]">
+                                            <img class="absolute w-[95.83%] h-[95.83%] top-[4.17%] left-[4.17%]"
+                                                src="img/vector-8.svg" alt="" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="md:row-[2_/_3] relative md:col-[1_/_3] w-full h-fit flex flex-col items-start gap-2">
+                            <label for="address-line-1"
+                                class="flex-col flex items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <span
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'JetBrains_Mono-Bold',Helvetica] font-bold text-zinc-300 text-xs tracking-[1.00px] leading-[normal]">ADDRESS
+                                    LINE 1</span>
+                            </label>
+                            <div
+                                class="items-center justify-center self-stretch w-full flex-[0_0_auto] bg-zinc-950 rounded-lg overflow-hidden border border-solid border-zinc-800 flex relative">
+                                <input id="address-line-1" name="addressLine1" type="text"
+                                    value="142 Neon Boulevard, Sector 4"
+                                    class="flex flex-col items-start pl-11 pr-4 py-[13px] relative flex-1 grow bg-transparent [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[15px] tracking-[0] leading-[normal] outline-none border-0 min-w-0" />
+                                <div aria-hidden="true" class="inline-flex items-center absolute top-3.5 left-[17px]">
+                                    <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                        <div class="relative w-[18px] h-[18px]">
+                                            <img class="absolute w-[91.67%] h-[90.68%] top-[9.32%] left-[8.33%]"
+                                                src="img/vector-5.svg" alt="" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="md:row-[3_/_4] relative md:col-[1_/_3] w-full h-fit flex flex-col items-start gap-2">
+                            <div class="flex items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <label for="address-line-2"
+                                    class="relative flex items-center w-fit mt-[-1.00px] [font-family:'JetBrains_Mono-Bold',Helvetica] font-bold text-zinc-300 text-xs tracking-[1.00px] leading-[normal]">ADDRESS
+                                    LINE 2</label>
+                                <span
+                                    class="mt-[-1.00px] ml-[-1.42e-14px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-600 text-xs tracking-[1.00px] relative flex items-center w-fit leading-[normal]">(Optional)</span>
+                            </div>
+                            <div
+                                class="items-center justify-center self-stretch w-full flex-[0_0_auto] bg-zinc-950 rounded-lg overflow-hidden border border-solid border-zinc-800 flex relative">
+                                <input id="address-line-2" name="addressLine2" type="text"
+                                    placeholder="Apartment, suite, unit, building, floor..."
+                                    class="flex flex-col items-start pl-11 pr-4 py-[13px] relative flex-1 grow bg-transparent [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-600 text-[15px] tracking-[0] leading-[normal] outline-none border-0 min-w-0 placeholder:text-zinc-600" />
+                                <img class="absolute top-3.5 left-[17px] w-[18px] h-[18px]" src="img/image.svg" alt=""
+                                    aria-hidden="true" />
+                            </div>
+                        </div>
+                        <div
+                            class="relative md:row-[4_/_5] md:col-[1_/_2] w-full h-fit flex flex-col items-start gap-2">
+                            <label for="city-town"
+                                class="flex-col flex items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <span
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'JetBrains_Mono-Bold',Helvetica] font-bold text-zinc-300 text-xs tracking-[1.00px] leading-[normal]">CITY
+                                    / TOWN</span>
+                            </label>
+                            <div
+                                class="items-center justify-center self-stretch w-full flex-[0_0_auto] bg-zinc-950 rounded-lg overflow-hidden border border-solid border-zinc-800 flex relative">
+                                <input id="city-town" name="cityTown" type="text" value="New Angeles"
+                                    class="flex flex-col items-start pl-11 pr-4 py-[13px] relative flex-1 grow bg-transparent [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[15px] tracking-[0] leading-[normal] outline-none border-0 min-w-0" />
+                                <img class="absolute top-3.5 left-[17px] w-[18px] h-[18px]" src="img/container-3.svg"
+                                    alt="" aria-hidden="true" />
+                            </div>
+                        </div>
+                        <div
+                            class="relative md:row-[4_/_5] md:col-[2_/_3] w-full h-fit flex flex-col items-start gap-2">
+                            <label for="state-region"
+                                class="flex-col flex items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <span
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'JetBrains_Mono-Bold',Helvetica] font-bold text-zinc-300 text-xs tracking-[1.00px] leading-[normal]">STATE
+                                    / REGION</span>
+                            </label>
+                            <div
+                                class="items-center justify-center self-stretch w-full flex-[0_0_auto] bg-zinc-950 rounded-lg overflow-hidden border border-solid border-zinc-800 flex relative">
+                                <input id="state-region" name="stateRegion" type="text" value="California"
+                                    class="flex flex-col items-start pl-11 pr-4 py-[13px] relative flex-1 grow bg-transparent [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[15px] tracking-[0] leading-[normal] outline-none border-0 min-w-0" />
+                                <img class="absolute top-3.5 left-[17px] w-[18px] h-[18px]" src="img/container-4.svg"
+                                    alt="" aria-hidden="true" />
+                            </div>
+                        </div>
+                        <div
+                            class="relative md:row-[5_/_6] md:col-[1_/_2] w-full h-fit flex flex-col items-start gap-2">
+                            <label for="zip-postal-code"
+                                class="flex-col flex items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <span
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'JetBrains_Mono-Bold',Helvetica] font-bold text-zinc-300 text-xs tracking-[1.00px] leading-[normal]">ZIP
+                                    / POSTAL CODE</span>
+                            </label>
+                            <div
+                                class="items-center justify-center self-stretch w-full flex-[0_0_auto] bg-zinc-950 rounded-lg overflow-hidden border border-solid border-zinc-800 flex relative">
+                                <input id="zip-postal-code" name="zipPostalCode" type="text" value="90210"
+                                    class="flex flex-col items-start pl-11 pr-4 py-[13px] relative flex-1 grow bg-transparent [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[15px] tracking-[0] leading-[normal] outline-none border-0 min-w-0" />
+                                <img class="absolute top-3.5 left-[17px] w-[18px] h-[18px]" src="img/container-2.svg"
+                                    alt="" aria-hidden="true" />
+                            </div>
+                        </div>
+                        <div
+                            class="relative md:row-[5_/_6] md:col-[2_/_3] w-full h-fit flex flex-col items-start gap-2">
+                            <label for="country"
+                                class="flex-col flex items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <span
+                                    class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'JetBrains_Mono-Bold',Helvetica] font-bold text-zinc-300 text-xs tracking-[1.00px] leading-[normal]">COUNTRY</span>
+                            </label>
+                            <div
+                                class="items-center justify-center self-stretch w-full flex-[0_0_auto] bg-zinc-950 rounded-lg overflow-hidden border border-solid border-zinc-800 flex relative">
+                                <select id="country" name="country"
+                                    class="flex flex-col items-start px-11 py-[13px] relative flex-1 grow bg-zinc-950 [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-100 text-[15px] tracking-[0] leading-[normal] outline-none border-0 appearance-none min-w-0">
+                                    <option selected>United States</option>
+                                </select>
+                                <img class="absolute top-3.5 left-[17px] w-[18px] h-[18px] pointer-events-none"
+                                    src="img/container-5.svg" alt="" aria-hidden="true" />
+                                <div aria-hidden="true"
+                                    class="inline-flex items-center absolute top-3.5 right-[17px] pointer-events-none">
+                                    <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                        <div class="relative w-[18px] h-[18px]">
+                                            <img class="absolute w-[79.17%] h-[66.67%] top-[33.33%] left-[20.83%]"
+                                                src="img/vector-9.svg" alt="" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <fieldset
+                        class="flex flex-col w-full items-start absolute md:top-[467px] left-0 top-[540px] border-0 p-0 m-0">
+                        <legend
+                            class="relative flex items-center w-fit mt-[-1.00px] [font-family:'JetBrains_Mono-Bold',Helvetica] font-bold text-zinc-300 text-xs tracking-[1.00px] leading-[normal]">
+                            TERMINAL TYPE</legend>
+                        <div
+                            class="items-start gap-1 p-1 absolute md:top-[24px] top-[24px] left-0 border-zinc-800 flex justify-center w-full bg-zinc-950 rounded-lg border border-solid">
+                            <label
+                                class="flex items-center justify-center gap-2 px-0 py-2.5 relative flex-1 self-stretch grow bg-[#0ea5e91a] rounded-md cursor-pointer">
+                                <input type="radio" name="terminalType" value="home" checked class="sr-only" />
+                                <div aria-hidden="true"
+                                    class="absolute w-full h-full top-0 left-0 bg-[#ffffff01] rounded-md shadow-[inset_0px_0px_0px_1px_#0ea5e9]">
+                                </div>
+                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                    <div class="relative w-4 h-4">
+                                        <div class="relative w-[75.00%] h-[79.17%] top-[8.33%] left-[12.50%]">
+                                            <img class="absolute w-[72.22%] h-[52.63%] top-[47.37%] left-[27.78%]"
+                                                src="img/vector.svg" alt="" />
+                                            <img class="absolute w-[105.56%] h-[105.26%] top-[-5.26%] left-[-5.56%]"
+                                                src="img/vector-2.svg" alt="" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <span
+                                    class="justify-center mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-sky-500 text-sm text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Home</span>
+                            </label>
+                            <label
+                                class="flex items-center justify-center gap-2 px-0 py-2.5 relative flex-1 self-stretch grow rounded-md cursor-pointer">
+                                <input type="radio" name="terminalType" value="office" class="sr-only" />
+                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                    <div class="relative w-4 h-4">
+                                        <div class="w-[83.33%] top-[8.33%] left-[8.33%] relative h-[75.00%]">
+                                            <img class="absolute w-[75.00%] h-[105.56%] top-[-5.56%] left-[25.00%]"
+                                                src="img/vector-6.svg" alt="" />
+                                            <img class="absolute w-[105.00%] h-[83.34%] top-[16.66%] left-[-5.00%]"
+                                                src="img/vector-3.svg" alt="" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <span
+                                    class="justify-center mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-zinc-400 text-sm text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Office</span>
+                            </label>
+                            <label
+                                class="flex items-center justify-center gap-2 px-0 py-2.5 relative flex-1 self-stretch grow rounded-md cursor-pointer">
+                                <input type="radio" name="terminalType" value="other" class="sr-only" />
+                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                    <div class="relative w-4 h-4">
+                                        <img class="absolute w-[91.67%] h-[95.83%] top-[4.17%] left-[8.33%]"
+                                            src="img/vector-4.svg" alt="" />
+                                    </div>
+                                </div>
+                                <span
+                                    class="justify-center mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-zinc-400 text-sm text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Other</span>
+                            </label>
+                        </div>
+                    </fieldset>
+                    <div
+                        class="flex w-full items-center justify-between px-5 py-4 absolute md:top-[562px] left-0 top-[635px] bg-[#0ea5e908] rounded-lg border border-solid border-zinc-800">
+                        <div class="inline-flex flex-col items-start gap-1 relative flex-[0_0_auto]">
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <label for="primary-terminal"
+                                    class="mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-100 text-[15px] tracking-[0] relative flex items-center w-fit leading-[normal]">Set
+                                    as primary delivery terminal</label>
+                            </div>
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <p
+                                    class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[13px] tracking-[0] relative flex items-center w-fit leading-[normal]">
+                                    Future physical product transmissions will default here.</p>
+                            </div>
+                        </div>
+                        <label for="primary-terminal"
+                            class="flex-col w-11 h-6 items-end pl-[22px] pr-0.5 py-0.5 bg-sky-500 rounded-xl shadow-[0px_0px_10px_#0ea5e959] flex relative cursor-pointer">
+                            <input id="primary-terminal" name="primaryTerminal" type="checkbox" checked
+                                class="sr-only" />
+                            <div class="relative w-5 h-5 bg-zinc-100 rounded-[10px] shadow-[0px_2px_4px_#0000004c]">
+                            </div>
+                        </label>
+                    </div>
+                    <div class="flex flex-col w-full items-start gap-4 absolute md:top-[667px] left-0 top-[740px]">
+                        <button type="submit"
+                            class="flex items-center justify-center gap-2.5 p-3.5 relative self-stretch w-full flex-[0_0_auto] bg-sky-500 rounded-lg shadow-[0px_0px_20px_#0ea5e959]">
+                            <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                <div class="relative w-5 h-5">
+                                    <div class="w-[75.00%] top-[12.50%] left-[12.50%] relative h-[75.00%]">
+                                        <img class="absolute w-[105.56%] h-[105.56%] top-[-5.56%] left-[-5.56%]"
+                                            src="img/vector-10.svg" alt="" />
+                                        <img class="absolute w-[83.33%] h-[105.56%] top-[-5.56%] left-[16.67%]"
+                                            src="img/vector-7.svg" alt="" />
+                                    </div>
+                                </div>
+                            </div>
+                            <span
+                                class="justify-center mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-950 text-base text-center tracking-[0.50px] relative flex items-center w-fit leading-[normal]">SAVE
+                                TERMINAL DETAILS</span>
+                        </button>
+                        <button type="button"
+                            class="flex items-center justify-center p-3.5 relative self-stretch w-full flex-[0_0_auto] rounded-lg border border-solid border-transparent">
+                            <span
+                                class="justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-400 text-[15px] text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Cancel
+                                &amp; Return</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>

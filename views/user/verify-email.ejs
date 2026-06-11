@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title>
+        <%= purpose === 'signup' ? 'Verify Email' : purpose === 'email_update' ? 'Verify New Email' : 'Reset Identity' %> - PixelPlay
+    </title>
+    <link rel="stylesheet" href="/globals.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        /** @type {import('tailwindcss').Config} */
+        tailwind.config = {
+            theme: {
+                extend: {},
+            },
+            plugins: [],
+        };
+    </script>
+</head>
+
+<body>
+    <main
+        class="flex flex-col min-h-[1024px] items-start relative [background:linear-gradient(153deg,rgba(19,19,21,0.9)_0%,rgba(0,54,58,0.8)_100%),linear-gradient(0deg,rgba(19,19,21,1)_0%,rgba(19,19,21,1)_100%),linear-gradient(0deg,rgba(255,255,255,1)_0%,rgba(255,255,255,1)_100%)]">
+        <section
+            class="flex items-center justify-center pt-[262.3px] pb-[262.31px] px-6 relative self-stretch w-full flex-[0_0_auto]">
+            <div class="flex flex-col max-w-md w-[448px] items-start relative">
+                <section
+                    class="flex flex-col w-[486px] items-start p-10 relative flex-[0_0_auto] mr-[-38.00px] bg-[#131315cc] border border-solid border-[#353437] backdrop-blur-md backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(12px)_brightness(100%)]">
+                    <div aria-hidden="true"
+                        class="absolute w-[calc(100%_-_2px)] h-[calc(100%_-_1px)] top-px left-px [background:linear-gradient(180deg,rgba(0,240,255,0.05)_0%,rgba(0,240,255,0)_100%)]">
+                    </div>
+                    <div class="flex flex-col items-center relative self-stretch w-full flex-[0_0_auto]">
+                        <div class="inline-flex flex-col items-center gap-4 relative flex-[0_0_auto]">
+                            <div
+                                class="flex w-16 items-center justify-center px-0 py-[11px] relative flex-[0_0_auto] bg-[#2a2a2c] rounded-xl border border-solid border-[#3b494b]">
+                                <div class="inline-flex flex-col items-center relative flex-[0_0_auto]">
+                                    <img class="relative w-[27.07px] h-[29.95px]" src="/img/image.svg" alt="" />
+                                </div>
+                            </div>
+                            <header
+                                class="flex flex-col items-center pt-2 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                                <h1
+                                    class="relative flex items-center justify-center w-[255.61px] h-[39px] mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#e5e1e4] text-[32px] text-center tracking-[-0.32px] leading-[38.4px] whitespace-nowrap">
+                                    <%= purpose === 'signup' ? 'Verify Email' : purpose === 'email_update' ? 'Verify New Email' : 'Reset Identity' %>
+                                </h1>
+                            </header>
+                            <div class="flex flex-col items-center relative self-stretch w-full flex-[0_0_auto]">
+                                <p
+                                    class="w-[334.97px] h-6 [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb] text-base tracking-[0] leading-6 relative flex items-center justify-center mt-[-1.00px] text-center whitespace-nowrap">
+                                    Enter the 6-digit code we sent to your email.
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            class="flex flex-col items-start pt-8 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto]">
+
+                            <div id="alert-message"
+                                class="hidden w-full px-4 py-3 rounded relative text-center text-sm font-medium">
+                            </div>
+
+                            <form id="otpForm"
+                                class="flex flex-col items-center gap-8 relative self-stretch w-full mt-4" action="#"
+                                method="post">
+
+                                <input type="hidden" id="userEmail" value="<%= email %>" />
+                                <input type="hidden" id="authPurpose" value="<%= purpose %>" />
+
+                                <div class="flex gap-3 justify-center w-full">
+                                    <input type="text" maxlength="1"
+                                        class="otp-input w-12 h-14 text-center text-2xl bg-[#201f22] text-white border border-[#3b494b] rounded focus:border-[#00f0ff] focus:outline-none transition-colors" />
+                                    <input type="text" maxlength="1"
+                                        class="otp-input w-12 h-14 text-center text-2xl bg-[#201f22] text-white border border-[#3b494b] rounded focus:border-[#00f0ff] focus:outline-none transition-colors" />
+                                    <input type="text" maxlength="1"
+                                        class="otp-input w-12 h-14 text-center text-2xl bg-[#201f22] text-white border border-[#3b494b] rounded focus:border-[#00f0ff] focus:outline-none transition-colors" />
+                                    <input type="text" maxlength="1"
+                                        class="otp-input w-12 h-14 text-center text-2xl bg-[#201f22] text-white border border-[#3b494b] rounded focus:border-[#00f0ff] focus:outline-none transition-colors" />
+                                    <input type="text" maxlength="1"
+                                        class="otp-input w-12 h-14 text-center text-2xl bg-[#201f22] text-white border border-[#3b494b] rounded focus:border-[#00f0ff] focus:outline-none transition-colors" />
+                                    <input type="text" maxlength="1"
+                                        class="otp-input w-12 h-14 text-center text-2xl bg-[#201f22] text-white border border-[#3b494b] rounded focus:border-[#00f0ff] focus:outline-none transition-colors" />
+                                </div>
+
+                                <button type="submit" id="submit-btn"
+                                    class="all-[unset] box-border flex items-center justify-center gap-2 px-0 py-4 relative self-stretch w-full flex-[0_0_auto] bg-[#00f0ff] cursor-pointer hover:bg-[#00c8d4] transition-colors mt-4">
+                                    <div class="inline-flex flex-col items-center relative flex-[0_0_auto]">
+                                        <div
+                                            class="w-[85.06px] h-3 [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#006970] text-xs tracking-[1.20px] leading-3 relative flex items-center justify-center mt-[-1.00px] text-center whitespace-nowrap">
+                                            VERIFY CODE
+                                        </div>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
+                        <footer
+                            class="flex flex-col items-start pt-8 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                            <div
+                                class="flex flex-col items-start pt-4 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto] border-t [border-top-style:solid] border-[#353437]">
+                                <div
+                                    class="flex items-center justify-center gap-2 relative self-stretch w-full flex-[0_0_auto]">
+                                    <div class="flex flex-col w-[406px] items-center relative ml-[-1.00px] mr-[-1.00px]">
+                                        <div id="timerContainer"
+                                            class="relative flex items-center justify-center w-[228px] h-6 mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-transparent text-base text-center tracking-[0] leading-6 whitespace-nowrap">
+                                            <span class="text-[#b9cacb]">Resend OTP in&nbsp;</span>
+                                            <span id="countdown" class="text-red-500">01:00</span>
+                                        </div>
+
+                                        <%# Bug 2 Fix: changed <a> to a <button type="button"> so that clicking it
+                                            cannot trigger a browser navigation / parse error. The old <a> tag without
+                                            an href value caused "Network Error" in some browsers when treated as a
+                                            relative link. A <button> is semantically correct for a JS-only action. %>
+                                        <button id="resendButton" type="button"
+                                            class="hidden all-[unset] box-border text-[#00f0ff] [font-family:'Inter-Bold',Helvetica] font-bold text-base cursor-pointer hover:underline transition-all">
+                                            Resend OTP
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </footer>
+                    </div>
+                </section>
+            </div>
+        </section>
+    </main>
+    <script>
+        const otpForm    = document.getElementById('otpForm');
+        const alertMsg   = document.getElementById('alert-message');
+        const inputs     = otpForm.querySelectorAll('input[type="text"]');
+        const submitBtn  = document.getElementById('submit-btn');
+
+        // ── Bug 2 Fix: hoist `purpose` into outer scope so the resend handler
+        // can reference it directly — previously it was read inside the submit
+        // handler closure only, making it `undefined` in the resend click handler.
+        const currentEmail = document.getElementById('userEmail').value;
+        const purpose      = document.getElementById('authPurpose').value;
+
+        // ── OTP box UX: auto-advance, backspace, paste ────────────────────────────
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasteData = e.clipboardData.getData('text').slice(0, inputs.length);
+                if (/^\d+$/.test(pasteData)) {
+                    pasteData.split('').forEach((char, i) => {
+                        if (inputs[i]) {
+                            inputs[i].value = char;
+                            if (i < inputs.length - 1) inputs[i + 1].focus();
+                        }
+                    });
+                }
+            });
+        });
+
+        const displayAlert = (msg, type) => {
+            alertMsg.textContent = msg;
+            alertMsg.className = `w-full px-4 py-3 rounded relative text-center text-sm font-medium mb-4 ${
+                type === 'success'
+                    ? 'bg-green-100 border border-green-400 text-green-700'
+                    : 'bg-red-100 border border-red-400 text-red-700'
+            }`;
+        };
+
+        // ── Bug 6 Fix: on successful OTP submission the handler now always
+        // redirects regardless of whether a redirectUrl key is present —
+        // it falls back to /auth/login for signup and /auth/reset-password
+        // for the forgot-password flow. The old guard `if (data.redirectUrl)`
+        // silently swallowed the redirect when the key was absent. ─────────────
+        otpForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            alertMsg.classList.add('hidden');
+
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.7';
+
+            const otpCode = Array.from(inputs).map(input => input.value).join('');
+
+            if (!currentEmail || otpCode.length !== 6) {
+                displayAlert('Please ensure you entered all 6 digits.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                return;
+            }
+
+            const endpoint = purpose === 'signup'
+                ? '/auth/verify-email'
+                : purpose === 'email_update'
+                    ? '/auth/verify-email-update'
+                    : '/auth/reset-password-otp';
+
+            const fallbackRedirect = purpose === 'signup'
+                ? '/auth/login'
+                : purpose === 'email_update'
+                    ? '/auth/profile'
+                    : '/auth/reset-password';
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentEmail, otp: otpCode, purpose })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayAlert(data.message || 'Verification successful.', 'success');
+                    // Always redirect — use server-provided URL or the flow fallback.
+                    setTimeout(() => {
+                        window.location.href = data.redirectUrl || fallbackRedirect;
+                    }, 1000);
+                } else {
+                    displayAlert(data.message || 'Verification failed. Please try again.', 'error');
+                    clearOtpInputs();
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                }
+            } catch (error) {
+                displayAlert('An error occurred. Please try again.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+            }
+        });
+
+        // ── Countdown timer ───────────────────────────────────────────────────────
+        const timerContainer = document.getElementById('timerContainer');
+        const countdownElement = document.getElementById('countdown');
+        const resendButton = document.getElementById('resendButton');
+
+        let timerInterval;
+
+        function startTimer(durationInSeconds) {
+            let timeLeft = durationInSeconds;
+            timerContainer.classList.remove('hidden');
+            resendButton.classList.add('hidden');
+
+            timerInterval = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                countdownElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerContainer.classList.add('hidden');
+                    resendButton.classList.remove('hidden');
+                }
+                timeLeft--;
+            }, 1000);
+        }
+
+        startTimer(60);
+
+        // ── Bug 2 Fix: resend handler now reads `purpose` from the hoisted
+        // outer-scope variable (not from an undefined inner closure var).
+        // The fetch body now correctly includes the purpose field so the
+        // server routes the OTP to the right email template. ────────────────────
+        resendButton.addEventListener('click', async () => {
+            try {
+                resendButton.textContent = 'Sending…';
+                resendButton.style.pointerEvents = 'none';
+
+                const response = await fetch('/auth/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentEmail, purpose })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resendButton.textContent = 'Resend OTP';
+                    resendButton.style.pointerEvents = 'auto';
+                    startTimer(60);
+                    alertMsg.classList.add('hidden');
+                    clearOtpInputs();
+                    displayAlert(data.message || 'OTP resent successfully.', 'success');
+                } else {
+                    displayAlert(data.message || 'Failed to resend code.', 'error');
+                    resendButton.textContent = 'Resend OTP';
+                    resendButton.style.pointerEvents = 'auto';
+                }
+            } catch (error) {
+                displayAlert('Network error. Could not resend OTP.', 'error');
+                resendButton.textContent = 'Resend OTP';
+                resendButton.style.pointerEvents = 'auto';
+            }
+        });
+
+        function clearOtpInputs() {
+            inputs.forEach(input => input.value = '');
+            inputs[0].focus();
+        }
+    </script>
+</body>
+
+</html>
