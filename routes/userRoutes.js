@@ -1,11 +1,11 @@
 import { isUserAuth, isUserUnAuth } from '../middleware/auth.js';
 import express from 'express';
 import passport from 'passport';
+import { upload } from '../config/cloudinary.js';
 
 import * as userController from '../controllers/userController.js';
 
 const router = express.Router();
-
 
 router.get('/auth/signup', isUserUnAuth, userController.getSignupPage);
 
@@ -38,21 +38,29 @@ router.get('/auth/google', passport.authenticate('google', {
     prompt: 'select_account'
 }));
 
-router.get('/auth/google/callback',
-    passport.authenticate('google', { session: false, failureRedirect: '/auth/login' }),
-    (req, res) => {
-        req.session.user = req.user._id;
-        res.redirect('/home');
-    }
-);
-
-router.get('/', (req, res) => {
-    res.redirect('/home');
+// Custom passport callback is used so that a blocked-user failure can surface
+// an error message on the login page instead of silently redirecting.
+router.get('/auth/google/callback', (req, res, next) => {
+    passport.authenticate('google', { session: false }, (err, user, info) =>
+        userController.handleGoogleCallback(req, res, next, err, user, info)
+    )(req, res, next);
 });
 
-router.get('/home', isUserAuth, userController.getHome);
+router.get('/', userController.getHome);
+
+router.get('/home', userController.getHome);
+
+router.get('/browse', userController.getBrowsePage);
+router.get('/products/:id', userController.getProductDetails);
 
 router.get('/auth/profile', isUserAuth, userController.getProfile);
+router.get('/auth/wishlist', isUserAuth, userController.getWishlist);
+router.post('/auth/wishlist/toggle', isUserAuth, userController.toggleWishlist);
+
+router.get('/auth/cart', isUserAuth, userController.getCart);
+router.post('/auth/cart/add', isUserAuth, userController.addToCart);
+router.post('/auth/cart/update-quantity', isUserAuth, userController.updateCartQuantity);
+router.post('/auth/cart/remove', isUserAuth, userController.removeFromCart);
 
 router.get('/auth/profile/edit', isUserAuth, userController.getProfileEdit);
 
@@ -68,11 +76,13 @@ router.post('/auth/profile/password', isUserAuth, userController.updatePassword)
 
 router.get('/auth/profile/addresses', isUserAuth, userController.getAddresses);
 
-router.post('/auth/profile/addresses/add', isUserAuth, userController.addAddress);
+router.put('/auth/profile/addresses/add', isUserAuth, userController.addAddress);
 
-router.post('/auth/profile/addresses/edit/:addressId', isUserAuth, userController.editAddress);
+router.patch('/auth/profile/addresses/edit/:addressId', isUserAuth, userController.editAddress);
 
-router.post('/auth/profile/addresses/delete/:addressId', isUserAuth, userController.deleteAddress);
+router.delete('/auth/profile/addresses/delete/:addressId', isUserAuth, userController.deleteAddress);
+
+router.post('/profile/update-avatar',upload.single('avatar'),userController.updateAvatar);
 
 router.post('/auth/logout', userController.logout);
 

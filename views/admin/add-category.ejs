@@ -1,0 +1,230 @@
+<%- include('../partials/admin/header') %>
+<body class="bg-pixel-bg text-gray-300 min-h-screen flex text-sm">
+<%- include('../partials/admin/sidebar', { activeTab: 'categories' }) %>
+<main class="content-bg flex-1 flex flex-col overflow-hidden relative">
+  <!-- Header -->
+  <header class="flex items-center justify-between px-8 py-6 border-b border-border-dark">
+    <h1 class="text-2xl font-bold text-white">Category Management</h1>
+  </header>
+
+  <!-- Content Area -->
+  <div class="flex-1 overflow-y-auto p-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <!-- Create Category Form Column -->
+      <div class="lg:col-span-4 bg-card-bg rounded-xl border border-border-dark p-6 shadow-2xl h-fit">
+        <div class="mb-6">
+          <h2 class="text-lg font-semibold text-white">Create Category</h2>
+          <p class="text-xs text-gray-500 mt-1">Add a new taxonomy to your library.</p>
+        </div>
+        <form id="createCategoryForm" action="/admin/categories" method="POST" enctype="multipart/form-data" class="space-y-5">
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Category Name</label>
+            <input name="name" type="text" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue" placeholder="e.g. RPG, Shooter" required />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Category Description</label>
+            <textarea name="description" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue resize-none" placeholder="Brief description of this category..." rows="4"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Default Offer / Discount</label>
+            <input name="defaultOffer" type="text" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue" placeholder="e.g. 10 or 10%" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Category Icon</label>
+            <div id="dropzone" class="border-2 border-dashed border-input-dark-border hover:border-pixel-blue/50 rounded-lg p-6 flex flex-col items-center justify-center text-center bg-content-bg/50 cursor-pointer transition-colors">
+              <input type="file" name="icon" id="categoryIcon" class="hidden" accept="image/*" />
+              <div class="w-12 h-12 rounded-full bg-pixel-blue/10 flex items-center justify-center mb-3 text-pixel-blue">
+                <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+              </div>
+              <h3 class="text-sm font-semibold text-white mb-1">Drop Category Icon Here</h3>
+              <p class="text-xs text-gray-500 mb-2">Drag &amp; drop your image, or <button id="browseBtn" class="text-pixel-blue hover:underline font-medium" type="button">browse files</button></p>
+              <p class="text-[11px] text-gray-500">Supports PNG, JPG · Max file size: 2MB ·<br/>Recommended: 300x300px</p>
+              <p id="fileNameDisplay" class="text-xs text-pixel-yellow font-medium mt-3 hidden"></p>
+            </div>
+          </div>
+          <button class="w-full bg-pixel-blue hover:bg-pixel-blue-hover text-background-dark font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors" type="submit">
+            Add Category
+          </button>
+        </form>
+      </div>
+      <!-- Category List Column -->
+      <div class="lg:col-span-8 space-y-4">
+        <div class="grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold tracking-wider text-gray-500 uppercase">
+          <div class="col-span-4">Category Name</div>
+          <div class="col-span-2 text-center">Total Games</div>
+          <div class="col-span-3">Default Offer</div>
+          <div class="col-span-2 text-center">Visibility</div>
+          <div class="col-span-1 text-right">Actions</div>
+        </div>
+        <div class="space-y-3">
+          <% if (categories && categories.length > 0) { %>
+            <% categories.forEach(cat => { %>
+              <div class="bg-card-bg border border-border-dark rounded-xl p-4 grid grid-cols-12 gap-4 items-center shadow-md">
+                <div class="col-span-4 font-semibold text-gray-200 text-sm">
+                  <%= cat.name %>
+                </div>
+                <div class="col-span-2 flex justify-center">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#1a2432] text-pixel-blue border border-pixel-blue/20">
+                    <%= cat.gameCount || 0 %> Titles
+                  </span>
+                </div>
+                <div class="col-span-3 text-sm text-gray-400">
+                  <%= (cat.defaultOffer && cat.defaultOffer > 0) ? cat.defaultOffer : 'None' %>
+                </div>
+                <div class="col-span-2 flex justify-center">
+                  <button aria-checked="<%= cat.status !== 'Hidden' %>" 
+                          data-id="<%= cat._id %>"
+                          class="category-status-toggle relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none <%= cat.status !== 'Hidden' ? 'bg-pixel-blue' : 'bg-slate-700' %>" 
+                          role="switch" type="button">
+                    <span aria-hidden="true" 
+                          class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out <%= cat.status !== 'Hidden' ? 'translate-x-4' : 'translate-x-0' %>"></span>
+                  </button>
+                </div>
+                <div class="col-span-1 flex justify-end gap-2 text-gray-500">
+                  <button data-id="<%= cat._id %>" class="category-edit-btn hover:text-white transition-colors">
+                    <i class="fa-solid fa-pen text-sm"></i>
+                  </button>
+                  <button data-id="<%= cat._id %>" class="category-delete-btn hover:text-pixel-red transition-colors">
+                    <i class="fa-solid fa-trash text-sm"></i>
+                  </button>
+                </div>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <div class="bg-card-bg border border-border-dark rounded-xl p-8 text-center text-gray-500 text-sm">
+              No active categories found in the database.
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Dynamic file select text display inside category icon dropzone
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('categoryIcon');
+  const browseBtn = document.getElementById('browseBtn');
+  const fileNameDisplay = document.getElementById('fileNameDisplay');
+
+  if (dropzone && fileInput) {
+    dropzone.addEventListener('click', (e) => {
+      if (e.target !== browseBtn) {
+        fileInput.click();
+      }
+    });
+
+    fileInput.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    if (browseBtn) {
+      browseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fileInput.click();
+      });
+    }
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length > 0) {
+        fileNameDisplay.textContent = 'Selected: ' + fileInput.files[0].name;
+        fileNameDisplay.classList.remove('hidden');
+      } else {
+        fileNameDisplay.textContent = '';
+        fileNameDisplay.classList.add('hidden');
+      }
+    });
+
+    // Drag and drop handlers
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('border-pixel-blue');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('border-pixel-blue');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('border-pixel-blue');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        fileNameDisplay.textContent = 'Selected: ' + fileInput.files[0].name;
+        fileNameDisplay.classList.remove('hidden');
+      }
+    });
+  }
+
+  // Handle Category Status Toggle
+  document.querySelectorAll('.category-status-toggle').forEach(button => {
+    button.addEventListener('click', async function() {
+      const catId = this.getAttribute('data-id');
+      const isCurrentlyActive = this.getAttribute('aria-checked') === 'true';
+      
+      if (isCurrentlyActive) {
+        const confirmUnlist = confirm("Disclaimer: Unlisting this category will hide all associated games from storefront filter options. Are you sure you want to proceed?");
+        if (!confirmUnlist) return;
+      } else {
+        const confirmList = confirm("Disclaimer: Listing this category will make it visible to customers on the storefront. Are you sure you want to proceed?");
+        if (!confirmList) return;
+      }
+      
+      try {
+        const response = await fetch(`/admin/categories/toggle-status/${catId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const result = await response.json();
+        if (response.ok && result.success) {
+          window.location.reload();
+        } else {
+          alert(result.message || 'Failed to toggle category status.');
+        }
+      } catch (err) {
+        console.error('Error toggling status:', err);
+        alert('An error occurred. Please try again.');
+      }
+    });
+  });
+
+  // Handle Category Edit button click
+  document.querySelectorAll('.category-edit-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const catId = this.getAttribute('data-id');
+      window.location.href = `/admin/categories/edit/${catId}`;
+    });
+  });
+
+  // Handle Category Delete button click
+  document.querySelectorAll('.category-delete-btn').forEach(button => {
+    button.addEventListener('click', async function() {
+      const catId = this.getAttribute('data-id');
+      const confirmDelete = confirm("Are you sure you want to delete this category?");
+      if (!confirmDelete) return;
+
+      try {
+        const response = await fetch(`/admin/categories/delete/${catId}`, {
+          method: 'POST'
+        });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          window.location.reload();
+        } else {
+          alert(result.message || 'Failed to delete category.');
+        }
+      } catch (err) {
+        console.error('Error deleting category:', err);
+        alert('An error occurred. Please try again.');
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/admin/footer') %>
+</body>
+</html>

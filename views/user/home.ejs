@@ -11,23 +11,55 @@
         /** @type {import('tailwindcss').Config} */
         tailwind.config = {
             theme: {
-                extend: {},
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#00A3FF',
+                            dark: '#0082CC',
+                            light: '#33B5FF',
+                        },
+                        legend: {
+                            DEFAULT: '#FFB800',
+                            dark: '#CC9300',
+                            light: '#FFC633',
+                        }
+                    }
+                },
             },
             plugins: [],
         }
     </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <style>
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 </head>
 
 <body class="bg-zinc-950 text-white min-h-screen flex flex-col">
-    <%- include('../partials/user/navbar', { activeTab: 'home' }) %>
+    <% 
+      const showDelivery = (typeof user !== 'undefined' && user && user.addresses && user.addresses.some(addr => addr.postal_code));
+    %>
+    <%- include('../partials/user/navbar', { activeTab: 'home' , user: user }) %>
 
         <main class="flex flex-col w-full items-center gap-12 pt-8 pb-16 relative">
             <!-- Segment 1: Latest Release, Categories, and Latest & Popular Games -->
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 w-full">
                 <section class="flex h-[480px] items-end relative self-stretch w-full rounded-xl overflow-hidden"
                     aria-labelledby="featured-release-title">
-                    <div class="absolute w-full h-full top-0 left-0 bg-[url(legacy:image:md5:10:49-no-children)] bg-cover bg-[50%_50%]"
-                        aria-hidden="true"></div>
+                    <% if (typeof latestRelease !== 'undefined' && latestRelease) { %>
+                        <div class="absolute w-full h-full top-0 left-0 bg-cover bg-[50%_50%]"
+                            style="background-image: url('<%= latestRelease.coverImageUrl || latestRelease.cover_image %>');"
+                            aria-hidden="true"></div>
+                    <% } else { %>
+                        <div class="absolute w-full h-full top-0 left-0 bg-[url('/img/games/neon_override_hero.png')] bg-cover bg-[50%_50%]"
+                            aria-hidden="true"></div>
+                    <% } %>
                     <div class="absolute w-full h-full top-0 left-0 [background:linear-gradient(90deg,rgba(9,9,11,0.95)_0%,rgba(9,9,11,0.4)_50%,rgba(9,9,11,0)_100%),linear-gradient(0deg,rgba(9,9,11,0.95)_0%,rgba(9,9,11,0)_40%)]"
                         aria-hidden="true"></div>
                     <div
@@ -50,50 +82,121 @@
                             class="pt-[3.9px] pb-[0.8px] px-0 self-stretch w-full flex-[0_0_auto] flex flex-col items-start relative">
                             <h1 id="featured-release-title"
                                 class="flex items-center mt-[-1.00px] [text-shadow:0px_2px_12px_#00000080] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-white text-5xl tracking-[0] leading-[52.8px] whitespace-nowrap relative w-fit">
-                                Neon Override 2077</h1>
+                                <%= typeof latestRelease !== 'undefined' && latestRelease ? latestRelease.title : 'Neon Override 2077' %></h1>
                         </div>
                         <div
                             class="flex flex-col items-start pt-0 pb-[0.69px] px-0 relative self-stretch w-full flex-[0_0_auto]">
                             <p
                                 class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-base tracking-[0] leading-[25.6px] relative w-fit">
-                                Dive into a relentless, neon-drenched metropolis where corporate<br />syndicates rule
-                                and rogue
-                                AI dictate the streets. Reclaim the<br />override key before the system purges.</p>
+                                <%= typeof latestRelease !== 'undefined' && latestRelease ? latestRelease.description : 'Dive into a relentless, neon-drenched metropolis where corporate syndicates rule and rogue AI dictate the streets. Reclaim the override key before the system purges.' %></p>
                         </div>
                         <div
                             class="flex items-center gap-4 pt-[16.9px] pb-0 px-0 relative self-stretch w-full flex-[0_0_auto]">
-                            <button type="button"
-                                class="all-[unset] box-border px-8 py-0 bg-sky-500 shadow-[0px_0px_24px_#0ea5e94c] inline-flex h-12 items-center justify-center gap-2 relative flex-[0_0_auto] rounded-md cursor-pointer"
-                                aria-label="Buy Neon Override 2077 now">
-                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
-                                    aria-hidden="true">
-                                    <div class="relative w-[18px] h-[18px]">
-                                        <img class="absolute w-[83.33%] h-[91.67%] top-[8.33%] left-[16.67%]"
-                                            src="img/vector-2.svg" alt="" />
+                            <% if (typeof latestRelease !== 'undefined' && latestRelease) { %>
+                                <% if (typeof user !=='undefined' && user) { %>
+                                    <button type="button"
+                                        onclick="window.location.href='/products/<%= latestRelease._id %>'"
+                                        class="all-[unset] box-border px-8 py-0 bg-sky-500 shadow-[0px_0px_24px_#0ea5e94c] inline-flex h-12 items-center justify-center gap-2 relative flex-[0_0_auto] rounded-md cursor-pointer"
+                                        aria-label="Buy <%= latestRelease.title %> now">
+                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                            aria-hidden="true">
+                                            <!-- <div class="relative w-[18px] h-[18px]">
+                                                <img class="absolute w-[83.33%] h-[91.67%] top-[8.33%] left-[16.67%]"
+                                                    src="icons/bag-icon.svg" alt="" />
+                                            </div> -->
+                                        </div>
+                                        <span
+                                            class="relative flex items-center justify-center w-fit [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-[#061323] text-base text-center tracking-[0] leading-[normal] whitespace-nowrap">Buy
+                                            Now</span>
+                                    </button>
+                                <% } else { %>
+                                    <a href="/auth/login"
+                                        class="all-[unset] box-border px-8 py-0 bg-sky-500 shadow-[0px_0px_24px_#0ea5e94c] inline-flex h-12 items-center justify-center gap-2 relative flex-[0_0_auto] rounded-md cursor-pointer"
+                                        aria-label="Sign in to purchase <%= latestRelease.title %>">
+                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                            aria-hidden="true">
+                                            <!-- <div class="relative w-[18px] h-[18px]">
+                                                <img class="absolute w-[83.33%] h-[91.67%] top-[8.33%] left-[16.67%]"
+                                                    src="img/vector-2.svg" alt="" />
+                                            </div> -->
+                                        </div>
+                                        <span
+                                            class="relative flex items-center justify-center w-fit [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-[#061323] text-base text-center tracking-[0] leading-[normal] whitespace-nowrap">Sign
+                                            In to Purchase</span>
+                                    </a>
+                                <% } %>
+                                <button type="button"
+                                    onclick="window.location.href='/products/<%= latestRelease._id %>'"
+                                    class="all-[unset] box-border px-6 py-0 bg-[#ffffff1a] border border-solid border-[#ffffff33] backdrop-blur-sm backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(4px)_brightness(100%)] inline-flex h-12 items-center justify-center gap-2 relative flex-[0_0_auto] rounded-md cursor-pointer"
+                                    aria-label="View details for <%= latestRelease.title %>">
+                                    <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                        aria-hidden="true">
+                                        <!-- <div class="relative w-[18px] h-[18px]">
+                                            <div
+                                                class="relative w-[83.33%] h-[83.33%] top-[8.33%] left-[8.33%]">
+                                                <img class="absolute w-[105.00%] h-[105.00%] top-[-5.00%] left-[-5.00%]"
+                                                    src="icons/information-icon.svg" alt="" />
+                                                <img class="absolute w-[55.00%] h-[75.00%] top-[25.00%] left-[45.00%]"
+                                                    src="icons/information-icon.svg" alt="" />
+                                            </div>
+                                        </div> -->
                                     </div>
-                                </div>
-                                <span
-                                    class="relative flex items-center justify-center w-fit [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-[#061323] text-base text-center tracking-[0] leading-[normal] whitespace-nowrap">Buy
-                                    Now</span>
-                            </button>
-                            <button type="button"
-                                class="all-[unset] box-border px-6 py-0 bg-[#ffffff1a] border border-solid border-[#ffffff33] backdrop-blur-sm backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(4px)_brightness(100%)] inline-flex h-12 items-center justify-center gap-2 relative flex-[0_0_auto] rounded-md cursor-pointer"
-                                aria-label="View details for Neon Override 2077">
-                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
-                                    aria-hidden="true">
-                                    <div class="relative w-[18px] h-[18px]">
-                                        <div class="relative w-[83.33%] h-[83.33%] top-[8.33%] left-[8.33%]">
-                                            <img class="absolute w-[105.00%] h-[105.00%] top-[-5.00%] left-[-5.00%]"
-                                                src="img/vector-3.svg" alt="" />
-                                            <img class="absolute w-[55.00%] h-[75.00%] top-[25.00%] left-[45.00%]"
-                                                src="img/vector-7.svg" alt="" />
+                                    <span
+                                        class="relative flex items-center justify-center w-fit [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-white text-base text-center tracking-[0] leading-[normal] whitespace-nowrap">View
+                                        Details</span>
+                                </button>
+                            <% } else { %>
+                                <% if (typeof user !=='undefined' && user) { %>
+                                    <button type="button"
+                                        class="all-[unset] box-border px-8 py-0 bg-sky-500 shadow-[0px_0px_24px_#0ea5e94c] inline-flex h-12 items-center justify-center gap-2 relative flex-[0_0_auto] rounded-md cursor-pointer"
+                                        aria-label="Buy Neon Override 2077 now">
+                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                            aria-hidden="true">
+                                            <div class="relative w-[18px] h-[18px]">
+                                                <img class="absolute w-[83.33%] h-[91.67%] top-[8.33%] left-[16.67%]"
+                                                    src="icons/bag-icon.svg" alt="" />
+                                            </div>
+                                        </div>
+                                        <span
+                                            class="relative flex items-center justify-center w-fit [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-[#061323] text-base text-center tracking-[0] leading-[normal] whitespace-nowrap">Buy
+                                            Now</span>
+                                    </button>
+                                <% } else { %>
+                                    <a href="/auth/login"
+                                        class="all-[unset] box-border px-8 py-0 bg-sky-500 shadow-[0px_0px_24px_#0ea5e94c] inline-flex h-12 items-center justify-center gap-2 relative flex-[0_0_auto] rounded-md cursor-pointer"
+                                        aria-label="Sign in to purchase Neon Override 2077">
+                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                            aria-hidden="true">
+                                            <div class="relative w-[18px] h-[18px]">
+                                                <img class="absolute w-[83.33%] h-[91.67%] top-[8.33%] left-[16.67%]"
+                                                    src="img/vector-2.svg" alt="" />
+                                            </div>
+                                        </div>
+                                        <span
+                                            class="relative flex items-center justify-center w-fit [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-[#061323] text-base text-center tracking-[0] leading-[normal] whitespace-nowrap">Sign
+                                            In to Purchase</span>
+                                    </a>
+                                <% } %>
+                                <button type="button"
+                                    class="all-[unset] box-border px-6 py-0 bg-[#ffffff1a] border border-solid border-[#ffffff33] backdrop-blur-sm backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(4px)_brightness(100%)] inline-flex h-12 items-center justify-center gap-2 relative flex-[0_0_auto] rounded-md cursor-pointer"
+                                    aria-label="View details for Neon Override 2077">
+                                    <div class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                        aria-hidden="true">
+                                        <div class="relative w-[18px] h-[18px]">
+                                            <div
+                                                class="relative w-[83.33%] h-[83.33%] top-[8.33%] left-[8.33%]">
+                                                <img class="absolute w-[105.00%] h-[105.00%] top-[-5.00%] left-[-5.00%]"
+                                                    src="icons/information-icon.svg" alt="" />
+                                                <img class="absolute w-[55.00%] h-[75.00%] top-[25.00%] left-[45.00%]"
+                                                    src="icons/information-icon.svg" alt="" />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <span
-                                    class="relative flex items-center justify-center w-fit [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-white text-base text-center tracking-[0] leading-[normal] whitespace-nowrap">View
-                                    Details</span>
-                            </button>
+                                    <span
+                                        class="relative flex items-center justify-center w-fit [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-white text-base text-center tracking-[0] leading-[normal] whitespace-nowrap">View
+                                        Details</span>
+                                </button>
+                            <% } %>
                         </div>
                     </div>
                     <div class="inline-flex items-start gap-2 absolute right-12 bottom-6 z-[1]" role="tablist"
@@ -119,84 +222,42 @@
                                 Browse by Category</h2>
                         </div>
                     </div>
-                    <ul
-                        class="flex items-start justify-center gap-4 relative self-stretch w-full flex-[0_0_auto] flex-wrap p-0 m-0 list-none">
-                        <li
-                            class="flex flex-col min-w-[140px] items-center gap-3 px-4 py-6 relative flex-1 self-stretch grow bg-[#0f1113] rounded-lg border border-solid border-[#00000014]">
-                            <div class="flex w-12 h-12 items-center justify-center relative bg-[#121214] rounded-3xl"
-                                aria-hidden="true">
-                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                    <div class="relative w-6 h-6">
-                                        <img class="absolute w-[91.67%] h-[91.67%] top-[8.33%] left-[8.33%]"
-                                            src="img/vector-5.svg" alt="" />
+                    
+                    <div class="relative w-full group">
+                        <!-- Left button -->
+                        <button type="button" id="cat-prev-btn" class="absolute left-[-20px] top-1/2 -translate-y-1/2 z-10 bg-[#0f1113]/90 hover:bg-[#121214] border border-solid border-[#ffffff20] text-sky-500 rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+
+                        <!-- Carousel scroll container -->
+                        <div id="cat-carousel" class="flex gap-4 overflow-x-auto scroll-smooth scrollbar-hide py-2 px-1">
+                            <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
+                                <% categories.forEach(cat => { %>
+                                    <div onclick="window.location.href='/browse?genre=<%= encodeURIComponent(cat.name) %>'" class="flex flex-col min-w-[150px] max-w-[180px] items-center gap-3 px-4 py-6 bg-[#0f1113] rounded-lg border border-solid border-[#ffffff10] hover:border-sky-500/50 hover:bg-[#121214] transition-all flex-shrink-0 cursor-pointer">
+                                        <div class="flex w-12 h-12 items-center justify-center relative bg-[#121214] rounded-3xl overflow-hidden border border-solid border-[#ffffff05]">
+                                            <% if (cat.icon) { %>
+                                                <img class="w-8 h-8 object-cover" src="<%= cat.icon %>" alt="<%= cat.name %> Icon" />
+                                            <% } else { %>
+                                                <img class="w-6 h-6 object-contain" src="icons/game-controller-icon.svg" alt="Default Icon" />
+                                            <% } %>
+                                        </div>
+                                        <p class="font-semibold text-[#e6eef6] text-sm text-center truncate w-full">
+                                            <%= cat.name %>
+                                        </p>
                                     </div>
-                                </div>
-                            </div>
-                            <p
-                                class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6eef6] text-sm tracking-[0] leading-[normal] relative w-fit">
-                                Action / RPG</p>
-                        </li>
-                        <li
-                            class="flex flex-col min-w-[140px] items-center gap-3 px-4 py-6 relative flex-1 self-stretch grow bg-[#0f1113] rounded-lg border border-solid border-[#00000014]">
-                            <img class="relative w-12 h-12" src="img/background-3.svg" alt="" aria-hidden="true" />
-                            <p
-                                class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6eef6] text-sm tracking-[0] leading-[normal] relative w-fit">
-                                Shooter</p>
-                        </li>
-                        <li
-                            class="flex flex-col min-w-[140px] items-center gap-3 px-4 py-6 relative flex-1 self-stretch grow bg-[#0f1113] rounded-lg border border-solid border-[#00000014]">
-                            <img class="relative w-12 h-12" src="img/image.svg" alt="" aria-hidden="true" />
-                            <p
-                                class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6eef6] text-sm tracking-[0] leading-[normal] relative w-fit">
-                                Strategy</p>
-                        </li>
-                        <li
-                            class="flex flex-col min-w-[140px] items-center gap-3 px-4 py-6 relative flex-1 self-stretch grow bg-[#0f1113] rounded-lg border border-solid border-[#00000014]">
-                            <img class="relative w-12 h-12" src="img/background-2.svg" alt="" aria-hidden="true" />
-                            <p
-                                class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6eef6] text-sm tracking-[0] leading-[normal] relative w-fit">
-                                Racing</p>
-                        </li>
-                        <li
-                            class="flex flex-col min-w-[140px] items-center gap-3 px-4 py-6 relative flex-1 self-stretch grow bg-[#0f1113] rounded-lg border border-solid border-[#00000014]">
-                            <div class="flex w-12 h-12 items-center justify-center relative bg-[#121214] rounded-3xl"
-                                aria-hidden="true">
-                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                    <div class="relative w-6 h-6">
-                                        <img class="absolute w-[87.50%] h-[95.83%] top-[4.17%] left-[12.50%]"
-                                            src="img/vector-6.svg" alt="" />
-                                    </div>
-                                </div>
-                            </div>
-                            <p
-                                class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6eef6] text-sm tracking-[0] leading-[normal] relative w-fit">
-                                Horror</p>
-                        </li>
-                        <li
-                            class="flex flex-col min-w-[140px] items-center gap-3 px-4 py-6 relative flex-1 self-stretch grow bg-[#0f1113] rounded-lg border border-solid border-[#00000014]">
-                            <img class="relative w-12 h-12" src="img/background-5.svg" alt="" aria-hidden="true" />
-                            <p
-                                class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6eef6] text-sm tracking-[0] leading-[normal] relative w-fit">
-                                Sports</p>
-                        </li>
-                        <li
-                            class="flex flex-col min-w-[140px] items-center gap-3 px-4 py-6 relative flex-1 self-stretch grow bg-[#0f1113] rounded-lg border border-solid border-[#00000014]">
-                            <img class="relative w-12 h-12" src="img/background-4.svg" alt="" aria-hidden="true" />
-                            <p
-                                class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6eef6] text-sm tracking-[0] leading-[normal] relative w-fit">
-                                Indie</p>
-                        </li>
-                        <li
-                            class="flex flex-col min-w-[140px] items-center gap-3 px-4 py-6 relative flex-1 self-stretch grow bg-[#0f1113] rounded-lg border border-solid border-[#00000014]">
-                            <img class="relative w-12 h-12" src="img/background.svg" alt="" aria-hidden="true" />
-                            <p
-                                class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6eef6] text-sm tracking-[0] leading-[normal] relative w-fit">
-                                Sci-Fi</p>
-                        </li>
-                    </ul>
+                                <% }) %>
+                            <% } else { %>
+                                <p class="text-zinc-500 text-sm py-4">No active categories found.</p>
+                            <% } %>
+                        </div>
+
+                        <!-- Right button -->
+                        <button type="button" id="cat-next-btn" class="absolute right-[-20px] top-1/2 -translate-y-1/2 z-10 bg-[#0f1113]/90 hover:bg-[#121214] border border-solid border-[#ffffff20] text-sky-500 rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
                 </section>
-                <section
-                    class="flex flex-col items-start gap-5 relative self-stretch w-full"
+                <section class="flex flex-col items-start gap-5 relative self-stretch w-full"
                     aria-labelledby="latest-popular-games-title">
                     <div class="flex items-center justify-between relative self-stretch w-full flex-[0_0_auto]">
                         <div class="inline-flex items-center gap-2.5 relative flex-[0_0_auto]">
@@ -205,7 +266,7 @@
                                 class="flex items-center mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-100 text-lg tracking-[0.90px] leading-[normal] whitespace-nowrap relative w-fit">
                                 LATEST &amp; POPULAR GAMES</h2>
                         </div>
-                        <a href="#" class="inline-flex items-center gap-1 relative flex-[0_0_auto]"
+                        <a href="/browse?vault=standard" class="inline-flex items-center gap-1 relative flex-[0_0_auto]"
                             aria-label="View all latest and popular games">
                             <span
                                 class="flex items-center mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-sky-500 text-xs tracking-[0.60px] leading-[normal] relative w-fit">VIEW
@@ -218,327 +279,122 @@
                             </span>
                         </a>
                     </div>
-                    <div class="grid grid-cols-4 grid-rows-[380px] h-fit gap-6 self-stretch">
-                        <article
-                            class="col-[1_/_2] relative row-[1_/_2] w-full h-[380px] flex flex-col items-start bg-[#121215] rounded-lg overflow-hidden border border-solid border-[#0ea5e94c] shadow-[0px_4px_20px_#0ea5e90d]">
-                            <div
-                                class="flex flex-col h-[180px] items-start justify-center relative self-stretch w-full z-[1] bg-[#1a1a1f]">
-                                <div class="relative flex-1 self-stretch w-full grow bg-[url(legacy:image:md5:273:1261-no-children)] bg-cover bg-[50%_50%]"
-                                    aria-hidden="true"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 self-stretch h-fit">
+                        <% if (typeof standardGames !== 'undefined' && standardGames && standardGames.length > 0) { %>
+                            <% standardGames.slice(0, 4).forEach(game => { %>
+                                <article onclick="window.location.href='/products/<%= game._id %>'" class="relative w-full h-[380px] flex flex-col items-start bg-[#121215] rounded-lg overflow-hidden border border-solid border-[#0ea5e94c] shadow-[0px_4px_20px_#0ea5e90d] cursor-pointer hover:border-sky-500 transition-colors">
+                                    <div class="flex flex-col h-[180px] items-start justify-center relative self-stretch w-full z-[1] bg-[#1a1a1f]">
+                                        <div class="relative flex-1 self-stretch w-full grow bg-cover bg-[50%_50%]"
+                                             style="background-image: url('<%= game.coverImageUrl || game.cover_image %>');"
+                                             role="img" aria-label="<%= game.title %> cover art"></div>
+                                    </div>
+                                    <div class="flex flex-col items-start justify-between p-4 relative flex-1 self-stretch w-full grow z-0">
+                                        <div class="flex flex-col items-start pt-0 pb-1.5 px-0 self-stretch w-full relative flex-[0_0_auto]">
+                                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                                <h2 class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[19.5px] truncate">
+                                                    <%= game.title %>
+                                                </h2>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col items-start pt-0 pb-3 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                                            <div class="flex flex-col gap-0.5 text-zinc-400 text-[11px] leading-[normal] w-full">
+                                                <div><span class="text-zinc-500">Category:</span> <%= game.categoryName %></div>
+                                                <div><span class="text-zinc-500">Publisher:</span> <%= game.publisher %></div>
+                                                <div class="truncate"><span class="text-zinc-500">Platforms:</span> <%= (game.platforms && game.platforms.length > 0) ? game.platforms.join(', ') : 'PC' %></div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col min-h-[45px] items-start justify-end pt-[69.5px] pb-0 px-0 relative flex-1 self-stretch w-full grow">
+                                            <div class="flex items-center justify-between pt-3 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto] mt-[-0.50px] border-t [border-top-style:solid] border-[#00000014]">
+                                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                                        <p class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] tracking-[0] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
+                                                            <% if (game.categoryDiscount > 0) { %>
+                                                                <span class="line-through">₹<%= Number(game.price).toFixed(2) %></span>
+                                                            <% } else { %>
+                                                                &nbsp;
+                                                            <% } %>
+                                                        </p>
+                                                    </div>
+                                                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                                        <p class="mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-sky-500 text-base tracking-[0] leading-[normal] relative flex items-center w-fit leading-[normal]">
+                                                            ₹<%= Number(game.discountedPrice).toFixed(2) %>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="flex gap-2 items-center" onclick="event.stopPropagation();">
+                                                    <% if (game.edition_type === 'LEGENDARY') { %>
+                                                      <button type="button" onclick="handleCartClick(this, '<%= game._id %>', '<%= game.title.replace(/'/g, "\\'") %>', '<%= (game.platforms && game.platforms.length > 0) ? game.platforms[0] : 'PC' %>')" class="bg-legend hover:bg-legend-light text-[#151515] p-2 rounded transition-colors shadow-[0_0_10px_rgba(255,184,0,0.3)] cursor-pointer">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                                      </button>
+                                                    <% } else { %>
+                                                      <button type="button" onclick="handleCartClick(this, '<%= game._id %>', '<%= game.title.replace(/'/g, "\\'") %>', '<%= (game.platforms && game.platforms.length > 0) ? game.platforms[0] : 'PC' %>')" class="bg-brand hover:bg-brand-light text-white p-2 rounded transition-colors shadow-[0_0_10px_rgba(0,163,255,0.2)] cursor-pointer">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                                      </button>
+                                                    <% } %>
+                                                    <button type="button" onclick="toggleWishlist(this, '<%= game._id %>', '<%= game.title.replace(/'/g, "\\'") %>')" class="bg-[#222222] hover:bg-[#333333] border border-[#333] p-2 rounded transition-colors cursor-pointer">
+                                                      <svg class="w-4 h-4 <%= (typeof userWishlist !== 'undefined' && userWishlist.includes(game._id.toString())) ? 'fill-red-500 text-red-500' : 'text-gray-400' %>" fill="<%= (typeof userWishlist !== 'undefined' && userWishlist.includes(game._id.toString())) ? 'currentColor' : 'none' %>" stroke="currentColor" viewbox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="col-span-full py-16 text-center text-zinc-500">
+                                No standard games found in the catalog database.
                             </div>
-                            <div
-                                class="flex flex-col items-start justify-between p-4 relative flex-1 self-stretch w-full grow z-0">
-                                <div
-                                    class="pt-0 pb-1.5 px-0 self-stretch w-full flex-[0_0_auto] flex flex-col items-start relative">
-                                    <div class="self-stretch w-full flex-[0_0_auto] flex flex-col items-start relative">
-                                        <h3
-                                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[19.5px]">
-                                            Apex Hunter: Physical Edition</h3>
-                                    </div>
-                                </div>
-                                <div
-                                    class="pt-0 pb-3 px-0 flex-[0_0_auto] flex flex-col items-start relative self-stretch w-full">
-                                    <div class="flex items-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
-                                        <div class="relative w-[5px] h-[5px] bg-sky-500 rounded-[2.5px]"
-                                            aria-hidden="true">
-                                        </div>
-                                        <p
-                                            class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[11px] tracking-[0] leading-[normal] relative w-fit">
-                                            Pristine Optical Media</p>
-                                    </div>
-                                </div>
-                                <div
-                                    class="min-h-[45px] justify-end pt-[69.5px] pb-0 px-0 flex-1 grow flex flex-col items-start relative self-stretch w-full">
-                                    <div
-                                        class="flex items-center justify-between pt-3 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto] mt-[-0.50px] border-t [border-top-style:solid] border-[#00000014]">
-                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                            <div
-                                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] tracking-[0] leading-[normal] whitespace-nowrap relative w-fit">
-                                                    RETAIL VALUE</p>
-                                            </div>
-                                            <div
-                                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="flex items-center mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-sky-500 text-base tracking-[0] leading-[normal] relative w-fit">
-                                                    $49.99</p>
-                                            </div>
-                                        </div>
-                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                            <div
-                                                class="flex flex-col items-end relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="flex items-center justify-end mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] text-right tracking-[0] leading-[normal] whitespace-nowrap relative w-fit">
-                                                    Est. Delivery</p>
-                                            </div>
-                                            <p
-                                                class="flex items-center justify-end [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-xs text-right tracking-[0] leading-[normal] relative w-fit">
-                                                2 Solar Days</p>
-                                        </div>
-                                    </div>
-                                    <div class="inline-flex flex-col items-start absolute top-0 left-0">
-                                        <div
-                                            class="flex flex-col items-start px-2.5 py-1 relative self-stretch w-full flex-[0_0_auto] bg-[#0ea5e926] rounded border border-solid border-sky-500">
-                                            <p
-                                                class="flex items-center [font-family:'Inter-Bold',Helvetica] font-bold text-sky-500 text-[10px] tracking-[0.50px] leading-[normal] whitespace-nowrap relative w-fit">
-                                                8 UNITS LEFT</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
-                        <article
-                            class="col-[2_/_3] relative row-[1_/_2] w-full h-[380px] flex flex-col items-start bg-[#121215] rounded-lg overflow-hidden border border-solid border-[#0ea5e94c] shadow-[0px_4px_20px_#0ea5e90d]">
-                            <div
-                                class="flex flex-col h-[180px] items-start justify-center relative self-stretch w-full z-[1] bg-[#1a1a1f]">
-                                <div class="relative flex-1 self-stretch w-full grow bg-[url(legacy:image:md5:273:1286-no-children)] bg-cover bg-[50%_50%]"
-                                    aria-hidden="true"></div>
-                                <div class="absolute top-3 left-3 w-[99px] h-[22px]" aria-hidden="true"></div>
-                            </div>
-                            <div
-                                class="flex flex-col items-start justify-between p-4 relative flex-1 self-stretch w-full grow z-0">
-                                <div
-                                    class="pt-0 pb-1.5 px-0 self-stretch w-full flex-[0_0_auto] flex flex-col items-start relative">
-                                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                        <h3
-                                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[19.5px]">
-                                            Aether Sector 9: Standard Disk</h3>
-                                    </div>
-                                </div>
-                                <div
-                                    class="pt-0 pb-3 px-0 flex-[0_0_auto] flex flex-col items-start relative self-stretch w-full">
-                                    <div class="flex items-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
-                                        <div class="relative w-[5px] h-[5px] bg-sky-500 rounded-[2.5px]"
-                                            aria-hidden="true">
-                                        </div>
-                                        <p
-                                            class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[11px] tracking-[0] leading-[normal] relative w-fit">
-                                            Pristine Optical Media</p>
-                                    </div>
-                                </div>
-                                <div
-                                    class="w-[99px] absolute top-[70px] left-[15px] bg-[#0ea5e926] border-sky-500 flex flex-col items-start px-2.5 py-1 rounded border border-solid">
-                                    <p
-                                        class="flex items-center [font-family:'Inter-Bold',Helvetica] font-bold text-sky-500 text-[10px] tracking-[0.50px] leading-[normal] whitespace-nowrap relative w-fit">
-                                        12 UNITS LEFT</p>
-                                </div>
-                                <div
-                                    class="min-h-[45px] justify-end pt-[69.5px] pb-0 px-0 flex-1 grow flex flex-col items-start relative self-stretch w-full">
-                                    <div
-                                        class="flex items-center justify-between pr-[5.68e-14px] pl-0 pt-3 pb-0 relative self-stretch w-full flex-[0_0_auto] mt-[-0.50px] border-t [border-top-style:solid] border-[#00000014]">
-                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                            <div
-                                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] tracking-[0] leading-[normal] whitespace-nowrap relative w-fit">
-                                                    RETAIL VALUE</p>
-                                            </div>
-                                            <div
-                                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="flex items-center mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-sky-500 text-base tracking-[0] leading-[normal] relative w-fit">
-                                                    $59.99</p>
-                                            </div>
-                                        </div>
-                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                            <div
-                                                class="flex flex-col items-end relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="flex items-center justify-end mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] text-right tracking-[0] leading-[normal] whitespace-nowrap relative w-fit">
-                                                    Est. Delivery</p>
-                                            </div>
-                                            <p
-                                                class="flex items-center justify-end [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-xs text-right tracking-[0] leading-[normal] relative w-fit">
-                                                2 Solar Days</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <% } %>
                     </div>
-                    </article>
-                    <article
-                        class="col-[3_/_4] relative row-[1_/_2] w-full h-[380px] flex flex-col items-start bg-[#121215] rounded-lg overflow-hidden border border-solid border-[#0ea5e94c] shadow-[0px_4px_20px_#0ea5e90d]">
-                        <div
-                            class="flex flex-col h-[180px] items-start justify-center relative self-stretch w-full z-[1] bg-[#1a1a1f]">
-                            <div class="relative flex-1 self-stretch w-full grow bg-[url(legacy:image:md5:273:1311-no-children)] bg-cover bg-[50%_50%]"
-                                aria-hidden="true"></div>
-                        </div>
-                        <div
-                            class="flex flex-col items-start justify-between p-4 relative flex-1 self-stretch w-full grow z-0">
-                            <div
-                                class="pt-0 pb-1.5 px-0 self-stretch w-full flex-[0_0_auto] flex flex-col items-start relative">
-                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                    <h3
-                                        class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[19.5px]">
-                                        Velocity 2088: Extreme</h3>
-                                </div>
+                    <nav class="flex w-full items-center justify-between px-5 py-[18px] relative flex-[0_0_auto] bg-[#0f1113] rounded-lg border border-solid border-[#0ea5e94c]"
+                        aria-label="Games pagination">
+                        <div class="inline-flex flex-col items-start gap-1 relative flex-[0_0_auto]">
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <p
+                                    class="mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">
+                                    Curated standard catalog</p>
                             </div>
-                            <div
-                                class="pt-0 pb-3 px-0 flex-[0_0_auto] flex flex-col items-start relative self-stretch w-full">
-                                <div class="flex items-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
-                                    <div class="relative w-[5px] h-[5px] bg-sky-500 rounded-[2.5px]" aria-hidden="true">
-                                    </div>
-                                    <p
-                                        class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[11px] tracking-[0] leading-[normal] relative w-fit">
-                                        Pristine Optical Media</p>
-                                </div>
-                            </div>
-                            <div
-                                class="min-h-[45px] justify-end pt-[69.5px] pb-0 px-0 flex-1 grow flex flex-col items-start relative self-stretch w-full">
-                                <div
-                                    class="flex items-center justify-between pt-3 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto] mt-[-0.50px] border-t [border-top-style:solid] border-[#00000014]">
-                                    <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                        <div
-                                            class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                            <p
-                                                class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] tracking-[0] leading-[normal] whitespace-nowrap relative w-fit">
-                                                RETAIL VALUE</p>
-                                        </div>
-                                        <div
-                                            class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                            <p
-                                                class="flex items-center mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-sky-500 text-base tracking-[0] leading-[normal] relative w-fit">
-                                                $69.99</p>
-                                        </div>
-                                    </div>
-                                    <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                        <div
-                                            class="flex flex-col items-end relative self-stretch w-full flex-[0_0_auto]">
-                                            <p
-                                                class="flex items-center justify-end mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] text-right tracking-[0] leading-[normal] whitespace-nowrap relative w-fit">
-                                                Est. Delivery</p>
-                                        </div>
-                                        <p
-                                            class="flex items-center justify-end [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-xs text-right tracking-[0] leading-[normal] relative w-fit">
-                                            3 Solar Days</p>
-                                    </div>
-                                </div>
-                                <div class="inline-flex flex-col items-start absolute top-0 left-0">
-                                    <div
-                                        class="relative self-stretch w-full flex-[0_0_auto] bg-[#ef444440] border-red-500 flex flex-col items-start px-2.5 py-1 rounded border border-solid">
-                                        <p
-                                            class="flex items-center [font-family:'Inter-Bold',Helvetica] font-bold text-red-500 text-[10px] tracking-[0.50px] leading-[normal] whitespace-nowrap relative w-fit">
-                                            4 UNITS LEFT</p>
-                                    </div>
-                                </div>
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <p
+                                    class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-stone-400 text-[13px] tracking-[0] relative flex items-center w-fit leading-[normal]">
+                                    Browse the full selection of physical standard edition game disks.</p>
                             </div>
                         </div>
-                    </article>
-                    <article
-                        class="col-[4_/_5] relative row-[1_/_2] w-full h-[380px] flex flex-col items-start bg-[#121215] rounded-lg overflow-hidden border border-solid border-[#0ea5e94c] shadow-[0px_4px_20px_#0ea5e90d]">
-                        <div
-                            class="flex flex-col h-[180px] items-start justify-center relative self-stretch w-full z-[1] bg-[#1a1a1f]">
-                            <div class="relative flex-1 self-stretch w-full grow bg-[url(legacy:image:md5:273:1336-no-children)] bg-cover bg-[50%_50%]"
-                                aria-hidden="true"></div>
+                        <div class="inline-flex items-center gap-2.5 relative flex-[0_0_auto]">
+                             <button type="button"
+                                onclick="window.location.href='/browse?vault=standard'"
+                                class="inline-flex h-10 items-center justify-center gap-2 px-4 py-0 rounded-md relative flex-[0_0_auto] cursor-pointer"
+                                aria-label="Go to previous games page">
+                                <span class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                    aria-hidden="true">
+                                    <span class="relative w-4 h-4 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                                    </span>
+                                </span>
+                                <span
+                                    class="justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-sky-500 text-sm text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Previous</span>
+                            </button>
+                            <button type="button"
+                                onclick="window.location.href='/browse?vault=standard'"
+                                class="inline-flex h-10 items-center justify-center gap-2 px-4 py-0 rounded-md relative flex-[0_0_auto] cursor-pointer"
+                                aria-label="Go to next games page">
+                                <span
+                                    class="justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-sky-500 text-sm text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Next</span>
+                                <span class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                    aria-hidden="true">
+                                    <span class="relative w-4 h-4 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                                    </span>
+                                </span>
+                            </button>
                         </div>
-                        <div
-                            class="flex flex-col items-start justify-between p-4 relative flex-1 self-stretch w-full grow z-0">
-                            <div
-                                class="pt-0 pb-1.5 px-0 self-stretch w-full flex-[0_0_auto] flex flex-col items-start relative">
-                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                    <h3
-                                        class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[19.5px]">
-                                        Cyber City: Wasteland</h3>
-                                </div>
-                            </div>
-                            <div
-                                class="pt-0 pb-3 px-0 flex-[0_0_auto] flex flex-col items-start relative self-stretch w-full">
-                                <div class="flex items-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
-                                    <div class="relative w-[5px] h-[5px] bg-sky-500 rounded-[2.5px]" aria-hidden="true">
-                                    </div>
-                                    <p
-                                        class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[11px] tracking-[0] leading-[normal] relative w-fit">
-                                        Pristine Optical Media</p>
-                                </div>
-                            </div>
-                            <div
-                                class="min-h-[45px] justify-end pt-[69.5px] pb-0 px-0 flex-1 grow flex flex-col items-start relative self-stretch w-full">
-                                <div
-                                    class="flex items-center justify-between pr-[5.68e-14px] pl-0 pt-3 pb-0 relative self-stretch w-full flex-[0_0_auto] mt-[-0.50px] border-t [border-top-style:solid] border-[#00000014]">
-                                    <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                        <div
-                                            class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                            <p
-                                                class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] tracking-[0] leading-[normal] whitespace-nowrap relative w-fit">
-                                                RETAIL VALUE</p>
-                                        </div>
-                                        <div
-                                            class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                            <p
-                                                class="flex items-center mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-sky-500 text-base tracking-[0] leading-[normal] relative w-fit">
-                                                $39.99</p>
-                                        </div>
-                                    </div>
-                                    <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                        <div
-                                            class="flex flex-col items-end relative self-stretch w-full flex-[0_0_auto]">
-                                            <p
-                                                class="flex items-center justify-end mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] text-right tracking-[0] leading-[normal] whitespace-nowrap relative w-fit">
-                                                Est. Delivery</p>
-                                        </div>
-                                        <p
-                                            class="flex items-center justify-end [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-xs text-right tracking-[0] leading-[normal] relative w-fit">
-                                            2 Solar Days</p>
-                                    </div>
-                                </div>
-                                <div class="inline-flex flex-col items-start absolute top-0 left-0">
-                                    <div
-                                        class="flex flex-col items-start px-2.5 py-1 relative self-stretch w-full flex-[0_0_auto] bg-[#0ea5e926] rounded border border-solid border-sky-500">
-                                        <p
-                                            class="flex items-center [font-family:'Inter-Bold',Helvetica] font-bold text-sky-500 text-[10px] tracking-[0.50px] leading-[normal] whitespace-nowrap relative w-fit">
-                                            15 UNITS LEFT</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-            </div>
-            <nav class="flex w-full justify-between pt-[22px] pb-[18px] px-5 bg-[#0f1113] rounded-lg items-center relative flex-[0_0_auto] border border-solid border-[#00000014]"
-                aria-label="Games pagination">
-                <div class="inline-flex flex-col items-start gap-1 relative flex-[0_0_auto]">
-                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                        <p
-                            class="flex items-center mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#e6eef6] text-sm tracking-[0] leading-[normal] relative w-fit">
-                            Curated page 1 of 4</p>
-                    </div>
-                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                        <p
-                            class="flex items-center mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-[13px] tracking-[0] leading-[normal] relative w-fit">
-                            Showing featured arcade and active releases from the latest discovery set.</p>
-                    </div>
-                </div>
-                <div class="inline-flex items-center gap-2.5 relative flex-[0_0_auto]">
-                    <button type="button"
-                        class="inline-flex h-10 justify-center gap-2 px-4 py-0 bg-[#121214] rounded-md items-center relative flex-[0_0_auto] border border-solid border-[#00000014] cursor-pointer"
-                        aria-label="Go to previous page">
-                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
-                            <div class="relative w-4 h-4">
-                                <img class="absolute w-[83.33%] h-[83.33%] top-[16.67%] left-[16.67%]"
-                                    src="img/vector.svg" alt="" />
-                            </div>
-                        </div>
-                        <span
-                            class="flex items-center justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#9aa6b3] text-sm text-center tracking-[0] leading-[normal] relative w-fit">Previous</span>
-                    </button>
-                    <button type="button"
-                        class="inline-flex h-10 justify-center gap-2 px-4 py-0 bg-[#0f1113] rounded-md items-center relative flex-[0_0_auto] border border-solid border-[#00000014] cursor-pointer"
-                        aria-label="Go to next page">
-                        <span
-                            class="relative flex items-center justify-center w-fit [font-family:'Inter-SemiBold',Helvetica] font-semibold text-sky-500 text-sm text-center tracking-[0] leading-[normal]">Next</span>
-                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]" aria-hidden="true">
-                            <div class="relative w-4 h-4">
-                                <img class="absolute w-[83.33%] h-[83.33%] top-[16.67%] left-[16.67%]"
-                                    src="img/vector-9.svg" alt="" />
-                            </div>
-                        </div>
-                    </button>
-                </div>
-            </nav>
+                    </nav>
+                </section>
             </div>
 
             <!-- Segment 2: The Legends Vault -->
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 w-full">
                 <section class="flex flex-col items-start gap-5 relative self-stretch w-full"
                     aria-labelledby="legends-vault-heading">
                     <header class="flex items-center justify-between relative self-stretch w-full flex-[0_0_auto]">
@@ -548,7 +404,7 @@
                                 class="mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-100 text-lg tracking-[0.90px] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
                                 THE LEGENDS VAULT</h1>
                         </div>
-                        <a href="#" class="inline-flex items-center gap-1 relative flex-[0_0_auto]"
+                        <a href="/browse?vault=legendary" class="inline-flex items-center gap-1 relative flex-[0_0_auto]"
                             aria-label="View all items in The Legends Vault">
                             <span
                                 class="mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-[#d4af37] text-xs tracking-[0.60px] relative flex items-center w-fit leading-[normal]">VIEW
@@ -563,306 +419,83 @@
                     </header>
                     <div
                         class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 auto-rows-[380px] h-fit gap-6 self-stretch w-full">
-                        <article
-                            class="relative w-full h-[380px] flex flex-col items-start bg-[#121215] rounded-lg overflow-hidden border border-solid border-[#d4af3766] shadow-[0px_4px_20px_#d4af370d]">
-                            <div
-                                class="flex flex-col h-[180px] items-start justify-center relative self-stretch w-full z-[1] bg-[#1a1a1f]">
-                                <div class="relative flex-1 self-stretch w-full grow bg-[url(legacy:image:md5:273:1436-no-children)] bg-cover bg-[50%_50%]"
-                                    role="img" aria-label="Neon Syndicate: Legacy Edition cover art"></div>
+                        <% if (typeof legendaryGames !== 'undefined' && legendaryGames && legendaryGames.length > 0) { %>
+                            <% legendaryGames.forEach(game => { %>
+                                <% 
+                                    const outOfStock = game.stock === 0;
+                                    // Generate deterministic badges & delivery days based on game properties
+                                    const subtitles = ["Authenticated Vault Disk", "Mint Vault Condition", "Certified Archive Copy", "Pristine Golden Media"];
+                                    const sub = subtitles[Math.abs(game.title.charCodeAt(0) || 0) % subtitles.length];
+
+                                    const badges = ["REFURBISHED LEGEND", "FACTORY SEALED LEGEND", "GOLD MASTER", "COLLECTOR ARTIFACT"];
+                                    const legendaryBadge = badges[Math.abs(game.title.charCodeAt(1) || 0) % badges.length];
+
+                                    const deliveryDays = (Math.abs(game.title.charCodeAt(2) || 0) % 3) + 2; 
+                                %>
+                                <article onclick="window.location.href='/products/<%= game._id %>'" class="relative w-full h-[380px] flex flex-col items-start bg-[#121215] rounded-lg overflow-hidden border border-solid border-[#d4af3766] hover:border-[#d4af37] transition-colors shadow-[0px_4px_20px_#d4af370d] cursor-pointer">
+                                    <div class="flex flex-col h-[180px] items-start justify-center relative self-stretch w-full z-[1] bg-[#1a1a1f]">
+                                        <div class="relative flex-1 self-stretch w-full grow bg-cover bg-[50%_50%]"
+                                             style="background-image: url('<%= game.coverImageUrl || game.cover_image %>');"
+                                             role="img" aria-label="<%= game.title %> cover art"></div>
+                                    </div>
+                                    <div class="flex flex-col items-start justify-between p-4 relative flex-1 self-stretch w-full grow z-0">
+                                        <div class="flex flex-col items-start pt-0 pb-1.5 px-0 self-stretch w-full relative flex-[0_0_auto]">
+                                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                                <h2 class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[19.5px] truncate" title="<%= game.title %>">
+                                                    <%= game.title %>
+                                                </h2>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col items-start pt-0 pb-3 px-0 relative self-stretch w-full flex-[0_0_auto]">
+                                            <div class="flex flex-col gap-0.5 text-zinc-400 text-[11px] leading-[normal] w-full">
+                                                <div><span class="text-zinc-500">Category:</span> <%= game.categoryName %></div>
+                                                <div><span class="text-zinc-500">Publisher:</span> <%= game.publisher %></div>
+                                                <div class="truncate"><span class="text-zinc-500">Platforms:</span> <%= (game.platforms && game.platforms.length > 0) ? game.platforms.join(', ') : 'PC' %></div>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col min-h-[45px] items-start justify-end pt-[69.5px] pb-0 px-0 relative flex-1 self-stretch w-full grow">
+                                            <div class="flex items-center justify-between pt-3 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto] mt-[-0.50px] border-t [border-top-style:solid] border-[#00000014]">
+                                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
+                                                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                                        <p class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] tracking-[0] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
+                                                            <% if (game.categoryDiscount > 0) { %>
+                                                                <span class="line-through">₹<%= Number(game.price).toFixed(2) %></span>
+                                                            <% } else { %>
+                                                                &nbsp;
+                                                            <% } %>
+                                                        </p>
+                                                    </div>
+                                                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                                        <p class="mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-[#d4af37] text-base tracking-[0] leading-[normal] relative flex items-center w-fit leading-[normal]">
+                                                            ₹<%= Number(game.discountedPrice).toFixed(2) %>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="flex gap-2 items-center" onclick="event.stopPropagation();">
+                                                    <% if (game.edition_type === 'LEGENDARY') { %>
+                                                      <button type="button" onclick="handleCartClick(this, '<%= game._id %>', '<%= game.title.replace(/'/g, "\\'") %>', '<%= (game.platforms && game.platforms.length > 0) ? game.platforms[0] : 'PC' %>')" class="bg-legend hover:bg-legend-light text-[#151515] p-2 rounded transition-colors shadow-[0_0_10px_rgba(255,184,0,0.3)] cursor-pointer">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                                      </button>
+                                                    <% } else { %>
+                                                      <button type="button" onclick="handleCartClick(this, '<%= game._id %>', '<%= game.title.replace(/'/g, "\\'") %>', '<%= (game.platforms && game.platforms.length > 0) ? game.platforms[0] : 'PC' %>')" class="bg-brand hover:bg-brand-light text-white p-2 rounded transition-colors shadow-[0_0_10px_rgba(0,163,255,0.2)] cursor-pointer">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                                      </button>
+                                                    <% } %>
+                                                    <button type="button" onclick="toggleWishlist(this, '<%= game._id %>', '<%= game.title.replace(/'/g, "\\'") %>')" class="bg-[#222222] hover:bg-[#333333] border border-[#333] p-2 rounded transition-colors cursor-pointer">
+                                                      <svg class="w-4 h-4 <%= (typeof userWishlist !== 'undefined' && userWishlist.includes(game._id.toString())) ? 'fill-red-500 text-red-500' : 'text-gray-400' %>" fill="<%= (typeof userWishlist !== 'undefined' && userWishlist.includes(game._id.toString())) ? 'currentColor' : 'none' %>" stroke="currentColor" viewbox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="col-span-full py-16 text-center text-zinc-500 text-sm">
+                                No legendary games found in the vault catalog database.
                             </div>
-                            <div
-                                class="flex flex-col items-start justify-between p-4 relative flex-1 self-stretch w-full grow z-0">
-                                <div
-                                    class="flex flex-col items-start pt-0 pb-1.5 px-0 self-stretch w-full relative flex-[0_0_auto]">
-                                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                        <h2
-                                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[19.5px]">
-                                            Neon Syndicate: Legacy Edition</h2>
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex flex-col items-start pt-0 pb-3 px-0 relative self-stretch w-full flex-[0_0_auto]">
-                                    <div class="flex items-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
-                                        <div class="relative w-[5px] h-[5px] bg-[#d4af37] rounded-[2.5px]"
-                                            aria-hidden="true">
-                                        </div>
-                                        <p
-                                            class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[11px] tracking-[0] leading-[normal]">
-                                            Authenticated Vault Disk</p>
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex flex-col min-h-[45px] items-start justify-end pt-[69.5px] pb-0 px-0 relative flex-1 self-stretch w-full grow">
-                                    <div
-                                        class="flex items-center justify-between pt-3 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto] mt-[-0.50px] border-t [border-top-style:solid] border-[#00000014]">
-                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                            <div
-                                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] tracking-[0] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
-                                                    COLLECTIBLE BID</p>
-                                            </div>
-                                            <div
-                                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-[#d4af37] text-base tracking-[0] relative flex items-center w-fit leading-[normal]">
-                                                    $149.99</p>
-                                            </div>
-                                        </div>
-                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                            <div
-                                                class="flex flex-col items-end relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="justify-end mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] text-right tracking-[0] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
-                                                    Est. Delivery</p>
-                                            </div>
-                                            <p
-                                                class="justify-end [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-xs text-right tracking-[0] relative flex items-center w-fit leading-[normal]">
-                                                2 Solar Days</p>
-                                        </div>
-                                    </div>
-                                    <div class="inline-flex flex-col items-start gap-1.5 absolute top-[7px] left-px">
-                                        <p
-                                            class="flex flex-col items-start px-2.5 py-1 self-stretch w-full bg-[#ef444426] rounded border border-solid border-red-500 relative flex-[0_0_auto]">
-                                            <span
-                                                class="[font-family:'Inter-Bold',Helvetica] font-bold text-red-500 text-[10px] tracking-[0.50px] whitespace-nowrap relative flex items-center w-fit leading-[normal]">1
-                                                UNIT LEFT</span>
-                                        </p>
-                                        <p
-                                            class="flex flex-col items-start px-2.5 py-1 relative self-stretch w-full flex-[0_0_auto] bg-[#d4af3726] rounded border border-solid border-[#d4af37]">
-                                            <span
-                                                class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#d4af37] text-[10px] tracking-[0.50px] whitespace-nowrap relative flex items-center w-fit leading-[normal]">REFURBISHED
-                                                LEGEND</span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
-                        <article
-                            class="relative w-full h-[380px] flex flex-col items-start bg-[#121215] rounded-lg overflow-hidden border border-solid border-[#d4af3766] shadow-[0px_4px_20px_#d4af370d]">
-                            <div
-                                class="flex flex-col h-[180px] items-start justify-center relative self-stretch w-full z-[1] bg-[#1a1a1f]">
-                                <div class="relative flex-1 self-stretch w-full grow bg-[url(legacy:image:md5:273:1463-no-children)] bg-cover bg-[50%_50%]"
-                                    role="img" aria-label="Chrono Trigger: Resurrected cover art"></div>
-                            </div>
-                            <div
-                                class="flex flex-col items-start justify-between p-4 relative flex-1 self-stretch w-full grow z-0">
-                                <div
-                                    class="flex flex-col items-start pt-0 pb-1.5 px-0 self-stretch w-full relative flex-[0_0_auto]">
-                                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                        <h2
-                                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[19.5px]">
-                                            Chrono Trigger: Resurrected</h2>
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex flex-col items-start pt-0 pb-3 px-0 relative self-stretch w-full flex-[0_0_auto]">
-                                    <div class="flex items-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
-                                        <div class="relative w-[5px] h-[5px] bg-[#d4af37] rounded-[2.5px]"
-                                            aria-hidden="true">
-                                        </div>
-                                        <p
-                                            class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[11px] tracking-[0] leading-[normal]">
-                                            Mint Vault Condition</p>
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex flex-col min-h-[45px] items-start justify-end pt-[69.5px] pb-0 px-0 relative flex-1 self-stretch w-full grow">
-                                    <div
-                                        class="flex items-center justify-between pt-3 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto] mt-[-0.50px] border-t [border-top-style:solid] border-[#00000014]">
-                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                            <div
-                                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] tracking-[0] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
-                                                    COLLECTIBLE BID</p>
-                                            </div>
-                                            <div
-                                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-[#d4af37] text-base tracking-[0] relative flex items-center w-fit leading-[normal]">
-                                                    $199.99</p>
-                                            </div>
-                                        </div>
-                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                            <div
-                                                class="flex flex-col items-end relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="justify-end mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] text-right tracking-[0] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
-                                                    Est. Delivery</p>
-                                            </div>
-                                            <p
-                                                class="justify-end [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-xs text-right tracking-[0] relative flex items-center w-fit leading-[normal]">
-                                                3 Solar Days</p>
-                                        </div>
-                                    </div>
-                                    <div class="inline-flex flex-col items-start gap-1.5 absolute top-0 left-0">
-                                        <p
-                                            class="flex flex-col items-start px-2.5 py-1 relative self-stretch w-full flex-[0_0_auto] bg-[#d4af3726] rounded border border-solid border-[#d4af37]">
-                                            <span
-                                                class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#d4af37] text-[10px] tracking-[0.50px] whitespace-nowrap relative flex items-center w-fit leading-[normal]">3
-                                                UNITS LEFT</span>
-                                        </p>
-                                        <p
-                                            class="flex flex-col items-start px-2.5 py-1 relative self-stretch w-full flex-[0_0_auto] bg-[#d4af3726] rounded border border-solid border-[#d4af37]">
-                                            <span
-                                                class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#d4af37] text-[10px] tracking-[0.50px] whitespace-nowrap relative flex items-center w-fit leading-[normal]">FACTORY
-                                                SEALED LEGEND</span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
-                        <article
-                            class="relative w-full h-[380px] flex flex-col items-start bg-[#121215] rounded-lg overflow-hidden border border-solid border-[#d4af3766] shadow-[0px_4px_20px_#d4af370d]">
-                            <div
-                                class="flex flex-col h-[180px] items-start justify-center relative self-stretch w-full z-[1] bg-[#1a1a1f]">
-                                <div class="relative flex-1 self-stretch w-full grow bg-[url(legacy:image:md5:273:1490-no-children)] bg-cover bg-[50%_50%]"
-                                    role="img" aria-label="Siege of Iron: Remastered cover art"></div>
-                            </div>
-                            <div
-                                class="flex flex-col items-start justify-between p-4 relative flex-1 self-stretch w-full grow z-0">
-                                <div
-                                    class="flex flex-col items-start pt-0 pb-1.5 px-0 self-stretch w-full relative flex-[0_0_auto]">
-                                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                        <h2
-                                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[19.5px]">
-                                            Siege of Iron: Remastered</h2>
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex flex-col items-start pt-0 pb-3 px-0 relative self-stretch w-full flex-[0_0_auto]">
-                                    <div class="flex items-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
-                                        <div class="relative w-[5px] h-[5px] bg-[#d4af37] rounded-[2.5px]"
-                                            aria-hidden="true">
-                                        </div>
-                                        <p
-                                            class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[11px] tracking-[0] leading-[normal]">
-                                            Certified Archive Copy</p>
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex flex-col min-h-[45px] items-start justify-end pt-[69.5px] pb-0 px-0 relative flex-1 self-stretch w-full grow">
-                                    <div
-                                        class="flex items-center justify-between pr-[5.68e-14px] pl-0 pt-3 pb-0 relative self-stretch w-full flex-[0_0_auto] mt-[-0.50px] border-t [border-top-style:solid] border-[#00000014]">
-                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                            <div
-                                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] tracking-[0] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
-                                                    COLLECTIBLE BID</p>
-                                            </div>
-                                            <div
-                                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-[#d4af37] text-base tracking-[0] relative flex items-center w-fit leading-[normal]">
-                                                    $179.99</p>
-                                            </div>
-                                        </div>
-                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                            <div
-                                                class="flex flex-col items-end relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="justify-end mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] text-right tracking-[0] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
-                                                    Est. Delivery</p>
-                                            </div>
-                                            <p
-                                                class="justify-end [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-xs text-right tracking-[0] relative flex items-center w-fit leading-[normal]">
-                                                2 Solar Days</p>
-                                        </div>
-                                    </div>
-                                    <div class="inline-flex flex-col items-start gap-1.5 absolute top-0 left-0">
-                                        <p
-                                            class="flex flex-col items-start px-2.5 py-1 relative self-stretch w-full flex-[0_0_auto] bg-[#d4af3726] rounded border border-solid border-[#d4af37]">
-                                            <span
-                                                class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#d4af37] text-[10px] tracking-[0.50px] whitespace-nowrap relative flex items-center w-fit leading-[normal]">2
-                                                UNITS LEFT</span>
-                                        </p>
-                                        <p
-                                            class="flex flex-col items-start px-2.5 py-1 relative self-stretch w-full flex-[0_0_auto] bg-[#d4af3726] rounded border border-solid border-[#d4af37]">
-                                            <span
-                                                class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#d4af37] text-[10px] tracking-[0.50px] whitespace-nowrap relative flex items-center w-fit leading-[normal]">GOLD
-                                                MASTER</span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
-                        <article
-                            class="relative w-full h-[380px] flex flex-col items-start bg-[#121215] rounded-lg overflow-hidden border border-solid border-[#d4af3766] shadow-[0px_4px_20px_#d4af370d]">
-                            <div
-                                class="flex flex-col h-[180px] items-start justify-center relative self-stretch w-full z-[1] bg-[#1a1a1f]">
-                                <div class="relative flex-1 self-stretch w-full grow bg-[url(legacy:image:md5:273:1517-no-children)] bg-cover bg-[50%_50%]"
-                                    role="img" aria-label="Key of Eternity: Collectors cover art"></div>
-                            </div>
-                            <div
-                                class="flex flex-col items-start justify-between p-4 relative flex-1 self-stretch w-full grow z-0">
-                                <div
-                                    class="flex flex-col items-start pt-0 pb-1.5 px-0 self-stretch w-full relative flex-[0_0_auto]">
-                                    <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                        <h2
-                                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-white text-[15px] tracking-[0] leading-[19.5px]">
-                                            Key of Eternity: Collectors</h2>
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex flex-col items-start pt-0 pb-3 px-0 relative self-stretch w-full flex-[0_0_auto]">
-                                    <div class="flex items-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
-                                        <div class="relative w-[5px] h-[5px] bg-[#d4af37] rounded-[2.5px]"
-                                            aria-hidden="true">
-                                        </div>
-                                        <p
-                                            class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[11px] tracking-[0] leading-[normal]">
-                                            Pristine Golden Media</p>
-                                    </div>
-                                </div>
-                                <div
-                                    class="flex flex-col min-h-[45px] items-start justify-end pt-[69.5px] pb-0 px-0 relative flex-1 self-stretch w-full grow">
-                                    <div
-                                        class="flex items-center justify-between pt-3 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto] mt-[-0.50px] border-t [border-top-style:solid] border-[#00000014]">
-                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                            <div
-                                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] tracking-[0] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
-                                                    COLLECTIBLE BID</p>
-                                            </div>
-                                            <div
-                                                class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-[#d4af37] text-base tracking-[0] relative flex items-center w-fit leading-[normal]">
-                                                    $299.99</p>
-                                            </div>
-                                        </div>
-                                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                            <div
-                                                class="flex flex-col items-end relative self-stretch w-full flex-[0_0_auto]">
-                                                <p
-                                                    class="justify-end mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] text-right tracking-[0] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
-                                                    Est. Delivery</p>
-                                            </div>
-                                            <p
-                                                class="justify-end [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-xs text-right tracking-[0] relative flex items-center w-fit leading-[normal]">
-                                                4 Solar Days</p>
-                                        </div>
-                                    </div>
-                                    <div class="inline-flex flex-col items-start gap-1.5 absolute top-0 left-px">
-                                        <p
-                                            class="flex flex-col items-start px-2.5 py-1 relative self-stretch w-full flex-[0_0_auto] bg-[#d4af3726] rounded border border-solid border-[#d4af37]">
-                                            <span
-                                                class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#d4af37] text-[10px] tracking-[0.50px] whitespace-nowrap relative flex items-center w-fit leading-[normal]">1
-                                                UNIT LEFT</span>
-                                        </p>
-                                        <p
-                                            class="flex flex-col items-start px-2.5 py-1 relative self-stretch w-full flex-[0_0_auto] bg-[#d4af3726] rounded border border-solid border-[#d4af37]">
-                                            <span
-                                                class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#d4af37] text-[10px] tracking-[0.50px] whitespace-nowrap relative flex items-center w-fit leading-[normal]">COLLECTOR
-                                                ARTIFACT</span>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </article>
+                        <% } %>
                     </div>
                     <nav class="flex w-full items-center justify-between px-5 py-[18px] relative flex-[0_0_auto] bg-[#141416] rounded-lg border border-solid border-[#d4af374c]"
                         aria-label="Archive pagination">
@@ -870,7 +503,7 @@
                             <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
                                 <p
                                     class="mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">
-                                    Archive page 1 of 3</p>
+                                    Curated legendary archive</p>
                             </div>
                             <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
                                 <p
@@ -880,29 +513,29 @@
                             </div>
                         </div>
                         <div class="inline-flex items-center gap-2.5 relative flex-[0_0_auto]">
-                            <button type="button"
-                                class="inline-flex h-10 items-center justify-center gap-2 px-4 py-0 rounded-md relative flex-[0_0_auto]"
-                                aria-label="Go to previous archive page" disabled>
+                             <button type="button"
+                                onclick="window.location.href='/browse?vault=legendary'"
+                                class="inline-flex h-10 items-center justify-center gap-2 px-4 py-0 rounded-md relative flex-[0_0_auto] cursor-pointer"
+                                aria-label="Go to previous archive page">
                                 <span class="inline-flex flex-col items-start relative flex-[0_0_auto]"
                                     aria-hidden="true">
-                                    <span class="relative w-4 h-4">
-                                        <img class="absolute w-[83.33%] h-[83.33%] top-[16.67%] left-[16.67%]"
-                                            src="img/image.svg" alt="" />
+                                    <span class="relative w-4 h-4 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-[#d4af37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                                     </span>
                                 </span>
                                 <span
-                                    class="justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#8a8a8e] text-sm text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Previous</span>
+                                    class="justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#d4af37] text-sm text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Previous</span>
                             </button>
                             <button type="button"
-                                class="inline-flex h-10 items-center justify-center gap-2 px-4 py-0 rounded-md relative flex-[0_0_auto]"
+                                onclick="window.location.href='/browse?vault=legendary'"
+                                class="inline-flex h-10 items-center justify-center gap-2 px-4 py-0 rounded-md relative flex-[0_0_auto] cursor-pointer"
                                 aria-label="Go to next archive page">
                                 <span
                                     class="justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#d4af37] text-sm text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Next</span>
                                 <span class="inline-flex flex-col items-start relative flex-[0_0_auto]"
                                     aria-hidden="true">
-                                    <span class="relative w-4 h-4">
-                                        <img class="absolute w-[83.33%] h-[83.33%] top-[16.67%] left-[16.67%]"
-                                            src="img/vector-2.svg" alt="" />
+                                    <span class="relative w-4 h-4 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-[#d4af37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
                                     </span>
                                 </span>
                             </button>
@@ -912,151 +545,251 @@
             </div>
 
             <!-- Segment 3: Developer Spotlight -->
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                <header class="flex items-end relative self-stretch w-full flex-[0_0_auto]">
+            <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                <header class="flex items-end justify-between relative self-stretch w-full flex-[0_0_auto] mb-5">
                     <div class="flex flex-col items-start relative flex-1 grow">
                         <h1
                             class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-[#e6eef6] text-2xl tracking-[0] leading-[normal]">
-                            Developer Spotlight
+                            Publisher's Spotlight
                         </h1>
                     </div>
+                    <button type="button" id="viewAllPublishersBtn" class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0f1113] hover:bg-[#121214] border border-solid border-[#ffffff10] rounded-md text-sky-500 font-bold text-xs tracking-wider transition-all cursor-pointer">
+                        VIEW ALL
+                    </button>
                 </header>
                 <section aria-labelledby="developer-spotlight-heading" class="self-stretch w-full">
                     <h2 id="developer-spotlight-heading" class="sr-only">Featured developers</h2>
-                    <ul
-                        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 auto-rows-[258px] h-fit gap-6 w-full list-none p-0 m-0">
-                        <li
-                            class="row-[1_/_2] col-auto w-full h-fit flex flex-col items-center gap-4 px-6 py-8 bg-[#0f1113] rounded-lg border border-solid relative border-[#00000014]">
-                            <div class="w-20 h-20 rounded-[40px] border-2 border-solid bg-[url(legacy:image:md5:10:357-no-children)] bg-cover bg-[50%_50%] relative border-[#00000014]"
-                                aria-hidden="true"></div>
-                            <div class="inline-flex flex-col items-start gap-1 relative flex-[0_0_auto]">
-                                <div class="flex flex-col items-center relative self-stretch w-full flex-[0_0_auto]">
-                                    <h3
-                                        class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-[#e6eef6] text-base text-center tracking-[0] leading-[normal]">
-                                        Neon Foundry
-                                    </h3>
-                                </div>
-                                <div class="flex flex-col items-center relative self-stretch w-full flex-[0_0_auto]">
-                                    <p
-                                        class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-[13px] text-center tracking-[0] leading-[normal]">
-                                        2.4M Followers
-                                    </p>
-                                </div>
+                    <ul class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 auto-rows-[258px] h-fit gap-6 w-full list-none p-0 m-0">
+                        <% if (typeof activePublishers !== 'undefined' && activePublishers && activePublishers.length > 0) { %>
+                            <% activePublishers.forEach((pub, index) => { %>
+                                <li class="w-full h-fit flex flex-col items-center gap-4 px-6 py-8 bg-[#0f1113] rounded-lg border border-solid relative border-[#00000014] <%= index >= 4 ? 'publisher-extra-card hidden' : '' %>">
+                                    <% if (pub.logo) { %>
+                                        <div class="w-20 h-20 rounded-[40px] border-2 border-solid bg-cover bg-[50%_50%] relative border-[#00000014]"
+                                            style="background-image: url('<%= pub.logo %>');"
+                                            aria-hidden="true"></div>
+                                    <% } else { %>
+                                        <div class="w-20 h-20 rounded-[40px] border-2 border-solid bg-[#1a1a1f] flex items-center justify-center relative border-[#00000014]"
+                                            aria-hidden="true">
+                                            <span class="[font-family:'Inter-Bold',Helvetica] font-bold text-sky-500 text-2xl">
+                                                <%= pub.name.charAt(0).toUpperCase() %>
+                                            </span>
+                                        </div>
+                                    <% } %>
+                                    <div class="inline-flex flex-col items-start gap-1 relative flex-[0_0_auto] w-full">
+                                        <div class="flex flex-col items-center relative self-stretch w-full flex-[0_0_auto]">
+                                            <h3 class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-[#e6eef6] text-base text-center tracking-[0] leading-[normal] truncate max-w-full" title="<%= pub.name %>">
+                                                <%= pub.name %>
+                                            </h3>
+                                        </div>
+                                        <div class="flex flex-col items-center relative self-stretch w-full flex-[0_0_auto]">
+                                            <p class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-[13px] text-center tracking-[0] leading-[normal]">
+                                                <%= pub.gameCount %> <%= pub.gameCount === 1 ? 'Live Game' : 'Live Games' %>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="box-border flex flex-col h-10 items-start pt-2 pb-0 px-0 relative self-stretch w-full">
+                                        <button type="button" aria-label="View <%= pub.name %> games"
+                                            onclick="window.location.href='/browse?publisher=<%= encodeURIComponent(pub.name) %>'"
+                                            class="all-[unset] box-border flex flex-col h-8 items-start px-6 py-[7.5px] relative self-stretch w-full rounded-full border border-solid border-[#00000014] cursor-pointer hover:bg-sky-500/10 hover:border-sky-500/30 transition-all text-center">
+                                            <span class="flex items-center justify-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
+                                                <span class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-[#e6eef6] text-[13px] text-center tracking-[0] leading-[normal]">View Games</span>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </li>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="col-span-full py-8 text-center text-zinc-500 text-sm">
+                                No active publishers spotlighted.
                             </div>
-                            <div
-                                class="box-border flex flex-col h-10 items-start pt-2 pb-0 px-0 relative self-stretch w-full">
-                                <button type="button" aria-label="Follow Neon Foundry"
-                                    class="all-[unset] box-border flex flex-col h-8 items-start px-6 py-[7.5px] relative self-stretch w-full rounded-full border border-solid border-[#00000014] cursor-pointer">
-                                    <span
-                                        class="flex items-center justify-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
-                                        <img class="relative flex-[0_0_auto]" src="img/iconify-icon-2.svg" alt=""
-                                            aria-hidden="true" />
-                                        <span
-                                            class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-[#e6eef6] text-[13px] text-center tracking-[0] leading-[normal]">Follow</span>
-                                    </span>
-                                </button>
-                            </div>
-                        </li>
-                        <li
-                            class="row-[1_/_2] col-auto w-full h-fit flex flex-col items-center gap-4 px-6 py-8 bg-[#0f1113] rounded-lg border border-solid relative border-[#00000014]">
-                            <div class="w-20 h-20 rounded-[40px] border-2 border-solid bg-[url(legacy:image:md5:10:374-no-children)] bg-cover bg-[50%_50%] relative border-[#00000014]"
-                                aria-hidden="true"></div>
-                            <div class="inline-flex flex-col items-start gap-1 relative flex-[0_0_auto]">
-                                <div class="flex flex-col items-center relative self-stretch w-full flex-[0_0_auto]">
-                                    <h3
-                                        class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-[#e6eef6] text-base text-center tracking-[0] leading-[normal]">
-                                        PixelForge Games
-                                    </h3>
-                                </div>
-                                <div class="flex flex-col items-center relative self-stretch w-full flex-[0_0_auto]">
-                                    <p
-                                        class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-[13px] text-center tracking-[0] leading-[normal]">
-                                        850K Followers
-                                    </p>
-                                </div>
-                            </div>
-                            <div
-                                class="box-border flex flex-col h-10 items-start pt-2 pb-0 px-0 relative self-stretch w-full">
-                                <button type="button" aria-label="Follow PixelForge Games"
-                                    class="all-[unset] box-border flex flex-col h-8 items-start px-6 py-[7.5px] relative self-stretch w-full rounded-full border border-solid border-[#00000014] cursor-pointer">
-                                    <span
-                                        class="flex items-center justify-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
-                                        <img class="relative flex-[0_0_auto]" src="img/iconify-icon.svg" alt=""
-                                            aria-hidden="true" />
-                                        <span
-                                            class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-[#e6eef6] text-[13px] text-center tracking-[0] leading-[normal]">Follow</span>
-                                    </span>
-                                </button>
-                            </div>
-                        </li>
-                        <li
-                            class="row-[1_/_2] col-auto w-full h-fit flex flex-col items-center gap-4 px-6 py-8 bg-[#0f1113] rounded-lg border border-solid relative border-[#00000014]">
-                            <div class="w-20 h-20 rounded-[40px] border-2 border-solid bg-[url(legacy:image:md5:10:391-no-children)] bg-cover bg-[50%_50%] relative border-[#00000014]"
-                                aria-hidden="true"></div>
-                            <div class="inline-flex flex-col items-start gap-1 relative flex-[0_0_auto]">
-                                <div class="flex flex-col items-center relative self-stretch w-full flex-[0_0_auto]">
-                                    <h3
-                                        class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-[#e6eef6] text-base text-center tracking-[0] leading-[normal]">
-                                        Ironclad Studios
-                                    </h3>
-                                </div>
-                                <div class="flex flex-col items-center relative self-stretch w-full flex-[0_0_auto]">
-                                    <p
-                                        class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-[13px] text-center tracking-[0] leading-[normal]">
-                                        1.2M Followers
-                                    </p>
-                                </div>
-                            </div>
-                            <div
-                                class="box-border flex flex-col h-10 items-start pt-2 pb-0 px-0 relative self-stretch w-full">
-                                <button type="button" aria-label="Follow Ironclad Studios"
-                                    class="all-[unset] box-border flex flex-col h-8 items-start px-6 py-[7.5px] relative self-stretch w-full rounded-full border border-solid border-[#00000014] cursor-pointer">
-                                    <span
-                                        class="flex items-center justify-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
-                                        <img class="relative flex-[0_0_auto]" src="img/iconify-icon-3.svg" alt=""
-                                            aria-hidden="true" />
-                                        <span
-                                            class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-[#e6eef6] text-[13px] text-center tracking-[0] leading-[normal]">Follow</span>
-                                    </span>
-                                </button>
-                            </div>
-                        </li>
-                        <li
-                            class="row-[1_/_2] col-auto w-full h-fit flex flex-col items-center gap-4 px-6 py-8 bg-[#0f1113] rounded-lg border border-solid relative border-[#00000014]">
-                            <div class="w-20 h-20 rounded-[40px] border-2 border-solid bg-[url(legacy:image:md5:10:408-no-children)] bg-cover bg-[50%_50%] relative border-[#00000014]"
-                                aria-hidden="true"></div>
-                            <div class="inline-flex flex-col items-start gap-1 relative flex-[0_0_auto]">
-                                <div class="flex flex-col items-center relative self-stretch w-full flex-[0_0_auto]">
-                                    <h3
-                                        class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-[#e6eef6] text-base text-center tracking-[0] leading-[normal]">
-                                        Aura Interactive
-                                    </h3>
-                                </div>
-                                <div class="flex flex-col items-center relative self-stretch w-full flex-[0_0_auto]">
-                                    <p
-                                        class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-[13px] text-center tracking-[0] leading-[normal]">
-                                        4.8M Followers
-                                    </p>
-                                </div>
-                            </div>
-                            <div
-                                class="box-border flex flex-col h-10 items-start pt-2 pb-0 px-0 relative self-stretch w-full">
-                                <button type="button" aria-label="Follow Aura Interactive"
-                                    class="all-[unset] box-border flex flex-col h-8 items-start px-6 py-[7.5px] relative self-stretch w-full rounded-full border border-solid border-[#00000014] cursor-pointer">
-                                    <span
-                                        class="flex items-center justify-center gap-1.5 relative self-stretch w-full flex-[0_0_auto]">
-                                        <img class="relative flex-[0_0_auto]" src="img/image.svg" alt=""
-                                            aria-hidden="true" />
-                                        <span
-                                            class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-[#e6eef6] text-[13px] text-center tracking-[0] leading-[normal]">Follow</span>
-                                    </span>
-                                </button>
-                            </div>
-                        </li>
+                        <% } %>
                     </ul>
+                    <nav class="flex w-full items-center justify-between px-5 py-[18px] mt-6 relative flex-[0_0_auto] bg-[#0f1113] rounded-lg border border-solid border-[#ffffff10]"
+                        aria-label="Publishers pagination">
+                        <div class="inline-flex flex-col items-start gap-1 relative flex-[0_0_auto]">
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <p
+                                    class="mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">
+                                    Curated publishers catalog</p>
+                            </div>
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <p
+                                    class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-stone-400 text-[13px] tracking-[0] relative flex items-center w-fit leading-[normal]">
+                                    Explore physical edition games and catalog releases grouped by official publishing studios.</p>
+                            </div>
+                        </div>
+                        <div class="inline-flex items-center gap-2.5 relative flex-[0_0_auto]">
+                             <button type="button"
+                                onclick="window.location.href='/browse'"
+                                class="inline-flex h-10 items-center justify-center gap-2 px-4 py-0 rounded-md relative flex-[0_0_auto] cursor-pointer"
+                                aria-label="Go to previous publishers page">
+                                <span class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                    aria-hidden="true">
+                                    <span class="relative w-4 h-4 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                                    </span>
+                                </span>
+                                <span
+                                    class="justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-sm text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Previous</span>
+                            </button>
+                            <button type="button"
+                                onclick="window.location.href='/browse'"
+                                class="inline-flex h-10 items-center justify-center gap-2 px-4 py-0 rounded-md relative flex-[0_0_auto] cursor-pointer"
+                                aria-label="Go to next publishers page">
+                                <span
+                                    class="justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-sm text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Next</span>
+                                <span class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                    aria-hidden="true">
+                                    <span class="relative w-4 h-4 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                                    </span>
+                                </span>
+                            </button>
+                        </div>
+                    </nav>
                 </section>
             </div>
         </main>
+
+        <script>
+            // Authentication state
+            const isLoggedIn = <%= typeof user !== 'undefined' && user ? 'true' : 'false' %>;
+
+            // Toast notifications
+            function showToast(message, type = 'info') {
+              let container = document.getElementById('toast-container');
+              if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none';
+                document.body.appendChild(container);
+              }
+              
+              const toast = document.createElement('div');
+              toast.className = `flex items-center gap-3 px-5 py-3 rounded-lg shadow-2xl text-sm font-semibold border transition-all duration-500 ease-out transform translate-x-full opacity-0 pointer-events-auto max-w-sm bg-[#13161b] text-white ${
+                type === 'success' 
+                  ? 'border-emerald-500 text-emerald-400' 
+                  : type === 'error' 
+                    ? 'border-red-500 text-red-400' 
+                    : 'border-[#00D1FF] text-[#00D1FF]'
+              }`;
+              
+              let icon = '<i class="fa-solid fa-circle-info"></i>';
+              if (type === 'success') icon = '<i class="fa-solid fa-circle-check"></i>';
+              if (type === 'error') icon = '<i class="fa-solid fa-circle-exclamation"></i>';
+              
+              toast.innerHTML = `${icon} <span>${message}</span>`;
+              container.appendChild(toast);
+              
+              setTimeout(() => {
+                toast.classList.remove('translate-x-full', 'opacity-0');
+              }, 10);
+              
+              setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => {
+                  toast.remove();
+                }, 500);
+              }, 3000);
+            }
+
+            // Cart Actions
+            async function handleCartClick(btn, productId, productTitle, defaultPlatform) {
+              if (!isLoggedIn) {
+                showToast("You must sign-in to continue with the process.", "info");
+                return;
+              }
+              try {
+                const response = await fetch('/auth/cart/add', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ productId, platform: defaultPlatform, quantity: 1 })
+                });
+                const data = await response.json();
+                if (data.success) {
+                  showToast(`${productTitle} (${defaultPlatform}) added to cart!`, "success");
+                  setTimeout(() => {
+                    window.location.href = '/auth/cart';
+                  }, 800);
+                } else {
+                  showToast(data.message || "Failed to add item to cart.", "error");
+                }
+              } catch (err) {
+                console.error("Error adding to cart:", err);
+                showToast("Network error adding to cart.", "error");
+              }
+            }
+
+            // Wishlist Actions
+            async function toggleWishlist(btn, productId, productTitle) {
+              if (!isLoggedIn) {
+                showToast("You must sign-in to continue with the process.", "info");
+                return;
+              }
+
+              try {
+                const response = await fetch('/auth/wishlist/toggle', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ productId })
+                });
+                
+                if (response.status === 401) {
+                  window.location.href = '/auth/login';
+                  return;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                  const svg = btn.querySelector('svg');
+                  if (svg) {
+                    if (data.added) {
+                      svg.setAttribute('fill', 'currentColor');
+                      svg.classList.remove('text-gray-400');
+                      svg.classList.add('fill-red-500', 'text-red-500');
+                      showToast(`${productTitle} added to wishlist!`, "success");
+                    } else {
+                      svg.setAttribute('fill', 'none');
+                      svg.classList.remove('fill-red-500', 'text-red-500');
+                      svg.classList.add('text-gray-400');
+                      showToast(`${productTitle} removed from wishlist.`, "success");
+                    }
+                  }
+                } else {
+                  console.error('Error toggling wishlist:', data.message);
+                }
+              } catch (err) {
+                console.error('Network error toggling wishlist:', err);
+              }
+            }
+
+            // Category Carousel Navigation
+            const catCarousel = document.getElementById('cat-carousel');
+            const catPrevBtn = document.getElementById('cat-prev-btn');
+            const catNextBtn = document.getElementById('cat-next-btn');
+            if (catCarousel && catPrevBtn && catNextBtn) {
+                catPrevBtn.addEventListener('click', () => {
+                    catCarousel.scrollLeft -= 250;
+                });
+                catNextBtn.addEventListener('click', () => {
+                    catCarousel.scrollLeft += 250;
+                });
+            }
+
+            // Inline publishers Spotlight expand logic
+            const viewAllPublishersBtn = document.getElementById('viewAllPublishersBtn');
+            if (viewAllPublishersBtn) {
+                viewAllPublishersBtn.addEventListener('click', () => {
+                    const extraCards = document.querySelectorAll('.publisher-extra-card');
+                    extraCards.forEach(card => card.classList.remove('hidden'));
+                    viewAllPublishersBtn.classList.add('hidden');
+                });
+            }
+        </script>
 </body>
 
 </html>

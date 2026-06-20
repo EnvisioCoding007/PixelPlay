@@ -307,6 +307,24 @@
             </div>
         </section>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const zipInput = document.getElementById('zip-postal-code');
+
+            zipInput.addEventListener('input', function(e) {
+                // Remove any character that is not a number
+                let sanitizedValue = e.target.value.replace(/\D/g, '');
+                if (sanitizedValue.length > 6) {
+                    sanitizedValue = sanitizedValue.slice(0, 6);
+                }
+
+                // 3. Update the input box with the clean data
+                e.target.value = sanitizedValue;
+            });
+        });
+    </script>
+
 </body>
 
 </html>

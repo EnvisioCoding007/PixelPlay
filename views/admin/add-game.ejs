@@ -1,0 +1,1091 @@
+<%- include('../partials/admin/header') %>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+<link rel="stylesheet" href="/globals.css">
+
+<body class="bg-background-dark text-white antialiased h-screen flex overflow-hidden">
+
+<%- include('../partials/admin/sidebar', { activeTab: 'add-game' }) %>
+
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-background-dark text-white">
+  <form id="addGameForm" class="flex-1 flex flex-col h-full overflow-hidden">
+    <!-- Page Header -->
+    <header class="px-8 py-6 border-b border-border-dark flex items-center justify-between flex-shrink-0 bg-background-dark/50 backdrop-blur-sm z-10 sticky top-0">
+      <div class="flex items-center gap-3">
+        <span class="material-icons-outlined text-accent text-2xl">note_add</span>
+        <h1 class="text-2xl font-bold text-white">New Game Addition</h1>
+      </div>
+      <div class="flex items-center gap-3 bg-surface-dark px-4 py-2 rounded-full border border-border-dark">
+        <span id="standardLabel" class="text-sm font-medium text-accent">Standard</span>
+        <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+          <input class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-accent border-4 border-surface-dark appearance-none cursor-pointer transform translate-x-0 transition-transform duration-200 ease-in-out bg-background-dark border border-border-dark text-white" id="toggle" type="checkbox"/>
+          <label class="toggle-label block overflow-hidden h-6 rounded-full bg-border-dark cursor-pointer" for="toggle"></label>
+        </div>
+        <span id="legendsLabel" class="text-sm font-medium text-text-muted">Legends</span>
+      </div>
+    </header>
+    
+    <!-- Hidden Edition Type Input -->
+    <input type="hidden" id="edition_type" name="edition_type" value="STANDARD" class="bg-background-dark border border-border-dark text-white" />
+
+    <div class="flex-1 overflow-y-auto p-8 bg-background-dark text-white">
+      <div class="max-w-6xl mx-auto space-y-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          <!-- Column 1: Core Details -->
+          <section class="bg-surface-dark rounded-xl border border-border-dark p-6">
+            <div class="flex items-center gap-2 mb-6 pb-4 border-b border-border-dark">
+              <span class="material-icons-outlined text-accent text-sm">info</span>
+              <h2 class="text-lg font-semibold text-white">Core Details</h2>
+            </div>
+            <div class="space-y-6">
+              <!-- Title -->
+              <div>
+                <label class="block text-sm font-medium text-text-muted mb-2">Game Title</label>
+                <input name="title" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" placeholder="Enter official game title..." type="text"/>
+              </div>
+              
+              <!-- Publisher -->
+              <div>
+                <label class="block text-sm font-medium text-text-muted mb-2">Publisher</label>
+                <div class="relative">
+                  <select name="publisher" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white appearance-none focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors cursor-pointer">
+                    <option class="text-text-muted" disabled="" selected="" value="">Select Publisher...</option>
+                    <% if (typeof publishers !== 'undefined' && publishers && publishers.length > 0) { %>
+                      <% publishers.forEach(pub => { %>
+                        <option value="<%= pub.name %>"><%= pub.name %></option>
+                      <% }) %>
+                    <% } else { %>
+                      <option value="Electronic Arts">Electronic Arts</option>
+                      <option value="Ubisoft">Ubisoft</option>
+                      <option value="Sony Interactive Entertainment">Sony Interactive Entertainment</option>
+                      <option value="Nintendo">Nintendo</option>
+                      <option value="Activision Blizzard">Activision Blizzard</option>
+                      <option value="Take-Two Interactive">Take-Two Interactive</option>
+                    <% } %>
+                  </select>
+                  <span class="material-icons-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none text-sm">arrow_drop_down</span>
+                </div>
+              </div>
+              
+              <!-- Core Grid: Release Year, Base Price -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-text-muted mb-2">Release Year</label>
+                  <input name="release_year" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" placeholder="YYYY" type="number" min="1950" max="2100"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-text-muted mb-2">Base Price (₹)</label>
+                  <input name="price" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" placeholder="0.00" type="number" step="0.01" min="0"/>
+                </div>
+              </div>
+              
+              <!-- Category -->
+              <div>
+                <label class="block text-sm font-medium text-text-muted mb-2">Primary Category</label>
+                <div class="relative">
+                  <select name="category" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white appearance-none focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors cursor-pointer">
+                    <option disabled="" selected="" value="">Select category...</option>
+                    <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
+                      <% categories.forEach(cat => { %>
+                        <option value="<%= cat._id %>"><%= cat.name %></option>
+                      <% }) %>
+                    <% } %>
+                  </select>
+                  <span class="material-icons-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none text-sm">arrow_drop_down</span>
+                </div>
+              </div>
+              
+              <!-- Supported Platforms -->
+              <div>
+                <label class="block text-sm font-medium text-text-muted mb-2">Supported Platforms</label>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 bg-background-dark border border-border-dark rounded-lg px-4 py-3" id="platformsContainer">
+                  <label class="flex items-center gap-2 cursor-pointer text-sm text-white">
+                    <input type="checkbox" name="platforms[]" value="PC" class="platform-checkbox rounded bg-background-dark border border-border-dark text-white text-accent focus:ring-accent">
+                    <span>PC</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm text-white">
+                    <input type="checkbox" name="platforms[]" value="PlayStation 5" class="platform-checkbox rounded bg-background-dark border border-border-dark text-white text-accent focus:ring-accent">
+                    <span>PlayStation 5</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm text-white">
+                    <input type="checkbox" name="platforms[]" value="Xbox Series X|S" class="platform-checkbox rounded bg-background-dark border border-border-dark text-white text-accent focus:ring-accent">
+                    <span>Xbox Series X|S</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm text-white">
+                    <input type="checkbox" name="platforms[]" value="PlayStation 4" class="platform-checkbox rounded bg-background-dark border border-border-dark text-white text-accent focus:ring-accent">
+                    <span>PlayStation 4</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm text-white">
+                    <input type="checkbox" name="platforms[]" value="Xbox One" class="platform-checkbox rounded bg-background-dark border border-border-dark text-white text-accent focus:ring-accent">
+                    <span>Xbox One</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm text-white">
+                    <input type="checkbox" id="otherPlatformsToggle" class="rounded bg-background-dark border border-border-dark text-white text-accent focus:ring-accent">
+                    <span>Other</span>
+                  </label>
+                </div>
+                
+                <!-- Dynamic Other Platforms Searchable Dropdown -->
+                <div id="otherPlatformsContainer" class="hidden mt-3 p-4 bg-background-dark/50 border border-border-dark rounded-lg space-y-3 relative">
+                  <label class="block text-xs font-medium text-text-muted">Search & Add Legacy/Extended Platforms</label>
+                  <div class="relative">
+                    <input type="text" id="otherPlatformsSearch" placeholder="Type platform name (e.g. Switch, PS3, Wii)..." class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent">
+                    <div id="otherPlatformsDropdown" class="hidden absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-surface-dark border border-border-dark rounded-lg shadow-xl z-20">
+                      <!-- Dropdown options rendered dynamically -->
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Configure Stock per Platform -->
+                <div id="platformStocksSection" class="hidden mt-4">
+                  <label class="block text-sm font-medium text-text-muted mb-2">Configure Stock per Platform</label>
+                  <div id="platformStocksContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-background-dark border border-border-dark rounded-lg p-4">
+                    <!-- Dynamic stock rows render here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          
+          <!-- Column 2: Media Gallery & Description -->
+          <section class="bg-surface-dark rounded-xl border border-border-dark p-6 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 mb-6 pb-4 border-b border-border-dark">
+                <span class="material-icons-outlined text-accent text-sm">perm_media</span>
+                <h2 class="text-lg font-semibold text-white">Media &amp; Summary</h2>
+              </div>
+              <div class="space-y-6">
+                <!-- Cover Art -->
+                <div>
+                  <label class="block text-sm font-medium text-text-muted mb-2">Cover Art</label>
+                  <div onclick="document.getElementById('coverInput').click()" class="border-2 border-dashed border-border-dark rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-text-muted transition-colors bg-background-dark/50">
+                    <span class="material-icons-outlined text-4xl text-text-muted mb-2">cloud_upload</span>
+                    <p class="text-sm font-medium text-white mb-1">Upload Cover Image</p>
+                    <p class="text-xs text-text-muted">JPEG, PNG or WEBP (Max 5MB)</p>
+                    <input type="file" id="coverInput" accept="image/*" class="hidden bg-background-dark border border-border-dark text-white">
+                  </div>
+                  <!-- Preview container -->
+                  <div id="coverPreviewContainer" class="mt-4 hidden text-center">
+                    <img id="coverPreview" class="max-h-48 rounded object-cover mx-auto border border-border-dark" />
+                  </div>
+                </div>
+                
+                <!-- Media Gallery -->
+                <div>
+                  <label class="block text-sm font-medium text-text-muted mb-2">Media Gallery (Min 1 Screenshot/Video, Unbounded Max)</label>
+                  <div class="border-2 border-dashed border-border-dark rounded-xl p-6 bg-background-dark/50 hover:border-text-muted transition-colors">
+                    <div id="galleryPreviews" class="flex flex-wrap gap-3 items-center justify-start">
+                      <!-- Stateful thumbnail previews will render here -->
+                      
+                      <!-- Persistent "+" placeholder button at the end -->
+                      <button type="button" id="galleryAddBtn" onclick="document.getElementById('galleryInput').click()" class="w-16 h-16 rounded-lg border-2 border-dashed border-border-dark hover:border-accent hover:text-accent flex flex-col items-center justify-center text-text-muted transition-colors cursor-pointer bg-background-dark/30">
+                        <span class="material-icons-outlined text-xl">add</span>
+                        <span class="text-[8px] mt-1">Add Media</span>
+                      </button>
+                    </div>
+                    <input type="file" id="galleryInput" accept="image/*,video/*" multiple class="hidden bg-background-dark border border-border-dark text-white">
+                  </div>
+                </div>
+                
+                <!-- Game Description -->
+                <div>
+                  <label class="block text-sm font-medium text-text-muted mb-2">Game Description</label>
+                  <textarea name="description" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors resize-none" placeholder="Write a compelling overview of the game..." rows="4"></textarea>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+        
+        <!-- Row 2: Hybrid System Requirements Grid -->
+        <section class="bg-surface-dark rounded-xl border border-border-dark p-6">
+          <div class="flex items-center gap-2 mb-6 pb-4 border-b border-border-dark">
+            <span class="material-icons-outlined text-accent text-sm">settings_system_daydream</span>
+            <h2 class="text-lg font-semibold text-white">Hardware Requirements</h2>
+          </div>
+          
+          <div id="requirementsTabs" class="flex flex-wrap gap-2 mb-6 border-b border-border-dark pb-2">
+            <!-- Tabs generated dynamically -->
+          </div>
+          
+          <div id="requirementsContent">
+            <!-- Form blocks generated dynamically -->
+          </div>
+          
+          <div id="noPlatformsMessage" class="text-text-muted text-sm text-center py-6">
+            Please select at least one supported platform above to configure requirements.
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Footer containing action buttons -->
+    <footer class="px-8 py-4 border-t border-border-dark flex items-center justify-end gap-4 bg-background-dark/50 backdrop-blur-sm flex-shrink-0 z-10 sticky bottom-0">
+      <button id="cancelBtn" class="px-6 py-2.5 text-sm font-medium text-white hover:bg-surface-hover border border-border-dark rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background-dark focus:ring-border-dark" type="button">
+        Cancel Intake
+      </button>
+      <button id="submitBtn" class="px-6 py-2.5 text-sm font-medium text-background-dark bg-accent hover:bg-accent/90 rounded-lg transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background-dark focus:ring-accent" type="submit">
+        <span class="material-icons-outlined text-sm">save</span>
+        Publish Game to Library
+      </button>
+    </footer>
+  </form>
+</main>
+
+<!-- Preset Options Datalists -->
+<datalist id="architecture-presets">
+  <option value="64-bit"></option>
+  <option value="32-bit"></option>
+</datalist>
+<datalist id="os-presets">
+  <option value="Windows 10"></option>
+  <option value="Windows 11"></option>
+  <option value="macOS"></option>
+  <option value="Ubuntu"></option>
+</datalist>
+<datalist id="processor-presets">
+  <option value="Intel Core i5"></option>
+  <option value="Intel Core i7"></option>
+  <option value="AMD Ryzen 5"></option>
+</datalist>
+<datalist id="memory-presets">
+  <option value="4 GB RAM"></option>
+  <option value="8 GB RAM"></option>
+  <option value="16 GB RAM"></option>
+  <option value="32 GB RAM"></option>
+</datalist>
+<datalist id="graphics-presets">
+  <option value="NVIDIA GTX 1060"></option>
+  <option value="NVIDIA RTX 3060"></option>
+  <option value="AMD RX 580"></option>
+</datalist>
+<datalist id="storage-presets">
+  <option value="50 GB available space"></option>
+  <option value="100 GB available space"></option>
+</datalist>
+
+<!-- Cropper.js Workspace Modal overlay -->
+<div id="cropperWorkspace" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-background-dark/95 backdrop-blur-sm p-4">
+  <div class="bg-surface-dark border border-border-dark rounded-xl max-w-2xl w-full p-6 flex flex-col gap-4 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-border-dark pb-3">
+      <h3 class="text-lg font-semibold text-white" id="cropperTitle">Crop Cover Image</h3>
+      <button type="button" id="closeCropperBtn" class="text-text-muted hover:text-white transition-colors">
+        <span class="material-icons-outlined">close</span>
+      </button>
+    </div>
+    <div class="relative w-full max-h-[50vh] bg-background-dark flex items-center justify-center overflow-hidden rounded-lg border border-border-dark">
+      <img id="cropperImage" class="max-w-full max-h-[45vh] object-contain" />
+    </div>
+    <div class="flex gap-3 justify-end border-t border-border-dark pt-3">
+      <button type="button" id="cancelCropBtn" class="px-5 py-2 text-sm text-white hover:bg-surface-hover border border-border-dark rounded-lg transition-colors">
+        Cancel
+      </button>
+      <button type="button" id="saveCropBtn" class="px-5 py-2 text-sm text-background-dark bg-accent hover:bg-accent/90 font-medium rounded-lg transition-colors">
+        Apply Crop
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+<script>
+  // Edition toggle syncing & Dynamic theme switching
+  const toggle = document.getElementById('toggle');
+  const editionInput = document.getElementById('edition_type');
+  const standardLabel = document.getElementById('standardLabel');
+  const legendsLabel = document.getElementById('legendsLabel');
+  
+  toggle.addEventListener('change', function() {
+    if (this.checked) {
+      this.classList.remove('translate-x-0');
+      this.classList.add('translate-x-6');
+      editionInput.value = 'LEGENDARY';
+      document.documentElement.setAttribute('data-theme', 'legendary');
+      
+      // Swap label active/inactive styling
+      standardLabel.classList.remove('text-accent');
+      standardLabel.classList.add('text-text-muted');
+      legendsLabel.classList.remove('text-text-muted');
+      legendsLabel.classList.add('text-accent');
+    } else {
+      this.classList.remove('translate-x-6');
+      this.classList.add('translate-x-0');
+      editionInput.value = 'STANDARD';
+      document.documentElement.removeAttribute('data-theme');
+      
+      // Swap label active/inactive styling
+      standardLabel.classList.remove('text-text-muted');
+      standardLabel.classList.add('text-accent');
+      legendsLabel.classList.remove('text-accent');
+      legendsLabel.classList.add('text-text-muted');
+    }
+  });
+
+  // Cancel redirection
+  document.getElementById('cancelBtn').addEventListener('click', function() {
+    window.location.href = '/admin/products';
+  });
+  
+  // Media cropping state variables
+  let croppedCoverBlob = null;
+  let croppedGalleryBlobs = [];
+  let cropper = null;
+  let currentCropType = 'cover'; 
+  let currentGalleryIndex = 0;
+  let galleryQueue = [];
+
+  const cropperWorkspace = document.getElementById('cropperWorkspace');
+  const cropperImage = document.getElementById('cropperImage');
+  const cropperTitle = document.getElementById('cropperTitle');
+  const closeCropperBtn = document.getElementById('closeCropperBtn');
+  const cancelCropBtn = document.getElementById('cancelCropBtn');
+  const saveCropBtn = document.getElementById('saveCropBtn');
+
+  const coverInput = document.getElementById('coverInput');
+  const galleryInput = document.getElementById('galleryInput');
+
+  const coverPreviewContainer = document.getElementById('coverPreviewContainer');
+  const coverPreview = document.getElementById('coverPreview');
+  const galleryPreviews = document.getElementById('galleryPreviews');
+
+  // Trigger Cropper initialization inside overlay
+  function startCropper(imageSrc, type, index = 0) {
+    currentCropType = type;
+    currentGalleryIndex = index;
+    
+    if (type === 'cover') {
+      cropperTitle.textContent = 'Crop Cover Image (3:4 Ratio)';
+    } else {
+      cropperTitle.textContent = `Crop Gallery Image ${index + 1} of ${galleryQueue.length} (16:9 Ratio)`;
+    }
+    
+    cropperImage.src = imageSrc;
+    cropperWorkspace.classList.remove('hidden');
+    
+    if (cropper) {
+      cropper.destroy();
+    }
+    
+    cropper = new Cropper(cropperImage, {
+      aspectRatio: type === 'cover' ? 3/4 : 16/9,
+      viewMode: 1,
+      dragMode: 'move',
+      autoCropArea: 0.9,
+      responsive: true,
+      restore: false,
+      guides: true,
+      center: true,
+      highlight: false,
+      cropBoxMovable: true,
+      cropBoxResizable: true,
+      toggleDragModeOnDblclick: false
+    });
+  }
+
+  function closeCropper() {
+    cropperWorkspace.classList.add('hidden');
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+  }
+
+  // Cover image listener
+  coverInput.addEventListener('change', function(e) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        startCropper(evt.target.result, 'cover');
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Render gallery thumbnails dynamically
+  function renderGalleryPreviews() {
+    const container = document.getElementById('galleryPreviews');
+    container.innerHTML = '';
+    
+    croppedGalleryBlobs.forEach((blob, idx) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'w-16 h-16 rounded-lg bg-surface-dark border border-border-dark flex items-center justify-center overflow-hidden relative group';
+      
+      if (blob instanceof File && blob.type.startsWith('video/')) {
+        const videoIcon = document.createElement('span');
+        videoIcon.className = 'material-icons-outlined text-accent text-2xl';
+        videoIcon.textContent = 'videocam';
+        thumb.appendChild(videoIcon);
+        
+        const badge = document.createElement('span');
+        badge.className = 'absolute bottom-1 right-1 bg-black/60 text-[8px] text-white px-1 rounded';
+        badge.textContent = `Video`;
+        thumb.appendChild(badge);
+      } else {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(blob);
+        img.className = 'w-full h-full object-cover';
+        thumb.appendChild(img);
+      }
+      
+      // Delete button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'absolute inset-0 bg-black/75 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-red-500 cursor-pointer border-none rounded-lg';
+      deleteBtn.innerHTML = '<span class="material-icons-outlined text-sm">delete_outline</span>';
+      deleteBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        croppedGalleryBlobs.splice(idx, 1);
+        renderGalleryPreviews();
+      });
+      thumb.appendChild(deleteBtn);
+      
+      container.appendChild(thumb);
+    });
+    
+    // Persistent "+" placeholder button at the end
+    const plusBtn = document.createElement('button');
+    plusBtn.type = 'button';
+    plusBtn.id = 'galleryAddBtn';
+    plusBtn.onclick = () => document.getElementById('galleryInput').click();
+    plusBtn.className = 'w-16 h-16 rounded-lg border-2 border-dashed border-border-dark hover:border-accent hover:text-accent flex flex-col items-center justify-center text-text-muted transition-colors cursor-pointer bg-background-dark/30';
+    plusBtn.innerHTML = '<span class="material-icons-outlined text-xl">add</span><span class="text-[8px] mt-1">Add Media</span>';
+    container.appendChild(plusBtn);
+  }
+
+  // Gallery multi-file listener
+  galleryInput.addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    galleryQueue = files;
+    
+    // Begin queuing
+    cropNextGalleryImage(0);
+  });
+
+  function cropNextGalleryImage(index) {
+    currentGalleryIndex = index;
+    if (index < galleryQueue.length) {
+      const file = galleryQueue[index];
+      
+      // If the file is a video, bypass the cropper and push directly
+      if (file.type.startsWith('video/')) {
+        croppedGalleryBlobs.push(file);
+        renderGalleryPreviews();
+        
+        // Proceed to next file
+        cropNextGalleryImage(index + 1);
+      } else {
+        // It's an image. Crop it.
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          startCropper(evt.target.result, 'gallery', index);
+        };
+        reader.readAsDataURL(file);
+      }
+    } else {
+      closeCropper();
+      galleryInput.value = ''; // clear input so change fires on same files again
+    }
+  }
+
+  // Save crop click listener
+  saveCropBtn.addEventListener('click', function() {
+    if (!cropper) return;
+    
+    const canvas = cropper.getCroppedCanvas({
+      width: currentCropType === 'cover' ? 600 : 1280,
+      height: currentCropType === 'cover' ? 800 : 720
+    });
+    
+    canvas.toBlob(function(blob) {
+      if (currentCropType === 'cover') {
+        croppedCoverBlob = blob;
+        coverPreview.src = URL.createObjectURL(blob);
+        coverPreviewContainer.classList.remove('hidden');
+        closeCropper();
+      } else {
+        croppedGalleryBlobs.push(blob);
+        renderGalleryPreviews();
+        
+        // Next image in queue
+        const nextIndex = currentGalleryIndex + 1;
+        if (nextIndex < galleryQueue.length) {
+          cropNextGalleryImage(nextIndex);
+        } else {
+          closeCropper();
+          galleryInput.value = '';
+        }
+      }
+    }, 'image/png');
+  });
+
+  // Cancel crop
+  cancelCropBtn.addEventListener('click', function() {
+    closeCropper();
+    if (currentCropType === 'cover') {
+      coverInput.value = '';
+    } else {
+      galleryInput.value = '';
+    }
+  });
+
+  closeCropperBtn.addEventListener('click', function() {
+    closeCropper();
+    if (currentCropType === 'cover') {
+      coverInput.value = '';
+    } else {
+      galleryInput.value = '';
+    }
+  });
+
+  // Initialize previews layout with persistent "+" button
+  renderGalleryPreviews();
+
+  // ─── Platform Expansion & Dynamic Hardware Requirements UI ────────────────
+  const otherToggle = document.getElementById('otherPlatformsToggle');
+  const otherContainer = document.getElementById('otherPlatformsContainer');
+  const otherSearchInput = document.getElementById('otherPlatformsSearch');
+  const otherDropdown = document.getElementById('otherPlatformsDropdown');
+
+  const requirementsTabs = document.getElementById('requirementsTabs');
+  const requirementsContent = document.getElementById('requirementsContent');
+  const noPlatformsMessage = document.getElementById('noPlatformsMessage');
+
+  let activePlatformTab = '';
+
+  const otherPlatformsList = [
+    "Nintendo Switch", "PlayStation 3", "PlayStation 2", "PlayStation 1",
+    "Xbox 360", "Nintendo Wii U", "Nintendo Wii", "Nintendo 3DS",
+    "Nintendo DS", "PlayStation Portable", "PlayStation Vita",
+    "Sega Genesis", "NES", "SNES"
+  ];
+
+  const consoleDefaults = {
+    "PlayStation 5": { os: "PS5 System Software", storage: "100 GB SSD", graphics: "4K 60FPS Support", architecture: "AMD Zen 2 Custom", processor: "AMD Zen 2 (8-core)", memory: "16 GB GDDR6" },
+    "Xbox Series X|S": { os: "Xbox System Software", storage: "100 GB SSD", graphics: "4K 60FPS Support", architecture: "AMD Zen 2 Custom", processor: "AMD Zen 2 (8-core)", memory: "16 GB GDDR6" },
+    "Nintendo Switch": { os: "Horizon OS", storage: "32 GB", graphics: "720p/1080p Support", architecture: "ARM Cortex-A57", processor: "Nvidia Tegra X1", memory: "4 GB LPDDR4" },
+    "PlayStation 4": { os: "Orbis OS", storage: "500 GB / 1 TB", graphics: "1080p Support", architecture: "x86-64 AMD Jaguar", processor: "AMD Jaguar (8-core)", memory: "8 GB GDDR5" },
+    "PlayStation 3": { os: "Cell OS", storage: "80 GB / 160 GB", graphics: "720p/1080p Support", architecture: "Cell Broadband Engine", processor: "Cell Broadband (3.2 GHz)", memory: "256 MB XDR RAM" },
+    "PlayStation 2": { os: "PS2 System", storage: "8 MB Memory Card", graphics: "480p Support", architecture: "MIPS R5900 Emotion Engine", processor: "Emotion Engine (294 MHz)", memory: "32 MB RDRAM" },
+    "PlayStation 1": { os: "PlayStation OS", storage: "1 MB Memory Card", graphics: "240p/480i Support", architecture: "MIPS R3000A", processor: "MIPS R3000A (33.86 MHz)", memory: "2 MB" },
+    "Xbox One": { os: "Xbox OS", storage: "500 GB / 1 TB", graphics: "1080p Support", architecture: "x86-64 AMD Jaguar", processor: "AMD Jaguar (8-core)", memory: "8 GB DDR3" },
+    "Xbox 360": { os: "Xbox 360 Dashboard", storage: "120 GB / 250 GB", graphics: "720p Support", architecture: "PowerPC Xenon", processor: "Xenon (3.2 GHz)", memory: "512 MB GDDR3" },
+    "Nintendo Wii U": { os: "Wii U System Software", storage: "32 GB", graphics: "1080p Support", architecture: "IBM Espresso", processor: "Espresso (1.24 GHz)", memory: "2 GB DDR3" },
+    "Nintendo Wii": { os: "Wii Menu Software", storage: "512 MB Flash", graphics: "480p Support", architecture: "Broadway IBM PowerPC", processor: "Broadway (729 MHz)", memory: "88 MB 1T-SRAM" },
+    "Nintendo 3DS": { os: "3DS System Software", storage: "4 GB SD Card", graphics: "240p 3D Support", architecture: "ARM11 Dual-Core", processor: "ARM11 (268 MHz)", memory: "128 MB FCRAM" },
+    "Nintendo DS": { os: "NDS Firmware", storage: "Game Card", graphics: "192p Support", architecture: "ARM946E-S & ARM7TDMI", processor: "ARM9 (67 MHz) & ARM7 (33 MHz)", memory: "4 MB" },
+    "PlayStation Portable": { os: "PSP System Software", storage: "Memory Stick PRO Duo", graphics: "272p Support", architecture: "MIPS R4000", processor: "MIPS R4000 (333 MHz)", memory: "32 MB" },
+    "PlayStation Vita": { os: "PS Vita System Software", storage: "Vita Memory Card", graphics: "544p Support", architecture: "ARM Cortex-A9 MPCore", processor: "ARM Cortex-A9 (4-core)", memory: "512 MB" },
+    "Sega Genesis": { os: "Genesis Hardware", storage: "ROM Cartridge", graphics: "224p Support", architecture: "Motorola 68000", processor: "Motorola 68000 (7.67 MHz)", memory: "64 KB" },
+    "NES": { os: "NES Hardware", storage: "ROM Cartridge", graphics: "240p Support", architecture: "Ricoh 2A03", processor: "Ricoh 2A03 (1.79 MHz)", memory: "2 KB" },
+    "SNES": { os: "SNES Hardware", storage: "ROM Cartridge", graphics: "224p/240p Support", architecture: "Ricoh 5A22", processor: "Ricoh 5A22 (3.58 MHz)", memory: "128 KB" }
+  };
+
+  // Toggle dropdown visibility
+  otherToggle.addEventListener('change', function() {
+    if (this.checked) {
+      otherContainer.classList.remove('hidden');
+    } else {
+      otherContainer.classList.add('hidden');
+      // Remove all dynamically added checkboxes
+      document.querySelectorAll('.dynamic-platform-checkbox').forEach(el => el.remove());
+      updateHardwareRequirementsUI();
+    }
+  });
+
+  // Render searchable dropdown options
+  function renderDropdownOptions(filterText = '') {
+    otherDropdown.innerHTML = '';
+    const filtered = otherPlatformsList.filter(platform => 
+      platform.toLowerCase().includes(filterText.toLowerCase())
+    );
+    
+    if (filtered.length === 0) {
+      const noResult = document.createElement('div');
+      noResult.className = 'px-4 py-2 text-xs text-text-muted';
+      noResult.textContent = 'No matching platforms';
+      otherDropdown.appendChild(noResult);
+      return;
+    }
+    
+    filtered.forEach(platform => {
+      // Don't show in dropdown if it's already selected
+      const isAlreadySelected = Array.from(document.querySelectorAll('input[name="platforms[]"]'))
+        .some(cb => cb.value === platform);
+      
+      if (isAlreadySelected) return;
+
+      const item = document.createElement('div');
+      item.className = 'px-4 py-2 text-sm text-white hover:bg-accent hover:text-background-dark cursor-pointer transition-colors';
+      item.textContent = platform;
+      item.addEventListener('mousedown', function(e) {
+        // Use mousedown to trigger before input blur fires
+        e.preventDefault();
+        
+        // Add checkbox to platformsContainer (before the "Other" label)
+        const otherLabel = document.getElementById('otherPlatformsToggle').closest('label');
+        const newLabel = document.createElement('label');
+        newLabel.className = 'flex items-center gap-2 cursor-pointer text-sm text-white dynamic-platform-checkbox';
+        newLabel.innerHTML = `
+          <input type="checkbox" name="platforms[]" value="${platform}" checked class="platform-checkbox rounded bg-background-dark border border-border-dark text-white text-accent focus:ring-accent">
+          <span>${platform}</span>
+        `;
+        otherLabel.parentNode.insertBefore(newLabel, otherLabel);
+        
+        // Add event listener to remove when unchecked
+        newLabel.querySelector('input').addEventListener('change', function() {
+          if (!this.checked) {
+            newLabel.remove();
+            updateHardwareRequirementsUI();
+          }
+        });
+
+        // Hide dropdown and clear search
+        otherDropdown.classList.add('hidden');
+        otherSearchInput.value = '';
+        
+        // Update hardware requirements UI
+        updateHardwareRequirementsUI();
+      });
+      otherDropdown.appendChild(item);
+    });
+  }
+
+  otherSearchInput.addEventListener('focus', function() {
+    renderDropdownOptions(this.value);
+    otherDropdown.classList.remove('hidden');
+  });
+
+  otherSearchInput.addEventListener('input', function() {
+    renderDropdownOptions(this.value);
+    otherDropdown.classList.remove('hidden');
+  });
+
+  // Hide dropdown on input blur, but with a small delay so click events on dropdown can fire
+  otherSearchInput.addEventListener('blur', function() {
+    setTimeout(() => {
+      otherDropdown.classList.add('hidden');
+    }, 200);
+  });
+
+  // Watch standard checkboxes for changes
+  document.getElementById('platformsContainer').addEventListener('change', function(e) {
+    if (e.target.classList.contains('platform-checkbox')) {
+      updateHardwareRequirementsUI();
+    }
+  });
+
+  function getPCRequirementsHTML(platform) {
+    const slug = platform.replace(/[^a-zA-Z0-9]/g, '_');
+    return `
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 platform-req-form" data-platform="${platform}" data-slug="${slug}">
+        <!-- Minimum Specs -->
+        <div class="space-y-4">
+          <h3 class="text-sm font-semibold text-accent uppercase tracking-wider">Minimum Specifications (${platform})</h3>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Architecture</label>
+            <input type="text" list="architecture-presets" data-req="minimum.architecture" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. 64-bit" value="64-bit" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Operating System</label>
+            <input type="text" list="os-presets-${slug}" data-req="minimum.os" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. Windows 10" autocomplete="off"/>
+            <datalist id="os-presets-${slug}"><option value="Windows 10"></option><option value="Windows 11"></option><option value="macOS"></option><option value="Ubuntu"></option></datalist>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Processor</label>
+            <input type="text" list="processor-presets-${slug}" data-req="minimum.processor" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. Intel Core i5" autocomplete="off"/>
+            <datalist id="processor-presets-${slug}"><option value="Intel Core i5"></option><option value="Intel Core i7"></option><option value="AMD Ryzen 5"></option></datalist>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Memory</label>
+            <input type="text" list="memory-presets-${slug}" data-req="minimum.memory" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. 8 GB RAM" autocomplete="off"/>
+            <datalist id="memory-presets-${slug}"><option value="4 GB RAM"></option><option value="8 GB RAM"></option><option value="16 GB RAM"></option></datalist>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Graphics Card</label>
+            <input type="text" list="graphics-presets-${slug}" data-req="minimum.graphics" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. NVIDIA GTX 1060" autocomplete="off"/>
+            <datalist id="graphics-presets-${slug}"><option value="NVIDIA GTX 1060"></option><option value="NVIDIA RTX 3060"></option><option value="AMD RX 580"></option></datalist>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Storage</label>
+            <input type="text" list="storage-presets-${slug}" data-req="minimum.storage" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. 50 GB available space" autocomplete="off"/>
+            <datalist id="storage-presets-${slug}"><option value="50 GB available space"></option><option value="100 GB available space"></option></datalist>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Sound Card (Optional)</label>
+            <input type="text" data-req="minimum.sound_card" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. DirectX Compatible" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Additional Notes (Optional)</label>
+            <input type="text" data-req="minimum.additional_notes" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. SSD recommended" autocomplete="off"/>
+          </div>
+        </div>
+        
+        <!-- Recommended Specs -->
+        <div class="space-y-4">
+          <h3 class="text-sm font-semibold text-accent uppercase tracking-wider">Recommended Specifications (${platform})</h3>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Architecture</label>
+            <input type="text" list="architecture-presets" data-req="recommended.architecture" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. 64-bit" value="64-bit" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Operating System</label>
+            <input type="text" list="os-presets-${slug}" data-req="recommended.os" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. Windows 11" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Processor</label>
+            <input type="text" list="processor-presets-${slug}" data-req="recommended.processor" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. Intel Core i7" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Memory</label>
+            <input type="text" list="memory-presets-${slug}" data-req="recommended.memory" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. 16 GB RAM" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Graphics Card</label>
+            <input type="text" list="graphics-presets-${slug}" data-req="recommended.graphics" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. NVIDIA RTX 3060" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Storage</label>
+            <input type="text" list="storage-presets-${slug}" data-req="recommended.storage" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. 100 GB available space" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Sound Card (Optional)</label>
+            <input type="text" data-req="recommended.sound_card" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. DirectX Compatible" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Additional Notes (Optional)</label>
+            <input type="text" data-req="recommended.additional_notes" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. SSD recommended" autocomplete="off"/>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function getConsoleRequirementsHTML(platform, defaults) {
+    const slug = platform.replace(/[^a-zA-Z0-9]/g, '_');
+    return `
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 platform-req-form" data-platform="${platform}" data-slug="${slug}">
+        <!-- Minimum Specs -->
+        <div class="space-y-4">
+          <h3 class="text-sm font-semibold text-accent uppercase tracking-wider">Specifications (${platform})</h3>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Firmware / System Software OS</label>
+            <input type="text" data-req="minimum.os" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" value="${defaults.os || ''}" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Required Storage Space</label>
+            <input type="text" data-req="minimum.storage" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. 50 GB SSD" value="${defaults.storage || ''}" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Target Display / Performance (e.g. 4K 60FPS)</label>
+            <input type="text" data-req="minimum.graphics" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" value="${defaults.graphics || '4K 60FPS Support'}" autocomplete="off"/>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-text-muted mb-1">Additional Notes (Optional)</label>
+            <input type="text" data-req="minimum.additional_notes" class="req-input w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent" placeholder="e.g. HDR support" autocomplete="off"/>
+          </div>
+          <!-- Hidden required fields for schema validation -->
+          <input type="hidden" data-req="minimum.architecture" class="req-input" value="${defaults.architecture || 'x86-64'}">
+          <input type="hidden" data-req="minimum.processor" class="req-input" value="${defaults.processor || 'Custom CPU'}">
+          <input type="hidden" data-req="minimum.memory" class="req-input" value="${defaults.memory || '8 GB'}">
+          <input type="hidden" data-req="minimum.sound_card" class="req-input" value="DirectX Compatible">
+        </div>
+        
+        <!-- Recommended Specs -->
+        <div class="space-y-4">
+          <h3 class="text-sm font-semibold text-accent uppercase tracking-wider">Recommended Info (${platform})</h3>
+          <p class="text-xs text-text-muted">Standard configuration matches specifications for this console release.</p>
+          <input type="hidden" data-req="recommended.os" class="req-input" value="${defaults.os || ''}">
+          <input type="hidden" data-req="recommended.storage" class="req-input" value="${defaults.storage || ''}">
+          <input type="hidden" data-req="recommended.graphics" class="req-input" value="${defaults.graphics || ''}">
+          <input type="hidden" data-req="recommended.additional_notes" class="req-input" value="N/A">
+          <input type="hidden" data-req="recommended.architecture" class="req-input" value="${defaults.architecture || 'x86-64'}">
+          <input type="hidden" data-req="recommended.processor" class="req-input" value="${defaults.processor || 'Custom CPU'}">
+          <input type="hidden" data-req="recommended.memory" class="req-input" value="${defaults.memory || '8 GB'}">
+          <input type="hidden" data-req="recommended.sound_card" class="req-input" value="DirectX Compatible">
+        </div>
+      </div>
+    `;
+  }
+
+  function updateHardwareRequirementsUI() {
+    // Collect all selected platforms
+    const checkedBoxes = Array.from(document.querySelectorAll('.platform-checkbox:checked')).map(cb => cb.value);
+    const selected = [...checkedBoxes];
+
+    if (selected.length === 0) {
+      noPlatformsMessage.classList.remove('hidden');
+      requirementsTabs.classList.add('hidden');
+      requirementsContent.classList.add('hidden');
+      requirementsTabs.innerHTML = '';
+      requirementsContent.innerHTML = '';
+      activePlatformTab = '';
+      return;
+    }
+
+    noPlatformsMessage.classList.add('hidden');
+    requirementsTabs.classList.remove('hidden');
+    requirementsContent.classList.remove('hidden');
+
+    // Remove platforms that are no longer selected
+    const renderedBlocks = Array.from(requirementsContent.querySelectorAll('.platform-req-form'));
+    renderedBlocks.forEach(block => {
+      const p = block.dataset.platform;
+      if (!selected.includes(p)) {
+        block.remove();
+      }
+    });
+
+    // Render blocks for newly selected platforms
+    selected.forEach(platform => {
+      let block = requirementsContent.querySelector(`.platform-req-form[data-platform="${platform}"]`);
+      if (!block) {
+        const tempDiv = document.createElement('div');
+        if (platform === 'PC') {
+          tempDiv.innerHTML = getPCRequirementsHTML(platform);
+        } else {
+          const defaults = consoleDefaults[platform] || { os: `${platform} System OS`, storage: "50 GB", graphics: "1080p Support" };
+          tempDiv.innerHTML = getConsoleRequirementsHTML(platform, defaults);
+        }
+        requirementsContent.appendChild(tempDiv.firstElementChild);
+      }
+    });
+
+    // Ensure activePlatformTab is valid
+    if (!selected.includes(activePlatformTab)) {
+      activePlatformTab = selected[0];
+    }
+
+    // Render Tabs
+    requirementsTabs.innerHTML = '';
+    selected.forEach(platform => {
+      const tabBtn = document.createElement('button');
+      tabBtn.type = 'button';
+      tabBtn.className = `px-4 py-2 text-xs font-semibold rounded-lg border transition-colors cursor-pointer ${
+        platform === activePlatformTab 
+          ? 'bg-accent text-background-dark border-accent' 
+          : 'bg-transparent text-text-muted border-border-dark hover:text-white'
+      }`;
+      tabBtn.textContent = platform;
+      tabBtn.addEventListener('click', function() {
+        activePlatformTab = platform;
+        showActivePlatformForm();
+      });
+      requirementsTabs.appendChild(tabBtn);
+    });
+
+    showActivePlatformForm();
+    updatePlatformStocksUI();
+  }
+
+  const platformStocksSection = document.getElementById('platformStocksSection');
+  const platformStocksContainer = document.getElementById('platformStocksContainer');
+
+  function updatePlatformStocksUI() {
+    const checkedBoxes = Array.from(document.querySelectorAll('.platform-checkbox:checked')).map(cb => cb.value);
+    
+    if (checkedBoxes.length === 0) {
+      platformStocksSection.classList.add('hidden');
+      platformStocksContainer.innerHTML = '';
+      return;
+    }
+    
+    platformStocksSection.classList.remove('hidden');
+    
+    // Save current values to restore them
+    const currentValues = {};
+    platformStocksContainer.querySelectorAll('input').forEach(input => {
+      currentValues[input.dataset.platform] = input.value;
+    });
+
+    platformStocksContainer.innerHTML = '';
+    checkedBoxes.forEach(platform => {
+      const slug = platform.replace(/[^a-zA-Z0-9]/g, '_');
+      const savedVal = currentValues[platform] !== undefined ? currentValues[platform] : '0';
+
+      const row = document.createElement('div');
+      row.className = 'flex items-center justify-between gap-4 py-2 border-b border-border-dark last:border-b-0';
+      row.innerHTML = `
+        <span class="text-sm font-medium text-white">${platform}</span>
+        <div class="flex items-center gap-2">
+          <input type="number" min="0" required 
+            data-platform="${platform}"
+            name="platform_stock_${platform}" 
+            id="stock_${slug}" 
+            value="${savedVal}" 
+            class="w-24 bg-surface-dark border border-border-dark rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-accent text-right" 
+            placeholder="0" />
+          <span class="text-xs text-text-muted">units</span>
+        </div>
+      `;
+      platformStocksContainer.appendChild(row);
+    });
+  }
+
+  function showActivePlatformForm() {
+    // Update tab styles
+    const tabButtons = Array.from(requirementsTabs.querySelectorAll('button'));
+    tabButtons.forEach(btn => {
+      if (btn.textContent === activePlatformTab) {
+        btn.className = 'px-4 py-2 text-xs font-semibold rounded-lg border bg-accent text-background-dark border-accent cursor-pointer';
+      } else {
+        btn.className = 'px-4 py-2 text-xs font-semibold rounded-lg border bg-transparent text-text-muted border-border-dark hover:text-white cursor-pointer';
+      }
+    });
+
+    // Show only the active form block
+    const blocks = Array.from(requirementsContent.querySelectorAll('.platform-req-form'));
+    blocks.forEach(block => {
+      if (block.dataset.platform === activePlatformTab) {
+        block.classList.remove('hidden');
+      } else {
+        block.classList.add('hidden');
+      }
+    });
+  }
+
+  // Initialize requirements UI empty state
+  updateHardwareRequirementsUI();
+
+  // Cancel redirection
+  document.getElementById('cancelBtn').addEventListener('click', function() {
+    window.location.href = '/admin/products';
+  });
+
+  // Form Submit Interceptor & AJAX poster
+  const form = document.getElementById('addGameForm');
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (!croppedCoverBlob) {
+      alert('Please select and crop a Cover Art image.');
+      return;
+    }
+    
+    if (croppedGalleryBlobs.length < 1) {
+      alert(`Please select at least 1 file for the Media Gallery. Current: ${croppedGalleryBlobs.length}`);
+      return;
+    }
+    
+    const formData = new FormData();
+    
+    // Core parameters
+    formData.append('title', form.title.value);
+    formData.append('publisher', form.publisher.value);
+    formData.append('release_year', form.release_year.value);
+    formData.append('price', form.price.value);
+    formData.append('category', form.category.value);
+    formData.append('edition_type', form.edition_type.value);
+    formData.append('description', form.description.value);
+    let totalStock = 0;
+    // Platforms checkbox mapping (both standard and other platforms badges are scanned)
+    form.querySelectorAll('input[name="platforms[]"]:checked').forEach(cb => {
+      const platform = cb.value;
+      const slug = platform.replace(/[^a-zA-Z0-9]/g, '_');
+      const stockInput = document.getElementById(`stock_${slug}`);
+      const stockVal = parseInt(stockInput ? stockInput.value : '0') || 0;
+      totalStock += stockVal;
+      formData.append(`platform_stock_${platform}`, stockVal);
+      formData.append('platforms[]', platform);
+    });
+    formData.append('stock', totalStock);
+    
+    // Dynamic System Requirements mapping — read only from the currently visible (active) platform block
+    const activeReqBlock = document.querySelector('.platform-req-form:not(.hidden)');
+    if (activeReqBlock) {
+      const getVal = (dataReq) => {
+        const input = activeReqBlock.querySelector(`[data-req="${dataReq}"]`);
+        return input ? input.value : '';
+      };
+      
+      formData.append('system_requirements.minimum.architecture', getVal('minimum.architecture'));
+      formData.append('system_requirements.minimum.os', getVal('minimum.os'));
+      formData.append('system_requirements.minimum.processor', getVal('minimum.processor'));
+      formData.append('system_requirements.minimum.memory', getVal('minimum.memory'));
+      formData.append('system_requirements.minimum.graphics', getVal('minimum.graphics'));
+      formData.append('system_requirements.minimum.storage', getVal('minimum.storage'));
+      formData.append('system_requirements.minimum.sound_card', getVal('minimum.sound_card'));
+      formData.append('system_requirements.minimum.additional_notes', getVal('minimum.additional_notes'));
+      
+      formData.append('system_requirements.recommended.architecture', getVal('recommended.architecture'));
+      formData.append('system_requirements.recommended.os', getVal('recommended.os'));
+      formData.append('system_requirements.recommended.processor', getVal('recommended.processor'));
+      formData.append('system_requirements.recommended.memory', getVal('recommended.memory'));
+      formData.append('system_requirements.recommended.graphics', getVal('recommended.graphics'));
+      formData.append('system_requirements.recommended.storage', getVal('recommended.storage'));
+      formData.append('system_requirements.recommended.sound_card', getVal('recommended.sound_card'));
+      formData.append('system_requirements.recommended.additional_notes', getVal('recommended.additional_notes'));
+    } else {
+      // Fallback
+      formData.append('system_requirements.minimum.architecture', '64-bit');
+      formData.append('system_requirements.minimum.os', 'N/A');
+      formData.append('system_requirements.minimum.processor', 'N/A');
+      formData.append('system_requirements.minimum.memory', 'N/A');
+      formData.append('system_requirements.minimum.graphics', 'N/A');
+      formData.append('system_requirements.minimum.storage', 'N/A');
+      formData.append('system_requirements.minimum.sound_card', '');
+      formData.append('system_requirements.minimum.additional_notes', '');
+      
+      formData.append('system_requirements.recommended.architecture', '64-bit');
+      formData.append('system_requirements.recommended.os', 'N/A');
+      formData.append('system_requirements.recommended.processor', 'N/A');
+      formData.append('system_requirements.recommended.memory', 'N/A');
+      formData.append('system_requirements.recommended.graphics', 'N/A');
+      formData.append('system_requirements.recommended.storage', 'N/A');
+      formData.append('system_requirements.recommended.sound_card', '');
+      formData.append('system_requirements.recommended.additional_notes', '');
+    }
+    
+    // Attach cropped blobs
+    formData.append('cover_image', croppedCoverBlob, 'cover.png');
+    croppedGalleryBlobs.forEach((blob, idx) => {
+      if (blob instanceof File) {
+        const ext = blob.name.split('.').pop() || 'mp4';
+        formData.append('gallery', blob, `gallery-${idx}.${ext}`);
+      } else {
+        formData.append('gallery', blob, `gallery-${idx}.png`);
+      }
+    });
+    
+    try {
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="material-icons-outlined animate-spin text-sm">sync</span> Publishing...';
+      
+      const response = await fetch('/admin/products/add', {
+        method: 'POST',
+        body: formData
+      });
+      
+      let result = null;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        result = await response.json();
+      }
+      
+      if (response.ok && result && result.success) {
+        alert('Game published successfully!');
+        window.location.href = '/admin/products';
+      } else {
+        const errMsg = result && result.message 
+          ? result.message 
+          : `Server returned status ${response.status} (${response.statusText || 'Unknown Error'})`;
+        alert('Error publishing game: ' + errMsg);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="material-icons-outlined text-sm">save</span> Publish Game to Library';
+      }
+    } catch (err) {
+      console.error('Submission error:', err);
+      alert('Failed to submit form: ' + err.message);
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span class="material-icons-outlined text-sm">save</span> Publish Game to Library';
+    }
+  });
+</script>
+
+<%- include('../partials/admin/footer') %>

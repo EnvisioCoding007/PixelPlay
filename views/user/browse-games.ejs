@@ -1,0 +1,414 @@
+<%- include('../partials/user/header') %>
+
+<style>
+  #gameGridContainer {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease-in-out;
+  }
+  .slide-out-left {
+    transform: translateX(-100px) !important;
+    opacity: 0 !important;
+  }
+  .slide-out-right {
+    transform: translateX(100px) !important;
+    opacity: 0 !important;
+  }
+  .slide-in-left {
+    transform: translateX(-100px) !important;
+    opacity: 0 !important;
+  }
+  .slide-in-right {
+    transform: translateX(100px) !important;
+    opacity: 0 !important;
+  }
+</style>
+
+<%
+  const getPageUrl = (page) => {
+    const params = new URLSearchParams();
+    if (typeof query !== 'undefined' && query) {
+      for (const [key, value] of Object.entries(query)) {
+        if (key === 'page') continue;
+        if (Array.isArray(value)) {
+          value.forEach(v => params.append(key, v));
+        } else if (value !== undefined && value !== null) {
+          params.append(key, value);
+        }
+      }
+    }
+    params.set('page', page);
+    return `/browse?${params.toString()}`;
+  };
+%>
+
+<body class="antialiased min-h-screen flex flex-col">
+
+<%- include('../partials/user/navbar', { activeTab: 'browse', user: typeof user !== 'undefined' ? user : null, query: typeof query !== 'undefined' ? query : {} }) %>
+
+<form id="filterForm" action="/browse" method="GET" class="flex flex-1 overflow-hidden w-full">
+  <!-- Hidden Input for active Vault Tab -->
+  <input type="hidden" name="vault" id="vaultInput" value="<%= (typeof query !== 'undefined' && query.vault) ? query.vault : 'all' %>" />
+  <input type="hidden" name="search" id="hiddenSearchInput" value="<%= (typeof query !== 'undefined' && query.search) ? query.search : '' %>" />
+
+  <%- include('../partials/user/sidebar', { 
+    query: typeof query !== 'undefined' ? query : {}, 
+    categories: typeof categories !== 'undefined' ? categories : [], 
+    platforms: typeof platforms !== 'undefined' ? platforms : [], 
+    publishers: typeof publishers !== 'undefined' ? publishers : [] 
+  }) %>
+
+  <!-- BEGIN: Main Content Area -->
+  <main class="flex-1 overflow-y-auto p-6 md:p-8 bg-[#0d0d0d]">
+    <div class="max-w-7xl mx-auto pb-12">
+      
+      <!-- Dynamic Tabs -->
+      <% const activeVault = (typeof query !== 'undefined' && query.vault) ? query.vault : 'all'; %>
+      <div class="flex gap-8 border-b border-[#2A2A2A] mb-6">
+        <button type="button" onclick="setVault('all')" class="<%= activeVault === 'all' ? 'text-brand border-b-2 border-brand' : 'text-gray-400 hover:text-gray-200 border-b-2 border-transparent hover:border-gray-500' %> pb-3 text-sm font-medium tracking-wide transition-all cursor-pointer">
+          All Games
+        </button>
+        <button type="button" onclick="setVault('standard')" class="<%= activeVault === 'standard' ? 'text-brand border-b-2 border-brand' : 'text-gray-400 hover:text-gray-200 border-b-2 border-transparent hover:border-gray-500' %> pb-3 text-sm font-medium tracking-wide transition-all cursor-pointer">
+          Standard Vault
+        </button>
+        <button type="button" onclick="setVault('legendary')" class="<%= activeVault === 'legendary' ? 'text-legend border-b-2 border-legend' : 'text-gray-400 hover:text-gray-200 border-b-2 border-transparent hover:border-gray-500' %> pb-3 text-sm font-medium tracking-wide transition-all cursor-pointer">
+          Legends Vault
+        </button>
+      </div>
+
+      <!-- Page Header -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">Browse Games</h1>
+          <p class="text-sm text-gray-400">
+            Showing <%= typeof totalCount !== 'undefined' ? totalCount : (typeof products !== 'undefined' && products ? products.length : 0) %> physical disk titles
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-400">Sort by:</span>
+          <div class="relative">
+            <select name="sort" onchange="this.form.submit()" class="appearance-none bg-[#1A1A1A] border border-[#2A2A2A] text-white text-sm rounded py-2 pl-4 pr-10 focus:outline-none focus:border-gray-500 cursor-pointer">
+              <option value="Trending" <%= typeof query !== 'undefined' && query.sort === 'Trending' ? 'selected' : '' %>>Trending</option>
+              <option value="Price: Low to High" <%= typeof query !== 'undefined' && query.sort === 'Price: Low to High' ? 'selected' : '' %>>Price: Low to High</option>
+              <option value="Price: High to Low" <%= typeof query !== 'undefined' && query.sort === 'Price: High to Low' ? 'selected' : '' %>>Price: High to Low</option>
+              <option value="A-Z" <%= typeof query !== 'undefined' && query.sort === 'A-Z' ? 'selected' : '' %>>A-Z</option>
+              <option value="Z-A" <%= typeof query !== 'undefined' && query.sort === 'Z-A' ? 'selected' : '' %>>Z-A</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BEGIN: Game Grid Wrapper -->
+      <div id="gameGridWrapper" class="relative overflow-hidden w-full">
+        <!-- BEGIN: Game Grid -->
+        <div id="gameGridContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-all duration-300 transform translate-x-0 opacity-100">
+        <% if (typeof products !== 'undefined' && products && products.length > 0) { %>
+          <% products.forEach(product => { %>
+            <% if (product.edition_type === 'LEGENDARY') { %>
+              <article onclick="window.location.href='/products/<%= product._id %>'" class="bg-[#151515] rounded-lg overflow-hidden border border-legend flex flex-col game-card-hover group shadow-[0_0_15px_rgba(255,184,0,0.1)] cursor-pointer">
+            <% } else { %>
+              <article onclick="window.location.href='/products/<%= product._id %>'" class="bg-[#151515] rounded-lg overflow-hidden border border-[#2A2A2A] flex flex-col game-card-hover group cursor-pointer">
+            <% } %>
+
+              <!-- Cover Image Area -->
+              <% if (product.edition_type === 'LEGENDARY') { %>
+                <div class="relative aspect-[4/3] bg-[#2a1b0a] overflow-hidden">
+                  <img alt="<%= product.title %>" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" src="<%= product.coverImageUrl || product.cover_image || '/img/placeholder.png' %>"/>
+                </div>
+              <% } else { %>
+                <div class="relative aspect-[4/3] bg-[#0a1122] overflow-hidden">
+                  <img alt="<%= product.title %>" class="w-full h-full object-cover mix-blend-screen opacity-80 group-hover:scale-105 transition-transform duration-500" src="<%= product.coverImageUrl || product.cover_image || '/img/placeholder.png' %>"/>
+                </div>
+              <% } %>
+
+              <!-- Product Details -->
+              <div class="p-4 flex-1 flex flex-col">
+                <h2 class="text-white font-semibold text-lg mb-1 truncate"><%= product.title %></h2>
+                <div class="flex flex-col gap-1 text-xs text-gray-400 mb-3">
+                  <div><span class="font-medium text-gray-300">Category:</span> <%= product.categoryName || 'N/A' %></div>
+                  <div><span class="font-medium text-gray-300">Publisher:</span> <%= product.publisher || 'N/A' %></div>
+                  <div><span class="font-medium text-gray-300">Platforms:</span> <%= (product.platforms && product.platforms.length > 0) ? product.platforms.join(', ') : 'PC' %></div>
+                </div>
+
+                <!-- Stock Badge -->
+                <% if (product.edition_type === 'LEGENDARY') { %>
+                  <div class="bg-[#332500] border border-[#664A00] rounded text-legend text-xs font-medium py-1 px-2 mb-3 inline-flex items-center gap-1 w-max">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                    Legends Vault
+                  </div>
+                <% } %>
+
+                <!-- Rating -->
+                <div class="flex items-center gap-1 mb-4 text-xs">
+                  <svg class="w-4 h-4 text-legend" fill="currentColor" viewbox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                  <span class="text-legend font-bold"><%= product.rating || '4.5' %></span>
+                  <span class="text-gray-500"><%= product.reviewsCount || '(120)' %></span>
+                </div>
+
+                <!-- Footer details & buy button -->
+                <div class="mt-auto">
+                  <% if (typeof user !== 'undefined' && user && user.addresses && user.addresses.some(addr => addr.postal_code)) { %>
+                    <div class="text-xs text-gray-500 mb-3">
+                      Est. Delivery: <%= product.edition_type === 'LEGENDARY' ? '3-5 Solar Days' : '2-3 Solar Days' %>
+                    </div>
+                  <% } %>
+                  <div class="flex items-center justify-between mt-2">
+                    <% if (typeof product.categoryDiscount !== 'undefined' && product.categoryDiscount > 0) { %>
+                      <div class="flex flex-col">
+                        <span class="line-through text-gray-500 text-xs">₹<%= Number(product.price).toFixed(2) %></span>
+                        <span class="<%= product.edition_type === 'LEGENDARY' ? 'text-legend' : 'text-brand' %> font-bold text-xl">₹<%= Number(product.discountedPrice).toFixed(2) %></span>
+                      </div>
+                    <% } else { %>
+                      <span class="<%= product.edition_type === 'LEGENDARY' ? 'text-legend' : 'text-brand' %> font-bold text-xl">₹<%= Number(product.price).toFixed(2) %></span>
+                    <% } %>
+
+                    <div class="flex gap-2">
+                      <% if (product.edition_type === 'LEGENDARY') { %>
+                        <button type="button" onclick="event.stopPropagation(); handleCartClick(this, '<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= (product.platforms && product.platforms.length > 0) ? product.platforms[0] : 'PC' %>')" class="bg-legend hover:bg-legend-light text-[#151515] p-2 rounded transition-colors shadow-[0_0_10px_rgba(255,184,0,0.3)]">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                        </button>
+                      <% } else { %>
+                        <button type="button" onclick="event.stopPropagation(); handleCartClick(this, '<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= (product.platforms && product.platforms.length > 0) ? product.platforms[0] : 'PC' %>')" class="bg-brand hover:bg-brand-light text-white p-2 rounded transition-colors shadow-[0_0_10px_rgba(0,163,255,0.2)]">
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                        </button>
+                      <% } %>
+                      <button type="button" onclick="event.stopPropagation(); toggleWishlist(this, '<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>')" class="bg-[#222222] hover:bg-[#333333] border border-[#333] p-2 rounded transition-colors">
+                        <svg class="w-5 h-5 <%= (typeof userWishlist !== 'undefined' && userWishlist.includes(product._id.toString())) ? 'fill-red-500 text-red-500' : 'text-gray-400' %>" fill="<%= (typeof userWishlist !== 'undefined' && userWishlist.includes(product._id.toString())) ? 'currentColor' : 'none' %>" stroke="currentColor" viewbox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          <% }) %>
+        <% } else { %>
+          <div class="col-span-full py-16 text-center">
+            <div class="text-gray-500 text-lg mb-2">No games found matching your active filters.</div>
+            <a href="/browse" class="text-brand hover:underline">Clear all filters</a>
+          </div>
+        <% } %>
+        </div>
+      </div>
+      <!-- END: Game Grid -->
+
+      <!-- Pagination -->
+      <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+        <div id="paginationContainer" class="mt-12 flex justify-center">
+          <nav class="flex items-center gap-1">
+            
+            <!-- Previous page -->
+            <% if (currentPage > 1) { %>
+              <a href="<%= getPageUrl(currentPage - 1) %>" onclick="event.preventDefault(); navigatePage('<%= getPageUrl(currentPage - 1) %>', 'prev')" class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-[#1A1A1A] border border-[#2A2A2A] rounded-l flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Previous
+              </a>
+            <% } else { %>
+              <span class="px-3 py-2 text-sm text-gray-600 bg-[#1A1A1A] border border-[#2A2A2A] rounded-l flex items-center gap-1 opacity-50 cursor-not-allowed">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Previous
+              </span>
+            <% } %>
+
+            <!-- Page numbers -->
+            <% 
+              let startPage = Math.max(1, currentPage - 2);
+              let endPage = Math.min(totalPages, currentPage + 2);
+              
+              if (startPage > 1) { %>
+                <a href="<%= getPageUrl(1) %>" onclick="event.preventDefault(); navigatePage('<%= getPageUrl(1) %>', 'prev')" class="px-4 py-2 text-sm text-gray-400 hover:text-white bg-[#1A1A1A] border border-[#2A2A2A] hover:bg-[#222]">1</a>
+                <% if (startPage > 2) { %>
+                  <span class="px-3 py-2 text-sm text-gray-500">...</span>
+                <% } %>
+              <% } %>
+
+              <% for (let i = startPage; i <= endPage; i++) { %>
+                <% if (i === currentPage) { %>
+                  <span class="px-4 py-2 text-sm bg-brand border border-brand text-white font-medium"><%= i %></span>
+                <% } else { %>
+                  <a href="<%= getPageUrl(i) %>" onclick="event.preventDefault(); navigatePage('<%= getPageUrl(i) %>', <%= i > currentPage ? "'next'" : "'prev'" %>)" class="px-4 py-2 text-sm text-gray-400 hover:text-white bg-[#1A1A1A] border border-[#2A2A2A] hover:bg-[#222]"><%= i %></a>
+                <% } %>
+              <% } %>
+
+              <% if (endPage < totalPages) { %>
+                <% if (endPage < totalPages - 1) { %>
+                  <span class="px-3 py-2 text-sm text-gray-500">...</span>
+                <% } %>
+                <a href="<%= getPageUrl(totalPages) %>" onclick="event.preventDefault(); navigatePage('<%= getPageUrl(totalPages) %>', 'next')" class="px-4 py-2 text-sm text-gray-400 hover:text-white bg-[#1A1A1A] border border-[#2A2A2A] hover:bg-[#222]"><%= totalPages %></a>
+              <% } %>
+
+            <!-- Next page -->
+            <% if (currentPage < totalPages) { %>
+              <a href="<%= getPageUrl(currentPage + 1) %>" onclick="event.preventDefault(); navigatePage('<%= getPageUrl(currentPage + 1) %>', 'next')" class="px-3 py-2 text-sm text-gray-400 hover:text-white bg-[#1A1A1A] border border-[#2A2A2A] rounded-r flex items-center gap-1">
+                Next
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              </a>
+            <% } else { %>
+              <span class="px-3 py-2 text-sm text-gray-600 bg-[#1A1A1A] border border-[#2A2A2A] rounded-r flex items-center gap-1 opacity-50 cursor-not-allowed">
+                Next
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+              </span>
+            <% } %>
+
+          </nav>
+        </div>
+      <% } %>
+
+    </div>
+  </main>
+  <!-- END: Main Content Area -->
+</form>
+
+<script>
+  const isLoggedIn = <%= typeof user !== 'undefined' && user ? 'true' : 'false' %>;
+
+  let isNavigating = false;
+
+  async function navigatePage(url, direction) {
+    if (isNavigating) return;
+    isNavigating = true;
+
+    const grid = document.getElementById('gameGridContainer');
+    if (!grid) {
+      window.location.href = url;
+      return;
+    }
+
+    // Phase 1: Slide out the current cards
+    if (direction === 'next') {
+      grid.classList.add('slide-out-left');
+    } else {
+      grid.classList.add('slide-out-right');
+    }
+
+    try {
+      const response = await fetch(url);
+      const htmlText = await response.text();
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, 'text/html');
+
+      const newGrid = doc.getElementById('gameGridContainer');
+      const newPagination = doc.getElementById('paginationContainer');
+
+      if (newGrid) {
+        setTimeout(() => {
+          // Replace content
+          grid.innerHTML = newGrid.innerHTML;
+
+          // Prepare to slide in new cards
+          grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-all duration-300';
+          if (direction === 'next') {
+            grid.classList.add('slide-in-right');
+          } else {
+            grid.classList.add('slide-in-left');
+          }
+
+          // Force reflow
+          grid.offsetHeight;
+
+          // Slide in the new cards
+          grid.classList.remove('slide-in-right', 'slide-in-left');
+
+          // Replace pagination
+          const pag = document.getElementById('paginationContainer');
+          if (pag && newPagination) {
+            pag.innerHTML = newPagination.innerHTML;
+          }
+
+          // Update URL
+          window.history.pushState({}, '', url);
+          isNavigating = false;
+        }, 300);
+      } else {
+        window.location.href = url;
+      }
+    } catch (err) {
+      console.error('AJAX pagination error:', err);
+      window.location.href = url;
+    }
+  }
+
+  function setVault(v) {
+    const input = document.getElementById('vaultInput');
+    if (input) {
+      input.value = v;
+      // Auto-submit the filterForm
+      document.getElementById('filterForm').submit();
+    }
+  }
+
+  async function handleCartClick(btn, productId, productTitle, defaultPlatform) {
+    if (!isLoggedIn) {
+      showToast("You must sign-in to continue with the process.", "info");
+      return;
+    }
+    try {
+      const response = await fetch('/auth/cart/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId, platform: defaultPlatform, quantity: 1 })
+      });
+      const data = await response.json();
+      if (data.success) {
+        showToast(`${productTitle} (${defaultPlatform}) added to cart!`, "success");
+        setTimeout(() => {
+          window.location.href = '/auth/cart';
+        }, 800);
+      } else {
+        showToast(data.message || "Failed to add item to cart.", "error");
+      }
+    } catch (err) {
+      console.error("Error adding to cart:", err);
+      showToast("Network error adding to cart.", "error");
+    }
+  }
+
+  async function toggleWishlist(btn, productId, productTitle) {
+    if (!isLoggedIn) {
+      showToast("You must sign-in to continue with the process.", "info");
+      return;
+    }
+
+    try {
+      const response = await fetch('/auth/wishlist/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId })
+      });
+      
+      if (response.status === 401) {
+        window.location.href = '/auth/login';
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        const svg = btn.querySelector('svg');
+        if (svg) {
+          if (data.added) {
+            svg.setAttribute('fill', 'currentColor');
+            svg.classList.remove('text-gray-400');
+            svg.classList.add('fill-red-500', 'text-red-500');
+            showToast(`${productTitle} added to wishlist!`, "success");
+          } else {
+            svg.setAttribute('fill', 'none');
+            svg.classList.remove('fill-red-500', 'text-red-500');
+            svg.classList.add('text-gray-400');
+            showToast(`${productTitle} removed from wishlist.`, "success");
+          }
+        }
+      } else {
+        console.error('Error toggling wishlist:', data.message);
+      }
+    } catch (err) {
+      console.error('Network error toggling wishlist:', err);
+    }
+  }
+</script>
+
+<%- include('../partials/user/footer') %>

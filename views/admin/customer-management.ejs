@@ -1,21 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
+<%- include('../partials/admin/header') %>
+<link rel="stylesheet" href="/globals.css">
 
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta charset="utf-8" />
-    <title>Customer Management · PixelPlay Admin</title>
-    <meta name="description" content="Manage, search and moderate customer accounts on the PixelPlay platform." />
-    <link rel="stylesheet" href="/globals.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { theme: { extend: {} }, plugins: [] };
-    </script>
-</head>
-
-<body class="bg-zinc-950 text-white">
+<body class="bg-background-dark text-white antialiased h-screen flex overflow-hidden">
     <div class="flex h-screen w-full bg-[#09090b] overflow-hidden">
-        <%- include('../partials/admin/sidebar', { activeTab: 'customer-management' }) %>
+        <%- include('../partials/admin/sidebar', { activeTab: 'customers' }) %>
 
         <main class="relative flex-1 h-full overflow-y-auto flex flex-col p-10 gap-6" aria-label="Customer Management Dashboard">
 
@@ -28,88 +16,45 @@
                 </div>
             </header>
 
-            <!-- ── KPI Stat Cards ───────────────────────────────────────── -->
-            <section class="grid h-[167px] w-full grid-cols-3 grid-rows-[167px] gap-5" aria-label="Customer overview metrics">
-                <article class="relative row-[1_/_2] col-[1_/_2] flex h-fit w-full flex-col items-start gap-3 overflow-hidden rounded-md border border-solid border-[#ffffff0f] bg-[#121215a6] px-6 pt-5 pb-[74px] backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)]">
-                    <div class="relative flex w-full flex-[0_0_auto] flex-col items-start self-stretch">
-                        <h2 class="relative mt-[-1.00px] flex items-center self-stretch [font-family:'Inter-SemiBold',Helvetica] text-[13px] font-semibold tracking-[0.50px] leading-[normal] text-[#9aa6ab]">TOTAL REGISTERED USERS</h2>
-                    </div>
-                    <div class="relative flex w-full flex-[0_0_auto] flex-col items-start self-stretch">
-                        <p class="relative mt-[-1.00px] flex items-center self-stretch [font-family:'JetBrains_Mono-Bold',Helvetica] text-[32px] font-bold tracking-[0] leading-[normal] text-[#e6eef2]">
-                            <%= totalCount.toLocaleString() %>
-                        </p>
-                    </div>
-                    <div class="absolute right-[-19px] bottom-[-19px] h-[100px] w-[100px] rounded-[50px] bg-sky-500 opacity-15 blur-[25px]" aria-hidden="true"></div>
-                </article>
-                <article class="relative row-[1_/_2] col-[2_/_3] flex h-fit w-full flex-col items-center gap-3 overflow-hidden rounded-md border border-solid border-[#ffffff0f] bg-[#121215a6] px-6 pt-5 pb-[72px] backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)]">
-                    <div class="relative flex w-full flex-[0_0_auto] flex-col items-start self-stretch">
-                        <h2 class="relative mt-[-1.00px] flex items-center self-stretch [font-family:'Inter-SemiBold',Helvetica] text-[13px] font-semibold tracking-[0.50px] leading-[normal] text-[#9aa6ab]">CURRENT PAGE</h2>
-                    </div>
-                    <div class="relative flex w-full flex-[0_0_auto] flex-col items-start">
-                        <div class="relative inline-flex flex-[0_0_auto] flex-col items-start rounded border border-solid border-[#0ea5e94c] bg-[#0ea5e91a] px-3 py-1.5 shadow-[0px_0px_12px_#0ea5e94c]">
-                            <p class="relative flex w-fit items-center [font-family:'JetBrains_Mono-Bold',Helvetica] text-2xl font-bold tracking-[0] leading-[normal] text-sky-500">
-                                <%= currentPage %> / <%= totalPages %>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="absolute right-[-19px] bottom-[-19px] h-[100px] w-[100px] rounded-[50px] bg-sky-500 opacity-15 blur-[25px]" aria-hidden="true"></div>
-                </article>
-                <article class="relative row-[1_/_2] col-[3_/_4] flex h-fit w-full flex-col items-start gap-3 overflow-hidden rounded-md border border-solid border-[#ffffff0f] bg-[#121215a6] px-6 py-5 backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)]">
-                    <div class="relative flex w-full flex-[0_0_auto] flex-col items-start self-stretch">
-                        <h2 class="relative mt-[-1.00px] flex items-center self-stretch [font-family:'Inter-SemiBold',Helvetica] text-[13px] font-semibold tracking-[0.50px] leading-[normal] text-[#9aa6ab]">SEARCH QUERY</h2>
-                    </div>
-                    <div class="relative flex w-full flex-[0_0_auto] flex-col items-start">
-                        <% if (search) { %>
-                        <div class="relative inline-flex flex-[0_0_auto] flex-col items-start rounded border border-solid border-[#d4af374c] bg-[#d4af371a] px-3 py-1.5 shadow-[0px_0px_12px_#d4af374c]">
-                            <p class="relative flex w-fit items-center [font-family:'JetBrains_Mono-Bold',Helvetica] text-base font-bold tracking-[0] leading-[normal] text-[#d4af37] break-all">
-                                "<%= search %>"
-                            </p>
-                        </div>
-                        <% } else { %>
-                        <p class="[font-family:'Inter-Regular',Helvetica] text-sm text-[#9aa6ab]">No active filter</p>
-                        <% } %>
-                    </div>
-                    <div class="absolute right-[-19px] bottom-[-19px] h-[100px] w-[100px] rounded-[50px] bg-[#d4af37] opacity-15 blur-[25px]" aria-hidden="true"></div>
-                </article>
-            </section>
 
-            <!-- ── Search & Filter Bar ──────────────────────────────────── -->
-            <section class="flex h-auto w-full items-center rounded-md border border-solid border-[#ffffff0f] bg-[#121215a6] shadow-[0px_4px_24px_#00000033] backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)] px-5 py-4 gap-3" aria-label="Customer filters">
-                <form id="search-form" class="flex flex-wrap w-full items-center gap-3" action="/admin/users" method="get">
-                    <!-- Search Input -->
-                    <div class="relative flex-1 min-w-[200px]">
-                        <label for="customer-search" class="sr-only">Search by Name or Email</label>
-                        <div class="relative flex items-center overflow-hidden rounded border border-solid border-[#ffffff1f] bg-[#00000066] py-2.5 pl-9 pr-4">
-                            <svg class="absolute left-3 w-4 h-4 text-[#9aa6ab] pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
-                                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                            </svg>
-                            <input id="customer-search" name="search"
-                                class="w-full border-none bg-transparent p-0 [font-family:'Inter-Regular',Helvetica] text-[13px] font-normal tracking-[0] leading-[normal] text-[#e6eef2] placeholder:text-[#757575] outline-none"
-                                placeholder="Search by name or email..."
-                                type="search"
-                                autocomplete="off"
-                                value="<%= search %>" />
-                        </div>
-                    </div>
 
-                    <!-- Submit / Clear -->
-                    <button type="submit"
-                        class="flex items-center gap-2 px-4 py-2.5 rounded border border-solid border-sky-500 bg-sky-500/10 hover:bg-sky-500/20 transition-colors cursor-pointer [font-family:'Inter-Medium',Helvetica] text-[13px] text-sky-400">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                        Search
-                    </button>
-                    <% if (search) { %>
-                    <a href="/admin/users"
-                        class="flex items-center gap-1.5 px-4 py-2.5 rounded border border-solid border-[#ffffff1f] bg-[#00000066] hover:bg-[#ffffff0f] transition-colors cursor-pointer [font-family:'Inter-Medium',Helvetica] text-[13px] text-[#9aa6ab]">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
-                        Clear
-                    </a>
-                    <% } %>
+            <!-- Search & Filter Control Bar -->
+            <form action="/admin/customers" method="GET" class="flex flex-col md:flex-row items-center gap-4 mb-6 bg-surface-dark p-4 rounded-lg border border-border-dark w-full">
+                
+                <!-- Search Input -->
+                <div class="relative flex-1 w-full">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"></i>
+                    <input type="text" name="search" placeholder="Search by Name, Email, or User ID..." class="w-full bg-background-dark border border-border-dark rounded px-10 py-2.5 text-sm text-[#9aa6ab] focus:border-accent focus:ring-1 focus:ring-accent transition-colors" value="<%= typeof currentSearch !== 'undefined' ? currentSearch : '' %>">
+                </div>
+                
+                <!-- Search Button -->
+                <button type="submit" class="bg-accent text-charcoal font-semibold px-5 py-2.5 rounded hover:opacity-90 transition-opacity text-sm">
+                    Search
+                </button>
 
-                    <!-- Preserve pagination limit on search -->
-                    <input type="hidden" name="limit" value="<%= limit %>" />
-                </form>
-            </section>
+                <!-- Status Filter -->
+                <select name="status" class="bg-background-dark border border-border-dark rounded px-4 py-2.5 text-sm text-white focus:border-accent" onchange="this.form.submit()">
+                    <option value="">Status: All</option>
+                    <option value="active" <%= typeof currentStatus !== 'undefined' && currentStatus === 'active' ? 'selected' : '' %>>Active</option>
+                    <option value="suspended" <%= typeof currentStatus !== 'undefined' && currentStatus === 'suspended' ? 'selected' : '' %>>Suspended</option>
+                </select>
+
+                <!-- Sorting Options -->
+                <select name="sort" class="bg-background-dark border border-border-dark rounded px-4 py-2.5 text-sm text-white focus:border-accent" onchange="this.form.submit()">
+                    <option value="-createdAt" <%= typeof currentSort !== 'undefined' && currentSort === '-createdAt' ? 'selected' : '' %>>Join Date: Newest</option>
+                    <option value="createdAt" <%= typeof currentSort !== 'undefined' && currentSort === 'createdAt' ? 'selected' : '' %>>Join Date: Oldest</option>
+                    <option value="name_asc" <%= typeof currentSort !== 'undefined' && currentSort === 'name_asc' ? 'selected' : '' %>>Name: A-Z</option>
+                    <option value="name_desc" <%= typeof currentSort !== 'undefined' && currentSort === 'name_desc' ? 'selected' : '' %>>Name: Z-A</option>
+                </select>
+
+                <!-- Clear Filters Button -->
+                <a href="/admin/customers" class="bg-surface-hover border border-border-dark text-text-muted hover:text-white px-4 py-2.5 rounded transition-colors text-sm text-center whitespace-nowrap">
+                    Clear Filters
+                </a>
+                
+                <!-- Preserve pagination limit on search -->
+                <input type="hidden" name="limit" value="<%= limit %>" />
+            </form>
 
             <!-- ── Customer Data Table ──────────────────────────────────── -->
             <section class="flex flex-col items-start gap-4 w-full" aria-labelledby="customers-heading">
@@ -248,7 +193,7 @@
                             <svg class="w-6 h-6 text-[#9aa6ab]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         </div>
                         <p class="[font-family:'Inter-Regular',Helvetica] text-sm text-[#9aa6ab]">
-                            <% if (search) { %>No customers match "<%= search %>". <a href="/admin/users" class="text-sky-400 hover:underline">Clear filter</a><% } else { %>No customers found.<% } %>
+                            <% if (search || (typeof status !== 'undefined' && status) || (typeof tier !== 'undefined' && tier)) { %>No customers match the current filters. <a href="/admin/customers" class="text-sky-400 hover:underline">Clear filter</a><% } else { %>No customers found.<% } %>
                         </p>
                     </div>
                     <% } %>
@@ -264,7 +209,7 @@
                         <div class="relative inline-flex flex-[0_0_auto] items-center gap-2">
                             <!-- Previous -->
                             <% if (currentPage > 1) { %>
-                            <a href="/admin/users?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(search) %>&limit=<%= limit %>"
+                            <a href="/admin/customers?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>&status=<%= encodeURIComponent(typeof status !== 'undefined' ? status : '') %>&tier=<%= encodeURIComponent(typeof tier !== 'undefined' ? tier : '') %>&sort=<%= encodeURIComponent(typeof sort !== 'undefined' ? sort : '') %>&limit=<%= limit %>"
                                 class="inline-flex items-center justify-center rounded border border-solid border-[#ffffff0f] bg-[#121215a6] px-3 py-1.5 text-[#9aa6ab] hover:bg-[#1e1e24] transition-colors"
                                 aria-label="Previous page">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
@@ -290,7 +235,7 @@
                                 <span class="[font-family:'Inter-Regular',Helvetica] text-center text-[13px] font-normal text-sky-500"><%= p %></span>
                             </span>
                             <% } else { %>
-                            <a href="/admin/users?page=<%= p %>&search=<%= encodeURIComponent(search) %>&limit=<%= limit %>"
+                            <a href="/admin/customers?page=<%= p %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>&status=<%= encodeURIComponent(typeof status !== 'undefined' ? status : '') %>&tier=<%= encodeURIComponent(typeof tier !== 'undefined' ? tier : '') %>&sort=<%= encodeURIComponent(typeof sort !== 'undefined' ? sort : '') %>&limit=<%= limit %>"
                                 class="inline-flex items-center justify-center rounded border border-solid border-[#ffffff0f] bg-[#121215a6] px-3 py-1.5 hover:bg-[#1e1e24] transition-colors">
                                 <span class="[font-family:'Inter-Regular',Helvetica] text-center text-[13px] font-normal text-[#e6eef2]"><%= p %></span>
                             </a>
@@ -299,7 +244,7 @@
 
                             <!-- Next -->
                             <% if (currentPage < totalPages) { %>
-                            <a href="/admin/users?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(search) %>&limit=<%= limit %>"
+                            <a href="/admin/customers?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>&status=<%= encodeURIComponent(typeof status !== 'undefined' ? status : '') %>&tier=<%= encodeURIComponent(typeof tier !== 'undefined' ? tier : '') %>&sort=<%= encodeURIComponent(typeof sort !== 'undefined' ? sort : '') %>&limit=<%= limit %>"
                                 class="inline-flex items-center justify-center rounded border border-solid border-[#ffffff0f] bg-[#121215a6] px-3 py-1.5 text-[#9aa6ab] hover:bg-[#1e1e24] transition-colors"
                                 aria-label="Next page">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>

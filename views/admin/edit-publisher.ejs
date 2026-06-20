@@ -1,0 +1,271 @@
+<%- include('../partials/admin/header') %>
+<body class="bg-pixel-bg text-gray-300 min-h-screen flex text-sm">
+<%- include('../partials/admin/sidebar', { activeTab: 'publishers' }) %>
+
+<!-- Saving Overlay Notification -->
+<div id="saving-overlay" class="hidden fixed inset-0 bg-background-dark/80 backdrop-blur-sm z-50 flex items-center justify-center">
+  <div class="bg-card-bg p-6 rounded-xl border border-border-dark flex flex-col items-center gap-4 max-w-sm text-center shadow-2xl">
+    <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pixel-blue"></div>
+    <p class="text-sm font-semibold text-white">Saving Changes...</p>
+    <p class="text-xs text-gray-500">Please wait while the publisher details and logo are being updated.</p>
+  </div>
+</div>
+
+<main class="content-bg flex-1 flex flex-col overflow-y-auto relative">
+  <form id="edit-publisher-form" action="/admin/publishers/edit/<%= publisher._id %>" method="POST" enctype="multipart/form-data" class="w-full">
+    <div class="max-w-4xl w-full mx-auto p-6 lg:p-10">
+      <!-- Back & Header -->
+      <div class="flex items-center gap-6 mb-8">
+        <button type="button" onclick="window.location.href='/admin/publishers'" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-400 hover:text-white bg-content-bg border border-border-dark hover:bg-border-dark/50 rounded-lg transition-colors cursor-pointer">
+          <i class="fa-solid fa-arrow-left text-xs"></i>
+          Back to Directory
+        </button>
+        <div>
+          <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+            Edit Publisher — <span class="text-pixel-blue"><%= publisher.name %></span>
+          </h1>
+          <p class="text-sm text-gray-400 mt-1">Modify publisher record details and logo asset.</p>
+        </div>
+      </div>
+
+      <!-- Form Card Container -->
+      <div class="bg-card-bg rounded-xl border border-border-dark shadow-2xl overflow-hidden">
+        <!-- Header -->
+        <div class="p-6 border-b border-border-dark flex justify-between items-center bg-[#121418]/30">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-content-bg flex items-center justify-center text-pixel-blue">
+              <i class="fa-solid fa-building text-base"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-semibold text-white">Publisher Record</h2>
+              <p class="text-xs text-gray-500">Modify the fields below to update the publisher entity</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 px-3 py-1 bg-pixel-blue/10 border border-pixel-blue/20 rounded-full">
+            <i class="fa-solid fa-link text-xs text-pixel-blue"></i>
+            <span class="text-xs font-medium text-pixel-blue">Linked Entity</span>
+          </div>
+        </div>
+
+        <!-- Body Inputs -->
+        <div class="p-6 space-y-6">
+          <div class="flex items-center gap-2 border-b border-border-dark pb-2 mb-4">
+            <i class="fa-solid fa-circle-info text-xs text-gray-500"></i>
+            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Basic Information</h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Publisher Name -->
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1.5" for="publisher_name">
+                Publisher Name <span class="text-pixel-blue">*</span>
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                  <i class="fa-solid fa-building text-xs"></i>
+                </div>
+                <input 
+                  class="block w-full pl-10 bg-content-bg border border-input-dark-border rounded-lg py-2.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue" 
+                  id="publisher_name" 
+                  name="publisher_name" 
+                  type="text" 
+                  value="<%= publisher.name %>"
+                  required
+                />
+              </div>
+              <p class="mt-1.5 text-xs text-gray-500">Full legal or trade name of the publisher.</p>
+            </div>
+
+            <!-- Official Website -->
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1.5" for="official_website">
+                Official Website <span class="text-gray-500 text-xs font-normal">(Optional)</span>
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                  <i class="fa-solid fa-link text-xs"></i>
+                </div>
+                <input 
+                  class="block w-full pl-10 bg-content-bg border border-input-dark-border rounded-lg py-2.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue" 
+                  id="official_website" 
+                  name="official_website" 
+                  type="url"
+                  value="<%= publisher.website %>"
+                />
+              </div>
+              <p class="mt-1.5 text-xs text-gray-500">Public-facing URL of the publisher's website.</p>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="pt-4">
+            <div class="flex items-center gap-2 border-b border-border-dark pb-2 mb-4">
+              <i class="fa-solid fa-file-lines text-xs text-gray-500"></i>
+              <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Studio Description</h3>
+            </div>
+            <textarea 
+              class="block w-full bg-content-bg border border-input-dark-border rounded-lg py-2.5 px-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue resize-y" 
+              id="studio_description" 
+              name="studio_description" 
+              rows="4"
+            ><%= publisher.description %></textarea>
+            <p class="mt-1.5 text-xs text-gray-500">Displayed on the publisher's public profile page in the storefront.</p>
+          </div>
+
+          <!-- Logo -->
+          <div class="pt-4">
+            <div class="flex items-center gap-2 border-b border-border-dark pb-2 mb-4">
+              <i class="fa-solid fa-image text-xs text-gray-500"></i>
+              <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Publisher Logo</h3>
+            </div>
+            <div class="flex items-center justify-between p-4 border border-border-dark bg-[#121418]/50 rounded-lg">
+              <div class="flex items-center gap-4">
+                <div class="h-16 w-16 bg-content-bg border border-border-dark rounded-md flex items-center justify-center overflow-hidden">
+                  <% if (publisher.logo) { %>
+                    <img id="logo-preview" src="<%= publisher.logo %>" alt="<%= publisher.name %> Logo" class="h-full w-full object-cover" />
+                  <% } else { %>
+                    <div id="logo-preview-placeholder" class="w-full h-full flex items-center justify-center text-pixel-blue font-bold text-xl">
+                      <%= publisher.name ? publisher.name.substring(0, 2).toUpperCase() : 'PB' %>
+                    </div>
+                    <img id="logo-preview" class="h-full w-full object-cover hidden" />
+                  <% } %>
+                </div>
+                <div>
+                  <h4 id="logo-filename-label" class="text-sm font-semibold text-white">
+                    <%= publisher.logo ? publisher.logo.split('/').pop() : 'No logo uploaded' %>
+                  </h4>
+                  <p class="text-xs text-gray-500 mt-1 max-w-md">PNG, JPG · Recommended: 300x300px. Used in catalog listings and profile pages.</p>
+                </div>
+              </div>
+              <button 
+                onclick="document.getElementById('logo').click()"
+                class="flex items-center gap-2 px-4 py-2 border border-pixel-blue text-pixel-blue hover:bg-pixel-blue/10 rounded-lg text-sm font-semibold transition-colors cursor-pointer" 
+                type="button"
+              >
+                <i class="fa-solid fa-upload"></i>
+                Change Logo
+              </button>
+              <input type="file" name="logo" id="logo" class="hidden" accept="image/*" />
+            </div>
+          </div>
+
+          <!-- Catalog Status -->
+          <div class="pt-4">
+            <div class="flex items-center gap-2 border-b border-border-dark pb-2 mb-4">
+              <i class="fa-solid fa-eye text-xs text-gray-500"></i>
+              <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Catalog Status</h3>
+            </div>
+            <div class="flex items-center justify-between p-4 border border-border-dark bg-[#121418]/50 rounded-lg">
+              <div>
+                <h4 class="text-sm font-semibold text-white">Active in Catalog</h4>
+                <p class="text-xs text-gray-500 mt-1">When disabled, all games under this publisher will be hidden from the storefront.</p>
+              </div>
+              <% const isListed = publisher.is_listed !== false; %>
+              <button 
+                id="visibilityToggle" 
+                aria-checked="<%= isListed %>" 
+                class="<%= isListed ? 'bg-pixel-blue' : 'bg-slate-700' %> relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-pixel-blue focus:ring-offset-2 focus:ring-offset-pixel-bg" 
+                role="switch" 
+                type="button"
+              >
+                <span aria-hidden="true" class="<%= isListed ? 'translate-x-5' : 'translate-x-0' %> pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+              </button>
+              <input type="hidden" name="is_listed" id="publisherStatusInput" value="<%= isListed %>" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer Action Buttons -->
+        <div class="px-6 py-4 bg-sidebar-bg/50 border-t border-border-dark flex items-center justify-between flex-wrap gap-4">
+          <div class="flex items-center gap-3">
+            <button 
+              type="submit" 
+              class="inline-flex items-center justify-center px-5 py-2 border border-transparent text-sm font-semibold rounded-lg text-background-dark bg-pixel-blue hover:bg-pixel-blue-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pixel-blue transition-colors gap-2 cursor-pointer"
+            >
+              <i class="fa-solid fa-save text-xs"></i>
+              Save Changes
+            </button>
+            <button 
+              type="button" 
+              onclick="window.location.href='/admin/publishers'"
+              class="inline-flex items-center justify-center px-5 py-2 text-sm font-medium text-gray-400 hover:text-white border border-input-dark-border bg-content-bg/50 hover:bg-content-bg rounded-lg focus:outline-none transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+          <div class="flex items-center text-xs text-gray-500 gap-1.5">
+            <i class="fa-solid fa-shield-halved text-xs"></i>
+            Changes are saved immediately to the live catalog database
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</main>
+
+<script>
+  // Change Logo file selection & preview
+  const logoInput = document.getElementById('logo');
+  const logoPreview = document.getElementById('logo-preview');
+  const placeholder = document.getElementById('logo-preview-placeholder');
+  const filenameLabel = document.getElementById('logo-filename-label');
+
+  if (logoInput) {
+    logoInput.addEventListener('change', function() {
+      if (this.files && this.files.length > 0) {
+        const file = this.files[0];
+        filenameLabel.textContent = file.name;
+        
+        // Read file to show local preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          if (logoPreview) {
+            logoPreview.src = e.target.result;
+            logoPreview.classList.remove('hidden');
+          }
+          if (placeholder) {
+            placeholder.classList.add('hidden');
+          }
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  // Catalog Status Toggle
+  const toggle = document.getElementById('visibilityToggle');
+  const statusInput = document.getElementById('publisherStatusInput');
+
+  if (toggle && statusInput) {
+    toggle.addEventListener('click', function() {
+      const isChecked = this.getAttribute('aria-checked') === 'true';
+      if (isChecked) {
+        this.setAttribute('aria-checked', 'false');
+        this.classList.remove('bg-pixel-blue');
+        this.classList.add('bg-slate-700');
+        this.firstElementChild.classList.remove('translate-x-5');
+        this.firstElementChild.classList.add('translate-x-0');
+        statusInput.value = 'false';
+      } else {
+        this.setAttribute('aria-checked', 'true');
+        this.classList.remove('bg-slate-700');
+        this.classList.add('bg-pixel-blue');
+        this.firstElementChild.classList.remove('translate-x-0');
+        this.firstElementChild.classList.add('translate-x-5');
+        statusInput.value = 'true';
+      }
+    });
+  }
+
+  // Form saving overlay
+  const form = document.getElementById('edit-publisher-form');
+  if (form) {
+    form.addEventListener('submit', function() {
+      const overlay = document.getElementById('saving-overlay');
+      if (overlay) {
+        overlay.classList.remove('hidden');
+      }
+    });
+  }
+</script>
+<%- include('../partials/admin/footer') %>

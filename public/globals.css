@@ -1,0 +1,19 @@
+:root {
+  --theme-accent: #0EA5E9; 
+}
+
+[data-theme="legendary"] {
+  --theme-accent: #D4AF37; 
+}
+
+/* Global CSS stylesheet */
+textarea::-webkit-scrollbar {
+    width: 8px;
+}
+textarea::-webkit-scrollbar-track {
+    background: transparent;
+}
+textarea::-webkit-scrollbar-thumb {
+    background-color: #2A2A2E;
+    border-radius: 4px;
+}

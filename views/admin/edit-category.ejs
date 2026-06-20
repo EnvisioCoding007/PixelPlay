@@ -1,0 +1,225 @@
+<%- include('../partials/admin/header') %>
+<body class="bg-pixel-bg text-gray-300 min-h-screen flex text-sm">
+<%- include('../partials/admin/sidebar', { activeTab: 'categories' }) %>
+
+<!-- BEGIN: Main Content Area -->
+<main class="flex-1 p-8 overflow-y-auto">
+<div class="max-w-6xl mx-auto">
+<!-- Page Header -->
+<header class="mb-8">
+<h1 class="text-3xl font-bold text-white mb-1">Update Category: <%= category.name %></h1>
+<p class="text-sm font-mono text-gray-500">CAT-ID: <%= category._id %></p>
+</header>
+<!-- Main Form Panel -->
+<div class="bg-card-bg border border-border-dark rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+<!-- Subtle gradient overlay to match image vibe -->
+<div class="absolute inset-0 bg-gradient-to-br from-pixel-blue/5 to-transparent pointer-events-none"></div>
+<form class="relative z-10" action="/admin/categories/edit/<%= category._id %>" method="POST" enctype="multipart/form-data">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+<!-- Left Column: Core Details -->
+<div class="space-y-8">
+<!-- Section Title -->
+<div class="flex items-center gap-4">
+<h2 class="text-xs font-bold tracking-widest text-gray-500 uppercase">Core Details</h2>
+<div class="h-px bg-border-dark flex-1"></div>
+</div>
+<!-- Input Group: Category Name -->
+<div class="space-y-2">
+<label class="block text-sm font-medium text-gray-200" for="categoryName">Category Name</label>
+<input name="name" class="w-full bg-content-bg border border-input-dark-border text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-pixel-blue focus:border-pixel-blue shadow-sm" id="categoryName" type="text" value="<%= category.name %>" required/>
+</div>
+<!-- Input Group: Description -->
+<div class="space-y-2">
+<label class="block text-sm font-medium text-gray-200" for="categoryDesc">Description</label>
+<textarea name="description" class="w-full bg-content-bg border border-input-dark-border text-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-pixel-blue focus:border-pixel-blue resize-none shadow-sm leading-relaxed" id="categoryDesc" rows="4"><%= category.description %></textarea>
+</div>
+<!-- Input Group: Category Icon -->
+<div class="space-y-2">
+<label class="block text-sm font-medium text-gray-200">Category Icon</label>
+<div id="iconUploadBox" class="inline-flex items-center gap-4 p-3 border border-input-dark-border bg-content-bg rounded-lg cursor-pointer hover:bg-border-dark/30 transition-colors">
+<div class="text-gray-400">
+<% if (category.icon) { %>
+  <img src="<%= category.icon %>" alt="<%= category.name %> Icon" class="w-8 h-8 rounded object-cover" />
+<% } else { %>
+  <!-- Icon placeholder (Sword) -->
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<% } %>
+</div>
+<div class="w-px h-6 bg-border-dark"></div>
+<div class="text-gray-400">
+<!-- Edit icon -->
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</div>
+</div>
+<input type="file" name="icon" id="categoryIcon" class="hidden" accept="image/*" />
+<p id="fileNameDisplay" class="text-xs text-pixel-yellow font-medium mt-1 hidden"></p>
+</div>
+</div>
+<!-- Right Column: Status & Config -->
+<div class="space-y-8">
+<!-- Section Title -->
+<div class="flex items-center gap-4">
+<h2 class="text-xs font-bold tracking-widest text-gray-500 uppercase">Status &amp; Configuration</h2>
+<div class="h-px bg-border-dark flex-1"></div>
+</div>
+<!-- Linked Data Card -->
+<div class="space-y-2">
+<label class="block text-sm font-medium text-gray-200">Linked Data</label>
+<div class="flex items-center gap-3 bg-content-bg border border-border-dark rounded-lg px-4 py-3">
+<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span class="text-sm text-gray-200">Games Linked:</span>
+<span class="text-sm font-semibold text-pixel-blue"><%= linkedGamesCount %></span>
+</div>
+</div>
+<!-- Input Group: Default Offer -->
+<div class="space-y-2">
+<label class="block text-sm font-medium text-gray-200" for="defaultOffer">Default Category Offer / Discount (%)</label>
+<input name="defaultOffer" type="text" class="w-full bg-content-bg border border-input-dark-border text-pixel-yellow rounded-lg px-4 py-3 focus:outline-none focus:ring-1 focus:ring-pixel-blue shadow-sm" id="defaultOffer" value="<%= category.defaultOffer || '' %>" placeholder="e.g. 20 for 20% Off"/>
+</div>
+<!-- Visibility Status Toggle -->
+<div class="space-y-2">
+<label class="block text-sm font-medium text-gray-200">Visibility Status</label>
+<div class="flex items-center justify-between bg-content-bg border border-border-dark rounded-lg px-4 py-3">
+<span class="text-sm text-white font-medium">Live on Storefront</span>
+<!-- Toggle Switch (Active state) -->
+<% const isListed = category.status !== 'Hidden'; %>
+<button id="visibilityToggle" aria-checked="<%= isListed %>" class="<%= isListed ? 'bg-pixel-blue' : 'bg-slate-700' %> relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-pixel-blue focus:ring-offset-2 focus:ring-offset-pixel-bg" role="switch" type="button">
+<span aria-hidden="true" class="<%= isListed ? 'translate-x-5' : 'translate-x-0' %> pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+</button>
+<input type="hidden" name="status" id="categoryStatusInput" value="<%= category.status || 'Live' %>" />
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Actions / Footer -->
+<div class="mt-12 pt-6 border-t border-border-dark flex items-center justify-between">
+<!-- Delete Action -->
+<div>
+<% if (linkedGamesCount > 0) { %>
+  <button class="flex items-center gap-2 text-sm font-medium text-gray-600 cursor-not-allowed opacity-50" type="button" disabled>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+    <span class="underline underline-offset-4">Delete Category</span>
+  </button>
+  <p class="text-xs text-pixel-red mt-1 font-semibold">Deletion blocked: change the category of associated games first.</p>
+<% } else { %>
+  <button id="deleteCategoryBtn" data-id="<%= category._id %>" class="flex items-center gap-2 text-sm font-medium text-pixel-red hover:text-red-400 transition-colors group" type="button">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+    <span class="underline underline-offset-4 decoration-pixel-red/50 group-hover:decoration-red-400">Delete Category</span>
+  </button>
+  <p class="text-xs text-gray-500 mt-1 opacity-70">(Only possible if zero games are linked)</p>
+<% } %>
+</div>
+<!-- Save/Cancel Actions -->
+<div class="flex items-center gap-4">
+<button id="cancelBtn" class="px-6 py-2.5 text-sm font-semibold text-white bg-content-bg border border-border-dark rounded-lg hover:bg-border-dark/50 transition-colors flex items-center gap-2" type="button">
+<svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Cancel &amp; Return
+              </button>
+<button class="px-6 py-2.5 text-sm font-semibold text-background-dark bg-pixel-blue rounded-lg hover:bg-pixel-blue-hover transition-colors shadow-[0_0_15px_rgba(44,181,232,0.3)] flex items-center gap-2" type="submit">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+                Commit Updates
+              </button>
+</div>
+</div>
+</form>
+</div>
+</div>
+</main>
+<!-- END: Main Content Area -->
+
+<script>
+  // Handle Category Status Toggle
+  const visibilityToggle = document.getElementById('visibilityToggle');
+  const categoryStatusInput = document.getElementById('categoryStatusInput');
+  const linkedGamesCount = <%= linkedGamesCount %>;
+
+  if (visibilityToggle && categoryStatusInput) {
+    visibilityToggle.addEventListener('click', function() {
+      const isChecked = this.getAttribute('aria-checked') === 'true';
+      
+      if (isChecked) {
+        // Unlisting action
+        if (linkedGamesCount > 0) {
+          alert("Please change the category of associated games before unlisting this category.");
+          return;
+        }
+        const confirmUnlist = confirm("Disclaimer: Unlisting this category will hide all associated games from storefront filter options. Are you sure you want to proceed?");
+        if (!confirmUnlist) return;
+        
+        this.setAttribute('aria-checked', 'false');
+        this.classList.remove('bg-pixel-blue');
+        this.classList.add('bg-slate-700');
+        this.firstElementChild.classList.remove('translate-x-5');
+        this.firstElementChild.classList.add('translate-x-0');
+        categoryStatusInput.value = 'Hidden';
+      } else {
+        // Listing action
+        const confirmList = confirm("Disclaimer: Listing this category will make it visible to customers on the storefront. Are you sure you want to proceed?");
+        if (!confirmList) return;
+        
+        this.setAttribute('aria-checked', 'true');
+        this.classList.remove('bg-slate-700');
+        this.classList.add('bg-pixel-blue');
+        this.firstElementChild.classList.remove('translate-x-0');
+        this.firstElementChild.classList.add('translate-x-5');
+        categoryStatusInput.value = 'Live';
+      }
+    });
+  }
+
+  // Handle Category Icon file selection
+  const iconUploadBox = document.getElementById('iconUploadBox');
+  const fileInput = document.getElementById('categoryIcon');
+  const fileNameDisplay = document.getElementById('fileNameDisplay');
+  if (iconUploadBox && fileInput) {
+    iconUploadBox.addEventListener('click', () => {
+      fileInput.click();
+    });
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length > 0) {
+        fileNameDisplay.textContent = 'Selected: ' + fileInput.files[0].name;
+        fileNameDisplay.classList.remove('hidden');
+      } else {
+        fileNameDisplay.textContent = '';
+        fileNameDisplay.classList.add('hidden');
+      }
+    });
+  }
+
+  // Cancel redirection
+  const cancelBtn = document.getElementById('cancelBtn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      window.location.href = '/admin/categories';
+    });
+  }
+
+  // Delete category request
+  const deleteBtn = document.getElementById('deleteCategoryBtn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', async function() {
+      const catId = this.getAttribute('data-id');
+      const confirmDelete = confirm("Are you sure you want to delete this category?");
+      if (!confirmDelete) return;
+
+      try {
+        const response = await fetch(`/admin/categories/delete/${catId}`, {
+          method: 'POST'
+        });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          window.location.href = '/admin/categories';
+        } else {
+          alert(result.message || 'Failed to delete category.');
+        }
+      } catch (err) {
+        console.error('Error deleting category:', err);
+        alert('An error occurred. Please try again.');
+      }
+    });
+  }
+</script>
+
+<%- include('../partials/admin/footer') %>
+</body>
+</html>

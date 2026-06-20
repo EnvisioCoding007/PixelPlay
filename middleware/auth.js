@@ -1,22 +1,17 @@
 import User from '../models/User.js';
 
-// ── User Auth Guards ───────────────────────────────────────────────────────
 
-/**
- * isUserAuth — guards every user-facing protected route.
- * Performs a live DB lookup on each request so that a blocked or deleted
- * account is ejected immediately, even if their session cookie is still valid.
- */
 export const isUserAuth = async (req, res, next) => {
     if (!req.session.user) {
         return res.redirect('/auth/login');
     }
     try {
         const user = await User.findById(req.session.user)
-            .select('is_blocked')
+            .select('is_blocked role')
             .lean();
 
-        if (!user || user.is_blocked) {
+        // Reject if not found, blocked, or if an admin ObjectId somehow ended up here
+        if (!user || user.is_blocked || user.role === 'admin') {
             // Destroy the stale / revoked session before redirecting
             req.session.destroy(() => {});
             return res.redirect('/auth/login');
@@ -30,6 +25,7 @@ export const isUserAuth = async (req, res, next) => {
 };
 
 export const isUserUnAuth = (req, res, next) => {
+    // Only redirect to /home if a regular user session exists (not an admin session)
     if (req.session.user) {
         res.redirect('/home');
     } else {
@@ -37,18 +33,9 @@ export const isUserUnAuth = (req, res, next) => {
     }
 };
 
-// ── Admin Auth Guards ──────────────────────────────────────────────────────
 
-/**
- * isAdminAuth — protects all admin routes.
- * Admin login stores { _id, role } on req.session.user so we can check role
- * without an extra DB round-trip on every request.
- * For AJAX / fetch requests it returns 401 JSON instead of an HTML redirect
- * so the client-side handler can show a proper error rather than crashing on
- * an unexpected HTML response.
- */
 export const isAdminAuth = (req, res, next) => {
-    if (req.session.user && req.session.user.role === 'admin') {
+    if (req.session.admin && req.session.admin.role === 'admin') {
         next();
     } else {
         const isAjax =
@@ -66,11 +53,9 @@ export const isAdminAuth = (req, res, next) => {
     }
 };
 
-/**
- * isAdminUnAuth — bounces already-authenticated admins away from the login page.
- */
+
 export const isAdminUnAuth = (req, res, next) => {
-    if (req.session.user && req.session.user.role === 'admin') {
+    if (req.session.admin && req.session.admin.role === 'admin') {
         res.redirect('/admin/users');
     } else {
         next();

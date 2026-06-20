@@ -1,0 +1,174 @@
+<%- include('../partials/admin/header') %>
+<body class="bg-pixel-bg text-gray-300 min-h-screen flex text-sm">
+<%- include('../partials/admin/sidebar', { activeTab: 'publishers' }) %>
+
+<!-- Saving Overlay Notification -->
+<div id="saving-overlay" class="hidden fixed inset-0 bg-background-dark/80 backdrop-blur-sm z-50 flex items-center justify-center">
+  <div class="bg-card-bg p-6 rounded-xl border border-border-dark flex flex-col items-center gap-4 max-w-sm text-center shadow-2xl">
+    <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-pixel-blue"></div>
+    <p class="text-sm font-semibold text-white">Saving Publisher...</p>
+    <p class="text-xs text-gray-500">Please wait while the details and logo are being uploaded and saved.</p>
+  </div>
+</div>
+
+<main class="content-bg flex-1 flex flex-col overflow-y-auto relative">
+  <form id="add-publisher-form" action="/admin/publishers/add" method="POST" enctype="multipart/form-data" class="w-full">
+    <div class="max-w-4xl w-full mx-auto p-6 lg:p-10">
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-white mb-2">Register New Publisher</h1>
+        <p class="text-sm text-gray-400">
+          Add a new publisher to the database. This name will appear in the dropdown menu when adding new physical game disks.
+        </p>
+      </div>
+
+      <!-- Info Alert Box -->
+      <div class="bg-pixel-yellow/10 border border-pixel-yellow/20 rounded-lg p-4 mb-6 flex gap-3 items-start text-pixel-yellow">
+        <i class="fa-solid fa-circle-info text-base mt-0.5"></i>
+        <p class="text-sm text-gray-300 leading-relaxed">
+          Publishers registered here will be immediately available in the <span class="text-pixel-yellow font-medium">Add / Edit Game</span> form. Ensure the publisher name matches their official branding to maintain catalog consistency.
+        </p>
+      </div>
+
+      <!-- Form Card Container -->
+      <div class="bg-card-bg rounded-xl border border-border-dark shadow-2xl overflow-hidden">
+        <!-- Header -->
+        <div class="p-6 border-b border-border-dark flex items-center gap-4">
+          <div class="w-10 h-10 rounded-lg bg-content-bg flex items-center justify-center text-pixel-blue">
+            <i class="fa-solid fa-building text-base"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-semibold text-white">Publisher Details</h2>
+            <p class="text-xs text-gray-500">Fill in the required fields to register a new publisher entity</p>
+          </div>
+        </div>
+
+        <!-- Body Inputs -->
+        <div class="p-6 space-y-6">
+          <!-- Publisher Name -->
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1.5" for="publisher_name">
+              Publisher Name <span class="text-pixel-blue">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                <i class="fa-solid fa-building text-xs"></i>
+              </div>
+              <input 
+                class="block w-full pl-10 bg-content-bg border border-input-dark-border rounded-lg py-2.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue" 
+                id="publisher_name" 
+                name="publisher_name" 
+                placeholder="e.g., Bethesda Softworks" 
+                type="text" 
+                required
+              />
+            </div>
+            <p class="mt-1.5 text-xs text-gray-500">This will be the display name used across the PixelPlay catalog.</p>
+          </div>
+
+          <!-- Official Website -->
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1.5" for="official_website">
+              Official Website <span class="text-gray-500 text-xs font-normal">(Optional)</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                <i class="fa-solid fa-link text-xs"></i>
+              </div>
+              <input 
+                class="block w-full pl-10 bg-content-bg border border-input-dark-border rounded-lg py-2.5 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue" 
+                id="official_website" 
+                name="official_website" 
+                placeholder="https://publisher-website.com" 
+                type="url"
+              />
+            </div>
+            <p class="mt-1.5 text-xs text-gray-500">Used for reference and may be displayed on the publisher's catalog page.</p>
+          </div>
+
+          <!-- Publisher Logo Upload -->
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1.5">
+              Publisher Logo <span class="text-gray-500 text-xs font-normal">(Optional)</span>
+            </label>
+            <div 
+              onclick="document.getElementById('logo').click()" 
+              class="mt-1 flex justify-center px-6 pt-8 pb-8 border-2 border-dashed border-input-dark-border bg-content-bg/30 rounded-lg hover:bg-content-bg/50 transition-colors cursor-pointer relative group"
+            >
+              <div class="space-y-3 text-center">
+                <div class="w-12 h-12 mx-auto rounded-full bg-content-bg border border-border-dark flex items-center justify-center group-hover:bg-pixel-blue/10 transition-colors text-pixel-blue">
+                  <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                </div>
+                <div class="text-sm text-gray-300">
+                  <span class="font-medium text-white">Drop Publisher Logo Here</span><br/>
+                  <span class="text-gray-500">Drag &amp; drop your image, or <span class="text-pixel-blue font-medium hover:underline">browse files</span></span>
+                </div>
+                <p class="text-xs text-gray-500">Supports PNG, JPG · Max file size: 2MB · Recommended: 300x300px</p>
+                <p id="logo-filename" class="text-xs text-pixel-yellow font-medium mt-3"></p>
+              </div>
+            </div>
+            <input type="file" name="logo" id="logo" class="hidden" accept="image/*" />
+            <p class="mt-1.5 text-xs text-gray-500">A square logo works best. Transparent PNG is preferred for storefront display.</p>
+          </div>
+
+          <!-- Brief Description -->
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-1.5" for="brief_description">
+              Brief Description <span class="text-gray-500 text-xs font-normal">(Optional)</span>
+            </label>
+            <textarea 
+              class="block w-full bg-content-bg border border-input-dark-border rounded-lg py-2.5 px-3 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue resize-y" 
+              id="brief_description" 
+              name="brief_description" 
+              placeholder="Write a short bio or internal notes about this publisher (e.g., founding year, known franchises, region)..." 
+              rows="4"
+            ></textarea>
+            <p class="mt-1.5 text-xs text-gray-500">Internal notes are visible only to admin users and won't be shown on the storefront.</p>
+          </div>
+        </div>
+
+        <!-- Footer Action Buttons -->
+        <div class="px-6 py-4 bg-sidebar-bg/50 border-t border-border-dark flex items-center justify-between flex-wrap gap-4">
+          <div class="flex items-center gap-3">
+            <button 
+              type="submit" 
+              class="inline-flex items-center justify-center px-5 py-2 border border-transparent text-sm font-semibold rounded-lg text-background-dark bg-pixel-blue hover:bg-pixel-blue-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pixel-blue transition-colors gap-2 cursor-pointer"
+            >
+              <i class="fa-solid fa-check text-xs"></i>
+              Save Publisher
+            </button>
+            <button 
+              type="button" 
+              onclick="window.location.href='/admin/publishers'"
+              class="inline-flex items-center justify-center px-5 py-2 text-sm font-medium text-gray-400 hover:text-white border border-input-dark-border bg-content-bg/50 hover:bg-content-bg rounded-lg focus:outline-none transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+          <div class="flex items-center text-xs text-gray-500 gap-1.5">
+            <i class="fa-solid fa-shield-halved text-xs"></i>
+            Changes are saved immediately to the live catalog database
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</main>
+
+<script>
+  // Display file name inside custom file input area
+  document.getElementById('logo').addEventListener('change', function() {
+    const fileDisplay = document.getElementById('logo-filename');
+    if (this.files && this.files.length > 0) {
+      fileDisplay.textContent = 'Selected Logo: ' + this.files[0].name;
+    } else {
+      fileDisplay.textContent = '';
+    }
+  });
+
+  // Submit listener to show the Saving notification overlay
+  document.getElementById('add-publisher-form').addEventListener('submit', function() {
+    document.getElementById('saving-overlay').classList.remove('hidden');
+  });
+</script>
+
+<%- include('../partials/admin/footer') %>

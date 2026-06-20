@@ -28,8 +28,8 @@
                 <div class="relative flex-1 grow h-[994px] bg-[#0a0a0d]">
                     <div class="absolute top-[calc(50.00%_-_127px)] left-[calc(50.00%_-_247px)] w-[494px] h-[355px]">
                         <div class="inline-flex items-center justify-center absolute top-0 left-[calc(50.00%_-_108px)]">
-                            <div class="relative w-[217px] h-[145px] aspect-[1.5] bg-[url(legacy:image:md5:366:1615-no-children)] bg-cover bg-[50%_50%]"
-                                aria-hidden="true"></div>
+                            <img class="relative w-[217px] h-[145px] object-contain"
+                                src="/icons/brand_logo/pixelplay-logo.png" alt="PixelPlay Logo" />
                         </div>
                         <div class="flex flex-col w-[213px] h-px items-center px-[86.41px] py-0 absolute top-[84px] left-[calc(50.00%_-_106px)]"
                             aria-hidden="true">
@@ -91,10 +91,8 @@
                     <div id="login-panel"
                         class="flex flex-col items-start gap-6 relative self-stretch w-full flex-[0_0_auto]"
                         role="tabpanel" aria-labelledby="login-tab">
-
-                        <%# Bug 4 Fix: removed HTML `required` attributes — JS validation handles all checks.
-                            Bug 7 Fix: #alert-message container is shared; focus listeners clear it. %>
-                        <form id="loginForm" class="flex flex-col items-start gap-6 relative self-stretch w-full flex-[0_0_auto]"
+                        <form id="loginForm"
+                            class="flex flex-col items-start gap-6 relative self-stretch w-full flex-[0_0_auto]"
                             action="#" method="post" novalidate>
                             <div class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
                                 <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
@@ -112,7 +110,8 @@
                                     </div>
                                     <div class="inline-flex flex-col h-[56.00%] items-start absolute top-[22.00%] left-4"
                                         aria-hidden="true">
-                                        <img class="relative w-[16.67px] h-[13.33px]" src="img/icon-4.svg" alt="" />
+                                        <img class="relative w-[16.67px] h-[13.33px]" src="/icons/email-icon.svg"
+                                            alt="" />
                                     </div>
                                 </div>
                             </div>
@@ -128,19 +127,21 @@
                                         <div class="flex flex-col items-start relative flex-1 grow">
                                             <input
                                                 class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#849495] text-base tracking-[0] leading-[normal] [background:transparent] border-[none] p-0"
-                                                placeholder="••••••••••••" type="password" id="input-2" name="password"
-                                                autocomplete="current-password" />
+                                                placeholder="Enter password" type="password" id="input-2"
+                                                name="password" autocomplete="current-password" />
                                         </div>
                                     </div>
                                     <div class="inline-flex flex-col h-[56.00%] items-start absolute top-[22.00%] left-4"
                                         aria-hidden="true">
-                                        <img class="relative w-[13.33px] h-[17.5px]" src="img/icon-3.svg" alt="" />
+                                        <img class="relative w-[13.33px] h-[17.5px]" src="/icons/lock-icon.svg"
+                                            alt="" />
                                     </div>
                                     <button
                                         class="inline-flex flex-col absolute h-[25.51%] top-[37.24%] right-4 items-center justify-center all-[unset] box-border cursor-pointer"
-                                        type="button" aria-label="Show password">
+                                        type="button" id="toggle-password" aria-label="Show password">
                                         <div class="inline-flex items-start justify-center relative flex-[0_0_auto]">
-                                            <img class="relative w-[18.33px] h-[12.5px]" src="img/image.svg" alt="" />
+                                            <img class="relative w-[18.33px] h-[12.5px]"
+                                                src="/icons/eye-password-close.svg" alt="" />
                                         </div>
                                     </button>
                                 </div>
@@ -153,9 +154,6 @@
                                         PASSWORD?</a>
                                 </div>
                             </div>
-
-                            <%# Bug 4 & 7 Fix: standardised #alert-message element, rendered inside
-                                the form so it's visually contextual and cleared on any input focus. %>
                             <p id="alert-message" class="hidden text-red-500 text-sm text-center w-full"></p>
 
                             <button
@@ -164,9 +162,9 @@
                                 <div
                                     class="justify-center w-[43.73px] text-[#002022] text-center relative flex items-center h-3 [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-xs tracking-[1.20px] leading-3 whitespace-nowrap">
                                     LOG IN</div>
-                                <div class="inline-flex flex-col items-center relative flex-[0_0_auto]">
-                                    <img class="relative w-4 h-4" src="img/icon.svg" alt="" />
-                                </div>
+                                <!-- <div class="inline-flex flex-col items-center relative flex-[0_0_auto]">
+                                    <img class="relative w-4 h-4" src="/icons/brand_logo/pixelplay-logo.png" alt="" />
+                                </div> -->
                             </button>
                         </form>
                         <div class="flex items-center gap-4 relative self-stretch w-full flex-[0_0_auto]">
@@ -182,7 +180,7 @@
                             <a href="/auth/google"
                                 class="all-[unset] box-border cursor-pointer relative row-[1_/_2] col-[1_/_2] justify-self-center w-[250px] h-fit flex gap-[7.99px] pl-[46.27px] pr-[46.28px] py-3 bg-[#1c1b1d] border border-solid border-[#3b494b] items-center justify-center transition-colors hover:bg-[#201f22]">
                                 <div class="inline-flex flex-col items-center relative flex-[0_0_auto]">
-                                    <img class="relative w-5 h-5" src="img/icon-2.svg" alt="" />
+                                    <img class="relative w-5 h-5" src="/icons/brand_logo/Google_icon.svg" alt="" />
                                 </div>
                                 <div
                                     class="justify-center w-[52.44px] text-[#e5e1e4] text-center relative flex items-center h-3 [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-xs tracking-[1.20px] leading-3 whitespace-nowrap">
@@ -196,7 +194,21 @@
         </div>
     </div>
     <script>
-        // ── Bug 5 Fix: password complexity regex ─────────────────────────────────
+            // Show error messages passed from the Google OAuth callback
+            // (e.g. "Your account has been suspended") via the ?error= query param.
+            (function () {
+                const params = new URLSearchParams(window.location.search);
+                const oauthError = params.get('error');
+                if (oauthError) {
+                    const el = document.getElementById('alert-message');
+                    if (el) {
+                        el.textContent = decodeURIComponent(oauthError);
+                        el.classList.remove('hidden');
+                    }
+                    history.replaceState(null, '', window.location.pathname);
+                }
+            })();
+
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
         const alertEl = document.getElementById('alert-message');
@@ -206,7 +218,7 @@
             alertEl.classList.remove('hidden');
         }
 
-        // ── Bug 7 Fix: clear alert on any input focus or change ──────────────────
+        // Clear the alert as soon as the user starts correcting input
         document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]')
             .forEach(function (input) {
                 ['focus', 'input'].forEach(function (evt) {
@@ -216,11 +228,27 @@
                 });
             });
 
-        // ── Form submit handler with JS validation (Bugs 4 & 5) ─────────────────
+        const togglePasswordBtn = document.getElementById('toggle-password');
+        const passwordInput = document.getElementById('input-2');
+        if (togglePasswordBtn && passwordInput) {
+            togglePasswordBtn.addEventListener('click', function () {
+                const img = togglePasswordBtn.querySelector('img');
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    img.src = '/icons/eye-password-open.svg';
+                    togglePasswordBtn.setAttribute('aria-label', 'Hide password');
+                } else {
+                    passwordInput.type = 'password';
+                    img.src = '/icons/eye-password-close.svg';
+                    togglePasswordBtn.setAttribute('aria-label', 'Show password');
+                }
+            });
+        }
+
         document.getElementById('loginForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            const email    = document.getElementById('input-1').value.trim();
+            const email = document.getElementById('input-1').value.trim();
             const password = document.getElementById('input-2').value;
 
             if (!email) {

@@ -1,27 +1,15 @@
 import User from '../models/User.js';
-import bcrypt from 'bcrypt';
+import Product from '../models/Product.js';
+import Publisher from '../models/Publisher.js';
+import Wishlist from '../models/Wishlist.js';
+import Cart from '../models/Cart.js';
 import * as userService from '../services/userService.js';
+import * as categoryService from '../services/categoryService.js';
+import * as productService from '../services/productService.js';
+import { uploadToCloudinary } from '../config/cloudinary.js';
 
 export const getSignupPage = (req, res) => {
     res.render('user/signup');
-};
-
-export const getVerifyEmailPage = (req, res) => {
-    const email = req.query.email;
-    res.render('user/verify-email', {
-        email, purpose: 'signup'
-    });
-};
-
-export const getForgetPasswordPage = (req, res) => {
-    res.render('user/forgot-password');
-};
-
-export const getResetPasswordPage = (req, res) => {
-    if (!req.session.resetEmail || !req.session.otpVerified) {
-        return res.redirect('/auth/forgot-password');
-    }
-    res.render('user/reset-password');
 };
 
 export const signup = async (req, res) => {
@@ -33,64 +21,64 @@ export const signup = async (req, res) => {
         }
 
         await userService.registerLocalUser(username, email, password, referralCode);
-
         await userService.generateOTP(email, 'signup');
+
+        req.session.pendingVerifyEmail = email;
 
         res.status(201).json({
             success: true,
             message: 'User registered successfully!',
-            redirectUrl: `/auth/verify-email?email=${encodeURIComponent(email)}`
+            redirectUrl: '/auth/verify-email'
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        res.status(400).json({ success: false, message: error.message });
     }
+};
+
+// ─── Auth — Email Verification ───────────────────────────────────────────────
+
+export const getVerifyEmailPage = (req, res) => {
+    const email = req.session.pendingVerifyEmail;
+    if (!email) return res.redirect('/auth/signup');
+
+    // Cache-Control prevents the browser from serving a stale cached copy on Back,
+    // which would re-render the page and reset the countdown timer.
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.render('user/verify-email', { email, purpose: 'signup' });
 };
 
 export const sendVerificationOtp = async (req, res) => {
     try {
         const { email, purpose } = req.body;
-
-        if (!email) {
-            throw new Error('Email is required to send an OTP.');
-        }
+        if (!email) throw new Error('Email is required to send an OTP.');
 
         const VALID_PURPOSES = ['signup', 'forgot', 'email_update'];
         const otpPurpose = VALID_PURPOSES.includes(purpose) ? purpose : 'signup';
 
         await userService.generateOTP(email, otpPurpose);
 
-        res.status(200).json({
-            success: true,
-            message: 'Verification code sent to your mail.'
-        });
+        res.status(200).json({ success: true, message: 'Verification code sent to your mail.' });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        res.status(400).json({ success: false, message: error.message });
     }
 };
 
 export const verifyOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
-        if (!email || !otp) {
-            throw new Error('Email and OTP are required.');
-        }
+        if (!email || !otp) throw new Error('Email and OTP are required.');
+
         await userService.otpCheck(email, otp, 'signup');
+
+        delete req.session.pendingVerifyEmail;
+
         res.status(200).json({
             success: true,
             message: 'OTP verification successful! Redirecting to login…',
             redirectUrl: '/auth/login'
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        res.status(400).json({ success: false, message: error.message });
     }
 };
 
@@ -101,242 +89,49 @@ export const getLogin = (req, res) => {
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        if (!email || !password) {
-            throw new Error('Email and password are required');
-        }
-        const user = await userService.loginAuth(email, password);
+        if (!email || !password) throw new Error('Email and password are required');
 
+        const user = await userService.loginAuth(email, password);
         req.session.user = user._id;
 
-        res.status(200).json({
-            success: true,
-            message: 'Login successful!',
-            redirectUrl: '/home'
-        });
+        res.status(200).json({ success: true, message: 'Login successful!', redirectUrl: '/home' });
     } catch (error) {
         if (error.code === 'UNVERIFIED') {
+            req.session.pendingVerifyEmail = req.body.email;
             return res.status(403).json({
                 success: false,
                 message: error.message,
-                redirectUrl: `/auth/verify-email?email=${encodeURIComponent(req.body.email)}`
+                redirectUrl: '/auth/verify-email'
             });
         }
-
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
-
-export const getHome = (req, res) => {
-    res.render('user/home');
-};
-
-export const getProfile = async (req, res) => {
-    try {
-        const rawUser = await User.findById(req.session.user).select('password_hash').lean();
-        const user = await User.findById(req.session.user).select('-password_hash').lean();
-        if (!user) {
-            return res.redirect('/auth/login');
-        }
-        // Attach a boolean so the EJS guard works without leaking the hash
-        user.password_hash = rawUser?.password_hash ? true : null;
-        res.render('user/profile', { user });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-export const getProfileEdit = async (req, res) => {
-    try {
-        const rawUser = await User.findById(req.session.user).select('password_hash').lean();
-        const user = await User.findById(req.session.user).select('-password_hash').lean();
-        if (!user) {
-            return res.redirect('/auth/login');
-        }
-        // Attach a boolean so the EJS guard works without leaking the hash
-        user.password_hash = rawUser?.password_hash ? true : null;
-        res.render('user/profile-edit', { user });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-export const getProfilePassword = async (req, res) => {
-    try {
-        const user = await User.findById(req.session.user).select('-password_hash').lean();
-        if (!user) {
-            return res.redirect('/auth/login');
-        }
-        res.render('user/password-update', { user });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-export const updateProfile = async (req, res) => {
-    try {
-        const { username, phone, email } = req.body;
-
-        if (!username || !username.trim()) {
-            return res.status(400).json({ success: false, message: 'Username cannot be empty.' });
-        }
-
-        const currentUser = await User.findById(req.session.user).select('email').lean();
-        if (!currentUser) {
-            return res.redirect('/auth/login');
-        }
-
-        const updateFields = {
-            username: username.trim(),
-            phone: phone?.trim() || null,
-        };
-
-        // If email changed, store as pending and trigger OTP
-        const submittedEmail = email?.trim().toLowerCase();
-        if (submittedEmail && submittedEmail !== currentUser.email) {
-            // Check the new address isn't already taken
-            const conflict = await User.findOne({ email: submittedEmail });
-            if (conflict) {
-                return res.status(400).json({ success: false, message: 'This email address is already in use.' });
-            }
-
-            await User.findByIdAndUpdate(
-                req.session.user,
-                { ...updateFields, pending_email: submittedEmail },
-                { runValidators: true }
-            );
-
-            // Send OTP to the new address
-            await userService.generateOTP(submittedEmail, 'email_update');
-
-            return res.redirect(
-                `/auth/verify-email-update?email=${encodeURIComponent(submittedEmail)}`
-            );
-        }
-
-        // No email change
-        await User.findByIdAndUpdate(
-            req.session.user,
-            updateFields,
-            { runValidators: true }
-        );
-
-        res.redirect('/auth/profile');
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-export const getVerifyEmailUpdate = async (req, res) => {
-    try {
-        const user = await User.findById(req.session.user).select('pending_email').lean();
-        if (!user || !user.pending_email) {
-            return res.redirect('/auth/profile/edit');
-        }
-        res.render('user/verify-email', {
-            email: user.pending_email,
-            purpose: 'email_update',
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-export const verifyEmailUpdate = async (req, res) => {
-    try {
-        const { email, otp } = req.body;
-        if (!email || !otp) {
-            throw new Error('Email and OTP are required.');
-        }
-
-        // Validate the OTP against the pending address
-        await userService.otpCheck(email, otp, 'email_update');
-
-        // Atomically promote pending_email to email
-        await userService.applyPendingEmail(req.session.user);
-
-        res.status(200).json({
-            success: true,
-            message: 'Email updated successfully! Redirecting to your profile…',
-            redirectUrl: '/auth/profile',
-        });
-    } catch (error) {
         res.status(400).json({ success: false, message: error.message });
     }
 };
 
-export const updatePassword = async (req, res) => {
-    try {
-        const { 'current-password': currentPassword, 'new-password': newPassword, 'confirm-new-password': confirmPassword } = req.body;
+export const handleGoogleCallback = (req, res, next, err, user, info) => {
+    if (err) return next(err);
 
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            return res.status(400).json({ success: false, message: 'All password fields are required.' });
-        }
-
-        if (newPassword !== confirmPassword) {
-            return res.status(400).json({ success: false, message: 'New passwords do not match.' });
-        }
-
-        if (newPassword.length < 8) {
-            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' });
-        }
-
-        // Re-fetch with password_hash for verification
-        const userDoc = await User.findById(req.session.user).select('password_hash').lean();
-        if (!userDoc || !userDoc.password_hash) {
-            return res.status(400).json({ success: false, message: 'Password update is not available for this account.' });
-        }
-
-        const isMatch = await bcrypt.compare(currentPassword, userDoc.password_hash);
-        if (!isMatch) {
-            return res.status(400).json({ success: false, message: 'Current password is incorrect.' });
-        }
-
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        await User.findByIdAndUpdate(
-            req.session.user,
-            { password_hash: hashedPassword }
-        );
-
-        res.redirect('/auth/profile');
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+    if (!user) {
+        const message = (info && info.message) || 'Authentication failed. Please try again.';
+        return res.redirect(`/auth/login?error=${encodeURIComponent(message)}`);
     }
+
+    req.session.user = user._id;
+    res.redirect('/home');
 };
 
-export const logout = (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).json({
-                success: false,
-                message: 'An error occurred during logout'
-            });
-        }
-
-        res.clearCookie('connect.sid');
-
-        return res.redirect('/auth/login');
-    });
+export const getForgetPasswordPage = (req, res) => {
+    res.render('user/forgot-password');
 };
 
 export const forgotPasswordOtp = async (req, res) => {
     try {
         const { email } = req.body;
-
-        if (!email) {
-            throw new Error('Email is required.');
-        }
+        if (!email) throw new Error('Email is required.');
 
         const existingUser = await User.findOne({ email });
-
         if (!existingUser) {
-            return res.status(404).json({
-                success: false,
-                message: 'No account found with that email address.'
-            });
+            return res.status(404).json({ success: false, message: 'No account found with that email address.' });
         }
 
         if (!existingUser.password_hash) {
@@ -347,7 +142,6 @@ export const forgotPasswordOtp = async (req, res) => {
         }
 
         await userService.generateOTP(email, 'forgot');
-
         req.session.resetEmail = email;
 
         res.status(200).json({
@@ -356,36 +150,25 @@ export const forgotPasswordOtp = async (req, res) => {
             redirectUrl: '/auth/reset-password-otp'
         });
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        res.status(400).json({ success: false, message: error.message });
     }
 };
 
 export const resetPasswordOtpPage = (req, res) => {
-    if (!req.session.resetEmail) {
-        return res.redirect('/auth/forgot-password');
-    }
+    if (!req.session.resetEmail) return res.redirect('/auth/forgot-password');
 
-    res.render('user/verify-email', {
-        email: req.session.resetEmail,
-        purpose: 'forgot'
-    });
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.render('user/verify-email', { email: req.session.resetEmail, purpose: 'forgot' });
 };
-
 
 export const verifyForgotPasswordOtp = async (req, res) => {
     try {
         const { otp } = req.body;
         const email = req.session.resetEmail;
 
-        if (!email || !otp) {
-            throw new Error('Session expired or OTP missing. Please try again.');
-        }
+        if (!email || !otp) throw new Error('Session expired or OTP missing. Please try again.');
 
         await userService.otpCheck(email, otp, 'forgot');
-
         req.session.otpVerified = true;
 
         res.status(200).json({
@@ -393,13 +176,16 @@ export const verifyForgotPasswordOtp = async (req, res) => {
             message: 'OTP verified successfully.',
             redirectUrl: '/auth/reset-password'
         });
-
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        res.status(400).json({ success: false, message: error.message });
     }
+};
+
+export const getResetPasswordPage = (req, res) => {
+    if (!req.session.resetEmail || !req.session.otpVerified) {
+        return res.redirect('/auth/forgot-password');
+    }
+    res.render('user/reset-password');
 };
 
 export const resetPassword = async (req, res) => {
@@ -415,19 +201,10 @@ export const resetPassword = async (req, res) => {
         }
 
         if (password !== confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                message: 'Passwords do not match.'
-            });
+            return res.status(400).json({ success: false, message: 'Passwords do not match.' });
         }
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        await User.findOneAndUpdate(
-            { email },
-            { password_hash: hashedPassword }
-        );
+        await userService.resetPasswordByEmail(email, password);
 
         req.session.resetEmail = null;
         req.session.otpVerified = null;
@@ -439,14 +216,253 @@ export const resetPassword = async (req, res) => {
         });
     } catch (error) {
         console.error('Password reset error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'An internal error occurred.'
+        res.status(500).json({ success: false, message: 'An internal error occurred.' });
+    }
+};
+
+// ─── Auth — Logout ────────────────────────────────────────────────────────────
+
+export const logout = (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: 'An error occurred during logout' });
+        }
+        res.clearCookie('connect.sid');
+        return res.redirect('/auth/login');
+    });
+};
+
+// ─── Home ─────────────────────────────────────────────────────────────────────
+
+export const getHome = async (req, res) => {
+    try {
+        const categories = await categoryService.getAllActiveCategories();
+        
+        const { latestRelease, standardGames, legendaryGames } = await productService.getProductsForHome();
+        const activePublishers = await productService.getActivePublishersWithGameCount();
+
+        // Pass activePublishers as both 'publishers' and 'activePublishers' for backward compatibility
+        const publishers = activePublishers;
+
+        let userWishlist = [];
+
+        if (req.session.user) {
+            const userId = req.session.user.id || req.session.user;
+            const user = await User.findById(userId)
+                .select('-password_hash')
+                .lean();
+
+            // Session references a user that no longer exists or is blocked
+            if (!user || user.is_blocked) {
+                req.session.destroy(() => {});
+                return res.render('user/home', { 
+                    user: null, 
+                    categories, 
+                    publishers,
+                    latestRelease,
+                    standardGames,
+                    legendaryGames,
+                    activePublishers,
+                    userWishlist: []
+                });
+            }
+
+            const wishlist = await Wishlist.findOne({ userId });
+            if (wishlist && wishlist.items) {
+                userWishlist = wishlist.items.map(item => item.product.toString());
+            }
+
+            return res.render('user/home', { 
+                user, 
+                categories, 
+                publishers,
+                latestRelease,
+                standardGames,
+                legendaryGames,
+                activePublishers,
+                userWishlist
+            });
+        }
+
+        // Unauthenticated — render as public landing page
+        return res.render('user/home', { 
+            user: null, 
+            categories, 
+            publishers,
+            latestRelease,
+            standardGames,
+            legendaryGames,
+            activePublishers,
+            userWishlist: []
+        });
+    } catch (error) {
+        console.error('[getHome]', error);
+        res.render('user/home', { 
+            user: null, 
+            categories: [], 
+            publishers: [],
+            latestRelease: null,
+            standardGames: [],
+            legendaryGames: [],
+            activePublishers: [],
+            userWishlist: []
         });
     }
 };
 
-// Address Management 
+// ─── Profile — View / Edit ───────────────────────────────────────────────────
+
+export const getProfile = async (req, res) => {
+    try {
+        const rawUser = await User.findById(req.session.user).select('password_hash').lean();
+        const user = await User.findById(req.session.user).select('-password_hash').lean();
+        if (!user) return res.redirect('/auth/login');
+
+        // Expose a boolean so the view knows whether the user has a local password
+        // without leaking the actual hash.
+        user.password_hash = rawUser?.password_hash ? true : null;
+        res.render('user/profile', { user });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getProfileEdit = async (req, res) => {
+    try {
+        const rawUser = await User.findById(req.session.user).select('password_hash').lean();
+        const user = await User.findById(req.session.user).select('-password_hash').lean();
+        if (!user) return res.redirect('/auth/login');
+
+        user.password_hash = rawUser?.password_hash ? true : null;
+        res.render('user/profile-edit', { user });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const updateProfile = async (req, res) => {
+    try {
+        const { username, phone, email, profile_image } = req.body;
+
+        if (!username || !username.trim()) {
+            return res.status(400).json({ success: false, message: 'Username cannot be empty.' });
+        }
+
+        const currentUser = await User.findById(req.session.user).select('email').lean();
+        if (!currentUser) return res.redirect('/auth/login');
+
+        const updateFields = {
+            username: username.trim(),
+            phone: phone?.trim() || null,
+        };
+
+        // Accept a base64 data URL from the avatar upload widget
+        if (profile_image && profile_image.startsWith('data:image/')) {
+            updateFields.profile_image = profile_image;
+        }
+
+        const submittedEmail = email?.trim().toLowerCase();
+        if (submittedEmail && submittedEmail !== currentUser.email) {
+            const conflict = await User.findOne({ email: submittedEmail });
+            if (conflict) {
+                return res.status(400).json({ success: false, message: 'This email address is already in use.' });
+            }
+
+            await User.findByIdAndUpdate(
+                req.session.user,
+                { ...updateFields, pending_email: submittedEmail },
+                { runValidators: true }
+            );
+
+            await userService.generateOTP(submittedEmail, 'email_update');
+            return res.redirect('/auth/verify-email-update');
+        }
+
+        await User.findByIdAndUpdate(req.session.user, updateFields, { runValidators: true });
+        res.redirect('/auth/profile');
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ─── Profile — Email Update Verification ─────────────────────────────────────
+
+export const getVerifyEmailUpdate = async (req, res) => {
+    try {
+        const user = await User.findById(req.session.user).select('pending_email').lean();
+        if (!user || !user.pending_email) return res.redirect('/auth/profile/edit');
+
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        res.render('user/verify-email', { email: user.pending_email, purpose: 'email_update' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const verifyEmailUpdate = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        if (!email || !otp) throw new Error('Email and OTP are required.');
+
+        await userService.otpCheck(email, otp, 'email_update');
+        await userService.applyPendingEmail(req.session.user);
+
+        res.status(200).json({
+            success: true,
+            message: 'Email updated successfully! Redirecting to your profile…',
+            redirectUrl: '/auth/profile',
+        });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+// ─── Profile — Password Update ────────────────────────────────────────────────
+
+export const getProfilePassword = async (req, res) => {
+    try {
+        const user = await User.findById(req.session.user).select('-password_hash').lean();
+        if (!user) return res.redirect('/auth/login');
+        res.render('user/password-update', { user });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const updatePassword = async (req, res) => {
+    try {
+        const {
+            'current-password': currentPassword,
+            'new-password': newPassword,
+            'confirm-new-password': confirmPassword
+        } = req.body;
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            return res.status(400).json({ success: false, message: 'All password fields are required.' });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ success: false, message: 'New passwords do not match.' });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' });
+        }
+
+        // Delegate all bcrypt operations to the service layer
+        await userService.changePassword(req.session.user, currentPassword, newPassword);
+
+        res.status(200).json({
+            success: true,
+            message: 'Password updated successfully.',
+            redirectUrl: '/auth/profile'
+        });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+// ─── Address Management ───────────────────────────────────────────────────────
 
 export const getAddresses = async (req, res) => {
     try {
@@ -469,7 +485,6 @@ export const addAddress = async (req, res) => {
         const user = await User.findById(req.session.user);
         if (!user) return res.status(401).json({ success: false, message: 'Session expired.' });
 
-        // If this address is being set as default, clear existing defaults first
         if (isDefault === 'true' || isDefault === true) {
             user.addresses.forEach(addr => { addr.isDefault = false; });
         }
@@ -509,7 +524,6 @@ export const editAddress = async (req, res) => {
         const address = user.addresses.id(addressId);
         if (!address) return res.status(404).json({ success: false, message: 'Address not found.' });
 
-        // If setting this one as default, clear others first
         if (isDefault === 'true' || isDefault === true) {
             user.addresses.forEach(addr => { addr.isDefault = false; });
         }
@@ -551,5 +565,410 @@ export const deleteAddress = async (req, res) => {
         res.status(200).json({ success: true, message: 'Address removed successfully.' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const updateAvatar = async(req,res)=>{
+    try{
+        if(!req.file){
+            return res.status(400).json({
+                success:false,
+                message:'No file uploaded.'
+            });
+        }
+        const userId = req.session.user.id || req.session.user;
+        const uploadResult = await uploadToCloudinary(req.file, 'pixelplay_uploads');
+        const secureCloudUrl = uploadResult.secure_url;
+
+        const updatedUser = await userService.updateUserProfileImage(userId, secureCloudUrl);
+
+        return res.status(200).json({
+            success:true,
+            message: 'Profile picture update successfully!',
+            url: updatedUser.profile_image
+        });
+    } catch(error){
+        console.error('[userController.updateAvatar Error]:',error);
+        return res.status(500).json({success:false, message: 'Internal Server Upload Error'});
+    }
+};
+
+export const getBrowsePage = async (req, res) => {
+    try {
+        const { search, genre, platform, price, rating, publisher, sort, vault, page } = req.query;
+
+        // Normalize array queries to ensure consistent rendering in EJS helpers
+        const queryGenre = Array.isArray(genre) ? genre : (genre ? [genre] : []);
+        const queryPlatform = Array.isArray(platform) ? platform : (platform ? [platform] : []);
+        const queryPrice = Array.isArray(price) ? price : (price ? [price] : []);
+        const queryRating = Array.isArray(rating) ? rating : (rating ? [rating] : []);
+        const queryPublisher = Array.isArray(publisher) ? publisher : (publisher ? [publisher] : []);
+
+        const filters = {
+            genre: queryGenre,
+            platform: queryPlatform,
+            price: queryPrice,
+            rating: queryRating,
+            publisher: queryPublisher,
+            vault: vault || 'all'
+        };
+
+        const result = await productService.getBrowseProductsAndFilters(
+            search || '',
+            filters,
+            sort || 'Trending',
+            page || 1,
+            12
+        );
+
+        let user = null;
+        let userWishlist = [];
+        if (req.session.user) {
+            const userId = req.session.user.id || req.session.user;
+            user = await User.findById(userId).select('-password_hash').lean();
+            const wishlist = await Wishlist.findOne({ userId });
+            if (wishlist) {
+                userWishlist = wishlist.items.map(item => item.product.toString());
+            }
+        }
+
+        res.render('user/browse-games', {
+            user,
+            userWishlist,
+            products: result.products,
+            currentPage: result.currentPage,
+            totalPages: result.totalPages,
+            totalCount: result.totalCount,
+            platforms: result.dbPlatforms,
+            publishers: result.dbPublishers,
+            categories: result.dbCategories,
+            query: {
+                search: search || '',
+                genre: queryGenre,
+                platform: queryPlatform,
+                price: queryPrice,
+                rating: queryRating,
+                publisher: queryPublisher,
+                sort: sort || 'Trending',
+                vault: vault || 'all'
+            }
+        });
+    } catch (error) {
+        console.error('[getBrowsePage] Error:', error);
+        res.status(500).render('user/home', {
+            user: null,
+            categories: [],
+            publishers: [],
+            error: 'An error occurred while loading products.'
+        });
+    }
+};
+
+export const getProductDetails = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const product = await Product.findById(id).lean();
+        if (!product) {
+            return res.status(404).render('user/home', {
+                user: null,
+                categories: [],
+                publishers: [],
+                error: 'Product not found.'
+            });
+        }
+
+        const Category = (await import('../models/Category.js')).default;
+        const catObj = product.category ? await Category.findById(product.category).lean() : null;
+        product.categoryName = catObj ? catObj.name : 'N/A';
+
+        let user = null;
+        let inWishlist = false;
+        let wishlistPlatforms = [];
+        if (req.session.user) {
+            const userId = req.session.user.id || req.session.user;
+            user = await User.findById(userId).select('-password_hash').lean();
+            const wishlist = await Wishlist.findOne({ userId });
+            if (wishlist) {
+                wishlistPlatforms = wishlist.items
+                    .filter(item => item.product.toString() === id.toString())
+                    .map(item => (item.platform || 'PC').toLowerCase());
+                inWishlist = wishlistPlatforms.length > 0;
+            }
+        }
+
+        const reviews = [];
+
+        res.render('user/game-details', {
+            product,
+            reviews,
+            user,
+            inWishlist,
+            wishlistPlatforms
+        });
+    } catch (error) {
+        console.error('[getProductDetails] Error:', error);
+        res.status(500).render('user/home', {
+            user: null,
+            categories: [],
+            publishers: [],
+            error: 'An error occurred while loading game details.'
+        });
+    }
+};
+
+export const getWishlist = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const user = await User.findById(userId).select('-password_hash').lean();
+        if (!user) return res.redirect('/auth/login');
+
+        let wishlist = await Wishlist.findOne({ userId }).populate('items.product').lean();
+        if (!wishlist) {
+            wishlist = { items: [] };
+        } else {
+            const CategoryModel = (await import('../models/Category.js')).default;
+            for (let item of wishlist.items) {
+                if (item.product) {
+                    const catObj = item.product.category ? await CategoryModel.findById(item.product.category).lean() : null;
+                    const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
+                    item.product.categoryDiscount = discount;
+                    item.product.discountedPrice = discount > 0 ? Math.max(0, item.product.price - (item.product.price * (discount / 100))) : item.product.price;
+                    item.product.categoryName = catObj ? catObj.name : 'N/A';
+                }
+            }
+        }
+
+        res.render('user/wishlist', {
+            user,
+            wishlist
+        });
+    } catch (error) {
+        console.error('[getWishlist] Error:', error);
+        res.status(500).render('user/home', {
+            user: null,
+            categories: [],
+            publishers: [],
+            error: 'An error occurred while loading wishlist.'
+        });
+    }
+};
+
+export const toggleWishlist = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const { productId, platform } = req.body;
+        if (!productId) {
+            return res.status(400).json({ success: false, message: 'Product ID is required.' });
+        }
+
+        let selectedPlatform = platform;
+        if (!selectedPlatform) {
+            const product = await Product.findById(productId).lean();
+            selectedPlatform = (product && product.platforms && product.platforms.length > 0) ? product.platforms[0] : 'PC';
+        }
+
+        let wishlist = await Wishlist.findOne({ userId });
+        if (!wishlist) {
+            wishlist = new Wishlist({ userId, items: [] });
+        } else {
+            wishlist.items.forEach(item => {
+                if (!item.platform) {
+                    item.platform = 'PC';
+                }
+            });
+        }
+
+        const itemIndex = wishlist.items.findIndex(item => 
+            item.product.toString() === productId.toString() &&
+            item.platform.toLowerCase() === selectedPlatform.toLowerCase()
+        );
+        let added = false;
+        if (itemIndex > -1) {
+            wishlist.items.splice(itemIndex, 1);
+        } else {
+            wishlist.items.push({ product: productId, platform: selectedPlatform });
+            added = true;
+        }
+
+        await wishlist.save();
+        res.status(200).json({ success: true, added });
+    } catch (error) {
+        console.error('[toggleWishlist] Error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+};
+
+export const getCart = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const user = await User.findById(userId).select('-password_hash').lean();
+        if (!user) return res.redirect('/auth/login');
+
+        let cart = await Cart.findOne({ userId }).populate('items.product').lean();
+        if (!cart) {
+            cart = { items: [] };
+        }
+
+        // Apply category discounts if applicable so prices match store listings
+        const CategoryModel = (await import('../models/Category.js')).default;
+        let subtotal = 0;
+        for (let item of cart.items) {
+            if (item.product) {
+                const catObj = item.product.category ? await CategoryModel.findById(item.product.category).lean() : null;
+                const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
+                item.product.categoryDiscount = discount;
+                const activePrice = discount > 0 ? Math.max(0, item.product.price - (item.product.price * (discount / 100))) : item.product.price;
+                item.product.price = activePrice;
+                subtotal += activePrice * item.quantity;
+            }
+        }
+
+        const tax = subtotal * 0.18;
+        const shipping = cart.items.length > 0 ? 100 : 0;
+        const grandTotal = subtotal + tax + shipping;
+
+        res.render('user/cart', {
+            user,
+            cart,
+            subtotal,
+            tax,
+            shipping,
+            grandTotal
+        });
+    } catch (error) {
+        console.error('[getCart] Error:', error);
+        res.status(500).render('user/home', {
+            user: null,
+            categories: [],
+            publishers: [],
+            error: 'An error occurred while loading your cart.'
+        });
+    }
+};
+
+export const addToCart = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const { productId, platform, quantity } = req.body;
+        if (!productId || !platform) {
+            return res.status(400).json({ success: false, message: 'Product ID and Platform are required.' });
+        }
+
+        const qty = Number(quantity) || 1;
+
+        let cart = await Cart.findOne({ userId });
+        if (!cart) {
+            cart = new Cart({ userId, items: [] });
+        }
+
+        const itemIndex = cart.items.findIndex(item => 
+            item.product.toString() === productId.toString() && 
+            (item.platform || 'PC').toLowerCase() === platform.toLowerCase()
+        );
+
+        if (itemIndex > -1) {
+            cart.items[itemIndex].quantity += qty;
+        } else {
+            cart.items.push({ product: productId, platform, quantity: qty });
+        }
+
+        await cart.save();
+
+        // Remove from wishlist if it exists there
+        let wishlist = await Wishlist.findOne({ userId });
+        if (wishlist) {
+            wishlist.items.forEach(item => {
+                if (!item.platform) {
+                    item.platform = 'PC';
+                }
+            });
+            const wlIndex = wishlist.items.findIndex(item => 
+                item.product.toString() === productId.toString() &&
+                item.platform.toLowerCase() === platform.toLowerCase()
+            );
+            if (wlIndex > -1) {
+                wishlist.items.splice(wlIndex, 1);
+                await wishlist.save();
+            }
+        }
+
+        res.status(200).json({ success: true });
+    } catch (error) {
+        console.error('[addToCart] Error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+};
+
+export const updateCartQuantity = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const { productId, platform, action } = req.body;
+        if (!productId || !platform || !action) {
+            return res.status(400).json({ success: false, message: 'Product ID, Platform, and Action are required.' });
+        }
+
+        const cart = await Cart.findOne({ userId });
+        if (!cart) {
+            return res.status(404).json({ success: false, message: 'Cart not found.' });
+        }
+
+        const itemIndex = cart.items.findIndex(item => 
+            item.product.toString() === productId.toString() && 
+            (item.platform || 'PC').toLowerCase() === platform.toLowerCase()
+        );
+
+        if (itemIndex > -1) {
+            if (action === 'increase') {
+                if (cart.items[itemIndex].quantity < 3) {
+                    cart.items[itemIndex].quantity += 1;
+                } else {
+                    return res.status(400).json({ success: false, message: 'Maximum quantity limit reached.' });
+                }
+            } else if (action === 'decrease') {
+                if (cart.items[itemIndex].quantity > 1) {
+                    cart.items[itemIndex].quantity -= 1;
+                } else {
+                    return res.status(400).json({ success: false, message: 'Minimum quantity limit reached.' });
+                }
+            }
+            await cart.save();
+            return res.status(200).json({ success: true });
+        }
+
+        res.status(404).json({ success: false, message: 'Item not found in cart.' });
+    } catch (error) {
+        console.error('[updateCartQuantity] Error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+};
+
+export const removeFromCart = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const { productId, platform } = req.body;
+        if (!productId || !platform) {
+            return res.status(400).json({ success: false, message: 'Product ID and Platform are required.' });
+        }
+
+        const cart = await Cart.findOne({ userId });
+        if (!cart) {
+            return res.status(404).json({ success: false, message: 'Cart not found.' });
+        }
+
+        const itemIndex = cart.items.findIndex(item => 
+            item.product.toString() === productId.toString() && 
+            (item.platform || 'PC').toLowerCase() === platform.toLowerCase()
+        );
+
+        if (itemIndex > -1) {
+            cart.items.splice(itemIndex, 1);
+            await cart.save();
+            return res.status(200).json({ success: true });
+        }
+
+        res.status(404).json({ success: false, message: 'Item not found in cart.' });
+    } catch (error) {
+        console.error('[removeFromCart] Error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 };

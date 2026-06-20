@@ -2,26 +2,29 @@
     class="flex h-[72px] items-center justify-between px-10 py-0 relative self-stretch w-full z-[1] bg-[#09090be6] border-b [border-bottom-style:solid] border-[#00000014] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
     <nav class="flex items-center justify-between w-full gap-6" aria-label="Primary">
         <div class="inline-flex items-center gap-10 relative flex-[0_0_auto]">
-            <a href="#"
-                class="relative w-[129px] h-12 aspect-[2.68] bg-[url(legacy:image:md5:I144:2444;273:1230-no-children)] bg-cover bg-[50%_50%] block"
-                aria-label="PixelPlay home"></a>
+            <a href="/" class="relative block w-[129px] h-12 flex items-center" aria-label="PixelPlay home">
+                <img src="/icons/brand_logo/pixelplay-logo.png" alt="PixelPlay Logo" class="w-full h-full object-contain" />
+            </a>
             <ul class="inline-flex items-center gap-[7.6px] relative flex-[0_0_auto]">
-                <li><a href="#"
+                <li><a href="/"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'home' ? 'bg-[#ffffff10]' : '' %>"><span
                             class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'home' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] leading-[normal]">Home</span></a>
                 </li>
-                <li><a href="#"
+                <li><a href="/browse"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'browse' ? 'bg-[#ffffff10]' : '' %>"><span
                             class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'browse' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Browse</span></a>
                 </li>
-                <li><a href="#"
+                <% if (typeof user !== 'undefined' && user) { %>
+                <li><a href="/auth/wishlist"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'wishlist' ? 'bg-[#ffffff10]' : '' %>"><span
                             class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'wishlist' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Wishlist</span></a>
                 </li>
+                <% } %>
                 <li><a href="#"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'offers' ? 'bg-[#ffffff10]' : '' %>"><span
                             class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'offers' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Offers</span></a>
                 </li>
+                <% if (typeof user !== 'undefined' && user) { %>
                 <li><a href="#"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'library' ? 'bg-[#ffffff10]' : '' %>"><span
                             class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'library' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] leading-[normal]">Library</span></a>
@@ -30,6 +33,7 @@
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'wallet' ? 'bg-[#ffffff10]' : '' %>"><span
                             class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'wallet' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] leading-[normal]">Wallet</span></a>
                 </li>
+                <% } %>
                 <li><a href="#"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'support' ? 'bg-[#ffffff10]' : '' %>"><span
                             class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'support' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Support</span></a>
@@ -37,33 +41,121 @@
             </ul>
         </div>
         <div class="inline-flex items-center gap-5 relative flex-[0_0_auto]">
-            <form
+            <form action="/browse" method="GET" id="navbarSearchForm"
                 class="flex w-60 items-center gap-3 px-4 py-2 relative bg-[#0f1113] rounded-full border border-solid border-[#00000014]"
                 role="search">
                 <label for="store-search" class="sr-only">Search store</label>
-                <img class="relative w-4 h-4" src="img/container.svg" alt="" />
-                <div class="flex flex-col items-start relative flex-1 grow">
-                    <input id="store-search"
-                        class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-sm tracking-[0] leading-[normal] bg-transparent border-0 p-0 outline-none placeholder:text-[#9aa6b3]"
-                        placeholder="Search store..." type="search" />
+                <button type="submit" class="p-0 border-0 bg-transparent flex items-center justify-center cursor-pointer focus:outline-none text-[#9aa6b3] hover:text-white" aria-label="Submit search">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </button>
+                <div class="flex items-center relative flex-1 grow w-full">
+                    <input id="store-search" name="search" value="<%= (typeof query !== 'undefined' && query.search) ? query.search : '' %>"
+                        class="relative flex items-center self-stretch [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-sm tracking-[0] bg-transparent border-0 p-0 outline-none placeholder:text-[#9aa6b3] w-full pr-6"
+                        placeholder="Search store..." type="text" autocomplete="off" />
+                    <button type="button" id="clear-search-btn" class="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white cursor-pointer bg-transparent border-0 p-0 hidden" aria-label="Clear search">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
                 </div>
             </form>
-            <button type="button" class="flex w-10 h-10 items-center justify-center relative rounded-[20px]"
+            <%# Cart icon visible to everyone %>
+            <a href="/auth/cart" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors"
                 aria-label="Cart">
-                <img class="relative flex-[0_0_auto]" src="img/iconify-icon.svg" alt="" />
-            </button>
+                <i class="fa-solid fa-cart-shopping text-[#9aa6b3] hover:text-white transition-colors text-lg"></i>
+                <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
+                    <span id="cart-badge" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white border border-[#0d0d0d] scale-100 transition-all duration-300 animate-pulse">
+                        <%= cartCount %>
+                    </span>
+                <% } %>
+            </a>
+
+            <% if (typeof user !== 'undefined' && user) { %>
+            <%# Authenticated: show bell and profile avatar %>
             <button type="button" class="flex w-10 h-10 items-center justify-center relative rounded-[20px]"
                 aria-label="Notifications">
-                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                    <div class="relative w-5 h-5">
-                        <img class="absolute w-[91.66%] h-[95.83%] top-[4.17%] left-[8.34%]"
-                            src="img/vector-2.svg" alt="" />
-                    </div>
-                </div>
+                <img class="relative w-5 h-5" src="/icons/notification-bell.svg" alt="Notifications" />
             </button>
             <a href="/auth/profile"
-                class="relative w-9 h-9 rounded-[18px] border-2 border-solid border-[#00000014] bg-[url(legacy:image:md5:I144:2444;10:45-no-children)] bg-cover bg-[50%_50%] block transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer"
-                aria-label="Profile"></a>
+                class="relative w-9 h-9 rounded-[18px] border-2 border-solid border-[#00000014] block transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer overflow-hidden"
+                aria-label="Profile">
+                <img src="/icons/profile-icon.svg" alt="Profile" class="w-full h-full object-cover" />
+            </a>
+            <% } else { %>
+            <%# Unauthenticated: show Log In and Sign Up CTAs %>
+            <div class="inline-flex items-center gap-3 relative flex-[0_0_auto]">
+                <a href="/auth/login"
+                    class="inline-flex h-9 items-center justify-center px-5 py-0 relative rounded-md border border-solid border-[#ffffff22] text-[#9aa6b3] hover:text-white hover:border-[#ffffff44] transition-colors [font-family:'Inter-Medium',Helvetica] font-medium text-sm tracking-[0] leading-[normal]">
+                    Log In
+                </a>
+                <a href="/auth/signup"
+                    class="inline-flex h-9 items-center justify-center px-5 py-0 relative rounded-md bg-sky-500 hover:bg-sky-400 shadow-[0px_0px_16px_#0ea5e94c] transition-colors [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#061323] text-sm tracking-[0] leading-[normal]">
+                    Sign Up
+                </a>
+            </div>
+            <% } %>
         </div>
     </nav>
 </header>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchForm = document.getElementById('navbarSearchForm');
+    const searchInput = document.getElementById('store-search');
+    const clearBtn = document.getElementById('clear-search-btn');
+
+    const updateClearBtnVisibility = () => {
+      if (searchInput && clearBtn) {
+        if (searchInput.value.trim().length > 0) {
+          clearBtn.classList.remove('hidden');
+        } else {
+          clearBtn.classList.add('hidden');
+        }
+      }
+    };
+
+    if (searchInput && clearBtn) {
+      searchInput.addEventListener('input', updateClearBtnVisibility);
+      updateClearBtnVisibility();
+
+      clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        clearBtn.classList.add('hidden');
+        searchInput.focus();
+        
+        // If on browse page, clear search query and submit filterForm
+        const hiddenSearch = document.getElementById('hiddenSearchInput');
+        if (hiddenSearch) {
+          hiddenSearch.value = '';
+          const filterForm = document.getElementById('filterForm');
+          if (filterForm) {
+            if (typeof triggerFilterFormSubmit === 'function') {
+              triggerFilterFormSubmit();
+            } else {
+              filterForm.submit();
+            }
+          }
+        } else {
+          // If on other pages, redirect to browse
+          window.location.href = '/browse';
+        }
+      });
+    }
+
+    if (searchForm) {
+      searchForm.addEventListener('submit', (e) => {
+        const hiddenSearch = document.getElementById('hiddenSearchInput');
+        if (hiddenSearch) {
+          e.preventDefault();
+          hiddenSearch.value = searchInput.value;
+          const filterForm = document.getElementById('filterForm');
+          if (filterForm) {
+            if (typeof triggerFilterFormSubmit === 'function') {
+              triggerFilterFormSubmit();
+            } else {
+              filterForm.submit();
+            }
+          }
+        }
+      });
+    }
+  });
+</script>

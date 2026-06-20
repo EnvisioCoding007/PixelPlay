@@ -1,0 +1,235 @@
+<%- include('../partials/user/header') %>
+
+<style>
+  /* Custom style utilities to support existing design tokens under the partial template */
+  body {
+    background-color: #0a0d12;
+    color: #ffffff;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-image: radial-gradient(circle at 80% 20%, rgba(0, 217, 225, 0.05) 0%, transparent 40%);
+    background-attachment: fixed;
+  }
+  .bg-app-card { background-color: #13161b !important; }
+  .bg-app-tag { background-color: #1c2028 !important; }
+  .bg-app-cyan { background-color: #00d9e1 !important; }
+  .bg-app-cyan-dark { background-color: #132832 !important; }
+  .text-app-cyan { color: #00d9e1 !important; }
+  .text-app-muted { color: #8b949e !important; }
+  
+  /* Edition contextual styling */
+  .bg-app-orange { background-color: #fce4bc !important; }
+  .hover\:bg-\[\#fbd394\]:hover { background-color: #fbd394 !important; }
+</style>
+
+<body class="min-h-screen flex flex-col">
+
+<%- include('../partials/user/navbar', { activeTab: 'wishlist', user: typeof user !== 'undefined' ? user : null }) %>
+
+<!-- BEGIN: MainContent -->
+<main class="flex-grow max-w-[1200px] w-full mx-auto px-6 py-12">
+  <!-- Page Header -->
+  <section class="mb-10">
+    <h1 class="text-4xl font-bold mb-3">Your Wishlist</h1>
+    <p class="text-app-muted text-lg">Keep track of the games you want to play. We'll notify you when they go on sale.</p>
+  </section>
+
+  <% if (typeof wishlist === 'undefined' || !wishlist || !wishlist.items || wishlist.items.length === 0) { %>
+    <!-- Empty State -->
+    <div class="bg-app-card border border-gray-800 rounded-xl p-12 text-center flex flex-col items-center justify-center max-w-2xl mx-auto my-10 shadow-lg">
+      <div class="w-24 h-24 rounded-full bg-[#0d1015] border border-gray-800 flex items-center justify-center mb-6">
+        <i class="fa-solid fa-gamepad text-4xl text-app-cyan"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-white mb-2">Your wishlist is empty</h2>
+      <p class="text-app-muted mb-8 max-w-md">You haven't saved any titles to your wishlist yet. Explore the shop and save your favorite games.</p>
+      <a href="/browse" class="bg-app-cyan hover:bg-cyan-400 text-black font-semibold py-3 px-8 rounded transition-colors tracking-wide flex items-center gap-2">
+        <i class="fa-solid fa-cart-shopping text-sm"></i>
+        BROWSE CATALOG
+      </a>
+    </div>
+  <% } else { %>
+    <!-- Wishlist Items List -->
+    <section class="flex flex-col gap-4">
+      <% wishlist.items.forEach(item => { %>
+        <% if (item.product) { %>
+          <% 
+            const isLegendary = (item.product.edition_type === 'LEGENDARY');
+            const itemCover = item.product.cover_image || item.product.coverImage || item.product.coverImageUrl || '/img/placeholder.png';
+            
+            // Gather categories/genres
+            let tags = [];
+            if (item.product.category) {
+              if (Array.isArray(item.product.category)) {
+                tags = item.product.category.map(cat => typeof cat === 'object' ? cat.name : cat);
+              } else if (typeof item.product.category === 'object' && item.product.category.name) {
+                tags.push(item.product.category.name);
+              } else if (typeof item.product.category === 'string') {
+                tags.push(item.product.category);
+              }
+            }
+            if (item.product.categoryName) {
+              tags.push(item.product.categoryName);
+            }
+            tags = [...new Set(tags)];
+          %>
+          <article class="bg-app-card rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center gap-6 border border-transparent hover:border-gray-800 transition-colors">
+            <!-- Thumbnail -->
+            <div class="w-full md:w-72 h-40 flex-shrink-0 rounded-lg overflow-hidden relative">
+              <img alt="<%= item.product.title %>" class="w-full h-full object-cover" src="<%= itemCover %>"/>
+            </div>
+            
+            <!-- Details -->
+            <div class="flex-grow min-w-0">
+              <h2 class="text-xl font-bold text-white mb-2 truncate"><%= item.product.title %></h2>
+              
+              <!-- Tags -->
+              <div class="flex flex-wrap gap-2 mb-4">
+                <% tags.forEach(tag => { %>
+                  <span class="bg-app-tag text-gray-300 text-xs px-2.5 py-1 rounded"><%= tag %></span>
+                <% }) %>
+              </div>
+              
+              <!-- Platforms & Rating -->
+              <div class="flex items-center gap-4 text-sm">
+                <!-- Platforms -->
+                <div class="text-gray-400 flex items-center gap-1.5">
+                  <% const itemPlatform = item.platform || 'PC'; %>
+                  <% if (itemPlatform.toLowerCase().includes('pc') || itemPlatform.toLowerCase().includes('desktop')) { %>
+                    <i class="fa-solid fa-desktop" title="PC"></i>
+                  <% } else if (itemPlatform.toLowerCase().includes('xbox')) { %>
+                    <i class="fa-brands fa-xbox" title="Xbox"></i>
+                  <% } else if (itemPlatform.toLowerCase().includes('playstation') || itemPlatform.toLowerCase().includes('ps')) { %>
+                    <i class="fa-brands fa-playstation" title="PlayStation"></i>
+                  <% } else if (itemPlatform.toLowerCase().includes('switch') || itemPlatform.toLowerCase().includes('nintendo')) { %>
+                    <i class="fa-solid fa-gamepad" title="Nintendo Switch"></i>
+                  <% } %>
+                  <span class="text-xs uppercase font-medium"><%= itemPlatform %></span>
+                </div>
+                
+                <!-- Rating -->
+                <div class="flex items-center gap-1">
+                  <% const ratingVal = Math.round(parseFloat(item.product.rating || '4.8')) %>
+                  <% for (let i = 1; i <= 5; i++) { %>
+                    <% if (i <= ratingVal) { %>
+                      <i class="fa-solid fa-star text-[#f59e0b] text-xs"></i>
+                    <% } else { %>
+                      <i class="fa-regular fa-star text-gray-600 text-xs"></i>
+                    <% } %>
+                  <% } %>
+                  <span class="text-yellow-500 font-medium ml-1.5"><%= item.product.rating || '4.8' %></span>
+                  <span class="text-app-muted ml-1"><%= item.product.reviewsCount || '(120)' %></span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Action / Pricing -->
+            <div class="w-full md:w-48 flex-shrink-0 flex flex-col items-end gap-3 mt-4 md:mt-0">
+              <div class="flex flex-col items-end">
+                <% if (typeof item.product.categoryDiscount !== 'undefined' && item.product.categoryDiscount > 0) { %>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="bg-app-cyan text-black text-xs font-bold px-1.5 py-0.5 rounded">-<%= item.product.categoryDiscount %>%</span>
+                    <span class="text-2xl font-bold text-white">₹<%= Number(item.product.discountedPrice).toFixed(2) %></span>
+                  </div>
+                  <span class="text-app-muted text-sm line-through">₹<%= Number(item.product.price).toFixed(2) %></span>
+                <% } else { %>
+                  <div class="text-2xl font-bold text-white mb-1">
+                    ₹<%= Number(item.product.price).toFixed(2) %>
+                  </div>
+                <% } %>
+              </div>
+              
+              <!-- Move to Cart Button -->
+              <% if (isLegendary) { %>
+                <button onclick="moveToCart('<%= item.product._id %>', '<%= itemPlatform %>', '<%= item.product.title.replace(/'/g, "\\'") %>')" class="w-full bg-app-orange hover:bg-[#fbd394] text-black font-semibold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-cart-shopping text-sm"></i> Move to Cart
+                </button>
+              <% } else { %>
+                <button onclick="moveToCart('<%= item.product._id %>', '<%= itemPlatform %>', '<%= item.product.title.replace(/'/g, "\\'") %>')" class="w-full bg-app-cyan hover:bg-cyan-400 text-black font-semibold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-cart-shopping text-sm"></i> Move to Cart
+                </button>
+              <% } %>
+              
+              <!-- Remove Button -->
+              <button data-id="<%= item.product._id %>" data-platform="<%= itemPlatform %>" data-title="<%= item.product.title.replace(/'/g, "\\'") %>" class="remove-btn text-app-muted hover:text-white text-sm transition-colors mt-1">
+                Remove
+              </button>
+            </div>
+          </article>
+        <% } %>
+      <% }) %>
+    </section>
+  <% } %>
+</main>
+<!-- END: MainContent -->
+
+<script>
+  async function moveToCart(productId, platform, productTitle) {
+    try {
+      const response = await fetch('/auth/cart/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId, platform })
+      });
+      
+      if (response.status === 401) {
+        window.location.href = '/auth/login';
+        return;
+      }
+      
+      const data = await response.json();
+      if (data.success) {
+        showToast(`${productTitle} (${platform}) added to cart!`, "success");
+        setTimeout(() => {
+          window.location.href = '/auth/cart';
+        }, 800);
+      } else {
+        console.error('Error moving to cart:', data.message);
+      }
+    } catch (err) {
+      console.error('Network error moving to cart:', err);
+    }
+  }
+
+  document.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.addEventListener('click', async function(e) {
+      e.preventDefault();
+      const productId = this.dataset.id;
+      const productTitle = this.dataset.title;
+      const platform = this.dataset.platform;
+      const article = this.closest('article');
+      
+      try {
+        const response = await fetch('/auth/wishlist/toggle', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ productId, platform })
+        });
+        
+        if (response.status === 401) {
+          window.location.href = '/auth/login';
+          return;
+        }
+
+        const data = await response.json();
+        if (data.success && !data.added) {
+          showToast(`${productTitle} (${platform}) removed from wishlist.`, "success");
+          article.remove();
+          
+          const section = document.querySelector('section.flex-col');
+          if (section && section.children.length === 0) {
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          }
+        }
+      } catch (err) {
+        console.error('Error removing from wishlist:', err);
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/user/footer') %>

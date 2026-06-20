@@ -1,0 +1,269 @@
+<%- include('../partials/admin/header') %>
+<body class="flex h-screen overflow-hidden text-sm bg-pixel-bg text-gray-300">
+<%- include('../partials/admin/sidebar', { activeTab: 'listed-games' }) %>
+<main class="content-bg flex-1 flex flex-col overflow-hidden relative">
+  <!-- Header -->
+  <header class="flex items-center justify-between px-8 py-6">
+    <h1 class="text-2xl font-semibold text-gray-100">Listed Games Management</h1>
+    <a href="/admin/products/add" class="bg-pixel-blue hover:bg-pixel-blue-hover text-white px-5 py-2.5 rounded flex items-center gap-2 font-medium transition-colors">
+      <i class="fa-solid fa-plus text-xs"></i> Add New Game
+    </a>
+  </header>
+
+  <!-- Content Area -->
+  <div class="flex-1 overflow-y-auto px-8 pb-8">
+    <!-- Filter & Search Form -->
+    <form action="/admin/products" method="get" class="bg-card-bg rounded-lg border border-border-dark p-4 mb-6 flex flex-col gap-4">
+      <div class="flex gap-4">
+        <!-- Search Input -->
+        <div class="relative flex-1">
+          <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+          <input id="searchInput" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full pl-10 pr-10 py-2.5 rounded text-sm placeholder-gray-500" placeholder="Search inventory by title, ID, or SKU..." type="text"/>
+          <button type="button" id="clearSearchBtn" class="<%= (typeof search !== 'undefined' && search) ? '' : 'hidden' %> absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white" onclick="clearSearch()">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+        
+        <!-- Filter Dropdowns -->
+        <div class="flex gap-4 w-1/2">
+          <!-- Category -->
+          <div class="relative flex-1">
+            <select name="category" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full appearance-none pl-4 pr-10 py-2.5 rounded text-sm cursor-pointer" onchange="this.form.submit()">
+              <option value="All" <%= typeof category !== 'undefined' && category === 'All' ? 'selected' : '' %>>Category: All</option>
+              <% 
+                const legacyList = ['Action / RPG', 'Fantasy RPG', 'MMORPG', 'Action Platformer', 'Hack & Slash', 'RTS'];
+                const dbList = typeof dbCategoryNames !== 'undefined' ? dbCategoryNames : [];
+                const combinedCategories = Array.from(new Set([...legacyList, ...dbList]));
+                combinedCategories.forEach(cat => { 
+              %>
+                <option value="<%= cat %>" <%= typeof category !== 'undefined' && category === cat ? 'selected' : '' %>><%= cat %></option>
+              <% }) %>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs pointer-events-none"></i>
+          </div>
+          
+          <!-- Platform -->
+          <div class="relative flex-1">
+            <select name="platform" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full appearance-none pl-4 pr-10 py-2.5 rounded text-sm cursor-pointer" onchange="this.form.submit()">
+              <option value="All" <%= typeof platform !== 'undefined' && platform === 'All' ? 'selected' : '' %>>Platform: All</option>
+              <% if (typeof dbPlatforms !== 'undefined' && dbPlatforms && dbPlatforms.length > 0) { %>
+                <% dbPlatforms.forEach(p => { %>
+                  <option value="<%= p %>" <%= typeof platform !== 'undefined' && platform === p ? 'selected' : '' %>><%= p %></option>
+                <% }) %>
+              <% } %>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs pointer-events-none"></i>
+          </div>
+
+          <!-- Developer -->
+          <div class="relative flex-1">
+            <select name="developer" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full appearance-none pl-4 pr-10 py-2.5 rounded text-sm cursor-pointer" onchange="this.form.submit()">
+              <option value="All" <%= typeof developer !== 'undefined' && developer === 'All' ? 'selected' : '' %>>Developer: All</option>
+              <% if (typeof dbPublishers !== 'undefined' && dbPublishers && dbPublishers.length > 0) { %>
+                <% dbPublishers.forEach(pub => { %>
+                  <option value="<%= pub %>" <%= typeof developer !== 'undefined' && developer === pub ? 'selected' : '' %>><%= pub %></option>
+                <% }) %>
+              <% } %>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs pointer-events-none"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Second Row of Dropdowns -->
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex gap-4 w-2/3">
+          <!-- Type -->
+          <div class="relative flex-1">
+            <select name="type" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full appearance-none pl-4 pr-10 py-2.5 rounded text-sm cursor-pointer" onchange="this.form.submit()">
+              <option value="All" <%= typeof type !== 'undefined' && type === 'All' ? 'selected' : '' %>>Type: All</option>
+              <option value="STANDARD" <%= typeof type !== 'undefined' && type === 'STANDARD' ? 'selected' : '' %>>Standard</option>
+              <option value="LEGENDARY" <%= typeof type !== 'undefined' && type === 'LEGENDARY' ? 'selected' : '' %>>Legendary</option>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs pointer-events-none"></i>
+          </div>
+
+          <!-- Status -->
+          <div class="relative flex-1">
+            <select name="status" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full appearance-none pl-4 pr-10 py-2.5 rounded text-sm cursor-pointer" onchange="this.form.submit()">
+              <option value="All" <%= typeof status !== 'undefined' && status === 'All' ? 'selected' : '' %>>Status: All</option>
+              <option value="Live" <%= typeof status !== 'undefined' && status === 'Live' ? 'selected' : '' %>>Live</option>
+              <option value="Hidden" <%= typeof status !== 'undefined' && status === 'Hidden' ? 'selected' : '' %>>Hidden</option>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs pointer-events-none"></i>
+          </div>
+
+          <!-- Sort Option -->
+          <div class="relative flex-1">
+            <select name="sort" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full appearance-none pl-4 pr-10 py-2.5 rounded text-sm cursor-pointer" onchange="this.form.submit()">
+              <option value="A-Z" <%= typeof sort !== 'undefined' && sort === 'A-Z' ? 'selected' : '' %>>Sort: Alphabetical (A-Z)</option>
+              <option value="Z-A" <%= typeof sort !== 'undefined' && sort === 'Z-A' ? 'selected' : '' %>>Sort: Alphabetical (Z-A)</option>
+              <option value="Price-Low" <%= typeof sort !== 'undefined' && sort === 'Price-Low' ? 'selected' : '' %>>Sort: Price (Low to High)</option>
+              <option value="Price-High" <%= typeof sort !== 'undefined' && sort === 'Price-High' ? 'selected' : '' %>>Sort: Price (High to Low)</option>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs pointer-events-none"></i>
+          </div>
+        </div>
+
+        <!-- Clear Filters Button -->
+        <button type="button" class="bg-sidebar-bg border border-input-dark-border text-gray-300 hover:bg-border-dark hover:text-white px-5 py-2.5 rounded text-sm font-semibold flex items-center gap-2 transition-colors" onclick="clearAllFilters()">
+          <i class="fa-solid fa-filter-circle-xmark text-xs"></i> Clear Filters
+        </button>
+      </div>
+    </form>
+
+    <!-- Data Table -->
+    <div class="bg-card-bg rounded-lg border border-border-dark overflow-hidden">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="text-xs text-gray-500 font-semibold tracking-wider uppercase border-b border-border-dark">
+            <th class="px-6 py-4 w-16 text-center">ITEM</th>
+            <th class="px-6 py-4">TITLE</th>
+            <th class="px-6 py-4 w-32">PRICE</th>
+            <th class="px-6 py-4 w-40">CATEGORY</th>
+            <th class="px-6 py-4 w-32">TYPE</th>
+            <th class="px-6 py-4 w-24">STATUS</th>
+            <th class="px-6 py-4 w-24 text-right">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-300">
+          <% if (products && products.length > 0) { %>
+            <% products.forEach(game => { %>
+              <tr class="bg-sidebar-bg hover:bg-card-bg border-b border-border-dark transition-colors <%= game.edition_type === 'LEGENDARY' ? 'border-l-[3px] border-pixel-yellow' : 'border-l-[3px] border-pixel-blue' %>">
+                <!-- Image -->
+                <td class="px-6 py-3 text-center">
+                  <% if (game.coverImageUrl) { %>
+                    <img alt="<%= game.title %>" class="rounded object-cover inline-block w-12 h-8" src="<%= game.coverImageUrl %>"/>
+                  <% } else { %>
+                    <div class="rounded inline-block w-12 h-8 bg-zinc-800 flex items-center justify-center text-gray-500 text-[10px]">No Img</div>
+                  <% } %>
+                </td>
+                
+                <!-- Title -->
+                <td class="px-6 py-3 font-medium <%= game.edition_type === 'STANDARD' ? 'text-pixel-blue' : 'text-pixel-yellow' %> hover:text-white transition-colors cursor-pointer">
+                  <%= game.title %>
+                </td>
+                
+                <!-- Price -->
+                <td class="px-6 py-3 <%= game.edition_type === 'LEGENDARY' ? 'text-pixel-yellow font-medium' : '' %>">
+                  <% if (typeof game.categoryDiscount !== 'undefined' && game.categoryDiscount > 0) { %>
+                    <span class="line-through text-gray-500 mr-2">₹<%= Number(game.price).toFixed(2) %></span>
+                    <span>₹<%= Number(game.discountedPrice).toFixed(2) %></span>
+                  <% } else { %>
+                    ₹<%= Number(game.price).toFixed(2) %>
+                  <% } %>
+                </td>
+                
+                <!-- Category -->
+                <td class="px-6 py-3"><%= game.categoryName || 'N/A' %></td>
+                
+                <!-- Game Type -->
+                <td class="px-6 py-3 font-semibold <%= game.edition_type === 'LEGENDARY' ? 'text-pixel-yellow' : 'text-pixel-blue' %>">
+                  <%= game.edition_type ? (game.edition_type.charAt(0).toUpperCase() + game.edition_type.slice(1).toLowerCase()) : '' %>
+                </td>
+                
+                <!-- Live Status -->
+                <td class="px-6 py-3">
+                  <% if (game.status === 'Live') { %>
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-circle text-[8px] text-[#00ff88]"></i> Live</span>
+                  <% } else { %>
+                    <span class="flex items-center gap-2 text-gray-500"><i class="fa-solid fa-circle text-[8px] text-[#888888]"></i> Hidden</span>
+                  <% } %>
+                </td>
+                
+                <!-- Action Controls -->
+                <td class="px-6 py-3 text-right">
+                  <a href="/admin/products/edit/<%= game._id %>" class="text-gray-500 hover:text-white transition-colors">
+                    <i class="fa-solid fa-pen"></i>
+                  </a>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="7" class="text-center py-8 text-gray-500">
+                No active products found in the inventory database.
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+      <div class="flex items-center justify-between mt-6 px-2">
+        <span class="text-gray-400 text-sm">
+          Showing <%= (currentPage - 1) * limit + 1 %>-<%= Math.min(currentPage * limit, totalCount) %> of <%= totalCount %> games
+        </span>
+        <div class="flex gap-2">
+          <!-- Previous page -->
+          <% if (currentPage > 1) { %>
+            <a href="/admin/products?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>&category=<%= encodeURIComponent(typeof category !== 'undefined' ? category : '') %>&type=<%= encodeURIComponent(typeof type !== 'undefined' ? type : '') %>&sort=<%= encodeURIComponent(typeof sort !== 'undefined' ? sort : '') %>&platform=<%= encodeURIComponent(typeof platform !== 'undefined' ? platform : '') %>&developer=<%= encodeURIComponent(typeof developer !== 'undefined' ? developer : '') %>&status=<%= encodeURIComponent(typeof status !== 'undefined' ? status : '') %>" class="w-8 h-8 flex items-center justify-center rounded bg-sidebar-bg border border-input-dark-border text-gray-400 hover:bg-border-dark hover:text-white transition-colors">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </a>
+          <% } else { %>
+            <span class="w-8 h-8 flex items-center justify-center rounded bg-sidebar-bg border border-input-dark-border text-gray-600 cursor-not-allowed">
+              <i class="fa-solid fa-chevron-left text-xs"></i>
+            </span>
+          <% } %>
+
+          <!-- Page numbers -->
+          <% for (let p = 1; p <= totalPages; p++) { %>
+            <% if (p === currentPage) { %>
+              <span class="w-8 h-8 flex items-center justify-center rounded border border-pixel-blue text-pixel-blue font-medium bg-[#1a2432]"><%= p %></span>
+            <% } else { %>
+              <a href="/admin/products?page=<%= p %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>&category=<%= encodeURIComponent(typeof category !== 'undefined' ? category : '') %>&type=<%= encodeURIComponent(typeof type !== 'undefined' ? type : '') %>&sort=<%= encodeURIComponent(typeof sort !== 'undefined' ? sort : '') %>&platform=<%= encodeURIComponent(typeof platform !== 'undefined' ? platform : '') %>&developer=<%= encodeURIComponent(typeof developer !== 'undefined' ? developer : '') %>&status=<%= encodeURIComponent(typeof status !== 'undefined' ? status : '') %>" class="w-8 h-8 flex items-center justify-center rounded bg-sidebar-bg border border-input-dark-border text-gray-400 hover:bg-border-dark hover:text-white transition-colors">
+                <%= p %>
+              </a>
+            <% } %>
+          <% } %>
+
+          <!-- Next page -->
+          <% if (currentPage < totalPages) { %>
+            <a href="/admin/products?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>&category=<%= encodeURIComponent(typeof category !== 'undefined' ? category : '') %>&type=<%= encodeURIComponent(typeof type !== 'undefined' ? type : '') %>&sort=<%= encodeURIComponent(typeof sort !== 'undefined' ? sort : '') %>&platform=<%= encodeURIComponent(typeof platform !== 'undefined' ? platform : '') %>&developer=<%= encodeURIComponent(typeof developer !== 'undefined' ? developer : '') %>&status=<%= encodeURIComponent(typeof status !== 'undefined' ? status : '') %>" class="w-8 h-8 flex items-center justify-center rounded bg-sidebar-bg border border-input-dark-border text-gray-400 hover:bg-border-dark hover:text-white transition-colors">
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </a>
+          <% } else { %>
+            <span class="w-8 h-8 flex items-center justify-center rounded bg-sidebar-bg border border-input-dark-border text-gray-600 cursor-not-allowed">
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </span>
+          <% } %>
+        </div>
+      </div>
+    <% } else if (typeof totalCount !== 'undefined') { %>
+      <div class="flex items-center justify-between mt-6 px-2">
+        <span class="text-gray-400 text-sm">Showing <%= totalCount %> of <%= totalCount %> games</span>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<script>
+  const searchInput = document.getElementById('searchInput');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+  if (searchInput && clearSearchBtn) {
+    searchInput.addEventListener('input', function() {
+      if (this.value.trim().length > 0) {
+        clearSearchBtn.classList.remove('hidden');
+      } else {
+        clearSearchBtn.classList.add('hidden');
+      }
+    });
+  }
+
+  function clearSearch() {
+    const input = document.getElementById('searchInput');
+    if (input) {
+      input.value = '';
+      input.form.submit();
+    }
+  }
+
+  function clearAllFilters() {
+    window.location.href = '/admin/products';
+  }
+</script>
+
+<%- include('../partials/admin/footer') %>

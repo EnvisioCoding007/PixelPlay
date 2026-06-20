@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PixelPlay - Browse Games</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#00A3FF',
+              dark: '#0082CC',
+              light: '#33B5FF',
+            },
+            legend: {
+              DEFAULT: '#FFB800',
+              dark: '#CC9300',
+              light: '#FFC633',
+            },
+            surface: {
+              100: '#1A1A1A',
+              200: '#222222',
+              300: '#2A2A2A',
+            },
+            gray: {
+              400: '#9CA3AF',
+              500: '#6B7280',
+              900: '#111827',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<style data-purpose="custom-utilities">
+    body {
+      background-color: #0d0d0d;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+    }
+    
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .form-checkbox {
+      appearance: none;
+      background-color: transparent;
+      margin: 0;
+      font: inherit;
+      color: currentColor;
+      width: 1rem;
+      height: 1rem;
+      border: 1px solid #4B5563;
+      border-radius: 0.25rem;
+      display: grid;
+      place-content: center;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .form-checkbox::before {
+      content: "";
+      width: 0.65em;
+      height: 0.65em;
+      transform: scale(0);
+      transition: 120ms transform ease-in-out;
+      box-shadow: inset 1em 1em white;
+      background-color: CanvasText;
+      transform-origin: bottom left;
+      clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    }
+
+    .form-checkbox:checked {
+      background-color: #00A3FF;
+      border-color: #00A3FF;
+    }
+
+    .form-checkbox:checked::before {
+      transform: scale(1);
+    }
+    
+    .game-card-hover {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .game-card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+  <script>
+    function showToast(message, type = 'info') {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none';
+        document.body.appendChild(container);
+      }
+      
+      const toast = document.createElement('div');
+      toast.className = `flex items-center gap-3 px-5 py-3 rounded-lg shadow-2xl text-sm font-semibold border transition-all duration-500 ease-out transform translate-x-full opacity-0 pointer-events-auto max-w-sm bg-[#13161b] text-white ${
+        type === 'success' 
+          ? 'border-emerald-500 text-emerald-400' 
+          : type === 'error' 
+            ? 'border-red-500 text-red-400' 
+            : 'border-[#00D1FF] text-[#00D1FF]'
+      }`;
+      
+      let icon = '<i class="fa-solid fa-circle-info"></i>';
+      if (type === 'success') icon = '<i class="fa-solid fa-circle-check"></i>';
+      if (type === 'error') icon = '<i class="fa-solid fa-circle-exclamation"></i>';
+      
+      toast.innerHTML = `${icon} <span>${message}</span>`;
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.remove('translate-x-full', 'opacity-0');
+      }, 10);
+      
+      setTimeout(() => {
+        toast.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(() => {
+          toast.remove();
+        }, 500);
+      }, 3000);
+    }
+  </script>
+</head>

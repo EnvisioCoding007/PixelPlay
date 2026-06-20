@@ -124,6 +124,14 @@
         </section>
     </main>
     <script>
+        // Prevent the Back button from navigating away from this page.
+        // Replacing the history entry and re-pushing on popstate keeps the
+        // user here so the countdown timer is not reset.
+        history.replaceState(null, '', location.href);
+        window.addEventListener('popstate', () => {
+            history.pushState(null, '', location.href);
+        });
+
         const otpForm    = document.getElementById('otpForm');
         const alertMsg   = document.getElementById('alert-message');
         const inputs     = otpForm.querySelectorAll('input[type="text"]');
