@@ -1169,19 +1169,34 @@
       }
 
       if (response.ok && result && result.success) {
-        alert('Game modifications saved successfully!');
+        await Swal.fire({
+          title: 'Saved!',
+          text: 'Game modifications saved successfully!',
+          icon: 'success',
+          confirmButtonColor: '#2cb5e8'
+        });
         window.location.href = '/admin/products';
       } else {
         const errMsg = result && result.message 
           ? result.message 
           : `Server error ${response.status}`;
-        alert('Error saving modifications: ' + errMsg);
+        Swal.fire({
+          title: 'Error',
+          text: 'Error saving modifications: ' + errMsg,
+          icon: 'error',
+          confirmButtonColor: '#2cb5e8'
+        });
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<span class="material-icons-outlined text-sm">save</span> Save Modifications';
       }
     } catch (err) {
       console.error('Submission error:', err);
-      alert('Failed to save modifications: ' + err.message);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to save modifications: ' + err.message,
+        icon: 'error',
+        confirmButtonColor: '#2cb5e8'
+      });
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<span class="material-icons-outlined text-sm">save</span> Save Modifications';

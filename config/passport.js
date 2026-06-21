@@ -11,8 +11,6 @@ passport.use(new GoogleStrategy({
         const user = await userService.handleGoogleAuth(profile);
         return done(null, user);
     } catch (error) {
-        // Blocked accounts are a known, expected outcome — surface the message
-        // to the login page rather than treating it as a server error.
         if (error.isBlocked) {
             return done(null, false, { message: error.message });
         }

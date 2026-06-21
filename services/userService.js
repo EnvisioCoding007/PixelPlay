@@ -114,11 +114,6 @@ export const loginAuth = async (email, password) => {
     return userData;
 };
 
-/**
- * Handles Google OAuth user lookup/creation. Called by passport.js strategy.
- * Throws a tagged error when the account is blocked so the caller can
- * distinguish it from an unexpected server error.
- */
 export const handleGoogleAuth = async (profile) => {
     let user = await User.findOne({ email: profile.emails[0].value });
 
@@ -144,10 +139,6 @@ export const handleGoogleAuth = async (profile) => {
     return user;
 };
 
-/**
- * Validates the current password and replaces it with a new one.
- * Used by the authenticated "change password" flow.
- */
 export const changePassword = async (userId, currentPassword, newPassword) => {
     const userDoc = await User.findById(userId).select('password_hash');
     if (!userDoc || !userDoc.password_hash) {
@@ -163,10 +154,6 @@ export const changePassword = async (userId, currentPassword, newPassword) => {
     await User.findByIdAndUpdate(userId, { password_hash: hashedPassword });
 };
 
-/**
- * Resets a password directly by email address.
- * Used by the forgot-password flow where identity is already proven via OTP.
- */
 export const resetPasswordByEmail = async (email, newPassword) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await User.findOneAndUpdate({ email }, { password_hash: hashedPassword });

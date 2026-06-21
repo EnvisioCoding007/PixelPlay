@@ -15,7 +15,7 @@
             },
             plugins: []
         };
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body class="bg-zinc-950 text-white min-h-screen flex flex-col">
@@ -683,7 +683,19 @@
 
             // Delete Address Fetch Action
             window.deleteAddress = async function (addressId) {
-                if (!confirm('Are you sure you want to delete this address?')) return;
+                const result = await Swal.fire({
+                    title: 'Delete Address?',
+                    text: 'Are you sure you want to delete this address?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel',
+                    background: '#071827',
+                    color: '#fff',
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#3f3f46'
+                });
+                if (!result.isConfirmed) return;
 
                 try {
                     const response = await fetch(`/auth/profile/addresses/delete/${addressId}`, {

@@ -49,6 +49,20 @@
       </div>
       <!-- Category List Column -->
       <div class="lg:col-span-8 space-y-4">
+        <!-- Search Bar -->
+        <form action="/admin/categories" method="GET" class="flex items-center gap-3 bg-card-bg p-4 rounded-xl border border-border-dark w-full shadow-2xl">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+            <input type="text" id="categorySearchInput" name="search" placeholder="Search categories by name or description..." class="w-full bg-content-bg border border-input-dark-border rounded-lg pl-10 pr-10 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue transition-colors" value="<%= typeof search !== 'undefined' ? search : '' %>">
+            <button type="button" id="clearSearchBtn" class="<%= (typeof search !== 'undefined' && search) ? '' : 'hidden' %> absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white bg-transparent border-0 cursor-pointer">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </div>
+          <button type="submit" class="bg-pixel-blue hover:bg-pixel-blue-hover text-background-dark font-semibold px-5 py-2.5 rounded-lg hover:opacity-90 transition-opacity text-sm whitespace-nowrap">
+            Search
+          </button>
+        </form>
+
         <div class="grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold tracking-wider text-gray-500 uppercase">
           <div class="col-span-4">Category Name</div>
           <div class="col-span-2 text-center">Total Games</div>
@@ -164,11 +178,29 @@
       const isCurrentlyActive = this.getAttribute('aria-checked') === 'true';
       
       if (isCurrentlyActive) {
-        const confirmUnlist = confirm("Disclaimer: Unlisting this category will hide all associated games from storefront filter options. Are you sure you want to proceed?");
-        if (!confirmUnlist) return;
+        const confirmUnlist = await Swal.fire({
+          title: 'Unlist Category?',
+          text: "Disclaimer: Unlisting this category will hide all associated games from storefront filter options. Are you sure you want to proceed?",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#f92a40',
+          cancelButtonColor: '#1f232b',
+          confirmButtonText: 'Yes, unlist it!',
+          cancelButtonText: 'Cancel'
+        });
+        if (!confirmUnlist.isConfirmed) return;
       } else {
-        const confirmList = confirm("Disclaimer: Listing this category will make it visible to customers on the storefront. Are you sure you want to proceed?");
-        if (!confirmList) return;
+        const confirmList = await Swal.fire({
+          title: 'List Category?',
+          text: "Disclaimer: Listing this category will make it visible to customers on the storefront. Are you sure you want to proceed?",
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#2cb5e8',
+          cancelButtonColor: '#1f232b',
+          confirmButtonText: 'Yes, list it!',
+          cancelButtonText: 'Cancel'
+        });
+        if (!confirmList.isConfirmed) return;
       }
       
       try {
@@ -183,11 +215,21 @@
         if (response.ok && result.success) {
           window.location.reload();
         } else {
-          alert(result.message || 'Failed to toggle category status.');
+          Swal.fire({
+            title: 'Error',
+            text: result.message || 'Failed to toggle category status.',
+            icon: 'error',
+            confirmButtonColor: '#2cb5e8'
+          });
         }
       } catch (err) {
         console.error('Error toggling status:', err);
-        alert('An error occurred. Please try again.');
+        Swal.fire({
+          title: 'Error',
+          text: 'An error occurred. Please try again.',
+          icon: 'error',
+          confirmButtonColor: '#2cb5e8'
+        });
       }
     });
   });
@@ -204,8 +246,17 @@
   document.querySelectorAll('.category-delete-btn').forEach(button => {
     button.addEventListener('click', async function() {
       const catId = this.getAttribute('data-id');
-      const confirmDelete = confirm("Are you sure you want to delete this category?");
-      if (!confirmDelete) return;
+      const confirmDelete = await Swal.fire({
+        title: 'Delete Category?',
+        text: "Are you sure you want to delete this category?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f92a40',
+        cancelButtonColor: '#1f232b',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+      });
+      if (!confirmDelete.isConfirmed) return;
 
       try {
         const response = await fetch(`/admin/categories/delete/${catId}`, {
@@ -215,14 +266,44 @@
         if (response.ok && result.success) {
           window.location.reload();
         } else {
-          alert(result.message || 'Failed to delete category.');
+          Swal.fire({
+            title: 'Error',
+            text: result.message || 'Failed to delete category.',
+            icon: 'error',
+            confirmButtonColor: '#2cb5e8'
+          });
         }
       } catch (err) {
         console.error('Error deleting category:', err);
-        alert('An error occurred. Please try again.');
+        Swal.fire({
+          title: 'Error',
+          text: 'An error occurred. Please try again.',
+          icon: 'error',
+          confirmButtonColor: '#2cb5e8'
+        });
       }
     });
   });
+
+  // Handle Category Search input & clear button
+  const categorySearchInput = document.getElementById('categorySearchInput');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+  if (categorySearchInput && clearSearchBtn) {
+    categorySearchInput.addEventListener('input', function() {
+      if (this.value.trim().length > 0) {
+        clearSearchBtn.classList.remove('hidden');
+      } else {
+        clearSearchBtn.classList.add('hidden');
+      }
+    });
+
+    clearSearchBtn.addEventListener('click', function() {
+      categorySearchInput.value = '';
+      clearSearchBtn.classList.add('hidden');
+      categorySearchInput.form.submit();
+    });
+  }
 </script>
 
 <%- include('../partials/admin/footer') %>

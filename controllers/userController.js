@@ -36,14 +36,11 @@ export const signup = async (req, res) => {
     }
 };
 
-// ─── Auth — Email Verification ───────────────────────────────────────────────
 
 export const getVerifyEmailPage = (req, res) => {
     const email = req.session.pendingVerifyEmail;
     if (!email) return res.redirect('/auth/signup');
 
-    // Cache-Control prevents the browser from serving a stale cached copy on Back,
-    // which would re-render the page and reset the countdown timer.
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.render('user/verify-email', { email, purpose: 'signup' });
 };
@@ -221,7 +218,6 @@ export const resetPassword = async (req, res) => {
     }
 };
 
-// ─── Auth — Logout ────────────────────────────────────────────────────────────
 
 export const logout = (req, res) => {
     req.session.destroy((err) => {
@@ -233,7 +229,6 @@ export const logout = (req, res) => {
     });
 };
 
-// ─── Home ─────────────────────────────────────────────────────────────────────
 
 export const getHome = async (req, res) => {
     try {
@@ -248,7 +243,6 @@ export const getHome = async (req, res) => {
         const { latestRelease, standardGames, legendaryGames } = await productService.getProductsForHome(primaryPlatform);
         const activePublishers = await productService.getActivePublishersWithGameCount();
 
-        // Pass activePublishers as both 'publishers' and 'activePublishers' for backward compatibility
         const publishers = activePublishers;
 
         let userWishlist = [];
@@ -259,7 +253,6 @@ export const getHome = async (req, res) => {
                 .select('-password_hash')
                 .lean();
 
-            // Session references a user that no longer exists or is blocked
             if (!user || user.is_blocked) {
                 req.session.destroy(() => {});
                 return res.render('user/home', { 
@@ -295,7 +288,6 @@ export const getHome = async (req, res) => {
             });
         }
 
-        // Unauthenticated — render as public landing page
         return res.render('user/home', { 
             user: null, 
             categories, 
@@ -323,7 +315,6 @@ export const getHome = async (req, res) => {
     }
 };
 
-// ─── Profile — View / Edit ───────────────────────────────────────────────────
 
 export const getProfile = async (req, res) => {
     try {
@@ -331,8 +322,6 @@ export const getProfile = async (req, res) => {
         const user = await User.findById(req.session.user).select('-password_hash').lean();
         if (!user) return res.redirect('/auth/login');
 
-        // Expose a boolean so the view knows whether the user has a local password
-        // without leaking the actual hash.
         user.password_hash = rawUser?.password_hash ? true : null;
         res.render('user/profile', { user });
     } catch (error) {
@@ -369,7 +358,6 @@ export const updateProfile = async (req, res) => {
             phone: phone?.trim() || null,
         };
 
-        // Accept a base64 data URL from the avatar upload widget
         if (profile_image && profile_image.startsWith('data:image/')) {
             updateFields.profile_image = profile_image;
         }
@@ -398,7 +386,6 @@ export const updateProfile = async (req, res) => {
     }
 };
 
-// ─── Profile — Email Update Verification ─────────────────────────────────────
 
 export const getVerifyEmailUpdate = async (req, res) => {
     try {
@@ -430,7 +417,6 @@ export const verifyEmailUpdate = async (req, res) => {
     }
 };
 
-// ─── Profile — Password Update ────────────────────────────────────────────────
 
 export const getProfilePassword = async (req, res) => {
     try {
@@ -462,7 +448,6 @@ export const updatePassword = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' });
         }
 
-        // Delegate all bcrypt operations to the service layer
         await userService.changePassword(req.session.user, currentPassword, newPassword);
 
         res.status(200).json({
@@ -475,7 +460,6 @@ export const updatePassword = async (req, res) => {
     }
 };
 
-// ─── Address Management ───────────────────────────────────────────────────────
 
 export const getAddresses = async (req, res) => {
     try {
@@ -638,6 +622,7 @@ export const getBrowsePage = async (req, res) => {
 
         let user = null;
         let userWishlist = [];
+        let userCartItems = [];
         if (req.session.user) {
             const userId = req.session.user.id || req.session.user;
             user = await User.findById(userId).select('-password_hash').lean();
@@ -645,11 +630,20 @@ export const getBrowsePage = async (req, res) => {
             if (wishlist) {
                 userWishlist = wishlist.items.map(item => item.product.toString());
             }
+            const cart = await Cart.findOne({ userId }).lean();
+            if (cart && cart.items) {
+                userCartItems = cart.items.map(item => ({
+                    productId: item.product.toString(),
+                    platform: item.platform,
+                    quantity: item.quantity
+                }));
+            }
         }
 
         res.render('user/browse-games', {
             user,
             userWishlist,
+            userCartItems,
             products: result.products,
             currentPage: result.currentPage,
             totalPages: result.totalPages,
@@ -874,7 +868,6 @@ export const getCart = async (req, res) => {
             cart = { items: [] };
         }
 
-        // Apply category discounts if applicable so prices match store listings
         const CategoryModel = (await import('../models/Category.js')).default;
         let subtotal = 0;
         let hasUnavailableProduct = false;
@@ -963,12 +956,20 @@ export const addToCart = async (req, res) => {
         );
 
         if (itemIndex > -1) {
-            cart.items[itemIndex].quantity += qty;
+            const newQty = cart.items[itemIndex].quantity + qty;
+            if (newQty > 3) {
+                return res.status(400).json({ success: false, message: 'Maximum of 3 should be the limit to add to cart.' });
+            }
+            cart.items[itemIndex].quantity = newQty;
         } else {
+            if (qty > 3) {
+                return res.status(400).json({ success: false, message: 'Maximum of 3 should be the limit to add to cart.' });
+            }
             cart.items.push({ product: productId, platform, quantity: qty });
         }
 
         await cart.save();
+        const cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
 
         // Remove from wishlist if it exists there
         let wishlist = await Wishlist.findOne({ userId });
@@ -988,7 +989,7 @@ export const addToCart = async (req, res) => {
             }
         }
 
-        res.status(200).json({ success: true });
+        res.status(200).json({ success: true, cartCount });
     } catch (error) {
         console.error('[addToCart] Error:', error);
         res.status(500).json({ success: false, message: 'Internal server error.' });
@@ -1018,7 +1019,7 @@ export const updateCartQuantity = async (req, res) => {
                 if (cart.items[itemIndex].quantity < 3) {
                     cart.items[itemIndex].quantity += 1;
                 } else {
-                    return res.status(400).json({ success: false, message: 'Maximum quantity limit reached.' });
+                    return res.status(400).json({ success: false, message: 'Maximum of 3 should be the limit to add to cart.' });
                 }
             } else if (action === 'decrease') {
                 if (cart.items[itemIndex].quantity > 1) {
@@ -1028,7 +1029,8 @@ export const updateCartQuantity = async (req, res) => {
                 }
             }
             await cart.save();
-            return res.status(200).json({ success: true });
+            const cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+            return res.status(200).json({ success: true, cartCount });
         }
 
         res.status(404).json({ success: false, message: 'Item not found in cart.' });
@@ -1059,7 +1061,8 @@ export const removeFromCart = async (req, res) => {
         if (itemIndex > -1) {
             cart.items.splice(itemIndex, 1);
             await cart.save();
-            return res.status(200).json({ success: true });
+            const cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+            return res.status(200).json({ success: true, cartCount });
         }
 
         res.status(404).json({ success: false, message: 'Item not found in cart.' });

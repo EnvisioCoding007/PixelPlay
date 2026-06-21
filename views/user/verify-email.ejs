@@ -172,13 +172,29 @@
         });
 
         const displayAlert = (msg, type) => {
+            if (!msg) {
+                alertMsg.classList.add('hidden');
+                sessionStorage.removeItem('otpAlertMessage');
+                sessionStorage.removeItem('otpAlertType');
+                return;
+            }
             alertMsg.textContent = msg;
             alertMsg.className = `w-full px-4 py-3 rounded relative text-center text-sm font-medium mb-4 ${
                 type === 'success'
                     ? 'bg-green-100 border border-green-400 text-green-700'
                     : 'bg-red-100 border border-red-400 text-red-700'
             }`;
+            alertMsg.classList.remove('hidden');
+            sessionStorage.setItem('otpAlertMessage', msg);
+            sessionStorage.setItem('otpAlertType', type);
         };
+
+        // Restore alert on page load if one was persisted
+        const storedMsg = sessionStorage.getItem('otpAlertMessage');
+        const storedType = sessionStorage.getItem('otpAlertType');
+        if (storedMsg && storedType) {
+            displayAlert(storedMsg, storedType);
+        }
 
         // ── Bug 6 Fix: on successful OTP submission the handler now always
         // redirects regardless of whether a redirectUrl key is present —
@@ -187,7 +203,7 @@
         // silently swallowed the redirect when the key was absent. ─────────────
         otpForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            alertMsg.classList.add('hidden');
+            displayAlert(null);
 
             submitBtn.disabled = true;
             submitBtn.style.opacity = '0.7';
@@ -224,6 +240,10 @@
 
                 if (response.ok) {
                     displayAlert(data.message || 'Verification successful.', 'success');
+                    // Clear storage so next flows don't inherit stale values
+                    sessionStorage.removeItem('otpTimerExpiry');
+                    sessionStorage.removeItem('otpAlertMessage');
+                    sessionStorage.removeItem('otpAlertType');
                     // Always redirect — use server-provided URL or the flow fallback.
                     setTimeout(() => {
                         window.location.href = data.redirectUrl || fallbackRedirect;
@@ -253,21 +273,65 @@
             timerContainer.classList.remove('hidden');
             resendButton.classList.add('hidden');
 
-            timerInterval = setInterval(() => {
+            const updateTimerDisplay = () => {
                 const minutes = Math.floor(timeLeft / 60);
                 const seconds = timeLeft % 60;
                 countdownElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            };
 
+            updateTimerDisplay();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     timerContainer.classList.add('hidden');
                     resendButton.classList.remove('hidden');
+                    sessionStorage.removeItem('otpTimerExpiry');
+                } else {
+                    updateTimerDisplay();
                 }
-                timeLeft--;
             }, 1000);
         }
 
-        startTimer(60);
+        function initTimer() {
+            const currentEmail = document.getElementById('userEmail').value;
+            const purpose      = document.getElementById('authPurpose').value;
+
+            const storedEmail = sessionStorage.getItem('otpEmail');
+            const storedPurpose = sessionStorage.getItem('otpPurpose');
+
+            if (storedEmail === currentEmail && storedPurpose === purpose) {
+                // Same session refresh
+                const expiryTime = sessionStorage.getItem('otpTimerExpiry');
+                if (expiryTime) {
+                    const timeLeft = Math.ceil((parseInt(expiryTime, 10) - Date.now()) / 1000);
+                    if (timeLeft > 0) {
+                        startTimer(timeLeft);
+                    } else {
+                        timerContainer.classList.add('hidden');
+                        resendButton.classList.remove('hidden');
+                        sessionStorage.removeItem('otpTimerExpiry');
+                    }
+                } else {
+                    timerContainer.classList.add('hidden');
+                    resendButton.classList.remove('hidden');
+                }
+            } else {
+                // Brand new session
+                sessionStorage.setItem('otpEmail', currentEmail);
+                sessionStorage.setItem('otpPurpose', purpose);
+                sessionStorage.removeItem('otpAlertMessage');
+                sessionStorage.removeItem('otpAlertType');
+
+                const timeLeft = 60;
+                const expiryTime = Date.now() + timeLeft * 1000;
+                sessionStorage.setItem('otpTimerExpiry', expiryTime);
+                startTimer(timeLeft);
+            }
+        }
+
+        initTimer();
 
         // ── Bug 2 Fix: resend handler now reads `purpose` from the hoisted
         // outer-scope variable (not from an undefined inner closure var).
@@ -289,8 +353,15 @@
                 if (response.ok) {
                     resendButton.textContent = 'Resend OTP';
                     resendButton.style.pointerEvents = 'auto';
-                    startTimer(60);
-                    alertMsg.classList.add('hidden');
+                    
+                    const timeLeft = 60;
+                    const expiryTime = Date.now() + timeLeft * 1000;
+                    sessionStorage.setItem('otpTimerExpiry', expiryTime);
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                    }
+                    startTimer(timeLeft);
+                    
                     clearOtpInputs();
                     displayAlert(data.message || 'OTP resent successfully.', 'success');
                 } else {

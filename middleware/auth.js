@@ -10,9 +10,7 @@ export const isUserAuth = async (req, res, next) => {
             .select('is_blocked role')
             .lean();
 
-        // Reject if not found, blocked, or if an admin ObjectId somehow ended up here
         if (!user || user.is_blocked || user.role === 'admin') {
-            // Destroy the stale / revoked session before redirecting
             req.session.destroy(() => {});
             return res.redirect('/auth/login');
         }
@@ -25,7 +23,6 @@ export const isUserAuth = async (req, res, next) => {
 };
 
 export const isUserUnAuth = (req, res, next) => {
-    // Only redirect to /home if a regular user session exists (not an admin session)
     if (req.session.user) {
         res.redirect('/home');
     } else {

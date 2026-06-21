@@ -976,12 +976,22 @@
     e.preventDefault();
     
     if (!croppedCoverBlob) {
-      alert('Please select and crop a Cover Art image.');
+      Swal.fire({
+        title: 'Validation Error',
+        text: 'Please select and crop a Cover Art image.',
+        icon: 'error',
+        confirmButtonColor: '#2cb5e8'
+      });
       return;
     }
     
     if (croppedGalleryBlobs.length < 1) {
-      alert(`Please select at least 1 file for the Media Gallery. Current: ${croppedGalleryBlobs.length}`);
+      Swal.fire({
+        title: 'Validation Error',
+        text: `Please select at least 1 file for the Media Gallery. Current: ${croppedGalleryBlobs.length}`,
+        icon: 'error',
+        confirmButtonColor: '#2cb5e8'
+      });
       return;
     }
     
@@ -1091,19 +1101,34 @@
       }
       
       if (response.ok && result && result.success) {
-        alert('Game published successfully!');
+        await Swal.fire({
+          title: 'Success!',
+          text: 'Game published successfully!',
+          icon: 'success',
+          confirmButtonColor: '#2cb5e8'
+        });
         window.location.href = '/admin/products';
       } else {
         const errMsg = result && result.message 
           ? result.message 
           : `Server returned status ${response.status} (${response.statusText || 'Unknown Error'})`;
-        alert('Error publishing game: ' + errMsg);
+        Swal.fire({
+          title: 'Publish Failed',
+          text: 'Error publishing game: ' + errMsg,
+          icon: 'error',
+          confirmButtonColor: '#2cb5e8'
+        });
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<span class="material-icons-outlined text-sm">save</span> Publish Game to Library';
       }
     } catch (err) {
       console.error('Submission error:', err);
-      alert('Failed to submit form: ' + err.message);
+      Swal.fire({
+        title: 'Error',
+        text: 'Failed to submit form: ' + err.message,
+        icon: 'error',
+        confirmButtonColor: '#2cb5e8'
+      });
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<span class="material-icons-outlined text-sm">save</span> Publish Game to Library';

@@ -265,16 +265,13 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
             });
         }
 
-        // Vault / Edition Filter
         if (filters.vault === 'standard') {
             products = products.filter(p => p.edition_type === 'STANDARD');
         } else if (filters.vault === 'legendary') {
             products = products.filter(p => p.edition_type === 'LEGENDARY');
         }
 
-        // 6. In-Memory Sorting (Out-of-stock items always come last)
         products.sort((a, b) => {
-            // Out of stock sorting: stock === 0 comes last
             if (a.stock === 0 && b.stock > 0) return 1;
             if (a.stock > 0 && b.stock === 0) return -1;
 
@@ -288,7 +285,6 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
             } else if (sort === 'Z-A') {
                 return b.title.localeCompare(a.title);
             } else {
-                // Trending (sort by rating and then createdAt)
                 if (b.rating !== a.rating) {
                     return b.rating - a.rating;
                 }
@@ -348,7 +344,6 @@ export const getProductsForHome = async (primaryPlatform = 'PC') => {
             if (discount > 0) {
                 discountedPrice = Math.max(0, basePrice - (basePrice * (discount / 100)));
             }
-            // Generate a rating between 4.0 and 5.0 deterministically or use fallback
             const rating = 4.0 + (Math.abs(game.title.charCodeAt(0) || 0) % 11) / 10;
             const reviewsCount = 50 + (Math.abs(game.title.charCodeAt(1) || 0) % 250);
 
@@ -364,18 +359,15 @@ export const getProductsForHome = async (primaryPlatform = 'PC') => {
             };
         };
 
-        // Find latest release banner (standard or legendary)
         const rawLatest = await Product.findOne({ status: 'Live' }).sort({ createdAt: -1 }).lean();
         const latestRelease = mapProduct(rawLatest);
 
-        // Find standard games
         const rawStandard = await Product.find({ status: 'Live', edition_type: 'STANDARD' })
             .sort({ createdAt: -1 })
             .limit(6)
             .lean();
         const standardGames = rawStandard.map(mapProduct);
 
-        // Find legendary games
         const rawLegendary = await Product.find({ status: 'Live', edition_type: 'LEGENDARY' })
             .sort({ createdAt: -1 })
             .limit(6)
@@ -414,7 +406,6 @@ export const getActivePublishersWithGameCount = async () => {
 
 export const getRecommendationsForProduct = async (categoryId, currentProductId, primaryPlatform = 'PC') => {
     try {
-        // Fetch all categories to map category ID / name
         const categories = await Category.find({ status: 'Live' }).lean();
         const categoryMap = new Map();
         const categoryNameMap = new Map();
@@ -424,7 +415,6 @@ export const getRecommendationsForProduct = async (categoryId, currentProductId,
             categoryNameMap.set(c.name.toLowerCase(), c);
         });
 
-        // Find the category of the current product
         let catObj = null;
         if (categoryId) {
             const catIdStr = categoryId.toString();
@@ -437,13 +427,11 @@ export const getRecommendationsForProduct = async (categoryId, currentProductId,
         
         const currentCategoryName = catObj ? catObj.name.toLowerCase() : '';
 
-        // Fetch all live products (except the current one)
         const rawProducts = await Product.find({
             status: 'Live',
             _id: { $ne: currentProductId }
         }).lean();
 
-        // Map and enrich products in memory
         const enrichedProducts = rawProducts.map(game => {
             let gameCatObj = null;
             if (game.category) {
@@ -455,7 +443,6 @@ export const getRecommendationsForProduct = async (categoryId, currentProductId,
                 }
             }
 
-            // Resolve platform specific price
             let basePrice = game.price || 0;
             if (game.platform_stock && game.platform_stock.length > 0) {
                 const platStock = game.platform_stock.find(ps => ps.platform === primaryPlatform);
@@ -484,12 +471,10 @@ export const getRecommendationsForProduct = async (categoryId, currentProductId,
             };
         });
 
-        // Filter: games of the same category
         let sameCategoryGames = enrichedProducts.filter(p => {
             return p.categoryName !== 'N/A' && p.categoryName.toLowerCase() === currentCategoryName;
         });
 
-        // Fallback to other categories if less than 5
         let recommendations = sameCategoryGames.slice(0, 5);
         if (recommendations.length < 5) {
             const currentRecIds = new Set(recommendations.map(r => r._id.toString()));

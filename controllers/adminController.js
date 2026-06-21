@@ -36,9 +36,6 @@ export const adminLogin = async (req, res) => {
             return res.render('admin/login', { error: 'Invalid credentials.' });
         }
 
-        // Regenerate the session ID first (prevents session-fixation attacks),
-        // then explicitly save before redirecting so the MemoryStore write is
-        // committed before the browser follows the 302 to /admin/users.
         req.session.regenerate((regenErr) => {
             if (regenErr) {
                 console.error('[adminLogin] session.regenerate error:', regenErr);
@@ -68,7 +65,6 @@ export const getCustomers = async (req, res) => {
         const pageNum = Math.max(1, parseInt(page, 10));
         const limitNum = Math.max(1, parseInt(limit, 10));
 
-        // Build dynamic search filter across username and email fields
         const queryFilter = search
             ? {
                 $or: [
@@ -78,17 +74,14 @@ export const getCustomers = async (req, res) => {
             }
             : {};
 
-        // Exclude admin accounts from the customer table
         const filter = { ...queryFilter, role: 'user' };
 
-        // Apply status filter
         if (status === 'active') {
             filter.is_blocked = false;
         } else if (status === 'suspended') {
             filter.is_blocked = true;
         }
 
-        // Sort configuration
         let sortConfig = { createdAt: -1 };
         if (sort === '-createdAt') {
             sortConfig = { createdAt: -1 };
@@ -111,7 +104,6 @@ export const getCustomers = async (req, res) => {
 
         const totalPages = Math.ceil(totalCount / limitNum);
 
-        // Build currentFilters object for Clear button
         const currentFilters = {};
         if (search) currentFilters.search = search;
         if (status) currentFilters.status = status;
@@ -139,7 +131,6 @@ export const getCustomers = async (req, res) => {
     }
 };
 
-// Toggle Block / Unblock User
 
 export const toggleBlock = async (req, res) => {
     try {
@@ -299,7 +290,6 @@ export const editProduct = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Game not found.' });
         }
 
-        // Handle Cover Image
         let cover_image = existingProduct.cover_image;
         const coverFiles = req.files && req.files.cover_image ? req.files.cover_image : [];
         if (coverFiles.length > 0) {
@@ -307,7 +297,6 @@ export const editProduct = async (req, res) => {
             cover_image = coverUploadResult.secure_url;
         }
 
-        // Handle Gallery
         const existingGalleryRaw = req.body.existing_gallery || req.body['existing_gallery[]'] || [];
         const existingGallery = Array.isArray(existingGalleryRaw) ? existingGalleryRaw : [existingGalleryRaw];
 
@@ -428,7 +417,6 @@ export const addProduct = async (req, res) => {
             return res.status(400).json({ success: false, message: 'At least 1 gallery file is required.' });
         }
 
-        // Upload files to Cloudinary using memory buffer
         const coverUploadResult = await uploadToCloudinary(coverFiles[0], 'pixelplay_uploads');
         const cover_image = coverUploadResult.secure_url;
 
@@ -465,21 +453,12 @@ export const addProduct = async (req, res) => {
 
 export const renderCategoryManagement = async (req, res) => {
     try {
-        const categoriesRaw = await Category.find({}).lean();
-        
-        // Enrich category objects with dynamically computed game counts
-        const categories = await Promise.all(categoriesRaw.map(async (cat) => {
-            const gameCount = await Product.countDocuments({ category: cat._id });
-            return {
-                ...cat,
-                gameCount,
-                defaultOffer: cat.defaultOffer || 0,
-                status: cat.status || 'Live'
-            };
-        }));
+        const { search = '' } = req.query;
+        const categories = await categoryService.getAllCategoriesAdmin(search);
 
         res.render('admin/add-category', {
             categories,
+            search,
             user: req.session.admin || null
         });
     } catch (err) {
@@ -595,7 +574,6 @@ export const editCategory = async (req, res) => {
             return res.status(404).send('Category not found.');
         }
 
-        // Server-side validation: block unlisting if games are linked
         if (status === 'Hidden') {
             const gameCount = await Product.countDocuments({ category: id });
             if (gameCount > 0) {
@@ -660,10 +638,8 @@ export const renderPublisherManagement = async (req, res) => {
         const pageNum = Math.max(1, parseInt(page, 10));
         const limitNum = Math.max(1, parseInt(limit, 10));
 
-        // Retrieve publishers from the Publisher collection
         let savedPublishers = await Publisher.find({}).lean();
         if (savedPublishers.length === 0) {
-            // Seed from distinct products if currently empty
             const productPubs = await Product.distinct('publisher');
             if (productPubs.length > 0) {
                 await Promise.all(productPubs.map(name => 
@@ -673,13 +649,11 @@ export const renderPublisherManagement = async (req, res) => {
             }
         }
 
-        // Apply in-memory search
         if (search && search.trim()) {
             const queryStr = search.trim().toLowerCase();
             savedPublishers = savedPublishers.filter(pub => pub.name.toLowerCase().includes(queryStr));
         }
 
-        // Enrich with gameCount and format structure
         let publishers = await Promise.all(savedPublishers.map(async (pub) => {
             const gameCount = await Product.countDocuments({ publisher: pub.name });
             return {
@@ -692,10 +666,8 @@ export const renderPublisherManagement = async (req, res) => {
             };
         }));
 
-        // Sort alphabetically
         publishers.sort((a, b) => a.name.localeCompare(b.name));
 
-        // Pagination
         const totalCount = publishers.length;
         const totalPages = Math.ceil(totalCount / limitNum);
         const startIndex = (pageNum - 1) * limitNum;
