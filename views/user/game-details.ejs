@@ -114,7 +114,7 @@
 <%- include('../partials/user/navbar', { activeTab: 'browse', user: typeof user !== 'undefined' ? user : null }) %>
 
 <!-- Main Content Area -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+<main class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
   <!-- Breadcrumbs -->
   <nav aria-label="Breadcrumb" class="flex text-xs text-gray-500 mb-6">
     <ol class="inline-flex items-center space-x-1 md:space-x-2">
@@ -189,6 +189,9 @@
         <div class="flex items-center space-x-2 <%= themeText %> text-xs font-bold tracking-wider uppercase mb-2">
           <svg class="w-4 h-4" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" fill-rule="evenodd"></path></svg>
           <span><%= isLegendary ? 'Legends Collection' : 'Standard Edition' %> • <%= product.release_year || 2026 %></span>
+        </div>
+        <div class="mb-4 w-32 aspect-[3/4] rounded-md overflow-hidden border border-gray-800 bg-gray-900 shadow-lg">
+          <img src="<%= fallbackCover %>" class="w-full h-full object-cover" alt="<%= product.title %> Cover" />
         </div>
         <h1 class="text-3xl sm:text-4xl font-extrabold text-pixel-white leading-tight mb-2 uppercase"><%= product.title %></h1>
         <div class="text-xs text-gray-400 mb-4 flex flex-wrap gap-x-4 gap-y-1">
@@ -348,25 +351,65 @@
           if (initialPlat === 'PC' && product.system_requirements && product.system_requirements.minimum && product.system_requirements.minimum.os) { 
         %>
           <!-- Render PC System Requirements -->
-          <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
-            <span class="text-gray-500 uppercase text-xs tracking-wider">OS</span>
-            <span class="text-pixel-white text-right"><%= product.system_requirements.minimum.os %></span>
-          </div>
-          <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
-            <span class="text-gray-500 uppercase text-xs tracking-wider">Processor</span>
-            <span class="text-pixel-white text-right"><%= product.system_requirements.minimum.processor %></span>
-          </div>
-          <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
-            <span class="text-gray-500 uppercase text-xs tracking-wider">Memory</span>
-            <span class="text-pixel-white text-right"><%= product.system_requirements.minimum.memory %></span>
-          </div>
-          <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
-            <span class="text-gray-500 uppercase text-xs tracking-wider">Graphics</span>
-            <span class="text-pixel-white text-right"><%= product.system_requirements.minimum.graphics %></span>
-          </div>
-          <div class="flex justify-between items-center text-sm">
-            <span class="text-gray-500 uppercase text-xs tracking-wider">Storage</span>
-            <span class="text-pixel-white text-right"><%= product.system_requirements.minimum.storage %></span>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-3">
+              <h3 class="text-xs font-bold <%= themeText %> uppercase tracking-wider mb-2">Minimum Requirements</h3>
+              <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                <span class="text-gray-500 uppercase text-[10px] tracking-wider">OS</span>
+                <span class="text-pixel-white text-right"><%= product.system_requirements.minimum.os %></span>
+              </div>
+              <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                <span class="text-gray-500 uppercase text-[10px] tracking-wider">Processor</span>
+                <span class="text-pixel-white text-right"><%= product.system_requirements.minimum.processor %></span>
+              </div>
+              <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                <span class="text-gray-500 uppercase text-[10px] tracking-wider">Memory</span>
+                <span class="text-pixel-white text-right"><%= product.system_requirements.minimum.memory %></span>
+              </div>
+              <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                <span class="text-gray-500 uppercase text-[10px] tracking-wider">Graphics</span>
+                <span class="text-pixel-white text-right"><%= product.system_requirements.minimum.graphics %></span>
+              </div>
+              <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                <span class="text-gray-500 uppercase text-[10px] tracking-wider">Storage</span>
+                <span class="text-pixel-white text-right"><%= product.system_requirements.minimum.storage %></span>
+              </div>
+              <% if (product.system_requirements.minimum.sound_card) { %>
+              <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                <span class="text-gray-500 uppercase text-[10px] tracking-wider">Sound Card</span>
+                <span class="text-pixel-white text-right"><%= product.system_requirements.minimum.sound_card %></span>
+              </div>
+              <% } %>
+            </div>
+            <div class="space-y-3">
+              <h3 class="text-xs font-bold <%= themeText %> uppercase tracking-wider mb-2">Recommended Requirements</h3>
+              <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                <span class="text-gray-500 uppercase text-[10px] tracking-wider">OS</span>
+                <span class="text-pixel-white text-right"><%= product.system_requirements.recommended.os %></span>
+              </div>
+              <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                <span class="text-gray-500 uppercase text-[10px] tracking-wider">Processor</span>
+                <span class="text-pixel-white text-right"><%= product.system_requirements.recommended.processor %></span>
+              </div>
+              <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                <span class="text-gray-500 uppercase text-[10px] tracking-wider">Memory</span>
+                <span class="text-pixel-white text-right"><%= product.system_requirements.recommended.memory %></span>
+              </div>
+              <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                <span class="text-gray-500 uppercase text-[10px] tracking-wider">Graphics</span>
+                <span class="text-pixel-white text-right"><%= product.system_requirements.recommended.graphics %></span>
+              </div>
+              <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                <span class="text-gray-500 uppercase text-[10px] tracking-wider">Storage</span>
+                <span class="text-pixel-white text-right"><%= product.system_requirements.recommended.storage %></span>
+              </div>
+              <% if (product.system_requirements.recommended.sound_card) { %>
+              <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                <span class="text-gray-500 uppercase text-[10px] tracking-wider">Sound Card</span>
+                <span class="text-pixel-white text-right"><%= product.system_requirements.recommended.sound_card %></span>
+              </div>
+              <% } %>
+            </div>
           </div>
         <% } else { 
           // Get console presets
@@ -610,6 +653,7 @@
       "SNES": { os: "SNES Hardware", storage: "ROM Cartridge", graphics: "224p/240p Support", processor: "Ricoh 5A22 (3.58 MHz)", memory: "128 KB" }
     };
 
+    const themeText = '<%= isLegendary ? "text-pixel-gold" : "text-pixel-cyan" %>';
     const themeBorderClass = '<%= isLegendary ? "border-pixel-gold" : "border-pixel-cyan" %>';
 
     const buyNowBtn = document.getElementById('buyNowBtn');
@@ -720,27 +764,65 @@
 
       const specsContainer = document.getElementById('specsContainer');
       if (specsContainer) {
-        if (selectedPlatform === 'PC' && gameData.systemRequirements && gameData.systemRequirements.minimum && gameData.systemRequirements.minimum.os) {
+        if (selectedPlatform === 'PC' && gameData.systemRequirements && gameData.systemRequirements.minimum && gameData.systemRequirements.minimum.os && gameData.systemRequirements.recommended && gameData.systemRequirements.recommended.os) {
           specsContainer.innerHTML = `
-            <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
-              <span class="text-gray-500 uppercase text-xs tracking-wider">OS</span>
-              <span class="text-pixel-white text-right">${gameData.systemRequirements.minimum.os}</span>
-            </div>
-            <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
-              <span class="text-gray-500 uppercase text-xs tracking-wider">Processor</span>
-              <span class="text-pixel-white text-right">${gameData.systemRequirements.minimum.processor}</span>
-            </div>
-            <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
-              <span class="text-gray-500 uppercase text-xs tracking-wider">Memory</span>
-              <span class="text-pixel-white text-right">${gameData.systemRequirements.minimum.memory}</span>
-            </div>
-            <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
-              <span class="text-gray-500 uppercase text-xs tracking-wider">Graphics</span>
-              <span class="text-pixel-white text-right">${gameData.systemRequirements.minimum.graphics}</span>
-            </div>
-            <div class="flex justify-between items-center text-sm">
-              <span class="text-gray-500 uppercase text-xs tracking-wider">Storage</span>
-              <span class="text-pixel-white text-right">${gameData.systemRequirements.minimum.storage}</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div class="space-y-3">
+                <h3 class="text-xs font-bold ${themeText} uppercase tracking-wider mb-2">Minimum Requirements</h3>
+                <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider">OS</span>
+                  <span class="text-pixel-white text-right">${gameData.systemRequirements.minimum.os}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider">Processor</span>
+                  <span class="text-pixel-white text-right">${gameData.systemRequirements.minimum.processor}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider">Memory</span>
+                  <span class="text-pixel-white text-right">${gameData.systemRequirements.minimum.memory}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider">Graphics</span>
+                  <span class="text-pixel-white text-right">${gameData.systemRequirements.minimum.graphics}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider">Storage</span>
+                  <span class="text-pixel-white text-right">${gameData.systemRequirements.minimum.storage}</span>
+                </div>
+                ${gameData.systemRequirements.minimum.sound_card ? `
+                <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider">Sound Card</span>
+                  <span class="text-pixel-white text-right">${gameData.systemRequirements.minimum.sound_card}</span>
+                </div>` : ''}
+              </div>
+              <div class="space-y-3">
+                <h3 class="text-xs font-bold ${themeText} uppercase tracking-wider mb-2">Recommended Requirements</h3>
+                <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider">OS</span>
+                  <span class="text-pixel-white text-right">${gameData.systemRequirements.recommended.os}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider">Processor</span>
+                  <span class="text-pixel-white text-right">${gameData.systemRequirements.recommended.processor}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider">Memory</span>
+                  <span class="text-pixel-white text-right">${gameData.systemRequirements.recommended.memory}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider">Graphics</span>
+                  <span class="text-pixel-white text-right">${gameData.systemRequirements.recommended.graphics}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider">Storage</span>
+                  <span class="text-pixel-white text-right">${gameData.systemRequirements.recommended.storage}</span>
+                </div>
+                ${gameData.systemRequirements.recommended.sound_card ? `
+                <div class="flex justify-between items-center text-sm border-b border-gray-800/50 pb-2">
+                  <span class="text-gray-500 uppercase text-[10px] tracking-wider">Sound Card</span>
+                  <span class="text-pixel-white text-right">${gameData.systemRequirements.recommended.sound_card}</span>
+                </div>` : ''}
+              </div>
             </div>
           `;
         } else {
@@ -805,6 +887,34 @@
         }
         const isLive = await checkLiveStatus();
         if (!isLive) return;
+
+        const activeBtn = document.querySelector('.platform-btn.text-pixel-white');
+        const selectedPlatform = activeBtn ? activeBtn.dataset.platform : 'PC';
+        const productId = '<%= product._id %>';
+        const productTitle = '<%= product.title.replace(/'/g, "\\'") %>';
+
+        try {
+          const response = await fetch('/auth/cart/add', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ productId, platform: selectedPlatform, quantity: 1 })
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            showToast(`${productTitle} (${selectedPlatform}) added to cart!`, "success");
+            setTimeout(() => {
+              window.location.href = '/auth/cart';
+            }, 800);
+          } else {
+            showToast(data.message || "Failed to add item to cart.", "error");
+          }
+        } catch (err) {
+          console.error("Error adding to cart:", err);
+          showToast("Network error adding to cart.", "error");
+        }
       });
     }
     if (addToCartBtn) {

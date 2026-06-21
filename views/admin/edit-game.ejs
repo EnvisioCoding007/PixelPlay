@@ -1,5 +1,6 @@
 <%- include('../partials/admin/header') %>
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 <link rel="stylesheet" href="/globals.css">
 
 <body class="bg-background-dark text-white antialiased h-screen flex overflow-hidden">
@@ -213,7 +214,7 @@
                         <span class="text-[8px] mt-1">Add Media</span>
                       </button>
                     </div>
-                    <input type="file" id="galleryInput" accept="image/*,video/*" multiple class="hidden bg-background-dark border border-border-dark text-white" onchange="handleGalleryUpload(this)">
+                    <input type="file" id="galleryInput" accept="image/*,video/*" multiple class="hidden bg-background-dark border border-border-dark text-white">
                   </div>
                 </div>
                 
@@ -294,6 +295,28 @@
   <option value="100 GB available space"></option>
 </datalist>
 
+<div id="cropperWorkspace" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-background-dark/95 backdrop-blur-sm p-4">
+  <div class="bg-surface-dark border border-border-dark rounded-xl max-w-2xl w-full p-6 flex flex-col gap-4 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-border-dark pb-3">
+      <h3 class="text-lg font-semibold text-white" id="cropperTitle">Crop Cover Image</h3>
+      <button type="button" id="closeCropperBtn" class="text-text-muted hover:text-white transition-colors">
+        <span class="material-icons-outlined">close</span>
+      </button>
+    </div>
+    <div class="relative w-full max-h-[50vh] bg-background-dark flex items-center justify-center overflow-hidden rounded-lg border border-border-dark">
+      <img id="cropperImage" class="max-w-full max-h-[45vh] object-contain" />
+    </div>
+    <div class="flex gap-3 justify-end border-t border-border-dark pt-3">
+      <button type="button" id="cancelCropBtn" class="px-5 py-2 text-sm text-white hover:bg-surface-hover border border-border-dark rounded-lg transition-colors">
+        Cancel
+      </button>
+      <button type="button" id="saveCropBtn" class="px-5 py-2 text-sm text-background-dark bg-accent hover:bg-accent/90 font-medium rounded-lg transition-colors">
+        Apply Crop
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Status Confirmation Modal ──────────────────────────────── -->
 <div id="status-confirm-modal"
     class="fixed inset-0 z-[100] hidden items-center justify-center bg-zinc-950/80 backdrop-blur-sm"
@@ -330,6 +353,7 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script>
   // Edition toggle syncing & Dynamic theme switching
   const toggle = document.getElementById('toggle');
@@ -488,49 +512,197 @@
     window.location.href = '/admin/products';
   });
 
-  // Cover image preview change
-  document.getElementById('coverInput').addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-      document.getElementById('coverPreview').src = URL.createObjectURL(file);
+  let croppedCoverBlob = null;
+  let croppedGalleryBlobs = [];
+  let cropper = null;
+  let currentCropType = 'cover';
+  let currentGalleryIndex = 0;
+  let galleryQueue = [];
+
+  const cropperWorkspace = document.getElementById('cropperWorkspace');
+  const cropperImage = document.getElementById('cropperImage');
+  const cropperTitle = document.getElementById('cropperTitle');
+  const closeCropperBtn = document.getElementById('closeCropperBtn');
+  const cancelCropBtn = document.getElementById('cancelCropBtn');
+  const saveCropBtn = document.getElementById('saveCropBtn');
+
+  const coverInput = document.getElementById('coverInput');
+  const galleryInput = document.getElementById('galleryInput');
+
+  const coverPreview = document.getElementById('coverPreview');
+
+  function startCropper(imageSrc, type, index = 0) {
+    currentCropType = type;
+    currentGalleryIndex = index;
+    
+    if (type === 'cover') {
+      cropperTitle.textContent = 'Crop Cover Image (3:4 Ratio)';
+    } else {
+      cropperTitle.textContent = `Crop Gallery Image ${index + 1} of ${galleryQueue.length} (16:9 Ratio)`;
+    }
+    
+    cropperImage.src = imageSrc;
+    cropperWorkspace.classList.remove('hidden');
+    cropperWorkspace.classList.add('flex');
+    
+    if (cropper) {
+      cropper.destroy();
+    }
+    
+    cropper = new Cropper(cropperImage, {
+      aspectRatio: type === 'cover' ? 3/4 : 16/9,
+      viewMode: 1,
+      dragMode: 'move',
+      autoCropArea: 0.9,
+      responsive: true,
+      restore: false,
+      guides: true,
+      center: true,
+      highlight: false,
+      cropBoxMovable: true,
+      cropBoxResizable: true,
+      toggleDragModeOnDblclick: false
+    });
+  }
+
+  function closeCropper() {
+    cropperWorkspace.classList.add('hidden');
+    cropperWorkspace.classList.remove('flex');
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+  }
+
+  coverInput.addEventListener('change', function(e) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        startCropper(evt.target.result, 'cover');
+      };
+      reader.readAsDataURL(file);
     }
   });
 
-  // Gallery manipulation functions
-  function handleGalleryUpload(input) {
-    const files = Array.from(input.files);
+  function renderNewGalleryPreviews() {
+    document.querySelectorAll('.gallery-item-new').forEach(el => el.remove());
+    
     const container = document.getElementById('galleryPreviews');
     const addBtn = document.getElementById('galleryAddBtn');
-
-    files.forEach((file, idx) => {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        // Create new thumbnail block
-        const item = document.createElement('div');
-        item.className = 'relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0 border border-border-dark gallery-item';
+    
+    croppedGalleryBlobs.forEach((blob, idx) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'w-16 h-16 rounded-lg bg-surface-dark border border-border-dark flex items-center justify-center overflow-hidden relative group gallery-item-new';
+      
+      if (blob instanceof File && blob.type.startsWith('video/')) {
+        const videoIcon = document.createElement('span');
+        videoIcon.className = 'material-icons-outlined text-accent text-2xl';
+        videoIcon.textContent = 'videocam';
+        thumb.appendChild(videoIcon);
         
+        const badge = document.createElement('span');
+        badge.className = 'absolute bottom-1 right-1 bg-black/60 text-[8px] text-white px-1 rounded';
+        badge.textContent = `Video`;
+        thumb.appendChild(badge);
+      } else {
         const img = document.createElement('img');
+        img.src = URL.createObjectURL(blob);
         img.className = 'w-full h-full object-cover';
-        img.src = e.target.result;
-        
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'absolute top-1 right-1 bg-black/70 rounded-full p-0.5 text-gray-300 hover:text-white hover:bg-red-500/80';
-        button.onclick = function() { item.remove(); };
-        button.innerHTML = `
-          <svg class="h-3 w-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-            <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-          </svg>
-        `;
-
-        item.appendChild(img);
-        item.appendChild(button);
-        // Insert before the add media button
-        container.insertBefore(item, addBtn);
-      };
-      reader.readAsDataURL(file);
+        thumb.appendChild(img);
+      }
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'absolute inset-0 bg-black/75 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-red-500 cursor-pointer border-none rounded-lg';
+      deleteBtn.innerHTML = '<span class="material-icons-outlined text-sm">delete_outline</span>';
+      deleteBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        croppedGalleryBlobs.splice(idx, 1);
+        renderNewGalleryPreviews();
+      });
+      thumb.appendChild(deleteBtn);
+      
+      container.insertBefore(thumb, addBtn);
     });
   }
+
+  galleryInput.addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    galleryQueue = files;
+    cropNextGalleryImage(0);
+  });
+
+  function cropNextGalleryImage(index) {
+    currentGalleryIndex = index;
+    if (index < galleryQueue.length) {
+      const file = galleryQueue[index];
+      
+      if (file.type.startsWith('video/')) {
+        croppedGalleryBlobs.push(file);
+        renderNewGalleryPreviews();
+        cropNextGalleryImage(index + 1);
+      } else {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          startCropper(evt.target.result, 'gallery', index);
+        };
+        reader.readAsDataURL(file);
+      }
+    } else {
+      closeCropper();
+      galleryInput.value = '';
+    }
+  }
+
+  saveCropBtn.addEventListener('click', function() {
+    if (!cropper) return;
+    
+    const canvas = cropper.getCroppedCanvas({
+      width: currentCropType === 'cover' ? 600 : 1280,
+      height: currentCropType === 'cover' ? 800 : 720
+    });
+    
+    canvas.toBlob(function(blob) {
+      if (currentCropType === 'cover') {
+        croppedCoverBlob = blob;
+        coverPreview.src = URL.createObjectURL(blob);
+        closeCropper();
+      } else {
+        croppedGalleryBlobs.push(blob);
+        renderNewGalleryPreviews();
+        
+        const nextIndex = currentGalleryIndex + 1;
+        if (nextIndex < galleryQueue.length) {
+          cropNextGalleryImage(nextIndex);
+        } else {
+          closeCropper();
+          galleryInput.value = '';
+        }
+      }
+    }, 'image/png');
+  });
+
+  cancelCropBtn.addEventListener('click', function() {
+    closeCropper();
+    if (currentCropType === 'cover') {
+      coverInput.value = '';
+    } else {
+      galleryInput.value = '';
+    }
+  });
+
+  closeCropperBtn.addEventListener('click', function() {
+    closeCropper();
+    if (currentCropType === 'cover') {
+      coverInput.value = '';
+    } else {
+      galleryInput.value = '';
+    }
+  });
 
   // System requirements state variables
   const productMin = <%- JSON.stringify(product.system_requirements?.minimum || {}) %>;
@@ -1094,16 +1266,17 @@
       formData.append('existing_gallery[]', input.value);
     });
 
-    // Append new cover image if selected
-    const coverInput = document.getElementById('coverInput');
-    if (coverInput.files.length > 0) {
-      formData.append('cover_image', coverInput.files[0]);
+    if (croppedCoverBlob) {
+      formData.append('cover_image', croppedCoverBlob, 'cover.png');
     }
 
-    // Append new gallery images if selected
-    const galleryInput = document.getElementById('galleryInput');
-    Array.from(galleryInput.files).forEach(file => {
-      formData.append('gallery', file);
+    croppedGalleryBlobs.forEach((blob, idx) => {
+      if (blob instanceof File) {
+        const ext = blob.name.split('.').pop() || 'mp4';
+        formData.append('gallery', blob, `gallery-${idx}.${ext}`);
+      } else {
+        formData.append('gallery', blob, `gallery-${idx}.png`);
+      }
     });
 
     // Append dynamic system requirements from the active tab form

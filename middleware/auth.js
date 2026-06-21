@@ -1,4 +1,6 @@
 import User from '../models/User.js';
+import passport from 'passport';
+import * as userController from '../controllers/userController.js';
 
 
 export const isUserAuth = async (req, res, next) => {
@@ -57,4 +59,10 @@ export const isAdminUnAuth = (req, res, next) => {
     } else {
         next();
     }
+};
+
+export const handleGoogleAuth = (req, res, next) => {
+    passport.authenticate('google', { session: false }, (err, user, info) =>
+        userController.handleGoogleCallback(req, res, next, err, user, info)
+    )(req, res, next);
 };

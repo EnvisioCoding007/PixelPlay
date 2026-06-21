@@ -2,6 +2,7 @@ import express from 'express';
 import { isAdminAuth, isAdminUnAuth } from '../middleware/auth.js';
 import * as adminController from '../controllers/adminController.js';
 import { upload } from '../config/cloudinary.js';
+import { handleProductUploads } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -15,36 +16,10 @@ router.get('/admin/customers', isAdminAuth, adminController.getCustomers);
 
 router.get('/admin/products', isAdminAuth, adminController.renderProductManagement);
 router.get('/admin/products/edit/:id', isAdminAuth, adminController.renderEditGamePage);
-router.post('/admin/products/edit/:id', isAdminAuth, (req, res, next) => {
-    uploadFields(req, res, (err) => {
-        if (err) {
-            console.error('[Multer/Cloudinary Upload Error]', err);
-            return res.status(400).json({ 
-                success: false, 
-                message: err.message || 'File upload failed. Please verify format and size.' 
-            });
-        }
-        next();
-    });
-}, adminController.editProduct);
+router.post('/admin/products/edit/:id', isAdminAuth, handleProductUploads, adminController.editProduct);
 router.get('/admin/products/add', isAdminAuth, adminController.renderAddGamePage);
-const uploadFields = upload.fields([
-    { name: 'cover_image', maxCount: 1 },
-    { name: 'gallery', maxCount: 10 }
-]);
 
-router.post('/admin/products/add', isAdminAuth, (req, res, next) => {
-    uploadFields(req, res, (err) => {
-        if (err) {
-            console.error('[Multer/Cloudinary Upload Error]', err);
-            return res.status(400).json({ 
-                success: false, 
-                message: err.message || 'File upload failed. Please verify format and size.' 
-            });
-        }
-        next();
-    });
-}, adminController.addProduct);
+router.post('/admin/products/add', isAdminAuth, handleProductUploads, adminController.addProduct);
 
 
 router.post('/admin/users/toggle-block/:id', isAdminAuth, adminController.toggleBlock);

@@ -1,4 +1,4 @@
-import { isUserAuth, isUserUnAuth } from '../middleware/auth.js';
+import { isUserAuth, isUserUnAuth, handleGoogleAuth } from '../middleware/auth.js';
 import express from 'express';
 import passport from 'passport';
 import { upload } from '../config/cloudinary.js';
@@ -40,11 +40,7 @@ router.get('/auth/google', passport.authenticate('google', {
 
 // Custom passport callback is used so that a blocked-user failure can surface
 // an error message on the login page instead of silently redirecting.
-router.get('/auth/google/callback', (req, res, next) => {
-    passport.authenticate('google', { session: false }, (err, user, info) =>
-        userController.handleGoogleCallback(req, res, next, err, user, info)
-    )(req, res, next);
-});
+router.get('/auth/google/callback', handleGoogleAuth);
 
 router.get('/', userController.getHome);
 router.post('/set-primary-platform', userController.setPrimaryPlatform);
