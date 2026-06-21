@@ -138,7 +138,11 @@
               </div>
               
               <!-- Move to Cart Button -->
-              <% if (isLegendary) { %>
+              <% if (item.product.status === 'Hidden') { %>
+                <div class="w-full bg-red-950/40 border border-red-800/60 text-red-400 font-semibold py-2 px-4 rounded flex items-center justify-center gap-2 select-none text-sm text-center">
+                  Product unavailable
+                </div>
+              <% } else if (isLegendary) { %>
                 <button onclick="moveToCart('<%= item.product._id %>', '<%= itemPlatform %>', '<%= item.product.title.replace(/'/g, "\\'") %>')" class="w-full bg-app-orange hover:bg-[#fbd394] text-black font-semibold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2">
                   <i class="fa-solid fa-cart-shopping text-sm"></i> Move to Cart
                 </button>

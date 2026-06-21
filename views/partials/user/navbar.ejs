@@ -57,7 +57,8 @@
                     </button>
                 </div>
             </form>
-            <%# Cart icon visible to everyone %>
+            <% if (typeof user !== 'undefined' && user) { %>
+            <%# Authenticated: show cart, bell, and profile avatar %>
             <a href="/auth/cart" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors"
                 aria-label="Cart">
                 <i class="fa-solid fa-cart-shopping text-[#9aa6b3] hover:text-white transition-colors text-lg"></i>
@@ -67,9 +68,6 @@
                     </span>
                 <% } %>
             </a>
-
-            <% if (typeof user !== 'undefined' && user) { %>
-            <%# Authenticated: show bell and profile avatar %>
             <button type="button" class="flex w-10 h-10 items-center justify-center relative rounded-[20px]"
                 aria-label="Notifications">
                 <img class="relative w-5 h-5" src="/icons/notification-bell.svg" alt="Notifications" />

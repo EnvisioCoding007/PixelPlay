@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Product from '../models/Product.js';
 import Publisher from '../models/Publisher.js';
@@ -238,7 +239,13 @@ export const getHome = async (req, res) => {
     try {
         const categories = await categoryService.getAllActiveCategories();
         
-        const { latestRelease, standardGames, legendaryGames } = await productService.getProductsForHome();
+        const primaryPlatform = req.session.primaryPlatform || 'PC';
+        const allPlatforms = await Product.distinct('platforms');
+        if (!allPlatforms.includes('PC')) {
+            allPlatforms.unshift('PC');
+        }
+
+        const { latestRelease, standardGames, legendaryGames } = await productService.getProductsForHome(primaryPlatform);
         const activePublishers = await productService.getActivePublishersWithGameCount();
 
         // Pass activePublishers as both 'publishers' and 'activePublishers' for backward compatibility
@@ -263,7 +270,9 @@ export const getHome = async (req, res) => {
                     standardGames,
                     legendaryGames,
                     activePublishers,
-                    userWishlist: []
+                    userWishlist: [],
+                    primaryPlatform,
+                    allPlatforms
                 });
             }
 
@@ -280,7 +289,9 @@ export const getHome = async (req, res) => {
                 standardGames,
                 legendaryGames,
                 activePublishers,
-                userWishlist
+                userWishlist,
+                primaryPlatform,
+                allPlatforms
             });
         }
 
@@ -293,7 +304,9 @@ export const getHome = async (req, res) => {
             standardGames,
             legendaryGames,
             activePublishers,
-            userWishlist: []
+            userWishlist: [],
+            primaryPlatform,
+            allPlatforms
         });
     } catch (error) {
         console.error('[getHome]', error);
@@ -613,12 +626,14 @@ export const getBrowsePage = async (req, res) => {
             vault: vault || 'all'
         };
 
+        const primaryPlatform = req.session.primaryPlatform || 'PC';
         const result = await productService.getBrowseProductsAndFilters(
             search || '',
             filters,
             sort || 'Trending',
             page || 1,
-            12
+            12,
+            primaryPlatform
         );
 
         let user = null;
@@ -642,6 +657,7 @@ export const getBrowsePage = async (req, res) => {
             platforms: result.dbPlatforms,
             publishers: result.dbPublishers,
             categories: result.dbCategories,
+            primaryPlatform,
             query: {
                 search: search || '',
                 genre: queryGenre,
@@ -668,18 +684,23 @@ export const getProductDetails = async (req, res) => {
     try {
         const { id } = req.params;
         const product = await Product.findById(id).lean();
-        if (!product) {
-            return res.status(404).render('user/home', {
-                user: null,
-                categories: [],
-                publishers: [],
-                error: 'Product not found.'
-            });
+        if (!product || product.status === 'Hidden') {
+            return res.redirect('/browse');
         }
 
         const Category = (await import('../models/Category.js')).default;
-        const catObj = product.category ? await Category.findById(product.category).lean() : null;
+        let catObj = null;
+        if (product.category) {
+            if (mongoose.Types.ObjectId.isValid(product.category)) {
+                catObj = await Category.findById(product.category).lean();
+            } else {
+                catObj = await Category.findOne({ name: product.category }).lean();
+            }
+        }
         product.categoryName = catObj ? catObj.name : 'N/A';
+        const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
+        product.categoryDiscount = discount;
+        product.discountedPrice = discount > 0 ? Math.max(0, product.price - (product.price * (discount / 100))) : product.price;
 
         let user = null;
         let inWishlist = false;
@@ -697,13 +718,17 @@ export const getProductDetails = async (req, res) => {
         }
 
         const reviews = [];
+        const primaryPlatform = req.session.primaryPlatform || 'PC';
+        const similarGames = await productService.getRecommendationsForProduct(product.category, product._id, primaryPlatform);
 
         res.render('user/game-details', {
             product,
             reviews,
             user,
             inWishlist,
-            wishlistPlatforms
+            wishlistPlatforms,
+            similarGames,
+            primaryPlatform
         });
     } catch (error) {
         console.error('[getProductDetails] Error:', error);
@@ -713,6 +738,20 @@ export const getProductDetails = async (req, res) => {
             publishers: [],
             error: 'An error occurred while loading game details.'
         });
+    }
+};
+
+export const checkProductStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const product = await Product.findById(id).lean();
+        if (!product || product.status === 'Hidden') {
+            return res.status(200).json({ status: 'Hidden', redirectUrl: '/browse' });
+        }
+        return res.status(200).json({ status: 'Live' });
+    } catch (error) {
+        console.error('[checkProductStatus] Error:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 };
 
@@ -729,10 +768,32 @@ export const getWishlist = async (req, res) => {
             const CategoryModel = (await import('../models/Category.js')).default;
             for (let item of wishlist.items) {
                 if (item.product) {
-                    const catObj = item.product.category ? await CategoryModel.findById(item.product.category).lean() : null;
+                    let catObj = null;
+                    if (item.product.category) {
+                        if (mongoose.Types.ObjectId.isValid(item.product.category)) {
+                            catObj = await CategoryModel.findById(item.product.category).lean();
+                        } else {
+                            catObj = await CategoryModel.findOne({ name: item.product.category }).lean();
+                        }
+                    }
                     const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
                     item.product.categoryDiscount = discount;
-                    item.product.discountedPrice = discount > 0 ? Math.max(0, item.product.price - (item.product.price * (discount / 100))) : item.product.price;
+                    
+                    let basePrice = item.product.price || 0;
+                    if (item.product.platform_stock && item.product.platform_stock.length > 0) {
+                        const platStock = item.product.platform_stock.find(ps => ps.platform === item.platform);
+                        if (platStock && typeof platStock.price === 'number') {
+                            basePrice = platStock.price;
+                        } else {
+                            const firstPlat = item.product.platform_stock[0];
+                            if (firstPlat && typeof firstPlat.price === 'number') {
+                                basePrice = firstPlat.price;
+                            }
+                        }
+                    }
+                    
+                    item.product.price = basePrice;
+                    item.product.discountedPrice = discount > 0 ? Math.max(0, basePrice - (basePrice * (discount / 100))) : basePrice;
                     item.product.categoryName = catObj ? catObj.name : 'N/A';
                 }
             }
@@ -761,10 +822,14 @@ export const toggleWishlist = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Product ID is required.' });
         }
 
+        const product = await Product.findById(productId).lean();
+        if (!product || product.status === 'Hidden') {
+            return res.status(400).json({ success: false, redirectUrl: '/browse', message: 'This product is currently unavailable.' });
+        }
+
         let selectedPlatform = platform;
         if (!selectedPlatform) {
-            const product = await Product.findById(productId).lean();
-            selectedPlatform = (product && product.platforms && product.platforms.length > 0) ? product.platforms[0] : 'PC';
+            selectedPlatform = (product.platforms && product.platforms.length > 0) ? product.platforms[0] : 'PC';
         }
 
         let wishlist = await Wishlist.findOne({ userId });
@@ -812,12 +877,37 @@ export const getCart = async (req, res) => {
         // Apply category discounts if applicable so prices match store listings
         const CategoryModel = (await import('../models/Category.js')).default;
         let subtotal = 0;
+        let hasUnavailableProduct = false;
         for (let item of cart.items) {
             if (item.product) {
-                const catObj = item.product.category ? await CategoryModel.findById(item.product.category).lean() : null;
+                if (item.product.status === 'Hidden') {
+                    hasUnavailableProduct = true;
+                }
+                let catObj = null;
+                if (item.product.category) {
+                    if (mongoose.Types.ObjectId.isValid(item.product.category)) {
+                        catObj = await CategoryModel.findById(item.product.category).lean();
+                    } else {
+                        catObj = await CategoryModel.findOne({ name: item.product.category }).lean();
+                    }
+                }
                 const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
                 item.product.categoryDiscount = discount;
-                const activePrice = discount > 0 ? Math.max(0, item.product.price - (item.product.price * (discount / 100))) : item.product.price;
+                
+                let basePrice = item.product.price || 0;
+                if (item.product.platform_stock && item.product.platform_stock.length > 0) {
+                    const platStock = item.product.platform_stock.find(ps => ps.platform === item.platform);
+                    if (platStock && typeof platStock.price === 'number') {
+                        basePrice = platStock.price;
+                    } else {
+                        const firstPlat = item.product.platform_stock[0];
+                        if (firstPlat && typeof firstPlat.price === 'number') {
+                            basePrice = firstPlat.price;
+                        }
+                    }
+                }
+                
+                const activePrice = discount > 0 ? Math.max(0, basePrice - (basePrice * (discount / 100))) : basePrice;
                 item.product.price = activePrice;
                 subtotal += activePrice * item.quantity;
             }
@@ -833,7 +923,8 @@ export const getCart = async (req, res) => {
             subtotal,
             tax,
             shipping,
-            grandTotal
+            grandTotal,
+            hasUnavailableProduct
         });
     } catch (error) {
         console.error('[getCart] Error:', error);
@@ -852,6 +943,11 @@ export const addToCart = async (req, res) => {
         const { productId, platform, quantity } = req.body;
         if (!productId || !platform) {
             return res.status(400).json({ success: false, message: 'Product ID and Platform are required.' });
+        }
+
+        const product = await Product.findById(productId);
+        if (!product || product.status === 'Hidden') {
+            return res.status(400).json({ success: false, redirectUrl: '/browse', message: 'This product is currently unavailable.' });
         }
 
         const qty = Number(quantity) || 1;
@@ -970,5 +1066,18 @@ export const removeFromCart = async (req, res) => {
     } catch (error) {
         console.error('[removeFromCart] Error:', error);
         res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+};
+
+export const setPrimaryPlatform = async (req, res) => {
+    try {
+        const { platform } = req.body;
+        if (platform) {
+            req.session.primaryPlatform = platform;
+        }
+        return res.redirect(req.headers.referer || '/home');
+    } catch (error) {
+        console.error('[setPrimaryPlatform] Error:', error);
+        return res.redirect('/home');
     }
 };

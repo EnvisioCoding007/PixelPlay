@@ -12,7 +12,10 @@
       <!-- Search Bar -->
       <form action="/admin/publishers" method="get" class="relative">
         <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
-        <input name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue text-sm rounded-lg pl-9 pr-4 py-2.5 w-64 placeholder-gray-500" placeholder="Search Publishers..." type="text"/>
+        <input id="pubSearchInput" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue text-sm rounded-lg pl-9 pr-10 py-2.5 w-64 placeholder-gray-500" placeholder="Search Publishers..." type="text"/>
+        <button type="button" id="clearPubSearchBtn" class="<%= (typeof search !== 'undefined' && search) ? '' : 'hidden' %> absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
       </form>
       <!-- Add Button -->
       <a href="/admin/publishers/add" class="bg-pixel-blue hover:bg-pixel-blue-hover text-white font-medium py-2.5 px-4 rounded-lg flex items-center gap-2 transition-colors">
@@ -177,5 +180,26 @@
     <!-- END: Data Table Section -->
   </div>
 </main>
+
+<script>
+  (function () {
+    const pubSearchInput = document.getElementById('pubSearchInput');
+    const clearPubSearchBtn = document.getElementById('clearPubSearchBtn');
+
+    if (pubSearchInput && clearPubSearchBtn) {
+      pubSearchInput.addEventListener('input', function() {
+        if (this.value.trim().length > 0) {
+          clearPubSearchBtn.classList.remove('hidden');
+        } else {
+          clearPubSearchBtn.classList.add('hidden');
+        }
+      });
+      clearPubSearchBtn.addEventListener('click', function() {
+        pubSearchInput.value = '';
+        pubSearchInput.form.submit();
+      });
+    }
+  })();
+</script>
 
 <%- include('../partials/admin/footer') %>

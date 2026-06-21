@@ -44,7 +44,7 @@
 
 <%- include('../partials/user/navbar', { activeTab: 'browse', user: typeof user !== 'undefined' ? user : null, query: typeof query !== 'undefined' ? query : {} }) %>
 
-<form id="filterForm" action="/browse" method="GET" class="flex flex-1 overflow-hidden w-full">
+<form id="filterForm" action="/browse" method="GET" class="flex flex-1 w-full">
   <!-- Hidden Input for active Vault Tab -->
   <input type="hidden" name="vault" id="vaultInput" value="<%= (typeof query !== 'undefined' && query.vault) ? query.vault : 'all' %>" />
   <input type="hidden" name="search" id="hiddenSearchInput" value="<%= (typeof query !== 'undefined' && query.search) ? query.search : '' %>" />
@@ -57,7 +57,7 @@
   }) %>
 
   <!-- BEGIN: Main Content Area -->
-  <main class="flex-1 overflow-y-auto p-6 md:p-8 bg-[#0d0d0d]">
+  <main class="flex-1 p-6 md:p-8 bg-[#0d0d0d] md:ml-64">
     <div class="max-w-7xl mx-auto pb-12">
       
       <!-- Dynamic Tabs -->
@@ -165,11 +165,11 @@
 
                     <div class="flex gap-2">
                       <% if (product.edition_type === 'LEGENDARY') { %>
-                        <button type="button" onclick="event.stopPropagation(); handleCartClick(this, '<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= (product.platforms && product.platforms.length > 0) ? product.platforms[0] : 'PC' %>')" class="bg-legend hover:bg-legend-light text-[#151515] p-2 rounded transition-colors shadow-[0_0_10px_rgba(255,184,0,0.3)]">
+                        <button type="button" onclick="event.stopPropagation(); handleCartClick(this, '<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= (product.platforms && product.platforms.length > 0) ? (product.platforms.includes(primaryPlatform) ? primaryPlatform : product.platforms[0]) : 'PC' %>')" class="bg-legend hover:bg-legend-light text-[#151515] p-2 rounded transition-colors shadow-[0_0_10px_rgba(255,184,0,0.3)]">
                           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
                         </button>
                       <% } else { %>
-                        <button type="button" onclick="event.stopPropagation(); handleCartClick(this, '<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= (product.platforms && product.platforms.length > 0) ? product.platforms[0] : 'PC' %>')" class="bg-brand hover:bg-brand-light text-white p-2 rounded transition-colors shadow-[0_0_10px_rgba(0,163,255,0.2)]">
+                        <button type="button" onclick="event.stopPropagation(); handleCartClick(this, '<%= product._id %>', '<%= product.title.replace(/'/g, "\\'") %>', '<%= (product.platforms && product.platforms.length > 0) ? (product.platforms.includes(primaryPlatform) ? primaryPlatform : product.platforms[0]) : 'PC' %>')" class="bg-brand hover:bg-brand-light text-white p-2 rounded transition-colors shadow-[0_0_10px_rgba(0,163,255,0.2)]">
                           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
                         </button>
                       <% } %>

@@ -24,7 +24,10 @@
                 <!-- Search Input -->
                 <div class="relative flex-1 w-full">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"></i>
-                    <input type="text" name="search" placeholder="Search by Name, Email, or User ID..." class="w-full bg-background-dark border border-border-dark rounded px-10 py-2.5 text-sm text-[#9aa6ab] focus:border-accent focus:ring-1 focus:ring-accent transition-colors" value="<%= typeof currentSearch !== 'undefined' ? currentSearch : '' %>">
+                    <input type="text" id="custSearchInput" name="search" placeholder="Search by Name, Email, or User ID..." class="w-full bg-background-dark border border-border-dark rounded px-10 py-2.5 text-sm text-[#9aa6ab] focus:border-accent focus:ring-1 focus:ring-accent transition-colors" value="<%= typeof currentSearch !== 'undefined' ? currentSearch : '' %>">
+                    <button type="button" id="clearCustSearchBtn" class="<%= (typeof currentSearch !== 'undefined' && currentSearch) ? '' : 'hidden' %> absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-white">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
                 </div>
                 
                 <!-- Search Button -->
@@ -505,6 +508,25 @@
                 showToast('Network error. Please try again.', 'error');
             }
         });
+
+        // ── Clear Customer Search ─────────────────────────────────────────
+        const custSearchInput = document.getElementById('custSearchInput');
+        const clearCustSearchBtn = document.getElementById('clearCustSearchBtn');
+
+        if (custSearchInput && clearCustSearchBtn) {
+            custSearchInput.addEventListener('input', function() {
+                if (this.value.trim().length > 0) {
+                    clearCustSearchBtn.classList.remove('hidden');
+                } else {
+                    clearCustSearchBtn.classList.add('hidden');
+                }
+            });
+            clearCustSearchBtn.addEventListener('click', function() {
+                custSearchInput.value = '';
+                custSearchInput.form.submit();
+            });
+        }
+
         // ── bfcache guard (Bug #1 – back button after logout) ────────────────
         // If the browser restores this page from the back-forward cache the
         // server never gets a request and isAdminAuth cannot redirect. Force a

@@ -68,16 +68,10 @@
                 </div>
               </div>
               
-              <!-- Core Grid: Release Year, Base Price -->
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-text-muted mb-2">Release Year</label>
-                  <input name="release_year" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" placeholder="YYYY" type="number" min="1950" max="2100"/>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-text-muted mb-2">Base Price (₹)</label>
-                  <input name="price" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" placeholder="0.00" type="number" step="0.01" min="0"/>
-                </div>
+              <!-- Core Grid: Release Year -->
+              <div>
+                <label class="block text-sm font-medium text-text-muted mb-2">Release Year</label>
+                <input name="release_year" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" placeholder="YYYY" type="number" min="1950" max="2100"/>
               </div>
               
               <!-- Category -->
@@ -140,7 +134,7 @@
                 <!-- Configure Stock per Platform -->
                 <div id="platformStocksSection" class="hidden mt-4">
                   <label class="block text-sm font-medium text-text-muted mb-2">Configure Stock per Platform</label>
-                  <div id="platformStocksContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-background-dark border border-border-dark rounded-lg p-4">
+                  <div id="platformStocksContainer" class="flex flex-col gap-3 bg-background-dark border border-border-dark rounded-lg p-4">
                     <!-- Dynamic stock rows render here -->
                   </div>
                 </div>
@@ -897,29 +891,49 @@
     platformStocksSection.classList.remove('hidden');
     
     // Save current values to restore them
-    const currentValues = {};
+    const currentStockValues = {};
+    const currentPriceValues = {};
     platformStocksContainer.querySelectorAll('input').forEach(input => {
-      currentValues[input.dataset.platform] = input.value;
+      if (input.dataset.field === 'stock') {
+        currentStockValues[input.dataset.platform] = input.value;
+      } else if (input.dataset.field === 'price') {
+        currentPriceValues[input.dataset.platform] = input.value;
+      }
     });
 
     platformStocksContainer.innerHTML = '';
     checkedBoxes.forEach(platform => {
       const slug = platform.replace(/[^a-zA-Z0-9]/g, '_');
-      const savedVal = currentValues[platform] !== undefined ? currentValues[platform] : '0';
+      const savedStock = currentStockValues[platform] !== undefined ? currentStockValues[platform] : '0';
+      const savedPrice = currentPriceValues[platform] !== undefined ? currentPriceValues[platform] : '0.00';
 
       const row = document.createElement('div');
       row.className = 'flex items-center justify-between gap-4 py-2 border-b border-border-dark last:border-b-0';
       row.innerHTML = `
         <span class="text-sm font-medium text-white">${platform}</span>
-        <div class="flex items-center gap-2">
-          <input type="number" min="0" required 
-            data-platform="${platform}"
-            name="platform_stock_${platform}" 
-            id="stock_${slug}" 
-            value="${savedVal}" 
-            class="w-24 bg-surface-dark border border-border-dark rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-accent text-right" 
-            placeholder="0" />
-          <span class="text-xs text-text-muted">units</span>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs text-text-muted">Stock:</span>
+            <input type="number" min="0" required 
+              data-platform="${platform}"
+              data-field="stock"
+              name="platform_stock_${platform}" 
+              id="stock_${slug}" 
+              value="${savedStock}" 
+              class="w-20 bg-surface-dark border border-border-dark rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-accent text-right" 
+              placeholder="0" />
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-xs text-text-muted">Price: ₹</span>
+            <input type="number" min="0" step="0.01" required 
+              data-platform="${platform}"
+              data-field="price"
+              name="platform_price_${platform}" 
+              id="price_${slug}" 
+              value="${savedPrice}" 
+              class="w-24 bg-surface-dark border border-border-dark rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-accent text-right" 
+              placeholder="0.00" />
+          </div>
         </div>
       `;
       platformStocksContainer.appendChild(row);
@@ -977,22 +991,31 @@
     formData.append('title', form.title.value);
     formData.append('publisher', form.publisher.value);
     formData.append('release_year', form.release_year.value);
-    formData.append('price', form.price.value);
     formData.append('category', form.category.value);
     formData.append('edition_type', form.edition_type.value);
     formData.append('description', form.description.value);
     let totalStock = 0;
+    let firstPlatformPrice = 0;
+    let hasFirstPlat = false;
     // Platforms checkbox mapping (both standard and other platforms badges are scanned)
     form.querySelectorAll('input[name="platforms[]"]:checked').forEach(cb => {
       const platform = cb.value;
       const slug = platform.replace(/[^a-zA-Z0-9]/g, '_');
       const stockInput = document.getElementById(`stock_${slug}`);
+      const priceInput = document.getElementById(`price_${slug}`);
       const stockVal = parseInt(stockInput ? stockInput.value : '0') || 0;
+      const priceVal = parseFloat(priceInput ? priceInput.value : '0.00') || 0;
       totalStock += stockVal;
+      if (!hasFirstPlat) {
+        firstPlatformPrice = priceVal;
+        hasFirstPlat = true;
+      }
       formData.append(`platform_stock_${platform}`, stockVal);
+      formData.append(`platform_price_${platform}`, priceVal);
       formData.append('platforms[]', platform);
     });
     formData.append('stock', totalStock);
+    formData.append('price', firstPlatformPrice);
     
     // Dynamic System Requirements mapping — read only from the currently visible (active) platform block
     const activeReqBlock = document.querySelector('.platform-req-form:not(.hidden)');

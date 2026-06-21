@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Product from '../models/Product.js';
 import Category from '../models/Category.js';
 import Publisher from '../models/Publisher.js';
@@ -153,7 +154,7 @@ const getProductReviewsCount = (product) => {
     return `(${reviews})`;
 };
 
-export const getBrowseProductsAndFilters = async (search = '', filters = {}, sort = 'Trending', page = 1, limit = 12) => {
+export const getBrowseProductsAndFilters = async (search = '', filters = {}, sort = 'Trending', page = 1, limit = 12, primaryPlatform = 'PC') => {
     try {
         // 1. Fetch Categories
         const categories = await Category.find({ status: 'Live' }).lean();
@@ -183,12 +184,28 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
         let products = rawProducts.map(game => {
             const catObj = game.category ? categoryMap.get(game.category.toString()) : null;
             const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
-            let discountedPrice = game.price || 0;
+            
+            // Resolve platform specific price
+            let basePrice = game.price || 0;
+            if (game.platform_stock && game.platform_stock.length > 0) {
+                const platStock = game.platform_stock.find(ps => ps.platform === primaryPlatform);
+                if (platStock && typeof platStock.price === 'number') {
+                    basePrice = platStock.price;
+                } else {
+                    const firstPlat = game.platform_stock[0];
+                    if (firstPlat && typeof firstPlat.price === 'number') {
+                        basePrice = firstPlat.price;
+                    }
+                }
+            }
+
+            let discountedPrice = basePrice;
             if (discount > 0) {
-                discountedPrice = Math.max(0, game.price - (game.price * (discount / 100)));
+                discountedPrice = Math.max(0, basePrice - (basePrice * (discount / 100)));
             }
             return {
                 ...game,
+                price: basePrice,
                 coverImageUrl: game.cover_image || game.coverImage || null,
                 categoryName: catObj ? catObj.name : 'N/A',
                 discountedPrice: discountedPrice,
@@ -303,7 +320,7 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
     }
 };
 
-export const getProductsForHome = async () => {
+export const getProductsForHome = async (primaryPlatform = 'PC') => {
     try {
         const categories = await Category.find({}).lean();
         const categoryMap = new Map(categories.map(c => [c._id.toString(), c]));
@@ -312,9 +329,24 @@ export const getProductsForHome = async () => {
             if (!game) return null;
             const catObj = game.category ? categoryMap.get(game.category.toString()) : null;
             const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
-            let discountedPrice = game.price || 0;
+            
+            // Resolve platform specific price
+            let basePrice = game.price || 0;
+            if (game.platform_stock && game.platform_stock.length > 0) {
+                const platStock = game.platform_stock.find(ps => ps.platform === primaryPlatform);
+                if (platStock && typeof platStock.price === 'number') {
+                    basePrice = platStock.price;
+                } else {
+                    const firstPlat = game.platform_stock[0];
+                    if (firstPlat && typeof firstPlat.price === 'number') {
+                        basePrice = firstPlat.price;
+                    }
+                }
+            }
+
+            let discountedPrice = basePrice;
             if (discount > 0) {
-                discountedPrice = Math.max(0, game.price - (game.price * (discount / 100)));
+                discountedPrice = Math.max(0, basePrice - (basePrice * (discount / 100)));
             }
             // Generate a rating between 4.0 and 5.0 deterministically or use fallback
             const rating = 4.0 + (Math.abs(game.title.charCodeAt(0) || 0) % 11) / 10;
@@ -322,6 +354,7 @@ export const getProductsForHome = async () => {
 
             return {
                 ...game,
+                price: basePrice,
                 coverImageUrl: game.cover_image || null,
                 categoryName: catObj ? catObj.name : 'N/A',
                 discountedPrice: discountedPrice,
@@ -338,14 +371,14 @@ export const getProductsForHome = async () => {
         // Find standard games
         const rawStandard = await Product.find({ status: 'Live', edition_type: 'STANDARD' })
             .sort({ createdAt: -1 })
-            .limit(8)
+            .limit(6)
             .lean();
         const standardGames = rawStandard.map(mapProduct);
 
         // Find legendary games
         const rawLegendary = await Product.find({ status: 'Live', edition_type: 'LEGENDARY' })
             .sort({ createdAt: -1 })
-            .limit(4)
+            .limit(6)
             .lean();
         const legendaryGames = rawLegendary.map(mapProduct);
 
@@ -375,6 +408,98 @@ export const getActivePublishersWithGameCount = async () => {
         return enrichedPublishers;
     } catch (error) {
         console.error('[getActivePublishersWithGameCount] Error:', error);
+        throw error;
+    }
+};
+
+export const getRecommendationsForProduct = async (categoryId, currentProductId, primaryPlatform = 'PC') => {
+    try {
+        // Fetch all categories to map category ID / name
+        const categories = await Category.find({ status: 'Live' }).lean();
+        const categoryMap = new Map();
+        const categoryNameMap = new Map();
+        
+        categories.forEach(c => {
+            categoryMap.set(c._id.toString(), c);
+            categoryNameMap.set(c.name.toLowerCase(), c);
+        });
+
+        // Find the category of the current product
+        let catObj = null;
+        if (categoryId) {
+            const catIdStr = categoryId.toString();
+            if (mongoose.isValidObjectId(catIdStr)) {
+                catObj = categoryMap.get(catIdStr);
+            } else {
+                catObj = categoryNameMap.get(catIdStr.toLowerCase());
+            }
+        }
+        
+        const currentCategoryName = catObj ? catObj.name.toLowerCase() : '';
+
+        // Fetch all live products (except the current one)
+        const rawProducts = await Product.find({
+            status: 'Live',
+            _id: { $ne: currentProductId }
+        }).lean();
+
+        // Map and enrich products in memory
+        const enrichedProducts = rawProducts.map(game => {
+            let gameCatObj = null;
+            if (game.category) {
+                const gameCatStr = game.category.toString();
+                if (mongoose.isValidObjectId(gameCatStr)) {
+                    gameCatObj = categoryMap.get(gameCatStr);
+                } else {
+                    gameCatObj = categoryNameMap.get(gameCatStr.toLowerCase());
+                }
+            }
+
+            // Resolve platform specific price
+            let basePrice = game.price || 0;
+            if (game.platform_stock && game.platform_stock.length > 0) {
+                const platStock = game.platform_stock.find(ps => ps.platform === primaryPlatform);
+                if (platStock && typeof platStock.price === 'number') {
+                    basePrice = platStock.price;
+                } else {
+                    const firstPlat = game.platform_stock[0];
+                    if (firstPlat && typeof firstPlat.price === 'number') {
+                        basePrice = firstPlat.price;
+                    }
+                }
+            }
+
+            const discount = (gameCatObj && gameCatObj.defaultOffer) ? parseFloat(gameCatObj.defaultOffer) : 0;
+            let discountedPrice = basePrice;
+            if (discount > 0) {
+                discountedPrice = Math.max(0, basePrice - (basePrice * (discount / 100)));
+            }
+
+            return {
+                ...game,
+                price: basePrice,
+                categoryName: gameCatObj ? gameCatObj.name : 'N/A',
+                discountedPrice,
+                categoryDiscount: discount
+            };
+        });
+
+        // Filter: games of the same category
+        let sameCategoryGames = enrichedProducts.filter(p => {
+            return p.categoryName !== 'N/A' && p.categoryName.toLowerCase() === currentCategoryName;
+        });
+
+        // Fallback to other categories if less than 5
+        let recommendations = sameCategoryGames.slice(0, 5);
+        if (recommendations.length < 5) {
+            const currentRecIds = new Set(recommendations.map(r => r._id.toString()));
+            const fallbackGames = enrichedProducts.filter(p => !currentRecIds.has(p._id.toString()));
+            recommendations = recommendations.concat(fallbackGames.slice(0, 5 - recommendations.length));
+        }
+
+        return recommendations;
+    } catch (error) {
+        console.error('[getRecommendationsForProduct] Error:', error);
         throw error;
     }
 };

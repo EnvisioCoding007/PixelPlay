@@ -17,7 +17,8 @@ const productSchema = new mongoose.Schema({
     },
     price: {
         type: Number,
-        required: true,
+        required: false,
+        default: 0,
         min: 0,
     },
     stock: {
@@ -38,7 +39,8 @@ const productSchema = new mongoose.Schema({
     platform_stock: {
         type: [{
             platform: { type: String, required: true },
-            stock: { type: Number, required: true, min: 0, default: 0 }
+            stock: { type: Number, required: true, min: 0, default: 0 },
+            price: { type: Number, required: true, min: 0, default: 0 }
         }],
         default: []
     },

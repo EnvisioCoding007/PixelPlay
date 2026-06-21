@@ -72,27 +72,43 @@
           <% cart.items.forEach(item => { %>
             <% 
               const isLegendary = (item.product.edition_type === 'LEGENDARY');
-              const borderClass = isLegendary ? 'border-l-pixel-goldBorder' : 'border-l-pixel-accent';
-              const textClass = isLegendary ? 'text-pixel-gold' : 'text-white';
+              const isUnavailable = (item.product.status === 'Hidden');
+              const borderClass = isUnavailable ? 'border-l-red-600' : (isLegendary ? 'border-l-pixel-goldBorder' : 'border-l-pixel-accent');
+              const textClass = isUnavailable ? 'text-red-500' : (isLegendary ? 'text-pixel-gold' : 'text-white');
               const formatText = isLegendary
                 ? `Format: ${item.platform} Physical Collector's Vault Disk`
                 : `Format: ${item.platform} Physical Disk`;
-              const badgeText = isLegendary ? 'LEGENDARY DISK' : 'PHYSICAL DISK';
-              const badgeClass = isLegendary ? 'text-pixel-gold bg-pixel-gold/10 border-pixel-gold/30' : 'text-pixel-accent bg-pixel-accent/10 border-pixel-accent/30';
-              const iconClass = isLegendary ? 'fa-solid fa-box-open text-pixel-gold' : 'fa-solid fa-compact-disc text-pixel-accent';
+              const badgeText = isUnavailable ? 'UNAVAILABLE' : (isLegendary ? 'LEGENDARY DISK' : 'PHYSICAL DISK');
+              const badgeClass = isUnavailable 
+                ? 'text-red-500 bg-red-950/20 border-red-800/40' 
+                : (isLegendary ? 'text-pixel-gold bg-pixel-gold/10 border-pixel-gold/30' : 'text-pixel-accent bg-pixel-accent/10 border-pixel-accent/30');
+              const iconClass = isUnavailable
+                ? 'fa-solid fa-circle-exclamation text-red-500'
+                : (isLegendary ? 'fa-solid fa-box-open text-pixel-gold' : 'fa-solid fa-compact-disc text-pixel-accent');
               const itemCover = item.product.cover_image || item.product.coverImage || item.product.coverImageUrl || '/img/placeholder.png';
             %>
-            <div class="bg-pixel-card border-l-4 <%= borderClass %> border-pixel-border rounded-lg p-5 flex gap-6 relative group hover:border-pixel-muted transition-colors">
+            <div class="bg-pixel-card border-l-4 <%= borderClass %> border-pixel-border rounded-lg p-5 flex gap-6 relative group hover:border-pixel-muted transition-colors <%= isUnavailable ? 'opacity-75' : '' %>">
               <!-- Product Image -->
-              <div class="w-32 h-44 flex-shrink-0 bg-pixel-bg rounded overflow-hidden border border-pixel-border">
+              <div class="w-32 h-44 flex-shrink-0 bg-pixel-bg rounded overflow-hidden border border-pixel-border relative">
                 <img alt="<%= item.product.title %> Cover" class="w-full h-full object-cover" src="<%= itemCover %>"/>
+                <% if (isUnavailable) { %>
+                  <div class="absolute inset-0 bg-black/60 flex items-center justify-center text-center p-2">
+                    <span class="text-red-500 font-bold text-xs">UNAVAILABLE</span>
+                  </div>
+                <% } %>
               </div>
               <!-- Product Details -->
               <div class="flex-grow flex flex-col justify-between py-1">
                 <div>
                   <div class="flex justify-between items-start">
                     <h2 class="text-xl font-bold text-white"><%= item.product.title %></h2>
-                    <span class="text-xl font-bold <%= textClass %>">₹<%= Number(item.product.price).toFixed(2) %></span>
+                    <span class="text-xl font-bold <%= textClass %>">
+                      <% if (isUnavailable) { %>
+                        Unavailable
+                      <% } else { %>
+                        ₹<%= Number(item.product.price).toFixed(2) %>
+                      <% } %>
+                    </span>
                   </div>
                   <div class="flex items-center gap-2 mt-2 text-sm text-pixel-muted">
                     <i class="<%= iconClass %>"></i>
@@ -106,24 +122,24 @@
                     <div class="flex items-center gap-3 bg-pixel-bg rounded border border-pixel-border px-3 py-1">
                       <% const isMinQty = (item.quantity <= 1); %>
                       <button aria-label="Decrease quantity" 
-                              class="text-pixel-muted transition-colors <%= isMinQty ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:text-white cursor-pointer' %>" 
-                              <%= isMinQty ? 'disabled' : '' %>
-                              onclick="<%= isMinQty ? '' : `updateQty('${item.product._id}', '${item.platform}', 'decrease')` %>">
+                              class="text-pixel-muted transition-colors <%= isMinQty || isUnavailable ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:text-white cursor-pointer' %>" 
+                              <%= isMinQty || isUnavailable ? 'disabled' : '' %>
+                              onclick="<%= isMinQty || isUnavailable ? '' : `updateQty('${item.product._id}', '${item.platform}', 'decrease')` %>">
                         <i class="fa-solid fa-minus text-xs"></i>
                       </button>
                       <span class="text-white font-medium w-4 text-center"><%= item.quantity %></span>
                       <% const isMaxQty = (item.quantity >= 3); %>
                       <button aria-label="Increase quantity" 
-                              class="text-pixel-muted transition-colors <%= isMaxQty ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:text-white cursor-pointer' %>" 
-                              <%= isMaxQty ? 'disabled' : '' %>
-                              onclick="<%= isMaxQty ? '' : `updateQty('${item.product._id}', '${item.platform}', 'increase')` %>">
+                              class="text-pixel-muted transition-colors <%= isMaxQty || isUnavailable ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:text-white cursor-pointer' %>" 
+                              <%= isMaxQty || isUnavailable ? 'disabled' : '' %>
+                              onclick="<%= isMaxQty || isUnavailable ? '' : `updateQty('${item.product._id}', '${item.platform}', 'increase')` %>">
                         <i class="fa-solid fa-plus text-xs"></i>
                       </button>
                     </div>
                     <!-- Badges / Warnings -->
                     <div class="flex items-center gap-3">
                       <span class="text-xs font-bold <%= badgeClass %> border px-2 py-1 rounded tracking-wider"><%= badgeText %></span>
-                      <% if (item.product.stock <= 5) { %>
+                      <% if (!isUnavailable && item.product.stock <= 5) { %>
                         <% if (isLegendary) { %>
                           <div class="flex items-center gap-1 text-pixel-warning text-sm">
                             <i class="fa-solid fa-circle-exclamation text-xs"></i>
@@ -184,10 +200,20 @@
             <span class="text-3xl font-bold text-[#00b4ff]">₹<%= Number(grandTotal).toFixed(2) %></span>
           </div>
           <!-- Checkout Action -->
-          <button class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
-            <i class="fa-solid fa-lock"></i>
-            PROCEED TO CHECKOUT
-          </button>
+          <% if (typeof hasUnavailableProduct !== 'undefined' && hasUnavailableProduct) { %>
+            <button disabled class="w-full bg-gray-800 text-gray-500 font-bold py-4 rounded flex items-center justify-center gap-2 mb-4 tracking-wide cursor-not-allowed opacity-50 select-none" style="pointer-events: none;">
+              <i class="fa-solid fa-ban text-sm"></i>
+              CHECKOUT UNAVAILABLE
+            </button>
+            <p class="text-xs text-red-500 text-center mb-4">
+              Please remove unavailable products from your cart to proceed.
+            </p>
+          <% } else { %>
+            <button class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
+              <i class="fa-solid fa-lock"></i>
+              PROCEED TO CHECKOUT
+            </button>
+          <% } %>
           <!-- Security Footer -->
           <div class="flex items-center justify-center gap-2 text-xs text-[#8e8e93]">
             <i class="fa-solid fa-shield-halved text-[#00b4ff]"></i>

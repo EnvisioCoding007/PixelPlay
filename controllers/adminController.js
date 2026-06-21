@@ -257,8 +257,10 @@ export const editProduct = async (req, res) => {
         let calculatedTotalStock = 0;
         platforms.forEach(platform => {
             const stockKey = `platform_stock_${platform}`;
+            const priceKey = `platform_price_${platform}`;
             const pStock = Number(req.body[stockKey]) || 0;
-            platform_stock.push({ platform, stock: pStock });
+            const pPrice = Number(req.body[priceKey]) || 0;
+            platform_stock.push({ platform, stock: pStock, price: pPrice });
             calculatedTotalStock += pStock;
         });
 
@@ -379,8 +381,10 @@ export const addProduct = async (req, res) => {
         let calculatedTotalStock = 0;
         platforms.forEach(platform => {
             const stockKey = `platform_stock_${platform}`;
+            const priceKey = `platform_price_${platform}`;
             const pStock = Number(req.body[stockKey]) || 0;
-            platform_stock.push({ platform, stock: pStock });
+            const pPrice = Number(req.body[priceKey]) || 0;
+            platform_stock.push({ platform, stock: pStock, price: pPrice });
             calculatedTotalStock += pStock;
         });
 

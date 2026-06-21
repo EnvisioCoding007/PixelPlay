@@ -73,9 +73,40 @@
   ];
   const similarGamesList = (typeof similarGames !== 'undefined' && similarGames) ? similarGames : mockSimilarGames;
 
+  // Helper to get platform stock
+  const getPlatformStock = (platName) => {
+    if (product.platform_stock && product.platform_stock.length > 0) {
+      const ps = product.platform_stock.find(item => item.platform.toLowerCase() === platName.toLowerCase());
+      return ps ? ps.stock : 0;
+    }
+    return product.stock || 0;
+  };
+
+  // Find first platform that is in stock
+  let defaultPlat = '';
+  if (product.platforms && product.platforms.length > 0) {
+    const inStockPlat = product.platforms.find(plat => getPlatformStock(plat) > 0);
+    defaultPlat = inStockPlat || product.platforms[0];
+  } else {
+    defaultPlat = 'PC';
+  }
+
   // Price & Offer handling
-  const displayPrice = typeof product.discountedPrice !== 'undefined' ? product.discountedPrice : (product.price || 0);
-  const hasDiscount = typeof product.categoryDiscount !== 'undefined' && product.categoryDiscount > 0;
+  let initialBasePrice = product.price || 0;
+  if (product.platform_stock && product.platform_stock.length > 0) {
+    const defaultPlatStock = product.platform_stock.find(ps => ps.platform === defaultPlat);
+    if (defaultPlatStock && typeof defaultPlatStock.price === 'number') {
+      initialBasePrice = defaultPlatStock.price;
+    } else {
+      const firstPlat = product.platform_stock[0];
+      if (firstPlat && typeof firstPlat.price === 'number') {
+        initialBasePrice = firstPlat.price;
+      }
+    }
+  }
+  const discount = typeof product.categoryDiscount !== 'undefined' ? product.categoryDiscount : 0;
+  const displayPrice = discount > 0 ? Math.max(0, initialBasePrice - (initialBasePrice * (discount / 100))) : initialBasePrice;
+  const hasDiscount = discount > 0;
 %>
 
 <body class="antialiased min-h-screen flex flex-col bg-pixel-dark text-pixel-text">
@@ -94,9 +125,17 @@
       <li>
         <div class="flex items-center">
           <span class="mx-1">/</span>
-          <a class="hover:text-pixel-white ml-1 md:ml-2" href="/browse">Legends Vault</a>
+          <a class="hover:text-pixel-white ml-1 md:ml-2" href="/browse">Browse</a>
         </div>
       </li>
+      <% if (product.categoryName && product.categoryName !== 'N/A') { %>
+        <li>
+          <div class="flex items-center">
+            <span class="mx-1">/</span>
+            <a class="hover:text-pixel-white ml-1 md:ml-2" href="/browse?genre=<%= encodeURIComponent(product.categoryName) %>"><%= product.categoryName %></a>
+          </div>
+        </li>
+      <% } %>
       <li aria-current="page">
         <div class="flex items-center">
           <span class="mx-1">/</span>
@@ -154,7 +193,6 @@
         <h1 class="text-3xl sm:text-4xl font-extrabold text-pixel-white leading-tight mb-2 uppercase"><%= product.title %></h1>
         <div class="text-xs text-gray-400 mb-4 flex flex-wrap gap-x-4 gap-y-1">
           <p>Publisher: <span class="text-gray-300"><%= product.publisher || 'PixelPlay Interactive' %></span></p>
-          <p>Developer: <span class="text-gray-300"><%= product.developer || product.publisher || 'PixelPlay Studios' %></span></p>
         </div>
         <!-- Rating -->
         <div class="flex items-center space-x-2 text-sm">
@@ -171,25 +209,36 @@
         <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2">Select Target Platform</p>
         <div class="grid grid-cols-3 gap-2">
           <% if (product.platforms && product.platforms.length > 0) { %>
-            <% product.platforms.forEach((plat, idx) => { %>
+            <% product.platforms.forEach((plat) => { %>
+              <% 
+                const platStock = getPlatformStock(plat);
+                const isOutOfStock = (platStock === 0);
+                const isSelected = (plat === defaultPlat);
+              %>
               <button 
                 type="button" 
-                class="platform-btn bg-pixel-panel border <%= idx === 0 ? themeBorder : 'border-gray-700' %> <%= idx === 0 ? 'text-pixel-white font-bold' : 'text-gray-400' %> text-xs font-semibold py-2 px-1 rounded flex items-center justify-center space-x-1 hover:bg-gray-800 transition-colors cursor-pointer"
+                class="platform-btn bg-pixel-panel border <%= isSelected ? themeBorder : 'border-gray-700' %> <%= isSelected ? 'text-pixel-white font-bold' : 'text-gray-400' %> <%= isOutOfStock ? 'opacity-40 cursor-not-allowed pointer-events-none border-gray-800/50' : 'hover:bg-gray-800 cursor-pointer' %> text-xs font-semibold py-2 px-1 rounded flex items-center justify-center space-x-1"
                 data-platform="<%= plat %>"
+                <%= isOutOfStock ? 'disabled' : '' %>
               >
-                <svg class="check-icon w-3 h-3 <%= themeText %> <%= idx === 0 ? '' : 'hidden' %>" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <svg class="check-icon w-3 h-3 <%= themeText %> <%= isSelected && !isOutOfStock ? '' : 'hidden' %>" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                 </svg>
                 <span><%= plat.toUpperCase() %></span>
               </button>
             <% }) %>
           <% } else { %>
+            <% 
+              const platStock = getPlatformStock('PC');
+              const isOutOfStock = (platStock === 0);
+            %>
             <button 
               type="button" 
-              class="platform-btn bg-pixel-panel border <%= themeBorder %> text-pixel-white font-bold text-xs font-semibold py-2 px-1 rounded flex items-center justify-center space-x-1 hover:bg-gray-800 transition-colors cursor-pointer"
+              class="platform-btn bg-pixel-panel border <%= themeBorder %> text-pixel-white font-bold text-xs font-semibold py-2 px-1 rounded flex items-center justify-center space-x-1 <%= isOutOfStock ? 'opacity-40 cursor-not-allowed pointer-events-none border-gray-800/50' : 'hover:bg-gray-800 cursor-pointer' %>"
               data-platform="PC"
+              <%= isOutOfStock ? 'disabled' : '' %>
             >
-              <svg class="check-icon w-3 h-3 <%= themeText %>" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <svg class="check-icon w-3 h-3 <%= themeText %> <%= isOutOfStock ? 'hidden' : '' %>" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
               </svg>
               <span>PC</span>
@@ -200,14 +249,7 @@
 
       <!-- Price & Stock -->
       <%
-        const defaultPlat = (product.platforms && product.platforms.length > 0) ? product.platforms[0] : 'PC';
-        let initialStock = 0;
-        if (product.platform_stock && product.platform_stock.length > 0) {
-          const found = product.platform_stock.find(ps => ps.platform === defaultPlat);
-          if (found) initialStock = found.stock;
-        } else {
-          initialStock = product.stock || 0;
-        }
+        let initialStock = getPlatformStock(defaultPlat);
       %>
       <div class="bg-pixel-panel border border-gray-800 rounded-lg p-4 mb-6">
         <div class="flex justify-between items-center mb-3 border-b border-gray-800 pb-3">
@@ -219,17 +261,17 @@
             <p class="text-[10px] text-gray-500 flex items-center"><svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>Est. 2-3 Days</p>
           <% } %>
         </div>
-        <div class="flex items-end justify-between mb-4">
+        <div id="platformPriceContainer" class="flex items-end justify-between mb-4">
           <% if (hasDiscount) { %>
             <div class="flex flex-col">
-              <span class="text-xs text-gray-500 line-through">₹<%= Number(product.price).toFixed(2) %></span>
+              <span class="text-xs text-gray-500 line-through">₹<%= Number(initialBasePrice).toFixed(2) %></span>
               <span class="text-3xl font-bold text-pixel-white">₹<%= Number(displayPrice).toFixed(2) %></span>
             </div>
             <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
               <%= product.categoryDiscount %>% OFF
             </span>
           <% } else { %>
-            <span class="text-3xl font-bold text-pixel-white">₹<%= Number(product.price || 0).toFixed(2) %></span>
+            <span class="text-3xl font-bold text-pixel-white">₹<%= Number(initialBasePrice).toFixed(2) %></span>
           <% } %>
         </div>
         <!-- Action Buttons -->
@@ -390,7 +432,14 @@
               <%= game.categoryName %> • <%= game.platforms && game.platforms.length > 0 ? game.platforms.join(', ') : 'Console' %>
             </p>
             <div class="flex items-center justify-between">
-              <span class="<%= gameIsLegendary ? 'text-pixel-gold' : 'text-pixel-cyan' %> font-bold text-sm">₹<%= Number(game.price).toFixed(2) %></span>
+              <% if (typeof game.categoryDiscount !== 'undefined' && game.categoryDiscount > 0) { %>
+                <div class="flex flex-col">
+                  <span class="line-through text-gray-500 text-[10px]">₹<%= Number(game.price).toFixed(2) %></span>
+                  <span class="<%= gameIsLegendary ? 'text-pixel-gold' : 'text-pixel-cyan' %> font-bold text-sm">₹<%= Number(game.discountedPrice).toFixed(2) %></span>
+                </div>
+              <% } else { %>
+                <span class="<%= gameIsLegendary ? 'text-pixel-gold' : 'text-pixel-cyan' %> font-bold text-sm">₹<%= Number(game.price).toFixed(2) %></span>
+              <% } %>
               <button onclick="event.stopPropagation(); window.location.href='/products/<%= game._id || game.id %>'" class="text-[10px] <%= gameIsLegendary ? 'bg-pixel-gold/10 hover:bg-pixel-gold/20 text-pixel-gold border border-pixel-gold/30' : 'bg-gray-800 hover:bg-gray-700 text-white' %> px-3 py-1.5 rounded font-medium transition-colors">View</button>
             </div>
           </div>
@@ -470,6 +519,20 @@
 
 <script>
   const wishlistPlatforms = <%- JSON.stringify(typeof wishlistPlatforms !== 'undefined' ? wishlistPlatforms : []) %>;
+  async function checkLiveStatus() {
+    try {
+      const response = await fetch('/products/status/<%= product._id %>');
+      const data = await response.json();
+      if (data.status === 'Hidden' || data.redirectUrl) {
+        window.location.href = data.redirectUrl || '/browse';
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error(err);
+      return true;
+    }
+  }
   function changeActiveMedia(url, type, element) {
     const mainPlayer = document.getElementById('mainMediaPlayer');
     if (!mainPlayer) return;
@@ -596,6 +659,41 @@
         stockEl.textContent = `${stock} ${stock === 1 ? 'Physical Unit' : 'Physical Units'}`;
       }
 
+      // Update platform price display dynamically
+      const categoryDiscount = <%= product.categoryDiscount || 0 %>;
+      let basePrice = 0;
+      if (gameData.platformStock && gameData.platformStock.length > 0) {
+        const found = gameData.platformStock.find(ps => ps.platform === selectedPlatform);
+        if (found) {
+          basePrice = found.price || 0;
+        } else {
+          // Fallback to first available platform
+          basePrice = gameData.platformStock[0].price || 0;
+        }
+      } else {
+        basePrice = <%= product.price || 0 %>;
+      }
+
+      const discountedPrice = categoryDiscount > 0 ? Math.max(0, basePrice - (basePrice * (categoryDiscount / 100))) : basePrice;
+      const priceContainer = document.getElementById('platformPriceContainer');
+      if (priceContainer) {
+        if (categoryDiscount > 0) {
+          priceContainer.innerHTML = `
+            <div class="flex flex-col">
+              <span class="text-xs text-gray-500 line-through">₹${Number(basePrice).toFixed(2)}</span>
+              <span class="text-3xl font-bold text-pixel-white">₹${Number(discountedPrice).toFixed(2)}</span>
+            </div>
+            <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+              ${categoryDiscount}% OFF
+            </span>
+          `;
+        } else {
+          priceContainer.innerHTML = `
+            <span class="text-3xl font-bold text-pixel-white">₹${Number(basePrice).toFixed(2)}</span>
+          `;
+        }
+      }
+
       if (stock === 0) {
         if (buyNowBtn) {
           buyNowBtn.disabled = true;
@@ -680,13 +778,15 @@
     }
 
     document.querySelectorAll('.platform-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
+      btn.addEventListener('click', async function() {
+        const isLive = await checkLiveStatus();
+        if (!isLive) return;
         const plat = this.dataset.platform;
         updatePlatformSelection(plat);
       });
     });
 
-    const initialPlat = (gameData.platforms && gameData.platforms.length > 0) ? gameData.platforms[0] : 'PC';
+    const initialPlat = '<%= defaultPlat %>';
     updatePlatformSelection(initialPlat);
   })();
 
@@ -696,12 +796,15 @@
     const buyNowBtn = document.getElementById('buyNowBtn');
     const addToCartBtn = document.getElementById('addToCartBtn');
     if (buyNowBtn) {
-      buyNowBtn.addEventListener('click', function(e) {
+      buyNowBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         if (!isLoggedIn) {
-          e.preventDefault();
-          e.stopPropagation();
           showToast("You must sign-in to continue with the process.", "info");
+          return;
         }
+        const isLive = await checkLiveStatus();
+        if (!isLive) return;
       });
     }
     if (addToCartBtn) {
@@ -749,6 +852,9 @@
       showToast("You must sign-in to continue with the process.", "info");
       return;
     }
+
+    const isLive = await checkLiveStatus();
+    if (!isLive) return;
 
     const activeBtn = document.querySelector('.platform-btn.text-pixel-white');
     const selectedPlatform = activeBtn ? activeBtn.dataset.platform : 'PC';

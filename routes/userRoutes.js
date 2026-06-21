@@ -47,11 +47,13 @@ router.get('/auth/google/callback', (req, res, next) => {
 });
 
 router.get('/', userController.getHome);
+router.post('/set-primary-platform', userController.setPrimaryPlatform);
 
 router.get('/home', userController.getHome);
 
 router.get('/browse', userController.getBrowsePage);
 router.get('/products/:id', userController.getProductDetails);
+router.get('/products/status/:id', userController.checkProductStatus);
 
 router.get('/auth/profile', isUserAuth, userController.getProfile);
 router.get('/auth/wishlist', isUserAuth, userController.getWishlist);
