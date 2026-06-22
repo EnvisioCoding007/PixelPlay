@@ -38,8 +38,6 @@ router.get('/auth/google', passport.authenticate('google', {
     prompt: 'select_account'
 }));
 
-// Custom passport callback is used so that a blocked-user failure can surface
-// an error message on the login page instead of silently redirecting.
 router.get('/auth/google/callback', handleGoogleAuth);
 
 router.get('/', userController.getHome);

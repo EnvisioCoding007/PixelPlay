@@ -21,9 +21,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 import passport from './config/passport.js';
 import session from 'express-session';
-
-
-import Cart from './models/Cart.js';
+import { injectCartCount } from './middleware/cartMiddleware.js';
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'the_forebidden_key',
@@ -42,21 +40,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(async (req, res, next) => {
-    res.locals.cartCount = 0;
-    if (req.session && req.session.user) {
-        try {
-            const userId = req.session.user.id || req.session.user;
-            const cart = await Cart.findOne({ userId });
-            if (cart && cart.items) {
-                res.locals.cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
-            }
-        } catch (err) {
-            console.error('Error fetching cart count:', err);
-        }
-    }
-    next();
-});
+app.use(injectCartCount);
 
 import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
