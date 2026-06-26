@@ -99,6 +99,11 @@ export const loginAuth = async (email, password) => {
     }
 
     if (userData.is_verified !== true) {
+        const existingOtp = await OTP.findOne({ email: userData.email, purpose: 'signup' });
+        const hasValidOtp = existingOtp && existingOtp.expires_at > Date.now();
+        if (!hasValidOtp) {
+            await generateOTP(userData.email, 'signup');
+        }
         const error = new Error('Please verify your email before logging in.');
         error.code = 'UNVERIFIED';
         throw error;
@@ -191,4 +196,24 @@ export const updateUserProfileImage = async(userId, imageUrl)=>{
     }
 
     return updatedUser;
+};
+
+export const checkAndSendForgotPasswordOtp = async (email) => {
+    const existingOtp = await OTP.findOne({ email, purpose: 'forgot' });
+    const hasValidOtp = existingOtp && existingOtp.expires_at > Date.now();
+    if (!hasValidOtp) {
+        await generateOTP(email, 'forgot');
+        return { sentNew: true };
+    }
+    return { sentNew: false };
+};
+
+export const checkAndSendSignupOtp = async (email) => {
+    const existingOtp = await OTP.findOne({ email, purpose: 'signup' });
+    const hasValidOtp = existingOtp && existingOtp.expires_at > Date.now();
+    if (!hasValidOtp) {
+        await generateOTP(email, 'signup');
+        return { sentNew: true };
+    }
+    return { sentNew: false };
 };

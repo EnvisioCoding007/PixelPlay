@@ -139,12 +139,24 @@ export const forgotPasswordOtp = async (req, res) => {
             });
         }
 
-        await userService.generateOTP(email, 'forgot');
+        if (existingUser.is_verified !== true) {
+            await userService.checkAndSendSignupOtp(email);
+            req.session.pendingVerifyEmail = email;
+            return res.status(200).json({
+                success: true,
+                message: 'Your email is not verified. Redirecting to verification page...',
+                redirectUrl: '/auth/verify-email'
+            });
+        }
+
+        const { sentNew } = await userService.checkAndSendForgotPasswordOtp(email);
         req.session.resetEmail = email;
 
         res.status(200).json({
             success: true,
-            message: 'Password reset code sent to your email.',
+            message: sentNew
+                ? 'Password reset code sent to your email.'
+                : 'A valid reset code already exists. Redirecting to verification page...',
             redirectUrl: '/auth/reset-password-otp'
         });
     } catch (error) {
@@ -616,7 +628,7 @@ export const getBrowsePage = async (req, res) => {
             filters,
             sort || 'Trending',
             page || 1,
-            12,
+            8,
             primaryPlatform
         );
 
@@ -960,10 +972,16 @@ export const addToCart = async (req, res) => {
             if (newQty > 3) {
                 return res.status(400).json({ success: false, message: 'Maximum of 3 should be the limit to add to cart.' });
             }
+            if (newQty > product.stock) {
+                return res.status(400).json({ success: false, message: `Only ${product.stock} items available in stock.` });
+            }
             cart.items[itemIndex].quantity = newQty;
         } else {
             if (qty > 3) {
                 return res.status(400).json({ success: false, message: 'Maximum of 3 should be the limit to add to cart.' });
+            }
+            if (qty > product.stock) {
+                return res.status(400).json({ success: false, message: `Only ${product.stock} items available in stock.` });
             }
             cart.items.push({ product: productId, platform, quantity: qty });
         }
@@ -1015,12 +1033,20 @@ export const updateCartQuantity = async (req, res) => {
         );
 
         if (itemIndex > -1) {
+            const product = await Product.findById(productId);
+            if (!product || product.status === 'Hidden') {
+                return res.status(400).json({ success: false, message: 'Product is currently unavailable.' });
+            }
+
             if (action === 'increase') {
-                if (cart.items[itemIndex].quantity < 3) {
-                    cart.items[itemIndex].quantity += 1;
-                } else {
+                const currentQty = cart.items[itemIndex].quantity;
+                if (currentQty >= 3) {
                     return res.status(400).json({ success: false, message: 'Maximum of 3 should be the limit to add to cart.' });
                 }
+                if (currentQty >= product.stock) {
+                    return res.status(400).json({ success: false, message: `Only ${product.stock} items available in stock.` });
+                }
+                cart.items[itemIndex].quantity += 1;
             } else if (action === 'decrease') {
                 if (cart.items[itemIndex].quantity > 1) {
                     cart.items[itemIndex].quantity -= 1;
@@ -1029,8 +1055,75 @@ export const updateCartQuantity = async (req, res) => {
                 }
             }
             await cart.save();
+
+            // Populate items.product for calculation
+            await cart.populate('items.product');
+
+            const CategoryModel = (await import('../models/Category.js')).default;
+            let subtotal = 0;
+            let hasUnavailableProduct = false;
+            let itemsData = [];
+
+            for (let item of cart.items) {
+                if (item.product) {
+                    if (item.product.status === 'Hidden') {
+                        hasUnavailableProduct = true;
+                    }
+                    let catObj = null;
+                    if (item.product.category) {
+                        if (mongoose.Types.ObjectId.isValid(item.product.category)) {
+                            catObj = await CategoryModel.findById(item.product.category).lean();
+                        } else {
+                            catObj = await CategoryModel.findOne({ name: item.product.category }).lean();
+                        }
+                    }
+                    const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
+                    
+                    let basePrice = item.product.price || 0;
+                    if (item.product.platform_stock && item.product.platform_stock.length > 0) {
+                        const platStock = item.product.platform_stock.find(ps => ps.platform === item.platform);
+                        if (platStock && typeof platStock.price === 'number') {
+                            basePrice = platStock.price;
+                        } else {
+                            const firstPlat = item.product.platform_stock[0];
+                            if (firstPlat && typeof firstPlat.price === 'number') {
+                                basePrice = firstPlat.price;
+                            }
+                        }
+                    }
+                    
+                    const activePrice = discount > 0 ? Math.max(0, basePrice - (basePrice * (discount / 100))) : basePrice;
+                    const itemSubtotal = activePrice * item.quantity;
+                    subtotal += itemSubtotal;
+                    
+                    itemsData.push({
+                        productId: item.product._id.toString(),
+                        platform: item.platform || 'PC',
+                        quantity: item.quantity,
+                        price: activePrice,
+                        itemSubtotal: itemSubtotal,
+                        isMinQty: item.quantity <= 1,
+                        isMaxQty: item.quantity >= 3 || item.quantity >= item.product.stock,
+                        stock: item.product.stock
+                    });
+                }
+            }
+
+            const tax = subtotal * 0.18;
+            const shipping = cart.items.length > 0 ? 100 : 0;
+            const grandTotal = subtotal + tax + shipping;
             const cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
-            return res.status(200).json({ success: true, cartCount });
+
+            return res.status(200).json({
+                success: true,
+                cartCount,
+                subtotal,
+                tax,
+                shipping,
+                grandTotal,
+                hasUnavailableProduct,
+                items: itemsData
+            });
         }
 
         res.status(404).json({ success: false, message: 'Item not found in cart.' });

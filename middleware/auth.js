@@ -33,9 +33,21 @@ export const isUserUnAuth = (req, res, next) => {
 };
 
 
-export const isAdminAuth = (req, res, next) => {
+export const isAdminAuth = async (req, res, next) => {
     if (req.session.admin && req.session.admin.role === 'admin') {
-        next();
+        try {
+            const adminUser = await User.findById(req.session.admin._id).lean();
+            if (!adminUser || adminUser.role !== 'admin') {
+                req.session.destroy(() => {});
+                return res.redirect('/admin/login');
+            }
+            res.locals.user = adminUser;
+            req.session.admin = adminUser;
+            next();
+        } catch (err) {
+            console.error('[isAdminAuth] Error fetching admin user details:', err);
+            res.redirect('/admin/login');
+        }
     } else {
         const isAjax =
             req.xhr ||

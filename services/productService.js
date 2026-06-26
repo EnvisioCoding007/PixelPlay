@@ -7,27 +7,22 @@ export const getAllAdminProducts = async (search = '', filters = {}, sort = 'A-Z
     try {
         const query = {};
 
-        // Title search (case-insensitive regex)
         if (search) {
             query.title = { $regex: search, $options: 'i' };
         }
 
-        // Apply edition_type filter
         if (filters.type && filters.type !== 'All') {
             query.edition_type = filters.type;
         }
 
-        // Apply platform filter
         if (filters.platform && filters.platform !== 'All') {
             query.platforms = filters.platform;
         }
 
-        // Apply developer (publisher) filter
         if (filters.developer && filters.developer !== 'All') {
             query.publisher = filters.developer;
         }
 
-        // Apply status filter
         if (filters.status && filters.status !== 'All') {
             query.status = filters.status;
         }
@@ -132,7 +127,6 @@ export const updateProduct = async (id, productData) => {
     }
 };
 
-// Deterministic mock rating helper
 const getProductRating = (product) => {
     let hash = 0;
     const str = product.title || '';
@@ -143,7 +137,6 @@ const getProductRating = (product) => {
     return parseFloat(rating.toFixed(1));
 };
 
-// Deterministic mock reviews helper
 const getProductReviewsCount = (product) => {
     let hash = 0;
     const str = product.title || '';
@@ -156,18 +149,14 @@ const getProductReviewsCount = (product) => {
 
 export const getBrowseProductsAndFilters = async (search = '', filters = {}, sort = 'Trending', page = 1, limit = 12, primaryPlatform = 'PC') => {
     try {
-        // 1. Fetch Categories
         const categories = await Category.find({ status: 'Live' }).lean();
         const categoryMap = new Map(categories.map(c => [c._id.toString(), c]));
 
-        // 2. Fetch Live Products
         const rawProducts = await Product.find({ status: 'Live' }).lean();
 
-        // 3. Extract distinct platforms and publishers dynamically from live products and database
         const allPlatforms = new Set();
         const allPublishers = new Set();
         
-        // Include saved publishers from the collection
         const savedPubs = await Publisher.find({}).lean();
         savedPubs.forEach(sp => {
             if (sp.name) allPublishers.add(sp.name);
@@ -180,12 +169,10 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
         const dbPlatforms = Array.from(allPlatforms).sort();
         const dbPublishers = Array.from(allPublishers).sort();
 
-        // 4. Map Category names, covers, deterministic ratings, and discounted prices
         let products = rawProducts.map(game => {
             const catObj = game.category ? categoryMap.get(game.category.toString()) : null;
             const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
             
-            // Resolve platform specific price
             let basePrice = game.price || 0;
             if (game.platform_stock && game.platform_stock.length > 0) {
                 const platStock = game.platform_stock.find(ps => ps.platform === primaryPlatform);
@@ -215,14 +202,13 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
             };
         });
 
-        // 5. In-Memory Filtering
         // Search Filter
         if (search && search.trim()) {
             const s = search.trim().toLowerCase();
             products = products.filter(p => p.title.toLowerCase().includes(s));
         }
 
-        // Genre / Category Filter
+        // Category Filter
         const selectedGenres = Array.isArray(filters.genre) ? filters.genre : (filters.genre ? [filters.genre] : []);
         if (selectedGenres.length > 0) {
             products = products.filter(p => selectedGenres.includes(p.categoryName));
@@ -292,7 +278,7 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
             }
         });
 
-        // 7. Paginate
+        // 7. Pagination
         const totalCount = products.length;
         const pageNum = Math.max(1, parseInt(page, 10));
         const limitNum = Math.max(1, parseInt(limit, 10));
@@ -326,7 +312,6 @@ export const getProductsForHome = async (primaryPlatform = 'PC') => {
             const catObj = game.category ? categoryMap.get(game.category.toString()) : null;
             const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
             
-            // Resolve platform specific price
             let basePrice = game.price || 0;
             if (game.platform_stock && game.platform_stock.length > 0) {
                 const platStock = game.platform_stock.find(ps => ps.platform === primaryPlatform);
@@ -476,11 +461,6 @@ export const getRecommendationsForProduct = async (categoryId, currentProductId,
         });
 
         let recommendations = sameCategoryGames.slice(0, 5);
-        if (recommendations.length < 5) {
-            const currentRecIds = new Set(recommendations.map(r => r._id.toString()));
-            const fallbackGames = enrichedProducts.filter(p => !currentRecIds.has(p._id.toString()));
-            recommendations = recommendations.concat(fallbackGames.slice(0, 5 - recommendations.length));
-        }
 
         return recommendations;
     } catch (error) {

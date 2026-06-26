@@ -4,8 +4,7 @@ const publisherSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        trim: true,
-        unique: true
+        trim: true
     },
     website: {
         type: String,
@@ -28,6 +27,8 @@ const publisherSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+publisherSchema.index({ name: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } });
 
 const Publisher = mongoose.model('Publisher', publisherSchema);
 export default Publisher;

@@ -2,7 +2,7 @@
   <div>
     <!-- Logo -->
     <div class="h-20 flex items-center justify-center border-b border-border-dark">
-        <img src="/icons/brand_logo/pixelplay-logo.png" alt="PixelPlay Logo" class="h-8 w-auto">
+        <img src="/icons/brand_logo/pixelplay-logo.png" alt="PixelPlay Logo" class="h-18 w-auto">
     </div>
     <!-- Navigation Links -->
     <nav class="mt-6 flex flex-col gap-1 px-4">
@@ -68,11 +68,13 @@
       <% if (typeof user !== 'undefined' && user && user.profile_image) { %>
         <img alt="<%= user.username %>" class="w-10 h-10 rounded-full object-cover" src="<%= user.profile_image %>"/>
       <% } else { %>
-        <img alt="Kira Nova" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmKPT7ddu-77W7nDrlYE3vpCJsenSN7r6aArCX8sFAh7kn_4nfQu56xgGH9ggAXd0fUVWSO3bFU5YNFHFBtDqzxs5OzZd2umE24UBG8ccahgyue42haSc3QCy_eep1qIY6tHqC_JxNC6jZc_gg8wr5hxWF1KZelrnTc05U22TtydAsHsNOsKv26SOBM6l7ykPWNGIKk0bT2syDGjePNJEU-D3AUFNzlY3foz7_wpGdO7bsqFsDbDtBjdDfbwlJ8ygJccT_t2KNKzsx"/>
+        <div class="w-10 h-10 rounded-full bg-pixel-blue/10 flex items-center justify-center text-pixel-blue border border-pixel-blue/20">
+          <i class="fa-solid fa-user-shield text-base"></i>
+        </div>
       <% } %>
       <div class="flex flex-col">
-        <span class="text-gray-200 font-medium text-sm"><%= typeof user !== 'undefined' && user ? (user.username || 'Kira Nova') : 'Kira Nova' %></span>
-        <span class="text-pixel-yellow text-xs"><%= typeof user !== 'undefined' && user ? (user.role || 'System Administrator') : 'System Administrator' %></span>
+        <span class="text-gray-200 font-medium text-sm"><%= typeof user !== 'undefined' && user && user.username ? (user.username.charAt(0).toUpperCase() + user.username.slice(1)) : 'Admin' %></span>
+        <span class="text-pixel-yellow text-xs"><%= typeof user !== 'undefined' && user && user.role ? (user.role === 'admin' ? 'System Administrator' : user.role) : 'System Administrator' %></span>
       </div>
     </div>
   </div>

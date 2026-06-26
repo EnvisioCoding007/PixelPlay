@@ -2,7 +2,7 @@
     class="flex h-[72px] items-center justify-between px-10 py-0 relative self-stretch w-full z-[1] bg-[#09090be6] border-b [border-bottom-style:solid] border-[#00000014] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
     <nav class="flex items-center justify-between w-full gap-6" aria-label="Primary">
         <div class="inline-flex items-center gap-10 relative flex-[0_0_auto]">
-            <a href="/" class="relative block w-[129px] h-12 flex items-center" aria-label="PixelPlay home">
+            <a href="/" class="relative block w-[180px] h-17 flex items-center" aria-label="PixelPlay home">
                 <img src="/icons/brand_logo/pixelplay-logo.png" alt="PixelPlay Logo" class="w-full h-full object-contain" />
             </a>
             <ul class="inline-flex items-center gap-[7.6px] relative flex-[0_0_auto]">
@@ -73,9 +73,13 @@
                 <img class="relative w-5 h-5" src="/icons/notification-bell.svg" alt="Notifications" />
             </button>
             <a href="/auth/profile"
-                class="relative w-9 h-9 rounded-[18px] border-2 border-solid border-[#00000014] block transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer overflow-hidden"
+                class="relative w-9 h-9 rounded-[18px] border-2 border-solid border-[#00000014] flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer overflow-hidden bg-[#1a2a3a] text-sky-400 font-bold"
                 aria-label="Profile">
-                <img src="/icons/profile-icon.svg" alt="Profile" class="w-full h-full object-cover" />
+                <% if (user.profile_image) { %>
+                    <img src="<%= user.profile_image %>" alt="Profile" class="w-full h-full object-cover" />
+                <% } else { %>
+                    <span class="text-sm select-none [font-family:'Inter-Bold',Helvetica]"><%= user.username.charAt(0).toUpperCase() %></span>
+                <% } %>
             </a>
             <% } else { %>
             <%# Unauthenticated: show Log In and Sign Up CTAs %>

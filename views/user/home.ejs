@@ -4,6 +4,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="/icons/brand_logo/pixelplay-logo.png?v=1.1">
     <title>PixelPlay - Game Store Showcase</title>
     <link rel="stylesheet" href="globals.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -84,10 +85,10 @@
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 relative flex-[0_0_auto] bg-sky-500 rounded-full">
                             <div class="flex w-3.5 h-3.5 items-center justify-center relative" aria-hidden="true">
                                 <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                    <div class="relative w-3.5 h-3.5">
+                                    <!-- <div class="relative w-3.5 h-3.5">
                                         <img class="absolute w-[91.68%] h-[95.85%] top-[4.15%] left-[8.32%]"
                                             src="img/vector-4.svg" alt="" />
-                                    </div>
+                                    </div> -->
                                 </div>
                             </div>
                             <p
@@ -565,16 +566,13 @@
                             Publisher's Spotlight
                         </h1>
                     </div>
-                    <button type="button" id="viewAllPublishersBtn" class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0f1113] hover:bg-[#121214] border border-solid border-[#ffffff10] rounded-md text-sky-500 font-bold text-xs tracking-wider transition-all cursor-pointer">
-                        VIEW ALL
-                    </button>
                 </header>
                 <section aria-labelledby="developer-spotlight-heading" class="self-stretch w-full">
                     <h2 id="developer-spotlight-heading" class="sr-only">Featured developers</h2>
                     <ul class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 auto-rows-[258px] h-fit gap-6 w-full list-none p-0 m-0">
                         <% if (typeof activePublishers !== 'undefined' && activePublishers && activePublishers.length > 0) { %>
                             <% activePublishers.forEach((pub, index) => { %>
-                                <li class="w-full h-fit flex flex-col items-center gap-4 px-6 py-8 bg-[#0f1113] rounded-lg border border-solid relative border-[#00000014] <%= index >= 4 ? 'publisher-extra-card hidden' : '' %>">
+                                <li class="publisher-spotlight-card w-full h-fit flex flex-col items-center gap-4 px-6 py-8 bg-[#0f1113] rounded-lg border border-solid relative border-[#00000014] <%= index >= 4 ? 'hidden' : '' %>">
                                     <% if (pub.logo) { %>
                                         <div class="w-20 h-20 rounded-[40px] border-2 border-solid bg-cover bg-[50%_50%] relative border-[#00000014]"
                                             style="background-image: url('<%= pub.logo %>');"
@@ -616,6 +614,50 @@
                             </div>
                         <% } %>
                     </ul>
+
+                    <% if (typeof activePublishers !== 'undefined' && activePublishers && activePublishers.length > 4) { %>
+                    <nav class="flex w-full items-center justify-between px-5 py-[18px] relative flex-[0_0_auto] bg-[#0f1113] rounded-lg border border-solid border-[#0ea5e94c] mt-6"
+                        aria-label="Publishers pagination">
+                        <div class="inline-flex flex-col items-start gap-1 relative flex-[0_0_auto]">
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <p
+                                    class="mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-white text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">
+                                    Spotlighted publishers</p>
+                            </div>
+                            <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
+                                <p
+                                    class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-stone-400 text-[13px] tracking-[0] relative flex items-center w-fit leading-[normal]">
+                                    Browse active publishers and their game libraries.</p>
+                            </div>
+                        </div>
+                        <div class="inline-flex items-center gap-2.5 relative flex-[0_0_auto]">
+                             <button type="button"
+                                class="inline-flex h-10 items-center justify-center gap-2 px-4 py-0 rounded-md relative flex-[0_0_auto] cursor-pointer"
+                                aria-label="Go to previous publishers page">
+                                <span class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                    aria-hidden="true">
+                                    <span class="relative w-4 h-4 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                                    </span>
+                                </span>
+                                <span
+                                    class="justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-sky-500 text-sm text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Previous</span>
+                             </button>
+                             <button type="button"
+                                class="inline-flex h-10 items-center justify-center gap-2 px-4 py-0 rounded-md relative flex-[0_0_auto] cursor-pointer"
+                                aria-label="Go to next publishers page">
+                                <span
+                                    class="justify-center [font-family:'Inter-SemiBold',Helvetica] font-semibold text-sky-500 text-sm text-center tracking-[0] relative flex items-center w-fit leading-[normal]">Next</span>
+                                <span class="inline-flex flex-col items-start relative flex-[0_0_auto]"
+                                    aria-hidden="true">
+                                    <span class="relative w-4 h-4 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                                    </span>
+                                </span>
+                             </button>
+                        </div>
+                    </nav>
+                    <% } %>
 
                 </section>
             </div>
@@ -750,15 +792,63 @@
                 });
             }
 
-            // Inline publishers Spotlight expand logic
-            const viewAllPublishersBtn = document.getElementById('viewAllPublishersBtn');
-            if (viewAllPublishersBtn) {
-                viewAllPublishersBtn.addEventListener('click', () => {
-                    const extraCards = document.querySelectorAll('.publisher-extra-card');
-                    extraCards.forEach(card => card.classList.remove('hidden'));
-                    viewAllPublishersBtn.classList.add('hidden');
-                });
-            }
+            // Publishers Spotlight Pagination Logic
+            (function() {
+                let publisherStartIndex = 0;
+                const publisherCards = document.querySelectorAll('.publisher-spotlight-card');
+                const publisherPrevBtn = document.querySelector('[aria-label="Publishers pagination"] [aria-label="Go to previous publishers page"]');
+                const publisherNextBtn = document.querySelector('[aria-label="Publishers pagination"] [aria-label="Go to next publishers page"]');
+
+                function updatePublisherPagination() {
+                    publisherCards.forEach((card, index) => {
+                        if (index >= publisherStartIndex && index < publisherStartIndex + 4) {
+                            card.classList.remove('hidden');
+                        } else {
+                            card.classList.add('hidden');
+                        }
+                    });
+
+                    if (publisherPrevBtn) {
+                        if (publisherStartIndex === 0) {
+                            publisherPrevBtn.classList.add('opacity-30', 'pointer-events-none');
+                            publisherPrevBtn.style.visibility = 'hidden';
+                        } else {
+                            publisherPrevBtn.classList.remove('opacity-30', 'pointer-events-none');
+                            publisherPrevBtn.style.visibility = 'visible';
+                        }
+                    }
+
+                    if (publisherNextBtn) {
+                        if (publisherStartIndex + 4 >= publisherCards.length) {
+                            publisherNextBtn.classList.add('opacity-30', 'pointer-events-none');
+                            publisherNextBtn.style.visibility = 'hidden';
+                        } else {
+                            publisherNextBtn.classList.remove('opacity-30', 'pointer-events-none');
+                            publisherNextBtn.style.visibility = 'visible';
+                        }
+                    }
+                }
+
+                if (publisherCards.length > 0 && publisherPrevBtn && publisherNextBtn) {
+                    publisherPrevBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        if (publisherStartIndex > 0) {
+                            publisherStartIndex--;
+                            updatePublisherPagination();
+                        }
+                    });
+
+                    publisherNextBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        if (publisherStartIndex + 4 < publisherCards.length) {
+                            publisherStartIndex++;
+                            updatePublisherPagination();
+                        }
+                    });
+
+                    updatePublisherPagination();
+                }
+            })();
 
             // Client-side pagination slider logic
             (function() {

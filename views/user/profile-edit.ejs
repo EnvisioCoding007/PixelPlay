@@ -6,6 +6,7 @@
     <meta charset="utf-8" />
     <title><%= user.username %> — Edit Profile · PixelPlay</title>
     <link rel="stylesheet" href="globals.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         /** @type {import('tailwindcss').Config} */
@@ -110,13 +111,17 @@
                         <div class="relative mt-[-20px] mb-[-20px] ml-[-20px] shrink-0" style="width:152px;height:152px">
                             <!-- Clickable avatar -->
                             <button type="button" id="avatar-upload-btn"
-                                class="relative w-full h-full rounded-full overflow-hidden border-2 border-zinc-700 hover:border-sky-500 focus:border-sky-500 transition-colors group cursor-pointer focus:outline-none"
+                                class="relative w-full h-full rounded-full overflow-hidden border-2 border-zinc-700 hover:border-sky-500 focus:border-sky-500 transition-colors group cursor-pointer focus:outline-none flex items-center justify-center bg-[#1a2a3a]"
                                 aria-label="Change profile picture">
                                 <!-- Avatar image -->
                                 <img id="avatar-preview"
-                                    src="<%= user.profile_image || '/img/avatar_cyberpunk.png' %>"
+                                    src="<%= user.profile_image || '' %>"
                                     alt="<%= user.username %> avatar"
-                                    class="w-full h-full object-cover" />
+                                    class="w-full h-full object-cover <%= !user.profile_image ? 'hidden' : '' %>" />
+                                <!-- Initials fallback -->
+                                <div id="avatar-fallback" class="w-full h-full flex items-center justify-center [font-family:'Inter-Bold',Helvetica] font-bold text-sky-400 text-5xl select-none <%= user.profile_image ? 'hidden' : '' %>">
+                                    <%= user.username.charAt(0).toUpperCase() %>
+                                </div>
                                 <!-- Camera overlay on hover -->
                                 <div class="absolute inset-0 bg-zinc-900/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <svg class="w-7 h-7 text-sky-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
@@ -257,8 +262,34 @@
             </div>
         </main>
     </div>
+
+    <!-- Cropper.js Workspace Modal overlay -->
+    <div id="cropperWorkspace" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl max-w-lg w-full p-6 flex flex-col gap-4 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+          <h3 class="text-lg font-semibold text-zinc-100">Crop Profile Picture</h3>
+          <button type="button" id="closeCropperBtn" class="text-zinc-400 hover:text-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="relative w-full max-h-[50vh] bg-zinc-950 flex items-center justify-center overflow-hidden rounded-lg border border-zinc-800">
+          <img id="cropperImage" class="max-w-full max-h-[40vh] object-contain" />
+        </div>
+        <div class="flex gap-3 justify-end border-t border-zinc-800 pt-3">
+          <button type="button" id="cancelCropBtn" class="px-5 py-2 text-sm text-zinc-300 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition-colors">
+            Cancel
+          </button>
+          <button type="button" id="saveCropBtn" class="px-5 py-2 text-sm text-zinc-950 bg-sky-500 hover:bg-sky-400 font-medium rounded-lg transition-colors">
+            Apply Crop
+          </button>
+        </div>
+      </div>
+    </div>
 </body>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script>
     (function () {
         // Profile picture upload via FileReader → base64 data URL
@@ -268,6 +299,14 @@
         const imageData    = document.getElementById('profile-image-data');
         const avatarError  = document.getElementById('avatar-error');
         const MAX_BYTES    = 2 * 1024 * 1024; // 2 MB
+
+        // Cropper elements
+        const cropperWorkspace = document.getElementById('cropperWorkspace');
+        const cropperImage = document.getElementById('cropperImage');
+        const closeCropperBtn = document.getElementById('closeCropperBtn');
+        const cancelCropBtn = document.getElementById('cancelCropBtn');
+        const saveCropBtn = document.getElementById('saveCropBtn');
+        let cropper = null;
 
         uploadBtn.addEventListener('click', () => fileInput.click());
 
@@ -290,10 +329,58 @@
 
             const reader = new FileReader();
             reader.onload = (e) => {
-                preview.src = e.target.result;       // live preview
-                imageData.value = e.target.result;   // base64 sent to server
+                cropperImage.src = e.target.result;
+                cropperWorkspace.classList.remove('hidden');
+                
+                if (cropper) {
+                    cropper.destroy();
+                }
+                
+                cropper = new Cropper(cropperImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 0.9,
+                    responsive: true,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false
+                });
             };
             reader.readAsDataURL(file);
+        });
+
+        function closeCropper() {
+            cropperWorkspace.classList.add('hidden');
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            fileInput.value = '';
+        }
+
+        closeCropperBtn.addEventListener('click', closeCropper);
+        cancelCropBtn.addEventListener('click', closeCropper);
+
+        saveCropBtn.addEventListener('click', () => {
+            if (!cropper) return;
+            const canvas = cropper.getCroppedCanvas({
+                width: 300,
+                height: 300
+            });
+            const dataUrl = canvas.toDataURL('image/png');
+            preview.src = dataUrl;
+            preview.classList.remove('hidden');
+            const fallback = document.getElementById('avatar-fallback');
+            if (fallback) {
+                fallback.classList.add('hidden');
+            }
+            imageData.value = dataUrl; // base64 sent to server
+            closeCropper();
         });
 
         // Email edit toggle

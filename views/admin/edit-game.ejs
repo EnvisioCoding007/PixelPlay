@@ -96,7 +96,7 @@
                           const isSelected = product.category && 
                             (cat._id.toString() === product.category.toString() || cat.name === product.category);
                         %>
-                        <option value="<%= cat._id %>" <%= isSelected ? 'selected' : '' %>><%= cat.name %></option>
+                        <option value="<%= cat._id %>" data-status="<%= cat.status %>" <%= isSelected ? 'selected' : '' %>><%= cat.name %><%= cat.status === 'Hidden' ? ' (Unlisted)' : '' %></option>
                       <% }) %>
                     <% } %>
                   </select>
@@ -199,7 +199,7 @@
                           <div class="relative w-16 h-16 rounded-md overflow-hidden flex-shrink-0 border border-border-dark gallery-item">
                             <img alt="Gallery thumbnail <%= idx + 1 %>" class="w-full h-full object-cover" src="<%= url %>"/>
                             <input type="hidden" name="existing_gallery[]" value="<%= url %>"/>
-                            <button type="button" onclick="this.parentNode.remove()" class="absolute top-1 right-1 bg-black/70 rounded-full p-0.5 text-gray-300 hover:text-white hover:bg-red-500/80">
+                            <button type="button" onclick="removeExistingGalleryItem(this)" class="absolute top-1 right-1 bg-black/70 rounded-full p-0.5 text-gray-300 hover:text-white hover:bg-red-500/80">
                               <svg class="h-3 w-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                                 <path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                               </svg>
@@ -428,8 +428,51 @@
     e.preventDefault();
     const isCurrentlyHidden = statusInput.value === 'Hidden';
     const targetState = isCurrentlyHidden ? 'Live' : 'Hidden';
+    
+    const categorySelect = document.querySelector('select[name="category"]');
+    const selectedOption = categorySelect ? categorySelect.options[categorySelect.selectedIndex] : null;
+    const isCategoryUnlisted = selectedOption ? selectedOption.getAttribute('data-status') === 'Hidden' : false;
+    
+    if (targetState === 'Live' && isCategoryUnlisted) {
+      Swal.fire({
+        title: 'Cannot List Game',
+        text: 'This game is linked to an unlisted category. Please change the game category to list the game.',
+        icon: 'warning',
+        confirmButtonColor: '#2cb5e8'
+      });
+      return;
+    }
+    
     openStatusConfirmModal(targetState);
   });
+
+  const categorySelect = document.querySelector('select[name="category"]');
+  if (categorySelect) {
+    categorySelect.addEventListener('change', function() {
+      const selectedOption = this.options[this.selectedIndex];
+      const isCategoryUnlisted = selectedOption ? selectedOption.getAttribute('data-status') === 'Hidden' : false;
+      const isGameLive = statusInput.value === 'Live';
+      
+      if (isCategoryUnlisted && isGameLive) {
+        Swal.fire({
+          title: 'Warning',
+          text: 'You have selected an unlisted category. To save this game with an unlisted category, the game status will be set to Unlisted.',
+          icon: 'warning',
+          confirmButtonColor: '#2cb5e8'
+        });
+        // Automatically toggle status to Hidden
+        statusToggle.checked = true;
+        statusToggle.classList.remove('translate-x-0');
+        statusToggle.classList.add('translate-x-6');
+        statusInput.value = 'Hidden';
+        
+        statusLabel.classList.remove('text-accent');
+        statusLabel.classList.add('text-text-muted');
+        unlistLabel.classList.remove('text-text-muted');
+        unlistLabel.classList.add('text-accent');
+      }
+    });
+  }
 
   statusModalCancelBtn.addEventListener('click', closeStatusConfirmModal);
   
@@ -586,6 +629,24 @@
     }
   });
 
+  function updateGalleryAddBtnState() {
+    const existingCount = document.querySelectorAll('input[name="existing_gallery[]"]').length;
+    const totalCount = existingCount + croppedGalleryBlobs.length;
+    const addBtn = document.getElementById('galleryAddBtn');
+    if (addBtn) {
+      if (totalCount >= 5) {
+        addBtn.classList.add('hidden');
+      } else {
+        addBtn.classList.remove('hidden');
+      }
+    }
+  }
+
+  function removeExistingGalleryItem(button) {
+    button.parentNode.remove();
+    updateGalleryAddBtnState();
+  }
+
   function renderNewGalleryPreviews() {
     document.querySelectorAll('.gallery-item-new').forEach(el => el.remove());
     
@@ -626,11 +687,28 @@
       
       container.insertBefore(thumb, addBtn);
     });
+
+    updateGalleryAddBtnState();
   }
+
+  // Initialize gallery button state on page load
+  setTimeout(updateGalleryAddBtnState, 0);
 
   galleryInput.addEventListener('change', function(e) {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
+    
+    const existingCount = document.querySelectorAll('input[name="existing_gallery[]"]').length;
+    if (existingCount + croppedGalleryBlobs.length + files.length > 5) {
+      Swal.fire({
+        title: 'Limit Exceeded',
+        text: 'Game gallery cannot have more than 5 images/videos in total.',
+        icon: 'error',
+        confirmButtonColor: '#2cb5e8'
+      });
+      galleryInput.value = '';
+      return;
+    }
     
     galleryQueue = files;
     cropNextGalleryImage(0);
@@ -1226,6 +1304,33 @@
   const editForm = document.getElementById('gameEditForm');
   editForm.addEventListener('submit', async function(e) {
     e.preventDefault();
+
+    const categorySelectEl = editForm.category;
+    const selectedOption = categorySelectEl ? categorySelectEl.options[categorySelectEl.selectedIndex] : null;
+    const isCategoryUnlisted = selectedOption ? selectedOption.getAttribute('data-status') === 'Hidden' : false;
+    const isGameLive = statusInput.value === 'Live';
+
+    if (isGameLive && isCategoryUnlisted) {
+      Swal.fire({
+        title: 'Validation Error',
+        text: 'This game is linked to an unlisted category. Please change the game category to list the game.',
+        icon: 'error',
+        confirmButtonColor: '#2cb5e8'
+      });
+      return;
+    }
+
+    const existingCount = editForm.querySelectorAll('input[name="existing_gallery[]"]').length;
+    const totalGalleryCount = existingCount + croppedGalleryBlobs.length;
+    if (totalGalleryCount > 5) {
+      Swal.fire({
+        title: 'Validation Error',
+        text: 'Game gallery cannot have more than 5 images/videos.',
+        icon: 'error',
+        confirmButtonColor: '#2cb5e8'
+      });
+      return;
+    }
 
     const formData = new FormData();
 

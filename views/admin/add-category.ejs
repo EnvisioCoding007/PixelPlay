@@ -1,4 +1,5 @@
 <%- include('../partials/admin/header') %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 <body class="bg-pixel-bg text-gray-300 min-h-screen flex text-sm">
 <%- include('../partials/admin/sidebar', { activeTab: 'categories' }) %>
 <main class="content-bg flex-1 flex flex-col overflow-hidden relative">
@@ -31,14 +32,29 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Category Icon</label>
-            <div id="dropzone" class="border-2 border-dashed border-input-dark-border hover:border-pixel-blue/50 rounded-lg p-6 flex flex-col items-center justify-center text-center bg-content-bg/50 cursor-pointer transition-colors">
-              <input type="file" name="icon" id="categoryIcon" class="hidden" accept="image/*" />
-              <div class="w-12 h-12 rounded-full bg-pixel-blue/10 flex items-center justify-center mb-3 text-pixel-blue">
-                <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+            <div id="dropzone" class="border-2 border-dashed border-input-dark-border hover:border-pixel-blue/50 rounded-lg p-6 flex flex-col items-center justify-center text-center bg-content-bg/50 cursor-pointer transition-colors relative">
+              <input type="file" id="categoryIcon" class="hidden" accept="image/*" />
+              
+              <!-- Upload Instructions (hidden when preview is shown) -->
+              <div id="uploadInstructions" class="flex flex-col items-center justify-center">
+                <div class="w-12 h-12 rounded-full bg-pixel-blue/10 flex items-center justify-center mb-3 text-pixel-blue">
+                  <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                </div>
+                <h3 class="text-sm font-semibold text-white mb-1">Drop Category Icon Here</h3>
+                <p class="text-xs text-gray-500 mb-2">Drag &amp; drop your image, or <button id="browseBtn" class="text-pixel-blue hover:underline font-medium" type="button">browse files</button></p>
+                <p class="text-[11px] text-gray-500">Supports PNG, JPG · Max file size: 2MB ·<br/>Recommended: 300x300px</p>
               </div>
-              <h3 class="text-sm font-semibold text-white mb-1">Drop Category Icon Here</h3>
-              <p class="text-xs text-gray-500 mb-2">Drag &amp; drop your image, or <button id="browseBtn" class="text-pixel-blue hover:underline font-medium" type="button">browse files</button></p>
-              <p class="text-[11px] text-gray-500">Supports PNG, JPG · Max file size: 2MB ·<br/>Recommended: 300x300px</p>
+
+              <!-- Preview container (shown when cropped blob exists) -->
+              <div id="iconPreviewContainer" class="hidden flex flex-col items-center justify-center w-full">
+                <img id="categoryIconPreview" class="w-20 h-20 rounded-lg object-cover border border-border-dark mb-3 mx-auto" />
+                <div class="flex gap-2 justify-center">
+                  <button type="button" id="removeIconBtn" class="px-3 py-1.5 text-xs bg-[#f92a40]/10 hover:bg-[#f92a40]/20 text-pixel-red rounded-lg transition-colors flex items-center gap-1.5">
+                    <i class="fa-solid fa-trash text-[10px]"></i> Remove Icon
+                  </button>
+                </div>
+              </div>
+              
               <p id="fileNameDisplay" class="text-xs text-pixel-yellow font-medium mt-3 hidden"></p>
             </div>
           </div>
@@ -88,6 +104,7 @@
                 <div class="col-span-2 flex justify-center">
                   <button aria-checked="<%= cat.status !== 'Hidden' %>" 
                           data-id="<%= cat._id %>"
+                          data-games-count="<%= cat.gameCount || 0 %>"
                           class="category-status-toggle relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none <%= cat.status !== 'Hidden' ? 'bg-pixel-blue' : 'bg-slate-700' %>" 
                           role="switch" type="button">
                     <span aria-hidden="true" 
@@ -110,21 +127,148 @@
             </div>
           <% } %>
         </div>
+
+        <!-- Pagination -->
+        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+          <div class="p-4 border border-border-dark rounded-xl bg-card-bg flex items-center justify-between shadow-2xl">
+            <div class="text-gray-400 text-sm">
+              Showing <span class="font-medium text-white"><%= (currentPage - 1) * limit + 1 %>-<%= Math.min(currentPage * limit, totalCount) %></span> of <span class="font-medium text-white"><%= totalCount %></span> categories
+            </div>
+            <div class="flex items-center gap-1">
+              <% if (currentPage > 1) { %>
+                <a href="/admin/categories?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>" class="px-3 py-1.5 rounded border border-border-dark bg-card-bg text-gray-400 hover:text-white transition-colors text-sm font-medium flex items-center gap-1">
+                  <i class="fa-solid fa-chevron-left text-xs"></i> Previous
+                </a>
+              <% } %>
+              <% for (let p = 1; p <= totalPages; p++) { %>
+                <% if (p === currentPage) { %>
+                  <span class="w-8 h-8 rounded bg-pixel-blue text-background-dark font-medium flex items-center justify-center text-sm"><%= p %></span>
+                <% } else { %>
+                  <a href="/admin/categories?page=<%= p %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>" class="w-8 h-8 rounded bg-transparent text-gray-400 hover:bg-card-bg hover:text-white transition-colors font-medium flex items-center justify-center text-sm"><%= p %></a>
+                <% } %>
+              <% } %>
+              <% if (currentPage < totalPages) { %>
+                <a href="/admin/categories?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>" class="px-3 py-1.5 rounded border border-border-dark bg-card-bg text-pixel-blue hover:bg-content-bg transition-colors text-sm font-medium flex items-center gap-1 ml-2">
+                  Next <i class="fa-solid fa-chevron-right text-xs"></i>
+                </a>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
       </div>
     </div>
   </div>
 </main>
 
+<!-- Cropper.js Workspace Modal overlay -->
+<div id="cropperWorkspace" class="hidden fixed inset-0 z-55 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+  <div class="bg-card-bg border border-border-dark rounded-xl max-w-2xl w-full p-6 flex flex-col gap-4 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-border-dark pb-3">
+      <h3 class="text-lg font-semibold text-white" id="cropperTitle">Crop Category Icon</h3>
+      <button type="button" id="closeCropperBtn" class="text-gray-400 hover:text-white transition-colors">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="relative w-full max-h-[50vh] bg-content-bg flex items-center justify-center overflow-hidden rounded-lg border border-border-dark">
+      <img id="cropperImage" class="max-w-full max-h-[45vh] object-contain" />
+    </div>
+    <div class="flex gap-3 justify-end border-t border-border-dark pt-3">
+      <button type="button" id="cancelCropBtn" class="px-5 py-2 text-sm text-gray-300 hover:text-white bg-content-bg border border-border-dark rounded-lg transition-colors">
+        Cancel
+      </button>
+      <button type="button" id="saveCropBtn" class="px-5 py-2 text-sm text-background-dark bg-pixel-blue hover:bg-pixel-blue-hover font-medium rounded-lg transition-colors">
+        Apply Crop
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script>
-  // Dynamic file select text display inside category icon dropzone
+  let cropper = null;
+  let croppedIconBlob = null;
+
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('categoryIcon');
   const browseBtn = document.getElementById('browseBtn');
   const fileNameDisplay = document.getElementById('fileNameDisplay');
+  const previewImg = document.getElementById('categoryIconPreview');
+  const previewContainer = document.getElementById('iconPreviewContainer');
+  const uploadInstructions = document.getElementById('uploadInstructions');
+  const removeIconBtn = document.getElementById('removeIconBtn');
+
+  const cropperWorkspace = document.getElementById('cropperWorkspace');
+  const cropperImage = document.getElementById('cropperImage');
+  const closeCropperBtn = document.getElementById('closeCropperBtn');
+  const cancelCropBtn = document.getElementById('cancelCropBtn');
+  const saveCropBtn = document.getElementById('saveCropBtn');
+
+  function startCropper(imageSrc) {
+    cropperImage.src = imageSrc;
+    cropperWorkspace.classList.remove('hidden');
+    cropperWorkspace.classList.add('flex');
+    
+    if (cropper) {
+      cropper.destroy();
+    }
+    
+    cropper = new Cropper(cropperImage, {
+      aspectRatio: 1, // 1:1 ratio
+      viewMode: 1,
+      dragMode: 'move',
+      autoCropArea: 0.9,
+      responsive: true,
+      restore: false,
+      guides: true,
+      center: true,
+      highlight: false,
+      cropBoxMovable: true,
+      cropBoxResizable: true,
+      toggleDragModeOnDblclick: false
+    });
+  }
+
+  function closeCropper() {
+    cropperWorkspace.classList.add('hidden');
+    cropperWorkspace.classList.remove('flex');
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+  }
+
+  cancelCropBtn.addEventListener('click', () => {
+    closeCropper();
+    fileInput.value = '';
+  });
+
+  closeCropperBtn.addEventListener('click', () => {
+    closeCropper();
+    fileInput.value = '';
+  });
+
+  saveCropBtn.addEventListener('click', () => {
+    if (!cropper) return;
+    const canvas = cropper.getCroppedCanvas({
+      width: 300,
+      height: 300
+    });
+    canvas.toBlob((blob) => {
+      croppedIconBlob = blob;
+      if (previewImg && previewContainer && uploadInstructions) {
+        previewImg.src = URL.createObjectURL(blob);
+        previewContainer.classList.remove('hidden');
+        uploadInstructions.classList.add('hidden');
+      }
+      fileNameDisplay.textContent = 'Selected: cropped_icon.png';
+      fileNameDisplay.classList.remove('hidden');
+      closeCropper();
+    }, 'image/png');
+  });
 
   if (dropzone && fileInput) {
     dropzone.addEventListener('click', (e) => {
-      if (e.target !== browseBtn) {
+      if (e.target !== browseBtn && !e.target.closest('#removeIconBtn')) {
         fileInput.click();
       }
     });
@@ -140,13 +284,19 @@
       });
     }
 
+    function handleIconFile(file) {
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          startCropper(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
     fileInput.addEventListener('change', () => {
       if (fileInput.files && fileInput.files.length > 0) {
-        fileNameDisplay.textContent = 'Selected: ' + fileInput.files[0].name;
-        fileNameDisplay.classList.remove('hidden');
-      } else {
-        fileNameDisplay.textContent = '';
-        fileNameDisplay.classList.add('hidden');
+        handleIconFile(fileInput.files[0]);
       }
     });
 
@@ -164,9 +314,75 @@
       e.preventDefault();
       dropzone.classList.remove('border-pixel-blue');
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
         fileInput.files = e.dataTransfer.files;
-        fileNameDisplay.textContent = 'Selected: ' + fileInput.files[0].name;
-        fileNameDisplay.classList.remove('hidden');
+        handleIconFile(file);
+      }
+    });
+
+    if (removeIconBtn) {
+      removeIconBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        croppedIconBlob = null;
+        fileInput.value = '';
+        if (previewContainer && uploadInstructions) {
+          previewContainer.classList.add('hidden');
+          uploadInstructions.classList.remove('hidden');
+        }
+        fileNameDisplay.textContent = '';
+        fileNameDisplay.classList.add('hidden');
+      });
+    }
+  }
+
+  // Intercept category creation form submit
+  const createCategoryForm = document.getElementById('createCategoryForm');
+  if (createCategoryForm) {
+    createCategoryForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (!croppedIconBlob) {
+        Swal.fire({
+          title: 'Validation Error',
+          text: 'Please select and crop a Category Icon.',
+          icon: 'error',
+          confirmButtonColor: '#2cb5e8'
+        });
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('name', this.name.value);
+      formData.append('description', this.description.value);
+      formData.append('defaultOffer', this.defaultOffer.value);
+      formData.append('icon', croppedIconBlob, 'icon.png');
+      
+      try {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Adding...';
+        }
+        
+        const response = await fetch('/admin/categories', {
+          method: 'POST',
+          body: formData
+        });
+        
+        window.location.href = response.url || '/admin/categories';
+      } catch (err) {
+        console.error('Category creation error:', err);
+        Swal.fire({
+          title: 'Error',
+          text: 'Failed to create category: ' + err.message,
+          icon: 'error',
+          confirmButtonColor: '#2cb5e8'
+        });
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = 'Add Category';
+        }
       }
     });
   }
@@ -176,11 +392,16 @@
     button.addEventListener('click', async function() {
       const catId = this.getAttribute('data-id');
       const isCurrentlyActive = this.getAttribute('aria-checked') === 'true';
+      const gamesCount = parseInt(this.getAttribute('data-games-count') || '0', 10);
       
       if (isCurrentlyActive) {
+        let warningText = "Disclaimer: Unlisting this category will hide all associated games from storefront filter options. Are you sure you want to proceed?";
+        if (gamesCount > 0) {
+          warningText = `Warning: This category currently has ${gamesCount} linked game(s). Unlisting it will automatically unlist all linked games on the storefront. Are you sure you want to proceed?`;
+        }
         const confirmUnlist = await Swal.fire({
           title: 'Unlist Category?',
-          text: "Disclaimer: Unlisting this category will hide all associated games from storefront filter options. Are you sure you want to proceed?",
+          text: warningText,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#f92a40',
@@ -288,7 +509,6 @@
   // Handle Category Search input & clear button
   const categorySearchInput = document.getElementById('categorySearchInput');
   const clearSearchBtn = document.getElementById('clearSearchBtn');
-
   if (categorySearchInput && clearSearchBtn) {
     categorySearchInput.addEventListener('input', function() {
       if (this.value.trim().length > 0) {
@@ -306,6 +526,17 @@
   }
 </script>
 
-<%- include('../partials/admin/footer') %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <script>
+      Swal.fire({
+        title: 'Error',
+        text: '<%= error %>',
+        icon: 'error',
+        confirmButtonColor: '#2cb5e8'
+      });
+    </script>
+  <% } %>
+
+  <%- include('../partials/admin/footer') %>
 </body>
 </html>

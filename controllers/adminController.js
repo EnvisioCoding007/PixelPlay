@@ -61,7 +61,7 @@ export const adminLogin = async (req, res) => {
 
 export const getCustomers = async (req, res) => {
     try {
-        const { page = 1, search = '', limit = 10, status = '', tier = '', sort = '-createdAt' } = req.query;
+        const { page = 1, search = '', limit = 10, status = '', tier = '', sort = '-createdAt', verification = '' } = req.query;
         const pageNum = Math.max(1, parseInt(page, 10));
         const limitNum = Math.max(1, parseInt(limit, 10));
 
@@ -80,6 +80,12 @@ export const getCustomers = async (req, res) => {
             filter.is_blocked = false;
         } else if (status === 'suspended') {
             filter.is_blocked = true;
+        }
+
+        if (verification === 'verified') {
+            filter.is_verified = true;
+        } else if (verification === 'unverified') {
+            filter.is_verified = false;
         }
 
         let sortConfig = { createdAt: -1 };
@@ -109,6 +115,7 @@ export const getCustomers = async (req, res) => {
         if (status) currentFilters.status = status;
         if (tier) currentFilters.tier = tier;
         if (sort && sort !== '-createdAt') currentFilters.sort = sort;
+        if (verification) currentFilters.verification = verification;
 
         res.render('admin/customer-management', {
             users,
@@ -119,9 +126,11 @@ export const getCustomers = async (req, res) => {
             status,
             tier,
             sort,
+            verification,
             currentSearch: search,
             currentStatus: status,
             currentSort: sort,
+            currentVerification: verification,
             currentFilters,
             limit: limitNum,
         });
@@ -212,7 +221,7 @@ export const renderEditGamePage = async (req, res) => {
         if (!product) {
             return res.status(404).send('Product not found');
         }
-        const categories = await categoryService.getAllActiveCategories();
+        const categories = await categoryService.getAllCategories();
         const publishers = await Publisher.find({}).sort({ name: 1 }).lean();
         res.render('admin/edit-game', {
             product,
@@ -290,17 +299,30 @@ export const editProduct = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Game not found.' });
         }
 
+        // Server-side validations
+        const selectedCategory = await Category.findById(category);
+        if (!selectedCategory) {
+            return res.status(400).json({ success: false, message: 'Selected category does not exist.' });
+        }
+        if (status === 'Live' && selectedCategory.status === 'Hidden') {
+            return res.status(400).json({ success: false, message: 'Cannot list a game under an unlisted category. Please change the game category to list the game.' });
+        }
+
+        const existingGalleryRaw = req.body.existing_gallery || req.body['existing_gallery[]'] || [];
+        const existingGallery = Array.isArray(existingGalleryRaw) ? existingGalleryRaw : [existingGalleryRaw];
+        const galleryFiles = req.files && req.files.gallery ? req.files.gallery : [];
+
+        const totalGalleryCount = existingGallery.filter(url => url && url.trim() !== '').length + galleryFiles.length;
+        if (totalGalleryCount > 5) {
+            return res.status(400).json({ success: false, message: 'Game gallery image limit must be capped to 5.' });
+        }
+
         let cover_image = existingProduct.cover_image;
         const coverFiles = req.files && req.files.cover_image ? req.files.cover_image : [];
         if (coverFiles.length > 0) {
             const coverUploadResult = await uploadToCloudinary(coverFiles[0], 'pixelplay_uploads');
             cover_image = coverUploadResult.secure_url;
         }
-
-        const existingGalleryRaw = req.body.existing_gallery || req.body['existing_gallery[]'] || [];
-        const existingGallery = Array.isArray(existingGalleryRaw) ? existingGalleryRaw : [existingGalleryRaw];
-
-        const galleryFiles = req.files && req.files.gallery ? req.files.gallery : [];
         const newGalleryUploadPromises = galleryFiles.map(file => uploadToCloudinary(file, 'pixelplay_uploads'));
         const newGalleryUploadResults = await Promise.all(newGalleryUploadPromises);
         const newGalleryUrls = newGalleryUploadResults.map(res => res.secure_url);
@@ -337,7 +359,7 @@ export const editProduct = async (req, res) => {
 
 export const renderAddGamePage = async (req, res) => {
     try {
-        const categories = await categoryService.getAllActiveCategories();
+        const categories = await categoryService.getAllCategories();
         const publishers = await Publisher.find({}).sort({ name: 1 }).lean();
         res.render('admin/add-game', {
             categories,
@@ -410,6 +432,17 @@ export const addProduct = async (req, res) => {
         const coverFiles = req.files && req.files.cover_image ? req.files.cover_image : [];
         const galleryFiles = req.files && req.files.gallery ? req.files.gallery : [];
 
+        const selectedCategory = await Category.findById(category);
+        if (!selectedCategory) {
+            return res.status(400).json({ success: false, message: 'Selected category does not exist.' });
+        }
+        if (selectedCategory.status === 'Hidden') {
+            return res.status(400).json({ success: false, message: 'Cannot list a game under an unlisted category. Please change the game category to list the game.' });
+        }
+        if (galleryFiles.length > 5) {
+            return res.status(400).json({ success: false, message: 'Game gallery image limit must be capped to 5.' });
+        }
+
         if (coverFiles.length === 0) {
             return res.status(400).json({ success: false, message: 'Cover image is required.' });
         }
@@ -453,12 +486,20 @@ export const addProduct = async (req, res) => {
 
 export const renderCategoryManagement = async (req, res) => {
     try {
-        const { search = '' } = req.query;
-        const categories = await categoryService.getAllCategoriesAdmin(search);
+        const { search = '', page = 1, error } = req.query;
+        const pageNum = Math.max(1, parseInt(page, 10));
+        const limitNum = 8;
+
+        const { categories, currentPage, totalPages, totalCount } = await categoryService.getAllCategoriesAdmin(search, pageNum, limitNum);
 
         res.render('admin/add-category', {
             categories,
+            currentPage,
+            totalPages,
+            totalCount,
+            limit: limitNum,
             search,
+            error: error || null,
             user: req.session.admin || null
         });
     } catch (err) {
@@ -471,12 +512,12 @@ export const createCategory = async (req, res) => {
     try {
         const { name, defaultOffer, description } = req.body;
         if (!name || !name.trim()) {
-            return res.status(400).send('Category name is required.');
+            return res.redirect('/admin/categories?error=Category name is required.');
         }
 
-        const existing = await Category.findOne({ name: name.trim() });
+        const existing = await Category.findOne({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
         if (existing) {
-            return res.status(400).send('Category already exists.');
+            return res.redirect('/admin/categories?error=Category already exists.');
         }
 
         let parsedOffer = 0;
@@ -500,7 +541,7 @@ export const createCategory = async (req, res) => {
         res.redirect('/admin/categories');
     } catch (err) {
         console.error('[createCategory]', err);
-        res.status(500).send('Internal Server Error');
+        res.redirect(`/admin/categories?error=${encodeURIComponent(err.message || 'Internal Server Error')}`);
     }
 };
 
@@ -516,13 +557,8 @@ export const toggleCategoryStatus = async (req, res) => {
         const newStatus = currentStatus === 'Live' ? 'Hidden' : 'Live';
 
         if (newStatus === 'Hidden') {
-            const gameCount = await Product.countDocuments({ category: id });
-            if (gameCount > 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Please change the category of associated games before unlisting this category.'
-                });
-            }
+            // Automatically unlist all linked games
+            await Product.updateMany({ category: id }, { status: 'Hidden' });
         }
 
         category.status = newStatus;
@@ -575,13 +611,14 @@ export const editCategory = async (req, res) => {
         }
 
         if (status === 'Hidden') {
-            const gameCount = await Product.countDocuments({ category: id });
-            if (gameCount > 0) {
-                return res.status(400).send('Please change the category of associated games before unlisting this category.');
-            }
+            // Automatically unlist all linked games
+            await Product.updateMany({ category: id }, { status: 'Hidden' });
         }
 
-        const conflict = await Category.findOne({ name: name.trim(), _id: { $ne: id } });
+        const conflict = await Category.findOne({ 
+            name: { $regex: new RegExp(`^${name.trim()}$`, 'i') }, 
+            _id: { $ne: id } 
+        });
         if (conflict) {
             return res.status(400).send('Category name already exists.');
         }
@@ -634,7 +671,7 @@ export const deleteCategory = async (req, res) => {
 
 export const renderPublisherManagement = async (req, res) => {
     try {
-        const { search = '', page = 1, limit = 10 } = req.query;
+        const { search = '', page = 1, limit = 8 } = req.query;
         const pageNum = Math.max(1, parseInt(page, 10));
         const limitNum = Math.max(1, parseInt(limit, 10));
 
@@ -690,7 +727,9 @@ export const renderPublisherManagement = async (req, res) => {
 
 export const renderAddPublisherPage = (req, res) => {
     try {
+        const { error } = req.query;
         res.render('admin/add-publisher', {
+            error: error || null,
             user: req.session.admin || null
         });
     } catch (err) {
@@ -704,12 +743,12 @@ export const createPublisher = async (req, res) => {
         const { publisher_name, official_website, brief_description } = req.body;
         
         if (!publisher_name || !publisher_name.trim()) {
-            return res.status(400).send('Publisher name is required.');
+            return res.redirect('/admin/publishers/add?error=Publisher name is required.');
         }
 
         const existing = await Publisher.findOne({ name: { $regex: new RegExp(`^${publisher_name.trim()}$`, 'i') } });
         if (existing) {
-            return res.status(400).send('Publisher already exists.');
+            return res.redirect('/admin/publishers/add?error=Publisher already exists.');
         }
 
         let logoUrl = '';
@@ -728,7 +767,7 @@ export const createPublisher = async (req, res) => {
         res.redirect('/admin/publishers');
     } catch (err) {
         console.error('[createPublisher]', err);
-        res.status(500).send('Internal Server Error');
+        res.redirect(`/admin/publishers/add?error=${encodeURIComponent(err.message || 'Internal Server Error')}`);
     }
 };
 

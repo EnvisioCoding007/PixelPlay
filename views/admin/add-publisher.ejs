@@ -1,4 +1,5 @@
 <%- include('../partials/admin/header') %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
 <body class="bg-pixel-bg text-gray-300 min-h-screen flex text-sm">
 <%- include('../partials/admin/sidebar', { activeTab: 'publishers' }) %>
 
@@ -98,6 +99,9 @@
                 <div class="w-12 h-12 mx-auto rounded-full bg-content-bg border border-border-dark flex items-center justify-center group-hover:bg-pixel-blue/10 transition-colors text-pixel-blue">
                   <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
                 </div>
+                <div id="logo-preview-container" class="hidden mb-3">
+                  <img id="logo-preview" class="w-16 h-16 rounded-lg object-cover border border-border-dark mx-auto" />
+                </div>
                 <div class="text-sm text-gray-300">
                   <span class="font-medium text-white">Drop Publisher Logo Here</span><br/>
                   <span class="text-gray-500">Drag &amp; drop your image, or <span class="text-pixel-blue font-medium hover:underline">browse files</span></span>
@@ -154,15 +158,112 @@
   </form>
 </main>
 
+<!-- Cropper.js Workspace Modal overlay -->
+<div id="cropperWorkspace" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-background-dark/95 backdrop-blur-sm p-4">
+  <div class="bg-card-bg border border-border-dark rounded-xl max-w-2xl w-full p-6 flex flex-col gap-4 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-border-dark pb-3">
+      <h3 class="text-lg font-semibold text-white" id="cropperTitle">Crop Publisher Logo</h3>
+      <button type="button" id="closeCropperBtn" class="text-gray-400 hover:text-white transition-colors">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="relative w-full max-h-[50vh] bg-background-dark flex items-center justify-center overflow-hidden rounded-lg border border-border-dark">
+      <img id="cropperImage" class="max-w-full max-h-[45vh] object-contain" />
+    </div>
+    <div class="flex gap-3 justify-end border-t border-border-dark pt-3">
+      <button type="button" id="cancelCropBtn" class="px-5 py-2 text-sm text-white hover:bg-border-dark border border-border-dark rounded-lg transition-colors">
+        Cancel
+      </button>
+      <button type="button" id="saveCropBtn" class="px-5 py-2 text-sm text-background-dark bg-pixel-blue hover:bg-pixel-blue-hover font-medium rounded-lg transition-colors">
+        Apply Crop
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
 <script>
-  // Display file name inside custom file input area
-  document.getElementById('logo').addEventListener('change', function() {
-    const fileDisplay = document.getElementById('logo-filename');
+  // Media cropping state variables
+  const logoInput = document.getElementById('logo');
+  const fileDisplay = document.getElementById('logo-filename');
+  const logoPreviewContainer = document.getElementById('logo-preview-container');
+  const logoPreview = document.getElementById('logo-preview');
+  const cropperWorkspace = document.getElementById('cropperWorkspace');
+  const cropperImage = document.getElementById('cropperImage');
+  const closeCropperBtn = document.getElementById('closeCropperBtn');
+  const cancelCropBtn = document.getElementById('cancelCropBtn');
+  const saveCropBtn = document.getElementById('saveCropBtn');
+  let cropper = null;
+
+  logoInput.addEventListener('change', function(e) {
     if (this.files && this.files.length > 0) {
-      fileDisplay.textContent = 'Selected Logo: ' + this.files[0].name;
-    } else {
-      fileDisplay.textContent = '';
+      const file = this.files[0];
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        cropperImage.src = evt.target.result;
+        cropperWorkspace.classList.remove('hidden');
+        
+        if (cropper) {
+          cropper.destroy();
+        }
+        
+        cropper = new Cropper(cropperImage, {
+          aspectRatio: 1,
+          viewMode: 1,
+          dragMode: 'move',
+          autoCropArea: 0.9,
+          responsive: true,
+          restore: false,
+          guides: true,
+          center: true,
+          highlight: false,
+          cropBoxMovable: true,
+          cropBoxResizable: true,
+          toggleDragModeOnDblclick: false
+        });
+      };
+      reader.readAsDataURL(file);
     }
+  });
+
+  function closeCropper() {
+    cropperWorkspace.classList.add('hidden');
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+    logoInput.value = '';
+  }
+
+  closeCropperBtn.addEventListener('click', closeCropper);
+  cancelCropBtn.addEventListener('click', closeCropper);
+
+  saveCropBtn.addEventListener('click', function() {
+    if (!cropper) return;
+    
+    const canvas = cropper.getCroppedCanvas({
+      width: 300,
+      height: 300
+    });
+    
+    canvas.toBlob(function(blob) {
+      const croppedFile = new File([blob], 'logo.png', { type: 'image/png' });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(croppedFile);
+      logoInput.files = dataTransfer.files;
+      
+      // Update preview
+      logoPreview.src = URL.createObjectURL(blob);
+      logoPreviewContainer.classList.remove('hidden');
+      fileDisplay.textContent = 'Cropped Logo: ' + croppedFile.name;
+      
+      // Close cropper
+      cropperWorkspace.classList.add('hidden');
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+      }
+    }, 'image/png');
   });
 
   // Submit listener to show the Saving notification overlay
@@ -170,5 +271,16 @@
     document.getElementById('saving-overlay').classList.remove('hidden');
   });
 </script>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <script>
+      Swal.fire({
+        title: 'Error',
+        text: '<%= error %>',
+        icon: 'error',
+        confirmButtonColor: '#2cb5e8'
+      });
+    </script>
+  <% } %>
 
 <%- include('../partials/admin/footer') %>

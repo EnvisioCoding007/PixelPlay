@@ -37,12 +37,13 @@
 <div class="space-y-2">
 <label class="block text-sm font-medium text-gray-200">Category Icon</label>
 <div id="iconUploadBox" class="inline-flex items-center gap-4 p-3 border border-input-dark-border bg-content-bg rounded-lg cursor-pointer hover:bg-border-dark/30 transition-colors">
-<div class="text-gray-400">
+<div class="text-gray-400" id="categoryIconPreviewContainer">
 <% if (category.icon) { %>
-  <img src="<%= category.icon %>" alt="<%= category.name %> Icon" class="w-8 h-8 rounded object-cover" />
+  <img id="categoryIconPreview" src="<%= category.icon %>" alt="<%= category.name %> Icon" class="w-8 h-8 rounded object-cover" />
 <% } else { %>
   <!-- Icon placeholder (Sword) -->
-  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+  <svg id="categoryIconPlaceholder" class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+  <img id="categoryIconPreview" class="w-8 h-8 rounded object-cover hidden" />
 <% } %>
 </div>
 <div class="w-px h-6 bg-border-dark"></div>
@@ -139,18 +140,13 @@
       
       if (isChecked) {
         // Unlisting action
+        let warningText = "Disclaimer: Unlisting this category will hide all associated games from storefront filter options. Are you sure you want to proceed?";
         if (linkedGamesCount > 0) {
-          Swal.fire({
-            title: 'Blocked',
-            text: "Please change the category of associated games before unlisting this category.",
-            icon: 'error',
-            confirmButtonColor: '#2cb5e8'
-          });
-          return;
+          warningText = `Warning: This category currently has ${linkedGamesCount} linked game(s). Unlisting it will automatically unlist all linked games on the storefront. Are you sure you want to proceed?`;
         }
         const confirmUnlist = await Swal.fire({
           title: 'Unlist Category?',
-          text: "Disclaimer: Unlisting this category will hide all associated games from storefront filter options. Are you sure you want to proceed?",
+          text: warningText,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#f92a40',
@@ -194,14 +190,32 @@
   const iconUploadBox = document.getElementById('iconUploadBox');
   const fileInput = document.getElementById('categoryIcon');
   const fileNameDisplay = document.getElementById('fileNameDisplay');
+  const previewImg = document.getElementById('categoryIconPreview');
+  const placeholderSvg = document.getElementById('categoryIconPlaceholder');
+
   if (iconUploadBox && fileInput) {
     iconUploadBox.addEventListener('click', () => {
       fileInput.click();
     });
     fileInput.addEventListener('change', () => {
       if (fileInput.files && fileInput.files.length > 0) {
-        fileNameDisplay.textContent = 'Selected: ' + fileInput.files[0].name;
+        const file = fileInput.files[0];
+        fileNameDisplay.textContent = 'Selected: ' + file.name;
         fileNameDisplay.classList.remove('hidden');
+        
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (previewImg) {
+              previewImg.src = e.target.result;
+              previewImg.classList.remove('hidden');
+            }
+            if (placeholderSvg) {
+              placeholderSvg.classList.add('hidden');
+            }
+          };
+          reader.readAsDataURL(file);
+        }
       } else {
         fileNameDisplay.textContent = '';
         fileNameDisplay.classList.add('hidden');

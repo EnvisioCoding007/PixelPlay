@@ -4,8 +4,7 @@ const categorySchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        trim: true,
-        unique: true
+        trim: true
     },
     defaultOffer: {
         type: Number,
@@ -21,11 +20,14 @@ const categorySchema = new mongoose.Schema({
         trim: true
     },
     icon: {
-        type: String
+        type: String,
+        required:true
     }
 }, {
     timestamps: true
 });
+
+categorySchema.index({ name: 1 }, { unique: true, collation: { locale: 'en', strength: 2 } });
 
 const Category = mongoose.model('Category', categorySchema);
 export default Category;

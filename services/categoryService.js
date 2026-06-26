@@ -10,7 +10,7 @@ export const getAllActiveCategories = async () => {
     }
 };
 
-export const getAllCategoriesAdmin = async (search = '') => {
+export const getAllCategoriesAdmin = async (search = '', page = 1, limit = 8) => {
     try {
         const query = {};
         if (search && search.trim()) {
@@ -19,7 +19,14 @@ export const getAllCategoriesAdmin = async (search = '') => {
                 { description: { $regex: search.trim(), $options: 'i' } }
             ];
         }
-        const categoriesRaw = await Category.find(query).lean();
+        const totalCount = await Category.countDocuments(query);
+        const totalPages = Math.ceil(totalCount / limit);
+        const currentPage = Math.max(1, Math.min(page, totalPages || 1));
+
+        const categoriesRaw = await Category.find(query)
+            .skip((currentPage - 1) * limit)
+            .limit(limit)
+            .lean();
         
         const categories = await Promise.all(categoriesRaw.map(async (cat) => {
             const gameCount = await Product.countDocuments({ category: cat._id });
@@ -31,9 +38,23 @@ export const getAllCategoriesAdmin = async (search = '') => {
             };
         }));
         
-        return categories;
+        return {
+            categories,
+            currentPage,
+            totalPages,
+            totalCount
+        };
     } catch (error) {
         console.error('[categoryService.getAllCategoriesAdmin] Error:', error);
+        throw error;
+    }
+};
+
+export const getAllCategories = async () => {
+    try {
+        return await Category.find({}).sort({ name: 1 }).lean();
+    } catch (error) {
+        console.error('[categoryService.getAllCategories] Error:', error);
         throw error;
     }
 };

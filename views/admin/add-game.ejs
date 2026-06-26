@@ -82,7 +82,7 @@
                     <option disabled="" selected="" value="">Select category...</option>
                     <% if (typeof categories !== 'undefined' && categories && categories.length > 0) { %>
                       <% categories.forEach(cat => { %>
-                        <option value="<%= cat._id %>"><%= cat.name %></option>
+                        <option value="<%= cat._id %>" data-status="<%= cat.status %>"><%= cat.name %><%= cat.status === 'Hidden' ? ' (Unlisted)' : '' %></option>
                       <% }) %>
                     <% } %>
                   </select>
@@ -153,7 +153,7 @@
                 <!-- Cover Art -->
                 <div>
                   <label class="block text-sm font-medium text-text-muted mb-2">Cover Art</label>
-                  <div onclick="document.getElementById('coverInput').click()" class="border-2 border-dashed border-border-dark rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-text-muted transition-colors bg-background-dark/50">
+                  <div id="coverUploadContainer" onclick="document.getElementById('coverInput').click()" class="border-2 border-dashed border-border-dark rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-text-muted transition-colors bg-background-dark/50">
                     <span class="material-icons-outlined text-4xl text-text-muted mb-2">cloud_upload</span>
                     <p class="text-sm font-medium text-white mb-1">Upload Cover Image</p>
                     <p class="text-xs text-text-muted">JPEG, PNG or WEBP (Max 5MB)</p>
@@ -161,7 +161,15 @@
                   </div>
                   <!-- Preview container -->
                   <div id="coverPreviewContainer" class="mt-4 hidden text-center">
-                    <img id="coverPreview" class="max-h-48 rounded object-cover mx-auto border border-border-dark" />
+                    <img id="coverPreview" class="max-h-48 rounded object-cover mx-auto border border-border-dark mb-3" />
+                    <div class="flex gap-2 justify-center">
+                      <button type="button" id="replaceCoverBtn" class="px-3 py-1.5 text-xs bg-surface-dark border border-border-dark hover:bg-border-dark/50 text-white rounded-lg transition-colors flex items-center gap-1.5">
+                        <span class="material-icons-outlined text-xs">cached</span> Replace
+                      </button>
+                      <button type="button" id="removeCoverBtn" class="px-3 py-1.5 text-xs bg-[#f92a40]/10 hover:bg-[#f92a40]/20 text-pixel-red rounded-lg transition-colors flex items-center gap-1.5">
+                        <span class="material-icons-outlined text-xs">delete</span> Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
                 
@@ -385,6 +393,18 @@
     }
   }
 
+  // Replace and Remove cover button listeners
+  document.getElementById('replaceCoverBtn').addEventListener('click', function() {
+    document.getElementById('coverInput').click();
+  });
+
+  document.getElementById('removeCoverBtn').addEventListener('click', function() {
+    croppedCoverBlob = null;
+    document.getElementById('coverInput').value = '';
+    document.getElementById('coverPreviewContainer').classList.add('hidden');
+    document.getElementById('coverUploadContainer').classList.remove('hidden');
+  });
+
   // Cover image listener
   coverInput.addEventListener('change', function(e) {
     const files = e.target.files;
@@ -439,20 +459,33 @@
       container.appendChild(thumb);
     });
     
-    // Persistent "+" placeholder button at the end
-    const plusBtn = document.createElement('button');
-    plusBtn.type = 'button';
-    plusBtn.id = 'galleryAddBtn';
-    plusBtn.onclick = () => document.getElementById('galleryInput').click();
-    plusBtn.className = 'w-16 h-16 rounded-lg border-2 border-dashed border-border-dark hover:border-accent hover:text-accent flex flex-col items-center justify-center text-text-muted transition-colors cursor-pointer bg-background-dark/30';
-    plusBtn.innerHTML = '<span class="material-icons-outlined text-xl">add</span><span class="text-[8px] mt-1">Add Media</span>';
-    container.appendChild(plusBtn);
+    // Persistent "+" placeholder button at the end (shown only if < 5 items)
+    if (croppedGalleryBlobs.length < 5) {
+      const plusBtn = document.createElement('button');
+      plusBtn.type = 'button';
+      plusBtn.id = 'galleryAddBtn';
+      plusBtn.onclick = () => document.getElementById('galleryInput').click();
+      plusBtn.className = 'w-16 h-16 rounded-lg border-2 border-dashed border-border-dark hover:border-accent hover:text-accent flex flex-col items-center justify-center text-text-muted transition-colors cursor-pointer bg-background-dark/30';
+      plusBtn.innerHTML = '<span class="material-icons-outlined text-xl">add</span><span class="text-[8px] mt-1">Add Media</span>';
+      container.appendChild(plusBtn);
+    }
   }
 
   // Gallery multi-file listener
   galleryInput.addEventListener('change', function(e) {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
+    
+    if (croppedGalleryBlobs.length + files.length > 5) {
+      Swal.fire({
+        title: 'Limit Exceeded',
+        text: 'You can upload a maximum of 5 images/videos to the game gallery.',
+        icon: 'error',
+        confirmButtonColor: '#2cb5e8'
+      });
+      galleryInput.value = '';
+      return;
+    }
     
     galleryQueue = files;
     
@@ -500,6 +533,7 @@
         croppedCoverBlob = blob;
         coverPreview.src = URL.createObjectURL(blob);
         coverPreviewContainer.classList.remove('hidden');
+        document.getElementById('coverUploadContainer').classList.add('hidden');
         closeCropper();
       } else {
         croppedGalleryBlobs.push(blob);
@@ -975,6 +1009,20 @@
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
     
+    const categorySelect = form.category;
+    const selectedOption = categorySelect ? categorySelect.options[categorySelect.selectedIndex] : null;
+    const isCategoryUnlisted = selectedOption ? selectedOption.getAttribute('data-status') === 'Hidden' : false;
+    
+    if (isCategoryUnlisted) {
+      Swal.fire({
+        title: 'Validation Error',
+        text: 'This game is linked to an unlisted category. Please change the game category to list the game.',
+        icon: 'error',
+        confirmButtonColor: '#2cb5e8'
+      });
+      return;
+    }
+
     if (!croppedCoverBlob) {
       Swal.fire({
         title: 'Validation Error',
@@ -989,6 +1037,16 @@
       Swal.fire({
         title: 'Validation Error',
         text: `Please select at least 1 file for the Media Gallery. Current: ${croppedGalleryBlobs.length}`,
+        icon: 'error',
+        confirmButtonColor: '#2cb5e8'
+      });
+      return;
+    }
+    
+    if (croppedGalleryBlobs.length > 5) {
+      Swal.fire({
+        title: 'Validation Error',
+        text: 'Game gallery cannot have more than 5 images/videos.',
         icon: 'error',
         confirmButtonColor: '#2cb5e8'
       });

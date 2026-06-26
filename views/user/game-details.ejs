@@ -1,18 +1,5 @@
 <%- include('../partials/user/header') %>
 
-<style>
-  .text-pixel-gold { color: #F2B94A !important; }
-  .text-pixel-cyan { color: #00D1FF !important; }
-  .border-pixel-gold { border-color: #F2B94A !important; }
-  .border-pixel-cyan { border-color: #00D1FF !important; }
-  .bg-pixel-gold { background-color: #F2B94A !important; }
-  .bg-pixel-cyan { background-color: #00D1FF !important; }
-  .shadow-pixel-gold { box-shadow: 0 0 15px rgba(242, 185, 74, 0.3) !important; }
-  .shadow-pixel-cyan { box-shadow: 0 0 15px rgba(0, 209, 255, 0.3) !important; }
-  .bg-pixel-cyan-hover:hover { background-color: #00B8E6 !important; }
-  .bg-pixel-gold-hover:hover { background-color: #d9a336 !important; }
-</style>
-
 <%
   // Compute theme colors based on product.edition_type
   const isLegendary = (product.edition_type === 'LEGENDARY');
@@ -71,7 +58,7 @@
     { title: 'Aether Chronicles', categoryName: 'Adventure', platforms: ['Nintendo Switch'], price: 44.99, coverImageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAtKd3MlNGyLm-mx6Rv0q9x5em_SMRJLLJqB2ZSH_u-0XD7DuZZJEUb8j4iei5Hv4cXxqM7F3DfNWmz3eO4qfSWk4xv_nsKEw5aq2h2vc-lE4OAfBmeaWi3fXdUqW4QIZb133S0uS6-sZAmFT_xSLg9ex3R2dg-JRsW9syXIUS8hXhQ7y_9lqXTYBpVM_DZYcpDlW3fad7W6TecyFxx-hu8sCdJZ5p_uLXjdfBiLC2eyAKVHv3nDHJl39zVBP4lXwDGyRjBCOB4-a4t', edition_type: 'STANDARD' },
     { title: "Hollow Knight's Oath", categoryName: 'Horror RPG', platforms: ['Xbox Series X'], price: 39.99, coverImageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBTWSpv07GHjoWX_guqMgCaecXP4DISyOFyP8ax0RsUPeoawgH6G-vmQWVOMtoPuEGtwcI0oNenXvyzGKUNbtNh-FSSCQPihYH8SVmpwtS44to3ctWY65KLoC7dK_A1NomWcOGwjww58KFr2fttJH0b54x2StLDEcuecBfc92MhXM3kmuAovi6j4ReaTkAUNrrQ1N4K12aYTDC_lglSZQrgUtUi1BmL4gMiyJ7lF_7fPtu0ItXOP2WzKmWovkwNB529SjrfDt9eKl4d', edition_type: 'STANDARD' }
   ];
-  const similarGamesList = (typeof similarGames !== 'undefined' && similarGames) ? similarGames : mockSimilarGames;
+  const similarGamesList = (typeof similarGames !== 'undefined' && similarGames) ? similarGames : [];
 
   // Helper to get platform stock
   const getPlatformStock = (platName) => {
@@ -108,6 +95,33 @@
   const displayPrice = discount > 0 ? Math.max(0, initialBasePrice - (initialBasePrice * (discount / 100))) : initialBasePrice;
   const hasDiscount = discount > 0;
 %>
+
+<style>
+  .text-pixel-gold { color: #F2B94A !important; }
+  .text-pixel-cyan { color: #00D1FF !important; }
+  .border-pixel-gold { border-color: #F2B94A !important; }
+  .border-pixel-cyan { border-color: #00D1FF !important; }
+  .bg-pixel-gold { background-color: #F2B94A !important; }
+  .bg-pixel-cyan { background-color: #00D1FF !important; }
+  .shadow-pixel-gold { box-shadow: 0 0 15px rgba(242, 185, 74, 0.3) !important; }
+  .shadow-pixel-cyan { box-shadow: 0 0 15px rgba(0, 209, 255, 0.3) !important; }
+  .bg-pixel-cyan-hover:hover { background-color: #00B8E6 !important; }
+  .bg-pixel-gold-hover:hover { background-color: #d9a336 !important; }
+  
+  .magnifier-lens {
+    position: absolute;
+    border: 2px solid <%= isLegendary ? '#F2B94A' : '#00D1FF' %>;
+    border-radius: 50%;
+    cursor: none;
+    width: 160px;
+    height: 160px;
+    pointer-events: none;
+    box-shadow: 0 0 15px rgba(0, 180, 255, 0.4), inset 0 0 10px rgba(0,0,0,0.5);
+    background-repeat: no-repeat;
+    display: none;
+    z-index: 30;
+  }
+</style>
 
 <body class="antialiased min-h-screen flex flex-col bg-pixel-dark text-pixel-text">
 
@@ -151,15 +165,23 @@
     <div class="lg:col-span-8 space-y-4">
       <!-- Main Media Player -->
       <div id="mainMediaPlayer" class="relative bg-black rounded-lg overflow-hidden aspect-video group cursor-pointer border border-gray-800">
-        <% if (isVideo(firstMedia)) { %>
-          <video src="<%= firstMedia %>" controls class="w-full h-full object-cover"></video>
-        <% } else { %>
-          <img alt="<%= product.title %> screenshot" class="w-full h-full object-cover transition-opacity duration-300" src="<%= firstMedia %>"/>
-        <% } %>
+        <video id="mainMediaVideo" src="<%= isVideo(firstMedia) ? firstMedia : '' %>" controls controlslist="nodownload" oncontextmenu="return false;" class="w-full h-full object-cover <%= isVideo(firstMedia) ? '' : 'hidden' %>"></video>
+        <img id="mainMediaImage" alt="<%= product.title %> screenshot" class="w-full h-full object-cover transition-opacity duration-300 <%= isVideo(firstMedia) ? 'hidden' : '' %>" src="<%= isVideo(firstMedia) ? '' : firstMedia %>"/>
         <!-- Top Left Tag -->
         <div class="absolute top-4 left-4 bg-pixel-panel/80 backdrop-blur-sm border <%= themeBorder %> <%= themeText %> text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
           <%= isLegendary ? 'Legends Rarity' : 'Standard Rarity' %>
         </div>
+        <!-- Controls overlay (Zoom & Fullscreen) -->
+        <div class="absolute top-4 right-4 flex items-center gap-2 z-20">
+          <button type="button" id="zoomBtn" class="bg-pixel-panel/80 hover:bg-pixel-panel border border-zinc-700 text-white rounded-lg p-2 flex items-center justify-center transition-colors cursor-pointer hover:text-sky-400 <%= isVideo(firstMedia) ? 'hidden' : '' %>" aria-label="Toggle Magnifier Zoom" title="Toggle Magnifier Zoom">
+            <i class="fa-solid fa-magnifying-glass-plus text-sm"></i>
+          </button>
+          <button type="button" id="fullscreenBtn" class="bg-pixel-panel/80 hover:bg-pixel-panel border border-zinc-700 text-white rounded-lg p-2 flex items-center justify-center transition-colors cursor-pointer hover:text-sky-400 <%= isVideo(firstMedia) ? 'hidden' : '' %>" aria-label="Toggle Fullscreen" title="Toggle Fullscreen">
+            <i class="fa-solid fa-expand text-sm"></i>
+          </button>
+        </div>
+        <!-- Magnifier Lens -->
+        <div id="magnifierLens" class="magnifier-lens"></div>
       </div>
       <!-- Thumbnail Gallery -->
       <div class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -448,6 +470,7 @@
     </div>
   </div>
 
+  <% if (similarGamesList && similarGamesList.length > 0) { %>
   <!-- Similar Games Section -->
   <div class="mb-12">
     <div class="flex items-center justify-between mb-6">
@@ -490,6 +513,7 @@
       <% }) %>
     </div>
   </div>
+  <% } %>
 
   <!-- User Reviews Section -->
   <div class="mb-12">
@@ -580,25 +604,47 @@
     const mainPlayer = document.getElementById('mainMediaPlayer');
     if (!mainPlayer) return;
     
-    // Save/persist the overlay tag
-    const isLegendary = <%= isLegendary %>;
-    const tagHtml = `
-      <div class="absolute top-4 left-4 bg-pixel-panel/80 backdrop-blur-sm border ${isLegendary ? 'border-pixel-gold text-pixel-gold' : 'border-pixel-cyan text-pixel-cyan'} text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
-        ${isLegendary ? 'Legends Rarity' : 'Standard Rarity'}
-      </div>
-    `;
+    const video = document.getElementById('mainMediaVideo');
+    const img = document.getElementById('mainMediaImage');
+    const zoomBtn = document.getElementById('zoomBtn');
+    
+    // Stop magnifier lens
+    const lens = document.getElementById('magnifierLens');
+    if (lens) {
+      lens.style.display = 'none';
+    }
 
-    // Update main player content
     if (type === 'video') {
-      mainPlayer.innerHTML = `
-        <video src="${url}" controls autoplay class="w-full h-full object-cover"></video>
-        ${tagHtml}
-      `;
+      if (img) img.classList.add('hidden');
+      if (video) {
+        video.src = url;
+        video.classList.remove('hidden');
+        video.play().catch(err => {});
+      }
+      if (zoomBtn) {
+        zoomBtn.classList.add('hidden');
+      }
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      if (fullscreenBtn) {
+        fullscreenBtn.classList.add('hidden');
+      }
     } else {
-      mainPlayer.innerHTML = `
-        <img src="${url}" class="w-full h-full object-cover transition-opacity duration-300" alt="Active Media" />
-        ${tagHtml}
-      `;
+      if (video) {
+        video.pause();
+        video.classList.add('hidden');
+        video.src = '';
+      }
+      if (img) {
+        img.src = url;
+        img.classList.remove('hidden');
+      }
+      if (zoomBtn) {
+        zoomBtn.classList.remove('hidden');
+      }
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      if (fullscreenBtn) {
+        fullscreenBtn.classList.remove('hidden');
+      }
     }
     
     // Update active border on thumbnails
@@ -1013,6 +1059,144 @@
       console.error('Network error toggling wishlist:', err);
     }
   }
+
+  // Magnifier Hover Zoom and Fullscreen Logic
+  (function() {
+    const mainPlayer = document.getElementById('mainMediaPlayer');
+    const zoomBtn = document.getElementById('zoomBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const lens = document.getElementById('magnifierLens');
+
+    if (!mainPlayer || !zoomBtn || !fullscreenBtn || !lens) return;
+
+    let zoomActive = false;
+
+    // Toggle zoom magnifier
+    zoomBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (document.fullscreenElement) {
+        // Not available in fullscreen
+        return;
+      }
+      zoomActive = !zoomActive;
+      updateZoomState();
+    });
+
+    function updateZoomState() {
+      const icon = zoomBtn.querySelector('i');
+      if (zoomActive) {
+        zoomBtn.classList.remove('text-white');
+        zoomBtn.classList.add('text-sky-400', 'border-sky-500');
+        if (icon) {
+          icon.classList.remove('fa-magnifying-glass-plus');
+          icon.classList.add('fa-magnifying-glass-minus');
+        }
+      } else {
+        zoomBtn.classList.remove('text-sky-400', 'border-sky-500');
+        zoomBtn.classList.add('text-white');
+        if (icon) {
+          icon.classList.remove('fa-magnifying-glass-minus');
+          icon.classList.add('fa-magnifying-glass-plus');
+        }
+        lens.style.display = 'none';
+      }
+    }
+
+    // Fullscreen toggling
+    fullscreenBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFullscreen();
+    });
+
+    // Double-click to toggle fullscreen
+    mainPlayer.addEventListener('dblclick', (e) => {
+      // Don't trigger if clicked on buttons
+      if (e.target.closest('#zoomBtn') || e.target.closest('#fullscreenBtn')) return;
+      toggleFullscreen();
+    });
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        mainPlayer.requestFullscreen().catch(err => {
+          console.error('[Fullscreen error]', err);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Monitor fullscreen state
+    document.addEventListener('fullscreenchange', () => {
+      const icon = fullscreenBtn.querySelector('i');
+      if (document.fullscreenElement === mainPlayer) {
+        // Enforce zoom disabled in fullscreen
+        zoomActive = false;
+        updateZoomState();
+        if (icon) {
+          icon.classList.remove('fa-expand');
+          icon.classList.add('fa-compress');
+        }
+      } else {
+        if (icon) {
+          icon.classList.remove('fa-compress');
+          icon.classList.add('fa-expand');
+        }
+      }
+    });
+
+    // Magnifier calculation and movement
+    function moveMagnifier(e) {
+      const img = document.getElementById('mainMediaImage');
+      if (!img || img.classList.contains('hidden')) {
+        lens.style.display = 'none';
+        return;
+      }
+
+      const rect = img.getBoundingClientRect();
+      const playerRect = mainPlayer.getBoundingClientRect();
+
+      // Relative coordinates inside the image
+      let x = e.clientX - rect.left;
+      let y = e.clientY - rect.top;
+
+      // Prevent coordinates out of image bounds
+      if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
+        lens.style.display = 'none';
+        return;
+      }
+
+      lens.style.display = 'block';
+      lens.style.backgroundImage = `url('${img.src}')`;
+
+      const zoomFactor = 2.5;
+      lens.style.backgroundSize = `${rect.width * zoomFactor}px ${rect.height * zoomFactor}px`;
+
+      // Positioning the lens centered on mouse relative to mainMediaPlayer
+      const lensX = (e.clientX - playerRect.left) - (lens.offsetWidth / 2);
+      const lensY = (e.clientY - playerRect.top) - (lens.offsetHeight / 2);
+
+      lens.style.left = `${lensX}px`;
+      lens.style.top = `${lensY}px`;
+
+      // Setting background positioning of magnified view
+      const bgX = (x * zoomFactor) - (lens.offsetWidth / 2);
+      const bgY = (y * zoomFactor) - (lens.offsetHeight / 2);
+
+      lens.style.backgroundPosition = `-${bgX}px -${bgY}px`;
+    }
+
+    mainPlayer.addEventListener('mousemove', (e) => {
+      if (!zoomActive || document.fullscreenElement) {
+        lens.style.display = 'none';
+        return;
+      }
+      moveMagnifier(e);
+    });
+
+    mainPlayer.addEventListener('mouseleave', () => {
+      lens.style.display = 'none';
+    });
+  })();
 </script>
 
 <%- include('../partials/user/footer') %>

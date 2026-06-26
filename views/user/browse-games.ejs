@@ -159,6 +159,8 @@
                         <span class="line-through text-gray-500 text-xs">₹<%= Number(product.price).toFixed(2) %></span>
                         <span class="<%= product.edition_type === 'LEGENDARY' ? 'text-legend' : 'text-brand' %> font-bold text-xl">₹<%= Number(product.discountedPrice).toFixed(2) %></span>
                       </div>
+                    <% } else { %>
+                      <span class="<%= product.edition_type === 'LEGENDARY' ? 'text-legend' : 'text-brand' %> font-bold text-xl">₹<%= Number(product.price).toFixed(2) %></span>
                     <% } %>
 
                     <div class="flex gap-2 items-center" onclick="event.stopPropagation();">
@@ -166,7 +168,7 @@
                         const defaultPlatform = (product.platforms && product.platforms.length > 0) ? (product.platforms.includes(primaryPlatform) ? primaryPlatform : product.platforms[0]) : 'PC';
                         const cartItem = (typeof userCartItems !== 'undefined') ? userCartItems.find(item => item.productId === product._id.toString() && item.platform.toLowerCase() === defaultPlatform.toLowerCase()) : null;
                       %>
-                      <div id="cart-controls-<%= product._id %>" class="flex gap-2 items-center" data-title="<%= product.title.replace(/'/g, "\\'") %>">
+                      <div id="cart-controls-<%= product._id %>" class="flex gap-2 items-center" data-title="<%= product.title.replace(/'/g, "\\'") %>" data-stock="<%= product.stock %>">
                         <% if (cartItem) { %>
                           <!-- Quantity selector -->
                           <div class="flex items-center bg-[#1A1A1A] border border-[#2A2A2A] rounded overflow-hidden">
@@ -176,7 +178,11 @@
                             <span class="px-3 text-sm text-white font-semibold min-w-[20px] text-center" id="qty-<%= product._id %>">
                               <%= cartItem.quantity %>
                             </span>
-                            <button type="button" onclick="updateBrowseQuantity(this, '<%= product._id %>', '<%= defaultPlatform %>', 'increase')" class="px-2 py-1 hover:bg-[#2A2A2A] text-gray-400 hover:text-white transition-colors">
+                            <% const isMaxQty = (cartItem.quantity >= 3 || cartItem.quantity >= product.stock); %>
+                            <button type="button" 
+                                    <%= isMaxQty ? 'disabled' : '' %>
+                                    onclick="updateBrowseQuantity(this, '<%= product._id %>', '<%= defaultPlatform %>', 'increase')" 
+                                    class="px-2 py-1 <%= isMaxQty ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:bg-[#2A2A2A] text-gray-400 hover:text-white transition-colors' %>">
                               <i class="fa-solid fa-plus text-xs"></i>
                             </button>
                           </div>
@@ -378,6 +384,8 @@
         // Dynamically replace with quantity controls
         const controlsDiv = document.getElementById(`cart-controls-${productId}`);
         if (controlsDiv) {
+          const stock = parseInt(controlsDiv.getAttribute('data-stock'), 10) || 0;
+          const isMax = (1 >= 3 || 1 >= stock);
           controlsDiv.innerHTML = `
             <div class="flex items-center bg-[#1A1A1A] border border-[#2A2A2A] rounded overflow-hidden">
               <button type="button" onclick="updateBrowseQuantity(this, '${productId}', '${defaultPlatform}', 'decrease')" class="px-2 py-1 hover:bg-[#2A2A2A] text-gray-400 hover:text-white transition-colors">
@@ -386,7 +394,10 @@
               <span class="px-3 text-sm text-white font-semibold min-w-[20px] text-center" id="qty-${productId}">
                 1
               </span>
-              <button type="button" onclick="updateBrowseQuantity(this, '${productId}', '${defaultPlatform}', 'increase')" class="px-2 py-1 hover:bg-[#2A2A2A] text-gray-400 hover:text-white transition-colors">
+              <button type="button" 
+                      ${isMax ? 'disabled' : ''} 
+                      onclick="updateBrowseQuantity(this, '${productId}', '${defaultPlatform}', 'increase')" 
+                      class="px-2 py-1 ${isMax ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'hover:bg-[#2A2A2A] text-gray-400 hover:text-white transition-colors'}">
                 <i class="fa-solid fa-plus text-xs"></i>
               </button>
             </div>
@@ -407,13 +418,20 @@
   }
 
   async function updateBrowseQuantity(btn, productId, platform, action) {
+    if (btn.hasAttribute('disabled')) return;
     const qtySpan = document.getElementById(`qty-${productId}`);
     if (!qtySpan) return;
     const currentQty = parseInt(qtySpan.textContent, 10) || 1;
+    const controlsDiv = document.getElementById(`cart-controls-${productId}`);
+    const stock = parseInt(controlsDiv?.getAttribute('data-stock'), 10) || 0;
 
     if (action === 'increase') {
       if (currentQty >= 3) {
         showToast("Maximum of 3 should be the limit to add to cart.", "error");
+        return;
+      }
+      if (currentQty >= stock) {
+        showToast("Cannot add more than the stock quantity.", "error");
         return;
       }
       try {
@@ -424,8 +442,23 @@
         });
         const data = await response.json();
         if (data.success) {
-          qtySpan.textContent = currentQty + 1;
+          const newQty = currentQty + 1;
+          qtySpan.textContent = newQty;
           showToast("Cart updated successfully.", "success");
+          
+          // Disable plus button if max limit reached
+          const isMax = (newQty >= 3 || newQty >= stock);
+          const plusBtn = controlsDiv ? controlsDiv.querySelector('button[onclick*="increase"]') : null;
+          if (plusBtn) {
+            if (isMax) {
+              plusBtn.setAttribute('disabled', 'true');
+              plusBtn.className = 'px-2 py-1 opacity-30 cursor-not-allowed pointer-events-none';
+            } else {
+              plusBtn.removeAttribute('disabled');
+              plusBtn.className = 'px-2 py-1 hover:bg-[#2A2A2A] text-gray-400 hover:text-white transition-colors';
+            }
+          }
+
           if (typeof data.cartCount !== 'undefined') {
             updateCartBadge(data.cartCount);
           }
@@ -484,8 +517,23 @@
           });
           const data = await response.json();
           if (data.success) {
-            qtySpan.textContent = currentQty - 1;
+            const newQty = currentQty - 1;
+            qtySpan.textContent = newQty;
             showToast("Cart updated successfully.", "success");
+            
+            // Re-enable plus button if needed
+            const isMax = (newQty >= 3 || newQty >= stock);
+            const plusBtn = controlsDiv ? controlsDiv.querySelector('button[onclick*="increase"]') : null;
+            if (plusBtn) {
+              if (isMax) {
+                plusBtn.setAttribute('disabled', 'true');
+                plusBtn.className = 'px-2 py-1 opacity-30 cursor-not-allowed pointer-events-none';
+              } else {
+                plusBtn.removeAttribute('disabled');
+                plusBtn.className = 'px-2 py-1 hover:bg-[#2A2A2A] text-gray-400 hover:text-white transition-colors';
+              }
+            }
+
             if (typeof data.cartCount !== 'undefined') {
               updateCartBadge(data.cartCount);
             }
