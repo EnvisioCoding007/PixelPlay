@@ -299,7 +299,6 @@ export const editProduct = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Game not found.' });
         }
 
-        // Server-side validations
         const selectedCategory = await Category.findById(category);
         if (!selectedCategory) {
             return res.status(400).json({ success: false, message: 'Selected category does not exist.' });
