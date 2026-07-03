@@ -18,7 +18,7 @@
         <!-- Search Input -->
         <div class="relative flex-1">
           <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
-          <input id="searchInput" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full pl-10 pr-10 py-2.5 rounded text-sm placeholder-gray-500" placeholder="Search inventory by title, ID, or SKU..." type="text"/>
+          <input id="searchInput" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full pl-10 pr-10 py-2.5 rounded text-sm placeholder-gray-500" placeholder="Search inventory by title" type="text"/>
           <button type="button" id="clearSearchBtn" class="<%= (typeof search !== 'undefined' && search) ? '' : 'hidden' %> absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-white" onclick="clearSearch()">
             <i class="fa-solid fa-xmark text-sm"></i>
           </button>

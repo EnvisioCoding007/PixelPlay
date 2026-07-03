@@ -70,24 +70,25 @@
         <!-- BEGIN: Cart Items List -->
         <div class="w-full lg:w-2/3 flex flex-col gap-4">
           <% cart.items.forEach(item => { %>
-            <% 
-              const isLegendary = (item.product.edition_type === 'LEGENDARY');
-              const isUnavailable = (item.product.status === 'Hidden');
-              const borderClass = isUnavailable ? 'border-l-red-600' : (isLegendary ? 'border-l-pixel-goldBorder' : 'border-l-pixel-accent');
-              const textClass = isUnavailable ? 'text-red-500' : (isLegendary ? 'text-pixel-gold' : 'text-white');
-              const formatText = isLegendary
-                ? `Format: ${item.platform} Physical Collector's Vault Disk`
-                : `Format: ${item.platform} Physical Disk`;
-              const badgeText = isUnavailable ? 'UNAVAILABLE' : (isLegendary ? 'LEGENDARY DISK' : 'PHYSICAL DISK');
-              const badgeClass = isUnavailable 
-                ? 'text-red-500 bg-red-950/20 border-red-800/40' 
-                : (isLegendary ? 'text-pixel-gold bg-pixel-gold/10 border-pixel-gold/30' : 'text-pixel-accent bg-pixel-accent/10 border-pixel-accent/30');
-              const iconClass = isUnavailable
-                ? 'fa-solid fa-circle-exclamation text-red-500'
-                : (isLegendary ? 'fa-solid fa-box-open text-pixel-gold' : 'fa-solid fa-compact-disc text-pixel-accent');
-              const itemCover = item.product.cover_image || item.product.coverImage || item.product.coverImageUrl || '/img/placeholder.png';
-            %>
-            <div class="bg-pixel-card border-l-4 <%= borderClass %> border-pixel-border rounded-lg p-5 flex gap-6 relative group hover:border-pixel-muted transition-colors <%= isUnavailable ? 'opacity-75' : '' %>">
+            <% if (item.product) { %>
+              <% 
+                const isLegendary = (item.product.edition_type === 'LEGENDARY');
+                const isUnavailable = (item.product.status === 'Hidden');
+                const borderClass = isUnavailable ? 'border-l-red-600' : (isLegendary ? 'border-l-pixel-goldBorder' : 'border-l-pixel-accent');
+                const textClass = isUnavailable ? 'text-red-500' : (isLegendary ? 'text-pixel-gold' : 'text-white');
+                const formatText = isLegendary
+                  ? `Format: ${item.platform} Physical Collector's Vault Disk`
+                  : `Format: ${item.platform} Physical Disk`;
+                const badgeText = isUnavailable ? 'UNAVAILABLE' : (isLegendary ? 'LEGENDARY DISK' : 'PHYSICAL DISK');
+                const badgeClass = isUnavailable 
+                  ? 'text-red-500 bg-red-950/20 border-red-800/40' 
+                  : (isLegendary ? 'text-pixel-gold bg-pixel-gold/10 border-pixel-gold/30' : 'text-pixel-accent bg-pixel-accent/10 border-pixel-accent/30');
+                const iconClass = isUnavailable
+                  ? 'fa-solid fa-circle-exclamation text-red-500'
+                  : (isLegendary ? 'fa-solid fa-box-open text-pixel-gold' : 'fa-solid fa-compact-disc text-pixel-accent');
+                const itemCover = item.product.cover_image || item.product.coverImage || item.product.coverImageUrl || '/img/placeholder.png';
+              %>
+              <div class="bg-pixel-card border-l-4 <%= borderClass %> border-pixel-border rounded-lg p-5 flex gap-6 relative group hover:border-pixel-muted transition-colors <%= isUnavailable ? 'opacity-75' : '' %>">
               <!-- Product Image -->
               <div class="w-32 h-44 flex-shrink-0 bg-pixel-bg rounded overflow-hidden border border-pixel-border relative">
                 <img alt="<%= item.product.title %> Cover" class="w-full h-full object-cover" src="<%= itemCover %>"/>
@@ -167,7 +168,8 @@
                   </button>
                 </div>
               </div>
-            </div>
+              </div>
+            <% } %>
           <% }) %>
         </div>
         <!-- END: Cart Items List -->
@@ -178,11 +180,13 @@
           <!-- Item Breakdown -->
           <div class="space-y-4 mb-6 font-mono text-sm">
             <% cart.items.forEach(item => { %>
-              <div class="flex justify-between items-end text-pixel-text" data-summary-item="<%= item.product._id %>-<%= item.platform %>">
-                <span class="summary-item-name" data-summary-title="<%= item.product.title %>"><%= item.product.title %> (x<%= item.quantity %>)</span>
-                <div class="dashed-line"></div>
-                <span class="summary-item-price">₹<%= (item.product.price * item.quantity).toFixed(2) %></span>
-              </div>
+              <% if (item.product) { %>
+                <div class="flex justify-between items-end text-pixel-text" data-summary-item="<%= item.product._id %>-<%= item.platform %>">
+                  <span class="summary-item-name" data-summary-title="<%= item.product.title %>"><%= item.product.title %> (x<%= item.quantity %>)</span>
+                  <div class="dashed-line"></div>
+                  <span class="summary-item-price">₹<%= (item.product.price * item.quantity).toFixed(2) %></span>
+                </div>
+              <% } %>
             <% }) %>
           </div>
           <!-- Totals Breakdown -->
@@ -215,10 +219,10 @@
               Please remove unavailable products from your cart to proceed.
             </p>
           <% } else { %>
-            <button class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
+            <a href="/auth/checkout" class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
               <i class="fa-solid fa-lock"></i>
               PROCEED TO CHECKOUT
-            </button>
+            </a>
           <% } %>
           <!-- Security Footer -->
           <div class="flex items-center justify-center gap-2 text-xs text-[#8e8e93]">

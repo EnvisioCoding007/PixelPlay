@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Order Details - PixelPlay Admin</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        // Mockup custom colors
+                        gray: {
+                            900: '#0B0D12',
+                            800: '#15171E',
+                            700: '#1D2029',
+                            600: '#2A2E39',
+                            500: '#3D4353',
+                            400: '#5A6376',
+                            300: '#7E899F',
+                            200: '#A3ADC0',
+                            100: '#C8CFDD',
+                            50: '#F0F3F7',
+                        },
+                        cyan: {
+                            400: '#22d3ee',
+                            500: '#06b6d4',
+                        },
+                        amber: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                        },
+                        
+                        // Sidebar theme colors
+                        'pixel-bg': '#0b0c10',
+                        'sidebar-bg': '#121418',
+                        'content-bg': '#0f1115',
+                        'card-bg': '#16181d',
+                        'pixel-red': '#f92a40',
+                        'pixel-blue': '#2cb5e8',
+                        'pixel-blue-hover': '#1a9bc9',
+                        'pixel-yellow': '#f0b90b',
+                        'border-dark': '#1f232b',
+                        'input-dark-border': '#2d3139',
+                        accent: 'var(--theme-accent, #0EA5E9)',
+                        charcoal: '#1A1A1A',
+                        'background-dark': '#0B0C10',
+                        'surface-dark': '#16181D',
+                        'surface-hover': '#1F232B',
+                        'text-muted': '#8A8A93'
+                    }
+                }
+            }
+        }
+    </script>
+    <style data-purpose="custom-utilities">
+        body {
+            background-color: #0B0D12;
+            color: #C8CFDD;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .glow-cyan {
+            box-shadow: 0 0 15px -3px rgba(6, 182, 212, 0.4);
+        }
+    </style>
+</head>
+
+<body class="antialiased flex h-screen overflow-hidden">
+    <!-- BEGIN: Sidebar -->
+    <%- include('../partials/admin/sidebar', { activeTab: 'order-management' }) %>
+    <!-- END: Sidebar -->
+
+    <!-- BEGIN: Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-[#0a0a0f] relative" data-purpose="main-content">
+        <!-- Outer Glow Borders -->
+        <div class="absolute inset-0 pointer-events-none border border-cyan-500/20 z-0"></div>
+        <div class="flex-1 max-w-7xl mx-auto w-full p-6 lg:p-8 z-10 relative">
+            <!-- Header Section -->
+            <header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <a class="inline-flex items-center text-sm text-gray-400 hover:text-gray-200 transition-colors mb-4"
+                        href="/admin/orders">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Back to Orders
+                    </a>
+                    <h1 class="text-3xl font-bold text-white font-mono flex items-center gap-4">
+                        Order ID: <span class="text-gray-200">#<%= order.orderId %></span>
+                    </h1>
+                </div>
+                <div class="flex flex-col items-end gap-3 text-sm">
+                    <div class="text-gray-400 font-mono">
+                        Placed on: <%= new Date(order.createdAt).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                    </div>
+                    <% 
+                        let badgeClass = 'border-yellow-500/50 text-yellow-400 bg-yellow-500/10';
+                        let spinClass = '';
+                        const currentStatus = order.orderStatus || 'Processing';
+                        if (currentStatus === 'Delivered') {
+                          badgeClass = 'border-green-500/50 text-green-400 bg-green-500/10';
+                        } else if (currentStatus === 'Shipped') {
+                          badgeClass = 'border-blue-500/50 text-blue-400 bg-blue-500/10';
+                        } else if (currentStatus === 'Processing') {
+                          badgeClass = 'border-cyan-500/50 text-cyan-400 bg-cyan-500/10';
+                          spinClass = 'fa-spin';
+                        } else if (currentStatus === 'Cancelled' || currentStatus === 'Returned') {
+                          badgeClass = 'border-red-500/50 text-red-400 bg-red-500/10';
+                        } else if (currentStatus === 'Return Requested') {
+                          badgeClass = 'border-amber-500/50 text-amber-400 bg-amber-500/10';
+                        }
+                    %>
+                    <div id="header-status-badge"
+                        class="inline-flex items-center px-4 py-1.5 rounded-full border <%= badgeClass %> font-mono font-medium tracking-wide text-xs">
+                        <i class="fa-solid <%= currentStatus === 'Processing' ? 'fa-spinner animate-spin' : 'fa-circle' %> mr-2"></i>
+                        <%= currentStatus.toUpperCase() %>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Grid Layout -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <!-- Left Column (Items & Financials) -->
+                <div class="xl:col-span-2 space-y-6">
+                    <!-- Purchased Items -->
+                    <section class="bg-gray-800/40 rounded-2xl border border-gray-700/50 p-6"
+                        data-purpose="purchased-items">
+                        <h2 class="text-lg font-semibold text-white mb-6 flex items-center">
+                            <i class="fa-solid fa-box text-gray-400 mr-3"></i> Purchased Items
+                        </h2>
+                        <div class="space-y-4">
+                            <% order.items.forEach(function(item) { %>
+                                <% 
+                                    const isLegendary = item.product && item.product.edition_type === 'LEGENDARY';
+                                    const itemBorderColor = isLegendary ? 'bg-amber-500' : 'bg-cyan-500';
+                                    const itemPriceGlow = isLegendary ? 'text-amber-400' : 'text-gray-100';
+                                %>
+                                <div class="relative flex items-center justify-between p-4 bg-[#14161a] rounded-xl border border-gray-700/30 overflow-hidden">
+                                    <div class="absolute left-0 top-0 bottom-0 w-1 <%= itemBorderColor %>"></div>
+                                    <div class="flex items-center gap-4 pl-2">
+                                        <div class="h-16 w-16 bg-gray-700 rounded-lg flex-shrink-0 overflow-hidden">
+                                            <img alt="<%= item.product ? item.product.title : 'Game Cover' %>" class="w-full h-full object-cover opacity-80"
+                                                src="<%= item.product ? item.product.cover_image : '/placeholder.jpg' %>" />
+                                        </div>
+                                        <div>
+                                            <h3 class="font-semibold text-gray-100 text-lg">
+                                                <%= item.product ? item.product.title : 'Unknown Game' %>
+                                            </h3>
+                                            <div class="flex items-center gap-3 mt-1.5 text-xs font-medium text-gray-400">
+                                                <span>Platform: <%= item.platform.toUpperCase() %></span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded border <%= isLegendary ? 'border-amber-500/30 text-amber-500 bg-amber-500/10' : 'border-cyan-500/30 text-cyan-400 bg-cyan-500/10' %>">
+                                                    <i class="<%= isLegendary ? 'fa-regular fa-clock' : 'fa-solid fa-compact-disc' %> mr-1.5 text-[10px]"></i>
+                                                    <%= isLegendary ? 'LEGEND' : 'STANDARD' %>
+                                                </span>
+                                                <span class="text-gray-400">Qty: <%= item.quantity %></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-xl font-mono font-bold <%= itemPriceGlow %>">
+                                        $<%= (item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </section>
+
+                    <!-- Financial Breakdown -->
+                    <section class="bg-gray-800/40 rounded-2xl border border-gray-700/50 p-6"
+                        data-purpose="financial-breakdown">
+                        <h2 class="text-lg font-semibold text-white mb-6 flex items-center">
+                            <i class="fa-solid fa-receipt text-gray-400 mr-3"></i> Financial Breakdown
+                        </h2>
+                        <div class="space-y-4 font-mono text-sm">
+                            <div class="flex justify-between text-gray-300">
+                                <span>Subtotal (<%= order.items.length %> <%= order.items.length === 1 ? 'Item' : 'Items' %>)</span>
+                                <span>$<%= order.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                            </div>
+                            <div class="flex justify-between text-gray-300">
+                                <span>Shipping &amp; Handling</span>
+                                <span>$<%= order.shipping.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                            </div>
+                            <% if (order.discount > 0) { %>
+                                <div class="flex justify-between text-emerald-400">
+                                    <span>Discount Applied</span>
+                                    <span>-$<%= order.discount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                                </div>
+                            <% } %>
+                            <div class="flex justify-between text-gray-300">
+                                <span>Tax (GST - 18%)</span>
+                                <span>$<%= order.tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                            </div>
+                        </div>
+                        <div class="mt-6 pt-6 border-t border-dashed border-gray-700 flex justify-between items-center">
+                            <span class="text-xl font-semibold text-white">Total Amount</span>
+                            <span class="text-2xl font-bold font-mono text-cyan-400">$<%= order.finalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Column (Customer & Logistics & Admin) -->
+                <div class="space-y-6">
+                    <!-- Customer Profile -->
+                    <section class="bg-gray-800/40 rounded-2xl border border-gray-700/50 p-6"
+                        data-purpose="customer-profile">
+                        <h2 class="text-lg font-semibold text-white mb-6 flex items-center">
+                            <i class="fa-regular fa-user text-gray-400 mr-3"></i> Customer Profile
+                        </h2>
+                        <div class="flex items-center gap-4 mb-6">
+                            <img alt="<%= order.userId ? order.userId.username : 'User avatar' %>" class="h-16 w-16 rounded-full object-cover ring-2 ring-gray-700"
+                                src="<%= (order.userId && order.userId.profile_image) ? order.userId.profile_image : 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y' %>" />
+                            <div>
+                                <h3 class="text-lg font-semibold text-white">
+                                    <%= order.userId ? order.userId.username : 'Deleted User' %>
+                                </h3>
+                                <p class="text-sm text-gray-400 font-mono mb-1">
+                                    <%= order.userId ? order.userId.email : 'N/A' %>
+                                </p>
+                                <p class="text-xs text-gray-500 flex items-center">
+                                    <i class="fa-solid fa-box-open mr-1.5"></i> Total Lifetime Orders: <%= lifetimeOrdersCount %>
+                                </p>
+                            </div>
+                        </div>
+                        <a class="text-cyan-400 hover:text-cyan-300 text-sm font-medium flex items-center transition-colors cursor-pointer"
+                           href="/admin/customers?search=<%= encodeURIComponent(order.userId ? order.userId.email : '') %>">
+                            View Customer Record <i class="fa-solid fa-chevron-right ml-1.5 text-xs"></i>
+                        </a>
+                    </section>
+
+                    <!-- Fulfillment Logistics -->
+                    <section class="bg-gray-800/40 rounded-2xl border border-gray-700/50 p-6"
+                        data-purpose="fulfillment-logistics">
+                        <h2 class="text-lg font-semibold text-white mb-6 flex items-center">
+                            <i class="fa-solid fa-truck text-gray-400 mr-3"></i> Fulfillment Logistics
+                        </h2>
+                        <div class="bg-[#14161a] rounded-xl border border-cyan-500/20 p-5 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 right-0 h-1 bg-cyan-500/20"></div>
+                            <div class="flex items-center gap-2 text-cyan-400 text-xs font-bold tracking-wider mb-4 uppercase">
+                                <i class="fa-solid fa-cube"></i> Shipping Address
+                            </div>
+                            <div class="space-y-1 mb-4 text-sm">
+                                <p class="text-white font-medium"><%= order.deliveryAddress.fullName %></p>
+                                <p class="text-gray-300"><%= order.deliveryAddress.addressLine1 %></p>
+                                <% if (order.deliveryAddress.addressLine2) { %>
+                                    <p class="text-gray-300"><%= order.deliveryAddress.addressLine2 %></p>
+                                <% } %>
+                                <p class="text-gray-300"><%= order.deliveryAddress.city %>, <%= order.deliveryAddress.state %> - <%= order.deliveryAddress.postal_code %></p>
+                                <p class="text-gray-300"><%= order.deliveryAddress.country %></p>
+                            </div>
+                            <p class="text-xs text-gray-400 font-mono">
+                                Phone: <%= order.deliveryAddress.phone %>
+                            </p>
+                            <p class="text-xs text-gray-500 font-mono mt-1">
+                                Payment Method: <%= order.paymentMethod %> (<span class="font-semibold text-gray-300"><%= order.paymentStatus %></span>)
+                            </p>
+                        </div>
+                    </section>
+
+                    <!-- Admin Action Center -->
+                    <section class="bg-[#0f1219] rounded-2xl border border-cyan-500/40 p-6 relative overflow-hidden glow-cyan"
+                        data-purpose="admin-actions">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
+                        <h2 class="text-lg font-semibold text-white mb-6 flex items-center">
+                            <i class="fa-solid fa-sliders text-gray-400 mr-3"></i> Admin Action Center
+                        </h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2" for="order-status">Update Order Status</label>
+                                <div class="relative">
+                                    <select
+                                        class="block w-full pl-3 pr-10 py-2.5 text-sm bg-gray-800 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 appearance-none cursor-pointer"
+                                        id="order-status-select">
+                                        <% ['Processing', 'Shipped', 'Delivered', 'Cancelled'].forEach(function(st) { %>
+                                            <option value="<%= st %>" <%= currentStatus === st ? 'selected' : '' %>><%= st %></option>
+                                        <% }); %>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" id="save-status-btn"
+                                class="w-full bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 mt-2">
+                                <i class="fa-regular fa-floppy-disk"></i> Save Status Update
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- END: Main Content -->
+
+    <script>
+        (function() {
+            const selectEl = document.getElementById('order-status-select');
+            const saveBtn = document.getElementById('save-status-btn');
+            const orderId = '<%= order._id %>';
+
+            saveBtn.addEventListener('click', async function() {
+                const newStatus = selectEl.value;
+
+                const confirmResult = await Swal.fire({
+                    title: 'Update Order Status',
+                    text: `Are you sure you want to update this order's status to "${newStatus}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#06b6d4',
+                    cancelButtonColor: '#ff3366',
+                    confirmButtonText: 'Yes, update it!',
+                    cancelButtonText: 'Cancel',
+                    background: '#15171E',
+                    color: '#C8CFDD'
+                });
+
+                if (!confirmResult.isConfirmed) return;
+
+                try {
+                    const res = await fetch(`/admin/orders/update-status/${orderId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ orderStatus: newStatus })
+                    });
+
+                    const data = await res.json();
+
+                    if (!res.ok || !data.success) {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message || 'Failed to update status.',
+                            icon: 'error',
+                            background: '#15171E',
+                            color: '#C8CFDD'
+                        });
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message,
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        background: '#15171E',
+                        color: '#C8CFDD'
+                    });
+
+                    // Reload page after a delay to reflect updates
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+
+                } catch (err) {
+                    Swal.fire({
+                        title: 'Network Error',
+                        text: 'Could not connect to the server.',
+                        icon: 'error',
+                        background: '#15171E',
+                        color: '#C8CFDD'
+                    });
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>

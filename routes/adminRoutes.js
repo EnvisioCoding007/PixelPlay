@@ -36,6 +36,11 @@ router.get('/admin/categories/edit/:id', isAdminAuth, adminController.renderEdit
 router.post('/admin/categories/edit/:id', isAdminAuth, upload.single('icon'), adminController.editCategory);
 router.post('/admin/categories/delete/:id', isAdminAuth, adminController.deleteCategory);
 
+router.get('/admin/orders', isAdminAuth, adminController.renderOrderManagement);
+router.get('/admin/orders/:id', isAdminAuth, adminController.renderAdminOrderDetails);
+router.post('/admin/orders/update-status/:id', isAdminAuth, adminController.updateAdminOrderStatus);
+
 router.post('/admin/logout', isAdminAuth, adminController.adminLogout);
 
 export default router;
+

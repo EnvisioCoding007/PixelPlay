@@ -7,6 +7,8 @@ import Cart from '../models/Cart.js';
 import * as userService from '../services/userService.js';
 import * as categoryService from '../services/categoryService.js';
 import * as productService from '../services/productService.js';
+import * as cartService from '../services/cartService.js';
+import * as orderService from '../services/orderService.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
 
 export const getSignupPage = (req, res) => {
@@ -774,6 +776,7 @@ export const getWishlist = async (req, res) => {
             const CategoryModel = (await import('../models/Category.js')).default;
             for (let item of wishlist.items) {
                 if (item.product) {
+                    item.product = { ...item.product };
                     let catObj = null;
                     if (item.product.category) {
                         if (mongoose.Types.ObjectId.isValid(item.product.category)) {
@@ -885,6 +888,7 @@ export const getCart = async (req, res) => {
         let hasUnavailableProduct = false;
         for (let item of cart.items) {
             if (item.product) {
+                item.product = { ...item.product };
                 if (item.product.status === 'Hidden') {
                     hasUnavailableProduct = true;
                 }
@@ -938,6 +942,44 @@ export const getCart = async (req, res) => {
             categories: [],
             publishers: [],
             error: 'An error occurred while loading your cart.'
+        });
+    }
+};
+
+export const getCheckout = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const user = await User.findById(userId).lean();
+        if (!user) return res.redirect('/auth/login');
+
+        const cartDetails = await cartService.getCartDetails(userId);
+
+        if (!cartDetails.cart || !cartDetails.cart.items || cartDetails.cart.items.length === 0) {
+            return res.redirect('/auth/cart');
+        }
+
+        if (cartDetails.hasUnavailableProduct) {
+            return res.redirect('/auth/cart');
+        }
+
+        res.render('user/checkout', {
+            user,
+            cart: {
+                items: cartDetails.cart.items,
+                subtotal: cartDetails.subtotal,
+                tax: cartDetails.tax,
+                shipping: cartDetails.shipping,
+                discount: cartDetails.discount,
+                grandTotal: cartDetails.grandTotal
+            }
+        });
+    } catch (error) {
+        console.error('[getCheckout] Error:', error);
+        res.status(500).render('user/home', {
+            user: null,
+            categories: [],
+            publishers: [],
+            error: 'An error occurred while loading checkout.'
         });
     }
 };
@@ -1066,6 +1108,7 @@ export const updateCartQuantity = async (req, res) => {
 
             for (let item of cart.items) {
                 if (item.product) {
+                    item.product = item.product.toObject ? item.product.toObject() : { ...item.product };
                     if (item.product.status === 'Hidden') {
                         hasUnavailableProduct = true;
                     }
@@ -1175,5 +1218,132 @@ export const setPrimaryPlatform = async (req, res) => {
     } catch (error) {
         console.error('[setPrimaryPlatform] Error:', error);
         return res.redirect('/home');
+    }
+};
+
+export const postPlaceOrder = async (req, res) => {
+    try {
+        const { paymentMethod, addressId } = req.body;
+        const userId = req.session.user.id || req.session.user;
+
+        if (!paymentMethod || !addressId) {
+            return res.status(400).json({ success: false, message: 'Payment method and address are required.' });
+        }
+
+        const order = await orderService.placeOrder(userId, paymentMethod, addressId);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Order placed successfully.',
+            orderId: order._id
+        });
+    } catch (error) {
+        console.error('[postPlaceOrder] Error:', error);
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const getOrderSuccess = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const order = await orderService.getOrderById(orderId);
+        
+        const loggedInUserId = req.session.user.id || req.session.user;
+        if (!order || order.userId.toString() !== loggedInUserId.toString()) {
+            return res.redirect('/home');
+        }
+
+        res.render('user/order-success', { order });
+    } catch (error) {
+        console.error('[getOrderSuccess] Error:', error);
+        res.redirect('/home');
+    }
+};
+
+export const getOrderDetails = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const dbOrder = await orderService.getOrderById(orderId);
+
+        const loggedInUserId = req.session.user.id || req.session.user;
+        const user = await User.findById(loggedInUserId).lean();
+        if (!dbOrder || dbOrder.userId.toString() !== loggedInUserId.toString()) {
+            return res.redirect('/home');
+        }
+
+        const cart = await Cart.findOne({ userId: loggedInUserId });
+        const cartCount = cart ? cart.items.reduce((acc, item) => acc + item.quantity, 0) : 0;
+
+        let mappedStatus = dbOrder.orderStatus || 'Processing';
+        if (mappedStatus.toUpperCase() === 'PENDING') {
+            mappedStatus = 'Processing';
+        }
+
+        const mappedOrder = {
+            _id: dbOrder._id,
+            orderId: dbOrder.orderId,
+            createdAt: dbOrder.createdAt,
+            status: mappedStatus,
+            address: dbOrder.deliveryAddress,
+            paymentMethod: dbOrder.paymentMethod,
+            subtotal: dbOrder.subtotal,
+            couponDiscount: dbOrder.discount,
+            tax: dbOrder.tax,
+            shipping: dbOrder.shipping,
+            grandTotal: dbOrder.finalAmount,
+            items: dbOrder.items
+        };
+
+        res.render('user/order-details', { order: mappedOrder, user, cartCount });
+    } catch (error) {
+        console.error('[getOrderDetails] Error:', error);
+        res.redirect('/home');
+    }
+};
+
+export const getOrderHistory = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const user = await User.findById(userId).lean();
+        if (!user) return res.redirect('/auth/login');
+
+        const limit = 5;
+        const page = parseInt(req.query.page) || 1;
+        const sort = req.query.sort || 'newest';
+        const filter = req.query.filter || 'All';
+
+        const { orders, totalPages, currentPage } = await orderService.getOrdersByUserPaginated(userId, page, limit, sort, filter);
+
+        const cart = await Cart.findOne({ userId });
+        const cartCount = cart ? cart.items.reduce((acc, item) => acc + item.quantity, 0) : 0;
+
+        const mappedOrders = orders.map(order => {
+            let mappedStatus = order.orderStatus || 'Processing';
+            if (mappedStatus.toUpperCase() === 'PENDING') {
+                mappedStatus = 'Processing';
+            }
+            return {
+                ...order,
+                status: mappedStatus
+            };
+        });
+
+        res.render('user/order-history', {
+            user,
+            orders: mappedOrders,
+            currentPage,
+            totalPages,
+            sort,
+            filter,
+            cartCount
+        });
+    } catch (error) {
+        console.error('[getOrderHistory] Error:', error);
+        res.status(500).render('user/home', {
+            user: null,
+            categories: [],
+            publishers: [],
+            error: 'An error occurred while loading order history.'
+        });
     }
 };

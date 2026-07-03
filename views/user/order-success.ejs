@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Order Placed Successfully - PixelPlay</title>
+    <!-- Tailwind CSS v3 CDN with plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'pixel-dark': '#0a0b0d',
+                        'pixel-card': '#111214',
+                        'pixel-cyan': '#00aeef',
+                        'pixel-text-gray': '#9ca3af',
+                    },
+                    boxShadow: {
+                        'cyan-glow': '0 0 25px -5px rgba(0, 174, 239, 0.4)',
+                        'success-glow': '0 0 40px -10px rgba(0, 174, 239, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom Styles for specific visual effects -->
+    <style data-purpose="custom-gradients">
+        .receipt-card-border {
+            position: relative;
+            background: #111214;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .receipt-card-border::before {
+            content: "";
+            position: absolute;
+            top: -1px;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #00aeef, transparent);
+        }
+
+        .check-outer {
+            background: radial-gradient(circle, rgba(0, 174, 239, 0.15) 0%, transparent 70%);
+        }
+    </style>
+</head>
+
+<body class="bg-pixel-dark text-white font-sans antialiased min-h-screen flex flex-col">
+    <!-- BEGIN: Top Navigation Bar -->
+    <nav class="flex justify-end items-center gap-8 px-8 py-6 text-sm text-pixel-text-gray" data-purpose="utility-nav">
+        <a class="flex items-center gap-2 hover:text-white transition-colors" href="#">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                <path
+                    d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+            </svg>
+            Support Center
+        </a>
+        <a class="flex items-center gap-2 hover:text-white transition-colors" href="#">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                <path d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+            </svg>
+            Return to Store
+        </a>
+    </nav>
+    <!-- END: Top Navigation Bar -->
+    <!-- BEGIN: Main Success Content -->
+    <main class="flex-grow flex flex-col items-center justify-center px-4 py-12" data-purpose="success-message">
+        <!-- Success Icon Container -->
+        <div class="check-outer relative flex items-center justify-center w-48 h-48 mb-8" data-purpose="status-icon">
+            <div
+                class="relative z-10 w-20 h-20 rounded-full border-2 border-pixel-cyan flex items-center justify-center shadow-success-glow">
+                <svg class="w-10 h-10 text-pixel-cyan" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                    <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+                </svg>
+            </div>
+        </div>
+        <!-- Headers -->
+        <div class="text-center max-w-2xl mb-12">
+            <h1 class="text-4xl font-bold mb-4">Order Placed Successfully!</h1>
+            <p class="text-pixel-text-gray text-lg leading-relaxed">
+                Thank you for your purchase. Your physical game disks are being prepped for shipment terminal
+                deployment.
+            </p>
+        </div>
+        <!-- BEGIN: Transaction Receipt Card -->
+        <section class="receipt-card-border w-full max-w-[600px] rounded-2xl p-8 mb-12"
+            data-purpose="transaction-details">
+            <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-8">Transaction Receipt</h2>
+            <div class="space-y-6">
+                <!-- Order Reference -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-gray-400">
+                            <span class="text-lg">#</span>
+                        </div>
+                        <span class="text-pixel-text-gray">Order Reference</span>
+                    </div>
+                    <span class="font-bold text-yellow-500">#<%= order.orderId %></span>
+                </div>
+                <!-- Payment Method -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path
+                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                        </div>
+                        <span class="text-pixel-text-gray">Payment Method</span>
+                    </div>
+                    <span class="font-semibold"><%= order.paymentMethod === 'COD' ? 'Cash on Delivery' : order.paymentMethod %></span>
+                </div>
+                <!-- Transaction ID -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path
+                                    d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09a13.916 13.916 0 002.522-3.92m6.034-9.736a9 9 0 011.259 4.355c0 4.695-2.326 9.107-6 12.038C7.069 21.49 4.842 15.59 4.08 14.111"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                        </div>
+                        <span class="text-pixel-text-gray">Transaction ID</span>
+                    </div>
+                    <span class="font-medium text-gray-300"><%= order.transactionId || 'N/A (Cash on Delivery)' %></span>
+                </div>
+                <!-- Amount Paid -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                            <span class="text-gray-400 font-bold">₹</span>
+                        </div>
+                        <span class="text-pixel-text-gray">Amount Paid</span>
+                    </div>
+                    <span class="font-bold text-pixel-cyan text-xl">₹<%= order.finalAmount %></span>
+                </div>
+                <!-- Estimated Arrival -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                        </div>
+                        <span class="text-pixel-text-gray">Estimated Arrival</span>
+                    </div>
+                    <div
+                        class="flex items-center gap-2 px-3 py-1 bg-pixel-cyan/10 border border-pixel-cyan/20 rounded-md text-xs font-bold text-pixel-cyan">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                            <path
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                        3-5 Operational Days
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- END: Transaction Receipt Card -->
+        <!-- BEGIN: Action Buttons -->
+        <div class="flex flex-col items-center gap-6" data-purpose="actions">
+            <div class="flex items-center gap-4">
+                <!-- Track Shipment Button -->
+                <a href="/user/orders/<%= order._id %>"
+                    class="bg-pixel-cyan hover:bg-pixel-cyan/90 text-white font-bold px-8 py-3.5 rounded-lg flex items-center gap-2 shadow-cyan-glow transition-all uppercase text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                        <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"
+                            stroke-width="2"></path>
+                    </svg>
+                    Track Shipment
+                </a>
+                <!-- Continue Shopping Button -->
+                <a href="/browse"
+                    class="bg-transparent hover:bg-white/5 text-gray-300 font-bold px-8 py-3.5 rounded-lg flex items-center gap-2 transition-all uppercase text-sm border border-transparent">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                        <path
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                    Continue Shopping
+                </a>
+            </div>
+            <!-- Email Confirmation Footer Note -->
+            <p class="text-xs text-gray-500 flex items-center gap-2 mt-4" data-purpose="footer-disclaimer">
+                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                    <path
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-7.618 3.04C5.456 7.647 6 9.283 6 11c0 3.758-2.528 7.239-6 9.04a11.03 11.03 0 0012 2.96 11.03 11.03 0 0012-2.96c-3.472-1.801-6-5.282-6-9.04 0-1.717.544-3.353 1.618-5.016z"
+                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                </svg>
+                A confirmation summary has been dispatched to your registered email terminal.
+            </p>
+        </div>
+        <!-- END: Action Buttons -->
+    </main>
+    <!-- END: Main Success Content -->
+</body>
+
+</html>

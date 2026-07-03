@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Order Management &amp; Fulfillment - PixelPlay</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bgDark: '#0f0f11',
+            sidebarDark: '#141416',
+            cardDark: '#1a1a1d',
+            borderDark: '#2a2a30',
+            textMuted: '#8b8b93',
+            neonYellow: '#d6b840',
+            neonBlue: '#00a8e8',
+            neonRed: '#ff3366',
+            neonGreen: '#39ff14',
+            accentGold: '#c5a365',
+            accentTeal: '#00ced1',
+            
+            // Sidebar theme colors
+            'pixel-bg': '#0b0c10',
+            'sidebar-bg': '#121418',
+            'content-bg': '#0f1115',
+            'card-bg': '#16181d',
+            'pixel-red': '#f92a40',
+            'pixel-blue': '#2cb5e8',
+            'pixel-blue-hover': '#1a9bc9',
+            'pixel-yellow': '#f0b90b',
+            'border-dark': '#1f232b',
+            'input-dark-border': '#2d3139',
+            accent: 'var(--theme-accent, #0EA5E9)',
+            charcoal: '#1A1A1A',
+            'background-dark': '#0B0C10',
+            'surface-dark': '#16181D',
+            'surface-hover': '#1F232B',
+            'text-muted': '#8A8A93'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style data-purpose="custom-utilities">
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0f0f11;
+      color: #e5e7eb;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Custom glow effects for cards */
+    .glow-yellow {
+      box-shadow: inset 0 0 40px rgba(214, 184, 64, 0.1);
+    }
+
+    .glow-blue {
+      box-shadow: inset 0 0 40px rgba(0, 168, 232, 0.1);
+    }
+
+    /* Table row hover and left border indicators */
+    .table-row-yellow {
+      border-left: 2px solid #c5a365;
+    }
+
+    .table-row-blue {
+      border-left: 2px solid #00a8e8;
+    }
+
+    .table-row:hover {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Custom scrollbar for sidebar if needed */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 3px;
+    }
+  </style>
+  <!-- Phosphor Icons for UI elements -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body class="flex h-screen overflow-hidden bg-bgDark antialiased text-gray-300">
+  <!-- BEGIN: Sidebar Navigation -->
+  <%- include('../partials/admin/sidebar', { activeTab: 'order-management' }) %>
+  <!-- END: Sidebar Navigation -->
+
+  <!-- BEGIN: Main Content Area -->
+  <main class="flex-1 overflow-y-auto" data-purpose="main-content">
+    <div class="w-full p-8">
+      <!-- Header -->
+      <header class="mb-8">
+        <h1 class="text-2xl font-bold text-white">Order Management &amp; Fulfillment</h1>
+      </header>
+
+      <!-- BEGIN: Summary Cards -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" data-purpose="summary-cards">
+        <!-- Total Revenue -->
+        <div class="bg-cardDark border border-borderDark rounded-xl p-6 glow-yellow relative overflow-hidden">
+          <div class="absolute right-0 top-0 w-32 h-32 bg-neonYellow/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+          <h3 class="text-xs font-semibold text-textMuted tracking-wider uppercase mb-2">Total Revenue</h3>
+          <p class="text-4xl font-mono font-bold text-neonYellow">$<%= stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></p>
+        </div>
+        <!-- Pending Shipments -->
+        <div class="bg-cardDark border border-borderDark rounded-xl p-6 relative overflow-hidden">
+          <div class="absolute right-0 top-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+          <h3 class="text-xs font-semibold text-textMuted tracking-wider uppercase mb-2">Pending Shipments</h3>
+          <div class="inline-block border border-yellow-500/30 bg-yellow-500/10 rounded-lg px-4 py-2 mt-1">
+            <p class="text-2xl font-mono font-semibold text-yellow-500"><%= stats.pendingShipments %> Orders</p>
+          </div>
+        </div>
+        <!-- Completed Provisioning -->
+        <div class="bg-cardDark border border-borderDark rounded-xl p-6 glow-blue relative overflow-hidden">
+          <div class="absolute right-0 top-0 w-32 h-32 bg-neonBlue/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+          <h3 class="text-xs font-semibold text-textMuted tracking-wider uppercase mb-2">Completed Provisioning</h3>
+          <div class="inline-block border border-neonBlue/30 bg-neonBlue/10 rounded-lg px-4 py-2 mt-1">
+            <p class="text-2xl font-mono font-semibold text-neonBlue"><%= stats.completedProvisioning %> Orders</p>
+          </div>
+        </div>
+      </section>
+      <!-- END: Summary Cards -->
+
+      <!-- BEGIN: Filters and Table Section -->
+      <section class="bg-cardDark border border-borderDark rounded-xl p-6 flex flex-col h-[calc(100vh-280px)]" data-purpose="table-section">
+        <!-- Toolbar -->
+        <form action="/admin/orders" method="GET" class="flex flex-wrap items-center justify-between gap-4 mb-6" data-purpose="toolbar">
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Search Input -->
+            <div class="relative w-64">
+              <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-textMuted"></i>
+              <input type="text" name="search" placeholder="Search Order ID or Email..." 
+                     class="w-full bg-bgDark border border-borderDark rounded-lg pl-9 pr-4 py-2 text-sm text-gray-300 focus:border-neonBlue focus:ring-1 focus:ring-neonBlue focus:outline-none transition-colors"
+                     value="<%= typeof search !== 'undefined' ? search : '' %>">
+            </div>
+
+            <!-- Status Dropdown -->
+            <div class="relative w-40">
+              <select name="status" onchange="this.form.submit()"
+                      class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-neonBlue focus:ring-1 focus:ring-neonBlue focus:outline-none cursor-pointer">
+                <option value="All" <%= status === 'All' ? 'selected' : '' %>>Status: All</option>
+                <option value="Processing" <%= status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                <option value="Shipped" <%= status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                <option value="Delivered" <%= status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                <option value="Return Requested" <%= status === 'Return Requested' ? 'selected' : '' %>>Return Requested</option>
+                <option value="Returned" <%= status === 'Returned' ? 'selected' : '' %>>Returned</option>
+                <option value="Cancelled" <%= status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+              </select>
+            </div>
+
+            <!-- Payment Dropdown -->
+            <div class="relative w-44">
+              <select name="paymentMethod" onchange="this.form.submit()"
+                      class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-neonBlue focus:ring-1 focus:ring-neonBlue focus:outline-none cursor-pointer">
+                <option value="All" <%= paymentMethod === 'All' ? 'selected' : '' %>>Payment: All</option>
+                <option value="COD" <%= paymentMethod === 'COD' ? 'selected' : '' %>>COD</option>
+                <option value="Razorpay" <%= paymentMethod === 'Razorpay' ? 'selected' : '' %>>Razorpay</option>
+                <option value="PixelWallet" <%= paymentMethod === 'PixelWallet' ? 'selected' : '' %>>PixelWallet</option>
+                <option value="UPI" <%= paymentMethod === 'UPI' ? 'selected' : '' %>>UPI</option>
+              </select>
+            </div>
+
+            <!-- Clear Button -->
+            <% if (search || status !== 'All' || paymentMethod !== 'All' || sort !== 'newest') { %>
+              <a href="/admin/orders" class="px-4 py-2 bg-bgDark border border-borderDark rounded-lg text-sm text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+                Clear Filters
+              </a>
+            <% } %>
+          </div>
+
+          <!-- Sort -->
+          <div class="relative w-48">
+            <select name="sort" onchange="this.form.submit()"
+                    class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-neonBlue focus:ring-1 focus:ring-neonBlue focus:outline-none cursor-pointer">
+              <option value="newest" <%= sort === 'newest' ? 'selected' : '' %>>Sort: Newest First</option>
+              <option value="oldest" <%= sort === 'oldest' ? 'selected' : '' %>>Sort: Oldest First</option>
+              <option value="amount_desc" <%= sort === 'amount_desc' ? 'selected' : '' %>>Amount: High to Low</option>
+              <option value="amount_asc" <%= sort === 'amount_asc' ? 'selected' : '' %>>Amount: Low to High</option>
+            </select>
+          </div>
+        </form>
+
+        <!-- Table Container -->
+        <div class="flex-1 overflow-auto border border-borderDark rounded-lg bg-bgDark" data-purpose="data-table">
+          <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="sticky top-0 bg-sidebarDark border-b border-borderDark text-xs font-semibold text-textMuted uppercase tracking-wider z-10">
+              <tr>
+                <th class="px-6 py-4" scope="col">Order ID</th>
+                <th class="px-6 py-4" scope="col">Customer Email</th>
+                <th class="px-6 py-4" scope="col">Game Title</th>
+                <th class="px-6 py-4" scope="col">Order Date</th>
+                <th class="px-6 py-4" scope="col">Amount</th>
+                <th class="px-6 py-4" scope="col">Type</th>
+                <th class="px-6 py-4" scope="col">Status</th>
+                <th class="px-6 py-4 text-center" scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-borderDark text-gray-300">
+              <% if (orders && orders.length > 0) { %>
+                <% orders.forEach(function(order) { %>
+                  <% 
+                    const firstItem = order.items && order.items[0];
+                    const isLegend = firstItem && firstItem.product && firstItem.product.edition_type === 'LEGENDARY';
+                    const borderClass = isLegend ? 'table-row-yellow' : 'table-row-blue';
+                    const bgClass = isLegend ? 'bg-cardDark/50' : 'bg-bgDark';
+                    const formattedDate = new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+                  %>
+                  <tr class="table-row <%= borderClass %> <%= bgClass %> transition-colors">
+                    <td class="px-6 py-4 font-mono text-accentGold hover:underline cursor-pointer" onclick="window.location.href='/admin/orders/<%= order._id %>'">
+                      #<%= order.orderId %>
+                    </td>
+                    <td class="px-6 py-4">
+                      <%= order.userId ? order.userId.email : 'Deleted User' %>
+                    </td>
+                    <td class="px-6 py-4 flex items-center">
+                      <span class="w-1.5 h-1.5 rounded-full <%= isLegend ? 'bg-accentGold' : 'bg-neonBlue' %> mr-2"></span>
+                      <%= firstItem && firstItem.product ? firstItem.product.title : 'N/A' %>
+                      <% if (order.items.length > 1) { %>
+                        <span class="text-xs text-textMuted ml-1.5">(+<%= order.items.length - 1 %> more)</span>
+                      <% } %>
+                    </td>
+                    <td class="px-6 py-4 text-textMuted">
+                      <%= formattedDate %>
+                    </td>
+                    <td class="px-6 py-4 font-mono font-medium">
+                      $<%= order.finalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                    </td>
+                    <td class="px-6 py-4 font-bold <%= isLegend ? 'text-accentGold' : 'text-neonBlue' %> text-xs">
+                      <%= isLegend ? 'LEGEND' : 'STANDARD' %>
+                    </td>
+                    <td class="px-6 py-4">
+                      <% 
+                        let badgeClass = 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+                        const orderStatus = order.orderStatus || 'Processing';
+                        if (orderStatus === 'Delivered') {
+                          badgeClass = 'bg-green-500/10 text-green-500 border-green-500/20';
+                        } else if (orderStatus === 'Shipped') {
+                          badgeClass = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+                        } else if (orderStatus === 'Processing') {
+                          badgeClass = 'bg-teal-500/10 text-teal-400 border-teal-500/20';
+                        } else if (orderStatus === 'Cancelled' || orderStatus === 'Returned') {
+                          badgeClass = 'bg-red-500/10 text-red-500 border-red-500/20';
+                        } else if (orderStatus === 'Return Requested') {
+                          badgeClass = 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+                        }
+                      %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border <%= badgeClass %>">
+                        <%= orderStatus.toUpperCase() %>
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 text-center relative">
+                      <div class="inline-block text-left">
+                        <button type="button" class="action-menu-trigger text-textMuted hover:text-white transition-colors focus:outline-none"
+                                data-order-id="<%= order._id %>"
+                                data-order-status="<%= orderStatus %>">
+                          <i class="ph ph-dots-three-vertical text-lg"></i>
+                        </button>
+                        <div id="dropdown-<%= order._id %>" class="action-dropdown hidden fixed w-48 bg-[#201f22] border border-[#353437] z-[9999] rounded-md shadow-xl overflow-hidden text-left" role="menu">
+                          <a href="/admin/orders/<%= order._id %>" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:bg-[#2a2a2f] hover:text-white transition-colors">
+                            <i class="ph ph-eye text-sm"></i>
+                            View Details
+                          </a>
+                          <div class="border-t border-[#353437]"></div>
+                          <div class="px-4 py-1.5 text-[10px] text-textMuted font-bold uppercase tracking-wider">Update Status</div>
+                          <% ['Processing', 'Shipped', 'Delivered', 'Cancelled'].forEach(function(s) { %>
+                            <% if (s !== orderStatus) { %>
+                              <button type="button" class="update-status-btn w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-gray-300 hover:bg-[#2a2a2f] hover:text-white transition-colors"
+                                      data-order-id="<%= order._id %>"
+                                      data-status="<%= s %>">
+                                <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                                <%= s %>
+                              </button>
+                            <% } %>
+                          <% }) %>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="8" class="px-6 py-12 text-center text-textMuted">
+                    <div class="flex flex-col items-center gap-3">
+                      <i class="ph ph-shopping-cart text-4xl"></i>
+                      <span>No orders found matching the criteria.</span>
+                    </div>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="mt-4 flex items-center justify-between text-sm text-textMuted" data-purpose="pagination">
+          <% 
+            const startNum = totalCount === 0 ? 0 : (currentPage - 1) * limit + 1;
+            const endNum = Math.min(currentPage * limit, totalCount);
+          %>
+          <div>
+            Showing <span class="font-medium text-white"><%= startNum %>-<%= endNum %></span> of <span class="font-medium text-white"><%= totalCount.toLocaleString() %></span>
+            orders
+          </div>
+          <% if (totalPages > 1) { %>
+            <div class="flex items-center space-x-1">
+              <% if (currentPage > 1) { %>
+                <a href="/admin/orders?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(search) %>&status=<%= encodeURIComponent(status) %>&paymentMethod=<%= encodeURIComponent(paymentMethod) %>&sort=<%= encodeURIComponent(sort) %>&limit=<%= limit %>"
+                   class="px-3 py-1.5 rounded bg-bgDark border border-borderDark hover:bg-gray-800 transition-colors text-gray-400">
+                  <i class="ph ph-caret-left"></i>
+                </a>
+              <% } else { %>
+                <span class="px-3 py-1.5 rounded bg-bgDark border border-borderDark text-gray-600 cursor-not-allowed">
+                  <i class="ph ph-caret-left"></i>
+                </span>
+              <% } %>
+
+              <% 
+                const maxPills = 5;
+                let startPill = Math.max(1, currentPage - Math.floor(maxPills / 2));
+                let endPill = Math.min(totalPages, startPill + maxPills - 1);
+                if (endPill - startPill < maxPills - 1) {
+                  startPill = Math.max(1, endPill - maxPills + 1);
+                }
+              %>
+              <% for (let p = startPill; p <= endPill; p++) { %>
+                <% if (p === currentPage) { %>
+                  <span class="px-3 py-1.5 rounded bg-neonBlue/10 border border-neonBlue text-neonBlue font-medium"><%= p %></span>
+                <% } else { %>
+                  <a href="/admin/orders?page=<%= p %>&search=<%= encodeURIComponent(search) %>&status=<%= encodeURIComponent(status) %>&paymentMethod=<%= encodeURIComponent(paymentMethod) %>&sort=<%= encodeURIComponent(sort) %>&limit=<%= limit %>"
+                     class="px-3 py-1.5 rounded bg-bgDark border border-borderDark hover:bg-gray-800 transition-colors hover:text-white"><%= p %></a>
+                <% } %>
+              <% } %>
+
+              <% if (currentPage < totalPages) { %>
+                <a href="/admin/orders?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(search) %>&status=<%= encodeURIComponent(status) %>&paymentMethod=<%= encodeURIComponent(paymentMethod) %>&sort=<%= encodeURIComponent(sort) %>&limit=<%= limit %>"
+                   class="px-3 py-1.5 rounded bg-bgDark border border-borderDark hover:bg-gray-800 transition-colors text-gray-400">
+                  <i class="ph ph-caret-right"></i>
+                </a>
+              <% } else { %>
+                <span class="px-3 py-1.5 rounded bg-bgDark border border-borderDark text-gray-600 cursor-not-allowed">
+                  <i class="ph ph-caret-right"></i>
+                </span>
+              <% } %>
+            </div>
+          <% } %>
+        </div>
+      </section>
+      <!-- END: Filters and Table Section -->
+    </div>
+  </main>
+  <!-- END: Main Content Area -->
+
+  <script>
+    (function() {
+        // ── Dropdown Menus ─────────────────────────────────────────────────
+        let openDropdown = null;
+        let openTrigger = null;
+
+        function positionDropdown(trigger, dropdown) {
+            const rect = trigger.getBoundingClientRect();
+            const dropdownWidth = 192;
+            const gap = 4;
+            let top = rect.bottom + window.scrollY + gap;
+            let left = rect.right + window.scrollX - dropdownWidth;
+
+            // Clamp to viewport
+            if (left < 4) left = 4;
+            dropdown.style.top = top + 'px';
+            dropdown.style.left = left + 'px';
+        }
+
+        function closeOpenDropdown() {
+            if (openDropdown) {
+                openDropdown.classList.add('hidden');
+                openDropdown = null;
+                openTrigger = null;
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const trigger = e.target.closest('.action-menu-trigger');
+            if (trigger) {
+                e.stopPropagation();
+                const orderId = trigger.dataset.orderId;
+                const dropdown = document.getElementById('dropdown-' + orderId);
+
+                if (openDropdown && openDropdown !== dropdown) {
+                    closeOpenDropdown();
+                }
+
+                const isCurrentlyOpen = !dropdown.classList.contains('hidden');
+                if (isCurrentlyOpen) {
+                    closeOpenDropdown();
+                } else {
+                    dropdown.classList.remove('hidden');
+                    positionDropdown(trigger, dropdown);
+                    openDropdown = dropdown;
+                    openTrigger = trigger;
+                }
+                return;
+            }
+
+            if (openDropdown && !e.target.closest('.action-dropdown')) {
+                closeOpenDropdown();
+            }
+        });
+
+        window.addEventListener('scroll', closeOpenDropdown, true);
+        window.addEventListener('resize', closeOpenDropdown);
+
+        // ── Update Order Status Flow ──────────────────────────────────────
+        document.addEventListener('click', async function(e) {
+            const btn = e.target.closest('.update-status-btn');
+            if (!btn) return;
+            e.stopPropagation();
+
+            const orderId = btn.dataset.orderId;
+            const newStatus = btn.dataset.status;
+
+            closeOpenDropdown();
+
+            const confirmResult = await Swal.fire({
+                title: 'Update Order Status',
+                text: `Are you sure you want to update this order's status to "${newStatus}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0ea5e9',
+                cancelButtonColor: '#ff3366',
+                confirmButtonText: 'Yes, update it!',
+                cancelButtonText: 'Cancel',
+                background: '#1a1a1d',
+                color: '#e5e7eb'
+            });
+
+            if (!confirmResult.isConfirmed) return;
+
+            try {
+                const res = await fetch(`/admin/orders/update-status/${orderId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ orderStatus: newStatus })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Failed to update status.',
+                        icon: 'error',
+                        background: '#1a1a1d',
+                        color: '#e5e7eb'
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Updated!',
+                    text: data.message,
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    background: '#1a1a1d',
+                    color: '#e5e7eb'
+                });
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+
+            } catch (err) {
+                Swal.fire({
+                    title: 'Network Error',
+                    text: 'Could not connect to the server.',
+                    icon: 'error',
+                    background: '#1a1a1d',
+                    color: '#e5e7eb'
+                });
+            }
+        });
+    })();
+  </script>
+</body>
+
+</html>

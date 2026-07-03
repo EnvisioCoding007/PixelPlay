@@ -57,6 +57,11 @@ router.get('/auth/cart', isUserAuth, userController.getCart);
 router.post('/auth/cart/add', isUserAuth, userController.addToCart);
 router.post('/auth/cart/update-quantity', isUserAuth, userController.updateCartQuantity);
 router.post('/auth/cart/remove', isUserAuth, userController.removeFromCart);
+router.get('/auth/checkout', isUserAuth, userController.getCheckout);
+router.post('/auth/orders/place', isUserAuth, userController.postPlaceOrder);
+router.get('/auth/orders/success/:orderId', isUserAuth, userController.getOrderSuccess);
+router.get('/user/orders/:orderId', isUserAuth, userController.getOrderDetails);
+router.get('/auth/orders', isUserAuth, userController.getOrderHistory);
 
 router.get('/auth/profile/edit', isUserAuth, userController.getProfileEdit);
 
