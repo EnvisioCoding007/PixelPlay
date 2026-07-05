@@ -127,12 +127,12 @@
                 <% if (typeof item.product.categoryDiscount !== 'undefined' && item.product.categoryDiscount > 0) { %>
                   <div class="flex items-center gap-2 mb-1">
                     <span class="bg-app-cyan text-black text-xs font-bold px-1.5 py-0.5 rounded">-<%= item.product.categoryDiscount %>%</span>
-                    <span class="text-2xl font-bold text-white">₹<%= Number(item.product.discountedPrice).toFixed(2) %></span>
+                    <span class="text-2xl font-bold text-white">₹<%= Number(item.product.discountedPrice / 100).toFixed(2) %></span>
                   </div>
-                  <span class="text-app-muted text-sm line-through">₹<%= Number(item.product.price).toFixed(2) %></span>
+                  <span class="text-app-muted text-sm line-through">₹<%= Number(item.product.price / 100).toFixed(2) %></span>
                 <% } else { %>
                   <div class="text-2xl font-bold text-white mb-1">
-                    ₹<%= Number(item.product.price).toFixed(2) %>
+                    ₹<%= Number(item.product.price / 100).toFixed(2) %>
                   </div>
                 <% } %>
               </div>

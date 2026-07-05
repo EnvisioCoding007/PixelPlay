@@ -326,7 +326,7 @@
                                                     <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
                                                         <p class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] tracking-[0] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
                                                             <% if (game.categoryDiscount > 0) { %>
-                                                                <span class="line-through">₹<%= Number(game.price).toFixed(2) %></span>
+                                                                <span class="line-through">₹<%= Number(game.price / 100).toFixed(2) %></span>
                                                             <% } else { %>
                                                                 &nbsp;
                                                             <% } %>
@@ -334,7 +334,7 @@
                                                     </div>
                                                     <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
                                                         <p class="mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-sky-500 text-base tracking-[0] leading-[normal] relative flex items-center w-fit leading-[normal]">
-                                                            ₹<%= Number(game.discountedPrice).toFixed(2) %>
+                                                            ₹<%= Number(game.discountedPrice / 100).toFixed(2) %>
                                                         </p>
                                                     </div>
                                                 </div>
@@ -474,7 +474,7 @@
                                                     <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
                                                         <p class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-[10px] tracking-[0] whitespace-nowrap relative flex items-center w-fit leading-[normal]">
                                                             <% if (game.categoryDiscount > 0) { %>
-                                                                <span class="line-through">₹<%= Number(game.price).toFixed(2) %></span>
+                                                                <span class="line-through">₹<%= Number(game.price / 100).toFixed(2) %></span>
                                                             <% } else { %>
                                                                 &nbsp;
                                                             <% } %>
@@ -482,7 +482,7 @@
                                                     </div>
                                                     <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
                                                         <p class="mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-[#d4af37] text-base tracking-[0] leading-[normal] relative flex items-center w-fit leading-[normal]">
-                                                            ₹<%= Number(game.discountedPrice).toFixed(2) %>
+                                                            ₹<%= Number(game.discountedPrice / 100).toFixed(2) %>
                                                         </p>
                                                     </div>
                                                 </div>

@@ -934,4 +934,48 @@ export const updateAdminOrderStatus = async (req, res) => {
     }
 };
 
+export const approveReturn = async (req, res) => {
+    try {
+        const { orderId, productId } = req.params;
+        const { platform } = req.query;
+        const { reason } = req.body;
+
+        if (!reason || !reason.trim()) {
+            return res.status(400).json({ success: false, message: 'Approval reason/comment is required.' });
+        }
+
+        await orderService.approveItemReturn(orderId, productId, reason, platform);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Return request approved successfully.'
+        });
+    } catch (err) {
+        console.error('[approveReturn]', err);
+        return res.status(500).json({ success: false, message: err.message || 'Failed to approve return.' });
+    }
+};
+
+export const rejectReturn = async (req, res) => {
+    try {
+        const { orderId, productId } = req.params;
+        const { platform } = req.query;
+        const { reason } = req.body;
+
+        if (!reason || !reason.trim()) {
+            return res.status(400).json({ success: false, message: 'Rejection reason/comment is required.' });
+        }
+
+        await orderService.rejectItemReturn(orderId, productId, reason, platform);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Return request rejected successfully.'
+        });
+    } catch (err) {
+        console.error('[rejectReturn]', err);
+        return res.status(500).json({ success: false, message: err.message || 'Failed to reject return.' });
+    }
+};
+
 

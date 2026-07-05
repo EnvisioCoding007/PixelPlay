@@ -60,9 +60,13 @@
             </a>
             <div class="flex flex-col gap-1">
                 <h1 class="text-3xl font-bold text-white tracking-tight">Order Details</h1>
-                <div class="text-sm font-medium flex gap-4 text-gray-400 font-mono">
+                <div class="text-sm font-medium flex flex-wrap gap-x-6 gap-y-1 text-gray-400 font-mono">
                     <span>Order ID: <span class="text-gray-300">#<%= order.orderId %></span></span>
-                    <span>Placed on: <span class="text-gray-300"><%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></span></span>
+                    <span>Order Date: <span class="text-gray-300"><%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) %></span></span>
+                    <% if (order.status === 'Cancelled' && order.cancellationDate) { %>
+                        <span class="text-red-400">Cancellation Date: <span class="text-gray-300"><%= new Date(order.cancellationDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span></span>
+                        <span class="text-red-400">Reason: <span class="text-gray-300"><%= order.cancellationReason || 'N/A' %></span></span>
+                    <% } %>
                 </div>
             </div>
         </div>
@@ -137,25 +141,62 @@
                     <div class="p-5 border-b border-pixelplay-border flex justify-between items-center bg-[#1a1a1f]">
                         <h3 class="font-semibold text-white">Physical Disks in This Order</h3>
                         <% 
-                            let headerBadgeClass = 'bg-pixelplay-gold/10 border-pixelplay-gold/30 text-pixelplay-gold';
-                            if (order.status === 'Processing' || order.status === 'Return Requested') {
-                                headerBadgeClass = 'bg-pixelplay-gold/10 border-pixelplay-gold/30 text-pixelplay-gold';
-                            } else if (order.status === 'Shipped') {
-                                headerBadgeClass = 'bg-pixelplay-accent/10 border-pixelplay-accent/30 text-pixelplay-accent';
-                            } else if (order.status === 'Delivered' || order.status === 'Returned') {
-                                headerBadgeClass = 'bg-green-500/10 border-green-500/30 text-green-400';
-                            } else if (order.status === 'Cancelled') {
-                                headerBadgeClass = 'bg-pixelplay-red/10 border-pixelplay-red/30 text-pixelplay-red';
-                            }
-                            
-                            let totalQtyHeader = 0;
+                            let orderedQty = 0;
+                            let deliveredQty = 0;
+                            let returnRequestedQty = 0;
+                            let returnedQty = 0;
+                            let cancelledQty = 0;
+
                             if (order.items && order.items.length > 0) {
-                                order.items.forEach(item => { totalQtyHeader += item.quantity; });
+                                order.items.forEach(item => {
+                                    const qty = item.quantity;
+                                    if (item.status === 'Cancelled') {
+                                        cancelledQty += qty;
+                                    } else if (item.status === 'Return Requested') {
+                                        returnRequestedQty += qty;
+                                    } else if (item.status === 'Returned') {
+                                        returnedQty += qty;
+                                    } else {
+                                        // status is 'Ordered' or undefined
+                                        if (order.status === 'Delivered' || order.status === 'Return Requested' || order.status === 'Returned') {
+                                            deliveredQty += qty;
+                                        } else {
+                                            orderedQty += qty;
+                                        }
+                                    }
+                                });
                             }
                         %>
-                        <span class="px-3 py-1 <%= headerBadgeClass %> text-xs font-medium rounded-full">
-                            <%= totalQtyHeader %> <%= totalQtyHeader === 1 ? 'Disk' : 'Disks' %> - <%= order.status %>
-                        </span>
+                        <div class="flex gap-2 flex-wrap">
+                            <% if (order.status === 'Processing' || order.status === 'Shipped') { %>
+                                <% const displayStatus = order.status; %>
+                                <% const badgeClass = displayStatus === 'Shipped' ? 'bg-pixelplay-accent/10 border border-pixelplay-accent/30 text-pixelplay-accent' : 'bg-pixelplay-gold/10 border border-pixelplay-gold/30 text-pixelplay-gold'; %>
+                                <span class="px-3 py-1 <%= badgeClass %> text-xs font-medium rounded-full">
+                                    <%= orderedQty %> <%= orderedQty === 1 ? 'Disk' : 'Disks' %> - <%= displayStatus %>
+                                </span>
+                            <% } else if (order.status === 'Cancelled') { %>
+                                <span class="px-3 py-1 bg-pixelplay-red/10 border border-pixelplay-red/30 text-pixelplay-red text-xs font-medium rounded-full">
+                                    <%= cancelledQty %> <%= cancelledQty === 1 ? 'Disk' : 'Disks' %> - Cancelled
+                                </span>
+                            <% } else { %>
+                                <!-- Delivered, Return Requested, or Returned orders -->
+                                <% if (deliveredQty > 0) { %>
+                                    <span class="px-3 py-1 bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-medium rounded-full">
+                                        <%= deliveredQty %> <%= deliveredQty === 1 ? 'Disk' : 'Disks' %> - Delivered
+                                    </span>
+                                <% } %>
+                                <% if (returnRequestedQty > 0) { %>
+                                    <span class="px-3 py-1 bg-pixelplay-gold/10 border border-pixelplay-gold/30 text-pixelplay-gold text-xs font-medium rounded-full">
+                                        <%= returnRequestedQty %> <%= returnRequestedQty === 1 ? 'Disk' : 'Disks' %> - Return Requested
+                                    </span>
+                                <% } %>
+                                <% if (returnedQty > 0) { %>
+                                    <span class="px-3 py-1 bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-medium rounded-full">
+                                        <%= returnedQty %> <%= returnedQty === 1 ? 'Disk' : 'Disks' %> - Returned
+                                    </span>
+                                <% } %>
+                            <% } %>
+                        </div>
                     </div>
                     <!-- Items Loop -->
                     <% order.items.forEach((item, index) => { %>
@@ -176,54 +217,80 @@
                                 </div>
                                 <p class="text-sm text-gray-400 mb-2"><%= item.platform || 'PC' %> Disk • Factory Sealed</p>
                                 <div class="flex items-center gap-3 mt-auto">
-                                    <span class="text-<%= itemThemeColor %> font-bold">$<%= item.price.toFixed(2) %></span>
+                                    <span class="text-<%= itemThemeColor %> font-bold">₹<%= (item.price / 100).toFixed(2) %></span>
                                     <span class="text-xs text-gray-500">Qty: <%= item.quantity %></span>
                                 </div>
                                 <div class="mt-4">
-                                    <% if (order.status === 'Processing') { %>
-                                        <button onclick="window.location.href='/orders/cancel/<%= order._id %>/<%= item.product._id %>'"
-                                            class="px-4 py-1.5 text-xs font-medium text-pixelplay-red border border-pixelplay-red/40 rounded-md hover:bg-pixelplay-red/10 transition-colors flex items-center gap-1.5">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                                <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                            </svg>
-                                            Cancel This Disk
-                                        </button>
-                                    <% } else if (order.status === 'Shipped') { %>
-                                        <!-- No buttons or links for Shipped status -->
-                                    <% } else if (order.status === 'Delivered') { %>
-                                        <button onclick="window.location.href='/orders/return/<%= order._id %>/<%= item.product._id %>'"
-                                            class="px-4 py-1.5 text-xs font-medium text-pixelplay-gold border border-pixelplay-gold/40 rounded-md hover:bg-pixelplay-gold/10 transition-colors flex items-center gap-1.5">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                                <path d="M16 15v-6a4 4 0 00-4-4H4m12 10l3-3m-3 3l-3-3"
-                                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                            </svg>
-                                            Return This Disk
-                                        </button>
-                                    <% } else if (order.status === 'Return Requested') { %>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-600/10 border border-yellow-600/30 text-yellow-500 text-xs font-semibold rounded-full select-none">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                            </svg>
-                                            Return Request Pending Approval
-                                        </span>
-                                    <% } else if (order.status === 'Returned') { %>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-semibold rounded-full select-none">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                            </svg>
-                                            Item Returned & Refunded
-                                        </span>
-                                    <% } else if (order.status === 'Cancelled') { %>
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-pixelplay-red/10 border border-pixelplay-red/30 text-pixelplay-red text-xs font-semibold rounded-full select-none">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                                <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                            </svg>
-                                            Item Cancelled
-                                        </span>
+                                    <% if (item.status === 'Cancelled') { %>
+                                        <div class="flex flex-col gap-1">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-pixelplay-red/10 border border-pixelplay-red/30 text-pixelplay-red text-xs font-semibold rounded-full select-none w-fit">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                                    <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                </svg>
+                                                Item Cancelled
+                                            </span>
+                                            <% if (item.cancellationDate) { %>
+                                                <p class="text-xs text-gray-400">Cancelled: <span class="text-gray-300 font-mono"><%= new Date(item.cancellationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span></p>
+                                                <p class="text-xs text-gray-400 font-medium">Reason: <span class="text-gray-300"><%= item.cancellationReason %></span></p>
+                                            <% } %>
+                                        </div>
+                                    <% } else if (item.status === 'Return Requested') { %>
+                                        <div class="flex flex-col gap-1">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-yellow-600/10 border border-yellow-600/30 text-yellow-500 text-xs font-semibold rounded-full select-none w-fit">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                </svg>
+                                                Return Request Pending Approval <%= item.quantity > 1 ? `(${item.quantity} copies)` : '' %>
+                                            </span>
+                                            <% if (item.returnReason) { %>
+                                                <p class="text-xs text-gray-400">Reason: <span class="text-gray-300"><%= item.returnReason === 'other' ? item.returnComments : item.returnReason %></span></p>
+                                            <% } %>
+                                        </div>
+                                    <% } else if (item.status === 'Returned') { %>
+                                        <div class="flex flex-col gap-1">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-semibold rounded-full select-none w-fit">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                </svg>
+                                                Item Returned & Refunded <%= item.quantity > 1 ? `(${item.quantity} copies)` : '' %>
+                                            </span>
+                                            <% if (item.returnReason) { %>
+                                                <p class="text-xs text-gray-400">Reason: <span class="text-gray-300"><%= item.returnReason === 'other' ? item.returnComments : item.returnReason %></span></p>
+                                            <% } %>
+                                        </div>
+                                    <% } else { %>
+                                        <div class="flex flex-col gap-2">
+                                            <% if (order.status === 'Processing') { %>
+                                                <button onclick="window.location.href='/user/orders/cancel/<%= order._id %>/<%= item.product._id %>?platform=<%= encodeURIComponent(item.platform) %>'"
+                                                    class="px-4 py-1.5 text-xs font-medium text-pixelplay-red border border-pixelplay-red/40 rounded-md hover:bg-pixelplay-red/10 transition-colors flex items-center gap-1.5 w-fit">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                                        <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                    </svg>
+                                                    Cancel Item
+                                                </button>
+                                            <% } else if (order.status === 'Shipped') { %>
+                                                <!-- No buttons or links for Shipped status -->
+                                            <% } else if (order.status === 'Delivered' || order.status === 'Return Requested' || order.status === 'Returned') { %>
+                                                <button onclick="window.location.href='/user/orders/return/<%= order._id %>/<%= item.product._id %>?platform=<%= encodeURIComponent(item.platform) %>'"
+                                                    class="px-4 py-1.5 text-xs font-medium text-pixelplay-gold border border-pixelplay-gold/40 rounded-md hover:bg-pixelplay-gold/10 transition-colors flex items-center gap-1.5 w-fit">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                                        <path d="M16 15v-6a4 4 0 00-4-4H4m12 10l3-3m-3 3l-3-3"
+                                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                    </svg>
+                                                    Return This Disk
+                                                </button>
+                                            <% } %>
+                                            <% if (item.adminReturnComment) { %>
+                                                <div class="mt-1 text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded p-3 max-w-md break-words">
+                                                    <span class="font-bold block mb-1 uppercase tracking-wider text-[10px] text-red-400">Return Rejected</span>
+                                                    Reason: <span class="text-gray-300 font-sans"><%= item.adminReturnComment %></span>
+                                                </div>
+                                            <% } %>
+                                        </div>
                                     <% } %>
                                 </div>
                             </div>
@@ -285,34 +352,35 @@
                             <div class="flex flex-col gap-3 text-sm">
                                 <div class="flex justify-between text-gray-400">
                                     <span>Items Subtotal</span>
-                                    <span class="font-mono text-white">$<%= order.subtotal.toFixed(2) %></span>
+                                    <span class="font-mono text-white">₹<%= (order.subtotal / 100).toFixed(2) %></span>
                                 </div>
                                 <% if (order.couponDiscount && order.couponDiscount > 0) { %>
                                     <div class="flex justify-between text-green-400">
                                         <span>Coupon Discount</span>
-                                        <span class="font-mono">-$<%= order.couponDiscount.toFixed(2) %></span>
+                                        <span class="font-mono">-₹<%= (order.couponDiscount / 100).toFixed(2) %></span>
                                     </div>
                                     <div class="h-px bg-pixelplay-border my-1"></div>
                                     <div class="flex justify-between text-gray-400">
                                         <span>Subtotal After Promos</span>
-                                        <span class="font-mono text-white">$<%= (order.subtotal - order.couponDiscount).toFixed(2) %></span>
+                                        <span class="font-mono text-white">₹<%= ((order.subtotal - order.couponDiscount) / 100).toFixed(2) %></span>
                                     </div>
                                 <% } %>
                                 <div class="flex justify-between text-gray-400">
                                     <span>GST (18%)</span>
-                                    <span class="font-mono text-white">$<%= order.tax.toFixed(2) %></span>
+                                    <span class="font-mono text-white">₹<%= (order.tax / 100).toFixed(2) %></span>
                                 </div>
                                 <div class="flex justify-between text-gray-400">
                                     <span>Shipping Charges</span>
-                                    <span class="font-mono text-white">$<%= order.shipping.toFixed(2) %></span>
+                                    <span class="font-mono text-white">₹<%= (order.shipping / 100).toFixed(2) %></span>
                                 </div>
                             </div>
                             <!-- Grand Total -->
                             <div class="mt-6 pt-4 border-t border-pixelplay-border flex justify-between items-center">
                                 <span class="font-bold text-white">Grand Total</span>
-                                <span class="text-xl font-bold text-pixelplay-accent font-mono">$<%= order.grandTotal.toFixed(2) %></span>
+                                <span class="text-xl font-bold text-pixelplay-accent font-mono">₹<%= (order.grandTotal / 100).toFixed(2) %></span>
                             </div>
                         </div>
+                        <% if (order.status !== 'Shipped' && order.status !== 'Delivered') { %>
                         <!-- Notice -->
                         <div class="bg-[#1e1a12] border border-pixelplay-gold/30 rounded-lg p-4 mt-2">
                             <p class="text-xs text-gray-300 leading-relaxed">
@@ -327,6 +395,20 @@
                                     class="text-pixelplay-gold font-medium">PixelWallet</span>.
                             </p>
                         </div>
+                        <% } %>
+
+                        <% if (order.status === 'Delivered') { %>
+                        <!-- Return Disclaimer Notice -->
+                        <div class="bg-[#101c26] border border-[#00b8ff]/30 rounded-lg p-4 mt-2">
+                            <p class="text-xs text-gray-300 leading-relaxed">
+                                <span class="text-pixelplay-accent font-semibold inline-flex items-center gap-1 mb-1">
+                                    <i class="fa-solid fa-circle-info text-pixelplay-accent"></i>
+                                    Return Refund Policy:
+                                </span>
+                                If a product is returned, the amount will be credited to the <span class="text-pixelplay-accent font-medium">PixelWallet</span> once the return is being confirmed.
+                            </p>
+                        </div>
+                        <% } %>
                     </div>
                 </div>
             </div>
@@ -334,6 +416,29 @@
         </div>
     </main>
     <!-- END: MainContent -->
+
+    <script>
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const notification = urlParams.get('notification');
+            if (notification) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: notification,
+                    icon: 'success',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    background: '#151518',
+                    color: '#e5e7eb',
+                    iconColor: '#00b8ff'
+                });
+                // Remove notification from URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        })();
+    </script>
 </body>
 
 </html>

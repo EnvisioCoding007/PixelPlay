@@ -19,6 +19,14 @@ export const placeOrder = async (userId, paymentMethod, addressId) => {
     if (!user) {
         throw new Error('User not found.');
     }
+    if (paymentMethod === 'PixelWallet') {
+        const balance = user.walletBalance || 0;
+        if (balance < cartDetails.grandTotal) {
+            throw new Error(`Insufficient PixelWallet balance. You need ₹${(cartDetails.grandTotal / 100).toFixed(2)} but only have ₹${(balance / 100).toFixed(2)}.`);
+        }
+        user.walletBalance = balance - cartDetails.grandTotal;
+        await user.save();
+    }
     const address = user.addresses.id(addressId);
     if (!address) {
         throw new Error('Invalid delivery address selected.');
@@ -112,32 +120,66 @@ export const getOrderById = async (orderId) => {
     return await Order.findById(orderId).populate('items.product').lean();
 };
 
-export const getOrdersByUserPaginated = async (userId, page = 1, limit = 5, sort = 'newest', filterStatus = 'All') => {
+export const getOrdersByUserPaginated = async (userId, page = 1, limit = 5, sort = 'newest', filterStatus = 'All', viewType = 'orders') => {
     const skip = (page - 1) * limit;
-    const query = { userId };
-    if (filterStatus && filterStatus !== 'All') {
-        query.orderStatus = filterStatus;
-    }
-
-    const totalCount = await Order.countDocuments(query);
-    const totalPages = Math.ceil(totalCount / limit) || 1;
-
     let sortObject = { createdAt: -1 };
     if (sort === 'oldest') {
         sortObject = { createdAt: 1 };
-    } else if (sort === 'price_desc') {
+    } else if (sort === 'price_desc' || sort === 'amount_desc') {
         sortObject = { finalAmount: -1 };
-    } else if (sort === 'price_asc') {
+    } else if (sort === 'price_asc' || sort === 'amount_asc') {
         sortObject = { finalAmount: 1 };
     }
 
-    const orders = await Order.find(query)
-        .sort(sortObject)
-        .skip(skip)
-        .limit(limit)
-        .populate('items.product')
-        .lean();
-    return { orders, totalPages, currentPage: page };
+    if (viewType === 'items') {
+        // Fetch all matching orders sorted
+        const orders = await Order.find({ userId })
+            .sort(sortObject)
+            .populate('items.product')
+            .lean();
+        
+        // Flatten to items
+        const items = [];
+        orders.forEach(order => {
+            order.items.forEach(item => {
+                const rawStatus = item.status || (order.orderStatus === 'Cancelled' ? 'Cancelled' : 'Ordered');
+                const itemStatus = rawStatus === 'Ordered' ? (order.orderStatus || 'Processing') : rawStatus;
+                if (filterStatus === 'All' || (itemStatus && itemStatus.toUpperCase() === filterStatus.toUpperCase())) {
+                    items.push({
+                        ...item,
+                        orderId: order.orderId,
+                        orderDbId: order._id,
+                        createdAt: order.createdAt,
+                        paymentMethod: order.paymentMethod,
+                        status: itemStatus
+                    });
+                }
+            });
+        });
+
+        // Paginate items
+        const totalCount = items.length;
+        const totalPages = Math.ceil(totalCount / limit) || 1;
+        const paginatedItems = items.slice(skip, skip + limit);
+
+        return { items: paginatedItems, totalPages, currentPage: page, viewType };
+    } else {
+        const query = { userId };
+        if (filterStatus && filterStatus !== 'All') {
+            query.orderStatus = filterStatus;
+        }
+
+        const totalCount = await Order.countDocuments(query);
+        const totalPages = Math.ceil(totalCount / limit) || 1;
+
+        const orders = await Order.find(query)
+            .sort(sortObject)
+            .skip(skip)
+            .limit(limit)
+            .populate('items.product')
+            .lean();
+        return { orders, totalPages, currentPage: page, viewType };
+    }
 };
 
 
@@ -216,6 +258,13 @@ export const updateOrderStatus = async (id, status) => {
     }
 
     const oldStatus = order.orderStatus;
+    if (oldStatus === 'Cancelled') {
+        throw new Error('Cannot change the status of a cancelled order');
+    }
+    if (oldStatus === 'Returned' || oldStatus === 'Return Requested') {
+        throw new Error('Cannot change the status of a returned or return requested order');
+    }
+
     order.orderStatus = status;
 
     if (status === 'Delivered') {
@@ -223,7 +272,85 @@ export const updateOrderStatus = async (id, status) => {
     }
 
     if (oldStatus !== 'Cancelled' && status === 'Cancelled') {
+        order.cancellationDate = new Date();
+        order.cancellationReason = 'Cancelled by Admin';
+        order.cancellationComments = 'Order status updated to Cancelled by administrator.';
+
+        if (order.paymentMethod !== 'COD') {
+            const user = await User.findById(order.userId);
+            if (user) {
+                user.walletBalance = (user.walletBalance || 0) + order.finalAmount;
+                await user.save();
+            }
+        }
+
         for (const item of order.items) {
+            if (item.status !== 'Cancelled' && item.status !== 'Returned' && item.status !== 'Return Requested') {
+                item.status = 'Cancelled';
+                item.cancellationDate = new Date();
+                item.cancellationReason = 'Cancelled by Admin';
+                item.cancellationComments = 'Order status updated to Cancelled by administrator.';
+
+                const product = await Product.findById(item.product);
+                if (product) {
+                    product.stock = (product.stock || 0) + item.quantity;
+                    if (product.platform_stock && product.platform_stock.length > 0) {
+                        const ps = product.platform_stock.find(p => p.platform === item.platform);
+                        if (ps) {
+                            ps.stock = (ps.stock || 0) + item.quantity;
+                        }
+                    }
+                    await product.save();
+                }
+            }
+        }
+    }
+
+    await order.save();
+    return order;
+};
+
+export const getOrderDetailsAdmin = async (id) => {
+    const order = await Order.findById(id).populate('items.product').populate('userId').lean();
+    if (!order) return null;
+    const lifetimeOrdersCount = await Order.countDocuments({ userId: order.userId ? order.userId._id : null });
+    return { order, lifetimeOrdersCount };
+};
+
+export const cancelOrder = async (orderId, userId, reason, comments) => {
+    const order = await Order.findOne({ _id: orderId, userId });
+    if (!order) {
+        throw new Error('Order not found');
+    }
+
+    if (order.orderStatus === 'Cancelled') {
+        throw new Error('Order is already cancelled');
+    }
+
+    if (order.orderStatus !== 'Processing' && order.orderStatus !== 'Pending') {
+        throw new Error('Order cannot be cancelled at this stage');
+    }
+
+    order.orderStatus = 'Cancelled';
+    order.cancellationDate = new Date();
+    order.cancellationReason = reason;
+    order.cancellationComments = comments;
+
+    if (order.paymentMethod !== 'COD') {
+        const user = await User.findById(order.userId);
+        if (user) {
+            user.walletBalance = (user.walletBalance || 0) + order.finalAmount;
+            await user.save();
+        }
+    }
+
+    for (const item of order.items) {
+        if (item.status !== 'Cancelled') {
+            item.status = 'Cancelled';
+            item.cancellationDate = new Date();
+            item.cancellationReason = reason;
+            item.cancellationComments = comments;
+
             const product = await Product.findById(item.product);
             if (product) {
                 product.stock = (product.stock || 0) + item.quantity;
@@ -242,11 +369,225 @@ export const updateOrderStatus = async (id, status) => {
     return order;
 };
 
-export const getOrderDetailsAdmin = async (id) => {
-    const order = await Order.findById(id).populate('items.product').populate('userId').lean();
-    if (!order) return null;
-    const lifetimeOrdersCount = await Order.countDocuments({ userId: order.userId ? order.userId._id : null });
-    return { order, lifetimeOrdersCount };
+export const cancelItem = async (orderId, userId, productId, reason, comments, cancelQty = 1, platform = null) => {
+    const order = await Order.findOne({ _id: orderId, userId });
+    if (!order) {
+        throw new Error('Order not found');
+    }
+
+    if (order.orderStatus === 'Cancelled') {
+        throw new Error('Order is already cancelled');
+    }
+
+    if (order.orderStatus !== 'Processing' && order.orderStatus !== 'Pending') {
+        throw new Error('Order cannot be cancelled at this stage');
+    }
+
+    const item = order.items.find(i => {
+        const itemProdId = i.product && i.product._id ? i.product._id.toString() : i.product.toString();
+        return itemProdId === productId.toString() && (!platform || i.platform === platform) && i.status !== 'Cancelled';
+    });
+    if (!item) {
+        throw new Error('Item not found in this order');
+    }
+
+    const qtyToCancel = Math.min(cancelQty, item.quantity);
+    if (qtyToCancel <= 0) {
+        throw new Error('Invalid cancellation quantity');
+    }
+
+    let targetItem;
+    if (qtyToCancel < item.quantity) {
+        // Split the item
+        item.quantity -= qtyToCancel;
+
+        const newItem = {
+            product: item.product,
+            platform: item.platform,
+            quantity: qtyToCancel,
+            price: item.price,
+            status: 'Cancelled',
+            cancellationDate: new Date(),
+            cancellationReason: reason,
+            cancellationComments: comments
+        };
+        order.items.push(newItem);
+        targetItem = order.items[order.items.length - 1];
+    } else {
+        item.status = 'Cancelled';
+        item.cancellationDate = new Date();
+        item.cancellationReason = reason;
+        item.cancellationComments = comments;
+        targetItem = item;
+    }
+
+    const product = await Product.findById(targetItem.product);
+    if (product) {
+        product.stock = (product.stock || 0) + qtyToCancel;
+        if (product.platform_stock && product.platform_stock.length > 0) {
+            const ps = product.platform_stock.find(p => p.platform === targetItem.platform);
+            if (ps) {
+                ps.stock = (ps.stock || 0) + qtyToCancel;
+            }
+        }
+        await product.save();
+    }
+
+    if (order.paymentMethod !== 'COD') {
+        const user = await User.findById(order.userId);
+        if (user) {
+            const refundAmount = targetItem.price * qtyToCancel;
+            user.walletBalance = (user.walletBalance || 0) + refundAmount;
+            await user.save();
+        }
+    }
+
+    const allCancelled = order.items.every(i => i.status === 'Cancelled');
+    if (allCancelled) {
+        order.orderStatus = 'Cancelled';
+        order.cancellationDate = new Date();
+        order.cancellationReason = 'All items cancelled';
+        order.cancellationComments = 'Cancelled because all items were individually cancelled.';
+
+        if (order.paymentMethod !== 'COD') {
+            const user = await User.findById(order.userId);
+            if (user) {
+                user.walletBalance = (user.walletBalance || 0) + (order.shipping || 0);
+                await user.save();
+            }
+        }
+    }
+
+    await order.save();
+    return order;
 };
+
+export const requestItemReturn = async (orderId, userId, productId, reason, comments, returnQty = 1, platform = null) => {
+    const order = await Order.findOne({ _id: orderId, userId });
+    if (!order) {
+        throw new Error('Order not found');
+    }
+
+    if (order.orderStatus !== 'Delivered' && order.orderStatus !== 'Return Requested' && order.orderStatus !== 'Returned') {
+        throw new Error('Only delivered orders can be returned');
+    }
+
+    const item = order.items.find(i => {
+        const itemProdId = i.product && i.product._id ? i.product._id.toString() : i.product.toString();
+        return itemProdId === productId.toString() && (!platform || i.platform === platform) && (i.status === 'Ordered' || !i.status);
+    });
+    if (!item) {
+        throw new Error('Item not found or already returned/cancelled');
+    }
+
+    const qtyToReturn = Math.min(returnQty, item.quantity);
+    if (qtyToReturn <= 0) {
+        throw new Error('Invalid return quantity');
+    }
+
+    if (qtyToReturn < item.quantity) {
+        // Split the item
+        item.quantity -= qtyToReturn;
+
+        const newItem = {
+            product: item.product,
+            platform: item.platform,
+            quantity: qtyToReturn,
+            price: item.price,
+            status: 'Return Requested',
+            returnDate: new Date(),
+            returnReason: reason,
+            returnComments: comments
+        };
+        order.items.push(newItem);
+    } else {
+        item.status = 'Return Requested';
+        item.returnDate = new Date();
+        item.returnReason = reason;
+        item.returnComments = comments;
+    }
+
+    order.orderStatus = 'Return Requested';
+    await order.save();
+    return order;
+};
+
+export const approveItemReturn = async (orderId, productId, adminComment, platform = null) => {
+    const order = await Order.findById(orderId);
+    if (!order) {
+        throw new Error('Order not found');
+    }
+
+    const item = order.items.find(i => {
+        const itemProdId = i.product && i.product._id ? i.product._id.toString() : i.product.toString();
+        return itemProdId === productId.toString() && (!platform || i.platform === platform) && i.status === 'Return Requested';
+    });
+    if (!item) {
+        throw new Error('Return request not found for this item');
+    }
+
+    item.status = 'Returned';
+    item.adminReturnComment = adminComment;
+
+    const user = await User.findById(order.userId);
+    if (user) {
+        const refundAmount = item.price * item.quantity;
+        user.walletBalance = (user.walletBalance || 0) + refundAmount;
+        await user.save();
+    }
+
+    const product = await Product.findById(item.product && item.product._id ? item.product._id : item.product);
+    if (product) {
+        product.stock = (product.stock || 0) + item.quantity;
+        if (product.platform_stock && product.platform_stock.length > 0) {
+            const ps = product.platform_stock.find(p => p.platform === item.platform);
+            if (ps) {
+                ps.stock = (ps.stock || 0) + item.quantity;
+            }
+        }
+        await product.save();
+    }
+
+    const allCancelledOrReturned = order.items.every(i => i.status === 'Cancelled' || i.status === 'Returned');
+    if (allCancelledOrReturned) {
+        order.orderStatus = 'Returned';
+    } else {
+        const hasPendingReturns = order.items.some(i => i.status === 'Return Requested');
+        if (!hasPendingReturns) {
+            order.orderStatus = 'Delivered';
+        }
+    }
+
+    await order.save();
+    return order;
+};
+
+export const rejectItemReturn = async (orderId, productId, adminComment, platform = null) => {
+    const order = await Order.findById(orderId);
+    if (!order) {
+        throw new Error('Order not found');
+    }
+
+    const item = order.items.find(i => {
+        const itemProdId = i.product && i.product._id ? i.product._id.toString() : i.product.toString();
+        return itemProdId === productId.toString() && (!platform || i.platform === platform) && i.status === 'Return Requested';
+    });
+    if (!item) {
+        throw new Error('Return request not found for this item');
+    }
+
+    item.status = 'Ordered';
+    item.adminReturnComment = adminComment;
+
+    const hasPendingReturns = order.items.some(i => i.status === 'Return Requested');
+    if (!hasPendingReturns) {
+        order.orderStatus = 'Delivered';
+    }
+
+    await order.save();
+    return order;
+};
+
+
 
 

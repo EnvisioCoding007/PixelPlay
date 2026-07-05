@@ -92,7 +92,7 @@
                     <input
                         class="w-full bg-dark-surface-2 p-3 text-sm text-text-primary border-b border-dark-border focus:outline-none"
                         placeholder="Email" type="email" value="<%= user.email %>" />
-                    <input class="w-full bg-dark-surface-2 p-3 text-sm text-text-primary focus:outline-none"
+                    <input id="checkout-phone" class="w-full bg-dark-surface-2 p-3 text-sm text-text-primary focus:outline-none"
                         placeholder="Phone Number" type="text" value="<%= user.phone || '' %>" />
                 </div>
             </div>
@@ -215,7 +215,7 @@
             <div class="mt-4 flex flex-col gap-3">
                 <button id="submit-pay-btn"
                     class="w-full bg-cyber-blue hover:bg-blue-400 text-black font-bold py-3.5 rounded-lg transition-colors flex justify-center items-center gap-2 shadow-[0_0_15px_rgba(0,176,255,0.3)]">
-                    Pay ₹<%= cart.grandTotal %>
+                    Pay ₹<%= (cart.grandTotal / 100).toFixed(2) %>
                 </button>
                 <div id="razorpay-secure-badge" class="text-center text-xs text-text-tertiary flex items-center justify-center gap-1">
                     <i class="fa-solid fa-shield-halved"></i> Secured by Razorpay
@@ -241,7 +241,7 @@
                                         <i class="fa-regular fa-circle-play"></i> <%= (item.platform || '').toUpperCase() %> PHYSICAL DISK
                                     </div>
                                     <div class="text-xs text-text-secondary">
-                                        Price: ₹<%= item.product.price %>
+                                        Price: ₹<%= (item.product.price / 100).toFixed(2) %>
                                     </div>
                                 </div>
                             </div>
@@ -255,7 +255,7 @@
                             <% if (item.product) { %>
                                 <div class="flex justify-between items-center">
                                     <span class="text-text-secondary"><%= item.product.title %> (x<%= item.quantity %>)</span>
-                                    <span class="text-white">₹<%= item.product.price * item.quantity %></span>
+                                    <span class="text-white">₹<%= ((item.product.price * item.quantity) / 100).toFixed(2) %></span>
                                 </div>
                             <% } %>
                         <% }) %>
@@ -270,27 +270,32 @@
                             </div>
                             <div class="flex justify-between items-center text-text-secondary">
                                 <span>Discount</span>
-                                <span class="text-cyber-green">-₹<%= cart.discount %></span>
+                                <span class="text-cyber-green">-₹<%= (cart.discount / 100).toFixed(2) %></span>
                             </div>
                         </div>
                     <% } %>
                     <div class="flex justify-between items-center pt-2">
                         <span class="text-text-secondary">Subtotal</span>
-                        <span class="text-white">₹<%= cart.subtotal %></span>
+                        <span class="text-white">₹<%= (cart.subtotal / 100).toFixed(2) %></span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-text-secondary">GST</span>
-                        <span class="text-white">₹<%= cart.tax %></span>
+                        <span class="text-white">₹<%= (cart.tax / 100).toFixed(2) %></span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-text-secondary">Shipping</span>
-                        <span class="text-white">₹<%= cart.shipping %></span>
+                        <span class="text-white">₹<%= (cart.shipping / 100).toFixed(2) %></span>
                     </div>
                 </div>
                 <!-- Total -->
-                <div class="border-t border-dark-border pt-6 pb-6 flex justify-between items-end">
+                <div class="border-t border-dark-border pt-6 pb-2 flex justify-between items-end">
                     <div class="font-bold text-sm text-white">Grand Total Due</div>
-                    <div class="text-3xl font-bold text-cyber-blue font-mono">₹<%= cart.grandTotal %></div>
+                    <div class="text-3xl font-bold text-cyber-blue font-mono font-semibold">₹<%= (cart.grandTotal / 100).toFixed(2) %></div>
+                </div>
+                <!-- Disclaimer -->
+                <div class="text-[11px] text-text-secondary leading-relaxed mb-4 pb-2 border-b border-dark-border/40 flex items-start gap-1">
+                    <i class="fa-solid fa-circle-info text-cyber-blue mt-0.5 shrink-0"></i>
+                    <span>If a product is returned or cancelled, the amount will be credited to the pixelWallet once the return/cancellation is being confirmed.</span>
                 </div>
                 <!-- Security Badge -->
                 <div id="encrypted-channel-badge" class="border border-[#166534] bg-[#064e3b]/30 rounded-lg p-4 flex gap-3 items-start mt-2">
@@ -810,14 +815,14 @@
                     showRazorpay: true,
                     showEncrypted: true,
                     addressLabel: "BILLING ADDRESS",
-                    buttonText: "Pay ₹<%= cart.grandTotal %>"
+                    buttonText: "Pay ₹<%= (cart.grandTotal / 100).toFixed(2) %>"
                 },
                 'tab-upi': {
                     showCardForm: false,
                     showRazorpay: true,
                     showEncrypted: true,
                     addressLabel: "BILLING ADDRESS",
-                    buttonText: "Pay ₹<%= cart.grandTotal %>"
+                    buttonText: "Pay ₹<%= (cart.grandTotal / 100).toFixed(2) %>"
                 },
                 'tab-cod': {
                     showCardForm: false,
@@ -831,7 +836,7 @@
                     showRazorpay: false,
                     showEncrypted: false,
                     addressLabel: "BILLING ADDRESS",
-                    buttonText: "Pay ₹<%= cart.grandTotal %>"
+                    buttonText: "Pay ₹<%= (cart.grandTotal / 100).toFixed(2) %>"
                 }
             };
 
@@ -878,6 +883,14 @@
             // Submit Payment / Place Order
             if (submitPayBtn) {
                 submitPayBtn.addEventListener('click', async () => {
+                    const phoneInput = document.getElementById('checkout-phone');
+                    const phoneVal = phoneInput ? phoneInput.value.trim() : '';
+                    const phoneRegex = /^[6-9]\d{9}$/;
+                    if (!phoneVal || !phoneRegex.test(phoneVal)) {
+                        showToast('Please enter a valid 10-digit phone number in Contact Information.', 'error');
+                        return;
+                    }
+
                     if (activePaymentMethod === 'COD') {
                         // Get selected address ID
                         const selectedAddressCard = document.querySelector('.address-card.border-cyber-blue');

@@ -1079,11 +1079,11 @@
         hasFirstPlat = true;
       }
       formData.append(`platform_stock_${platform}`, stockVal);
-      formData.append(`platform_price_${platform}`, priceVal);
+      formData.append(`platform_price_${platform}`, Math.round(priceVal * 100));
       formData.append('platforms[]', platform);
     });
     formData.append('stock', totalStock);
-    formData.append('price', firstPlatformPrice);
+    formData.append('price', Math.round(firstPlatformPrice * 100));
     
     // Dynamic System Requirements mapping — read only from the currently visible (active) platform block
     const activeReqBlock = document.querySelector('.platform-req-form:not(.hidden)');

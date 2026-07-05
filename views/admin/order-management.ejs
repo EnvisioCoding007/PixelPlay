@@ -124,7 +124,7 @@
         <div class="bg-cardDark border border-borderDark rounded-xl p-6 glow-yellow relative overflow-hidden">
           <div class="absolute right-0 top-0 w-32 h-32 bg-neonYellow/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
           <h3 class="text-xs font-semibold text-textMuted tracking-wider uppercase mb-2">Total Revenue</h3>
-          <p class="text-4xl font-mono font-bold text-neonYellow">$<%= stats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></p>
+          <p class="text-4xl font-mono font-bold text-neonYellow">₹<%= (stats.totalRevenue / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></p>
         </div>
         <!-- Pending Shipments -->
         <div class="bg-cardDark border border-borderDark rounded-xl p-6 relative overflow-hidden">
@@ -211,10 +211,9 @@
               <tr>
                 <th class="px-6 py-4" scope="col">Order ID</th>
                 <th class="px-6 py-4" scope="col">Customer Email</th>
-                <th class="px-6 py-4" scope="col">Game Title</th>
+                <th class="px-6 py-4" scope="col">Total Items</th>
                 <th class="px-6 py-4" scope="col">Order Date</th>
                 <th class="px-6 py-4" scope="col">Amount</th>
-                <th class="px-6 py-4" scope="col">Type</th>
                 <th class="px-6 py-4" scope="col">Status</th>
                 <th class="px-6 py-4 text-center" scope="col">Actions</th>
               </tr>
@@ -228,29 +227,23 @@
                     const borderClass = isLegend ? 'table-row-yellow' : 'table-row-blue';
                     const bgClass = isLegend ? 'bg-cardDark/50' : 'bg-bgDark';
                     const formattedDate = new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+                    const totalItemsCount = order.items ? order.items.reduce((acc, item) => acc + item.quantity, 0) : 0;
                   %>
                   <tr class="table-row <%= borderClass %> <%= bgClass %> transition-colors">
                     <td class="px-6 py-4 font-mono text-accentGold hover:underline cursor-pointer" onclick="window.location.href='/admin/orders/<%= order._id %>'">
-                      #<%= order.orderId %>
+                       #<%= order.orderId %>
                     </td>
                     <td class="px-6 py-4">
                       <%= order.userId ? order.userId.email : 'Deleted User' %>
                     </td>
-                    <td class="px-6 py-4 flex items-center">
-                      <span class="w-1.5 h-1.5 rounded-full <%= isLegend ? 'bg-accentGold' : 'bg-neonBlue' %> mr-2"></span>
-                      <%= firstItem && firstItem.product ? firstItem.product.title : 'N/A' %>
-                      <% if (order.items.length > 1) { %>
-                        <span class="text-xs text-textMuted ml-1.5">(+<%= order.items.length - 1 %> more)</span>
-                      <% } %>
+                    <td class="px-6 py-4 font-mono">
+                      <%= totalItemsCount %> <%= totalItemsCount === 1 ? 'disk' : 'disks' %>
                     </td>
                     <td class="px-6 py-4 text-textMuted">
                       <%= formattedDate %>
                     </td>
                     <td class="px-6 py-4 font-mono font-medium">
-                      $<%= order.finalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                    </td>
-                    <td class="px-6 py-4 font-bold <%= isLegend ? 'text-accentGold' : 'text-neonBlue' %> text-xs">
-                      <%= isLegend ? 'LEGEND' : 'STANDARD' %>
+                      ₹<%= (order.finalAmount / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
                     </td>
                     <td class="px-6 py-4">
                       <% 

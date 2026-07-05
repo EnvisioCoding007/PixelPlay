@@ -141,7 +141,7 @@
                         </div>
                         <span class="text-pixel-text-gray">Amount Paid</span>
                     </div>
-                    <span class="font-bold text-pixel-cyan text-xl">₹<%= order.finalAmount %></span>
+                    <span class="font-bold text-pixel-cyan text-xl">₹<%= (order.finalAmount / 100).toFixed(2) %></span>
                 </div>
                 <!-- Estimated Arrival -->
                 <div class="flex items-center justify-between">

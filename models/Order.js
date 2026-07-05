@@ -27,8 +27,41 @@ const orderSchema = new mongoose.Schema({
             min: 1
         },
         price: {
-            type: Number,
+            type: Number, // Stored in Paisa (whole integer)
             required: true
+        },
+        status: {
+            type: String,
+            enum: ['Ordered', 'Cancelled', 'Return Requested', 'Returned'],
+            default: 'Ordered'
+        },
+        cancellationDate: {
+            type: Date,
+            default: null
+        },
+        cancellationReason: {
+            type: String,
+            default: null
+        },
+        cancellationComments: {
+            type: String,
+            default: null
+        },
+        returnDate: {
+            type: Date,
+            default: null
+        },
+        returnReason: {
+            type: String,
+            default: null
+        },
+        returnComments: {
+            type: String,
+            default: null
+        },
+        adminReturnComment: {
+            type: String,
+            default: null
         }
     }],
     deliveryAddress: {
@@ -57,26 +90,38 @@ const orderSchema = new mongoose.Schema({
         default: 'Processing'
     },
     subtotal: {
-        type: Number,
+        type: Number, // Stored in Paisa (whole integer)
         required: true
     },
     tax: {
-        type: Number,
+        type: Number, // Stored in Paisa (whole integer)
         required: true
     },
     shipping: {
-        type: Number,
+        type: Number, // Stored in Paisa (whole integer)
         required: true
     },
     discount: {
-        type: Number,
+        type: Number, // Stored in Paisa (whole integer)
         default: 0
     },
     finalAmount: {
-        type: Number,
+        type: Number, // Stored in Paisa (whole integer)
         required: true
     },
     transactionId: {
+        type: String,
+        default: null
+    },
+    cancellationDate: {
+        type: Date,
+        default: null
+    },
+    cancellationReason: {
+        type: String,
+        default: null
+    },
+    cancellationComments: {
         type: String,
         default: null
     }

@@ -50,23 +50,25 @@ export const getCartDetails = async (userId) => {
                 }
             }
             
-            const activePrice = catDiscount > 0 ? Math.max(0, basePrice - (basePrice * (catDiscount / 100))) : basePrice;
-            item.product.price = activePrice;
-            subtotal += activePrice * item.quantity;
+            const activePrice = catDiscount > 0 ? Math.round(Math.max(0, basePrice - (basePrice * (catDiscount / 100)))) : basePrice;
+            const cartPrice = Math.round(activePrice * 0.82);
+            item.product.price = cartPrice;
+            item.product.displayPrice = activePrice;
+            subtotal += cartPrice * item.quantity;
         }
     }
 
-    const tax = subtotal * 0.18;
-    const shipping = cart.items.length > 0 ? 100 : 0;
+    const tax = Math.round(subtotal * (18 / 82));
+    const shipping = cart.items.length > 0 ? 10000 : 0;
     const grandTotal = subtotal - discount + tax + shipping;
 
     return {
         cart,
-        subtotal: Number(subtotal.toFixed(2)),
-        tax: Number(tax.toFixed(2)),
-        shipping: Number(shipping.toFixed(2)),
-        discount: Number(discount.toFixed(2)),
-        grandTotal: Number(grandTotal.toFixed(2)),
+        subtotal: Math.round(subtotal),
+        tax: Math.round(tax),
+        shipping: Math.round(shipping),
+        discount: Math.round(discount),
+        grandTotal: Math.round(grandTotal),
         hasUnavailableProduct
     };
 };

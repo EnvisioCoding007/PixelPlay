@@ -9,6 +9,7 @@ import * as categoryService from '../services/categoryService.js';
 import * as productService from '../services/productService.js';
 import * as cartService from '../services/cartService.js';
 import * as orderService from '../services/orderService.js';
+import * as invoiceService from '../services/invoiceService.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
 
 export const getSignupPage = (req, res) => {
@@ -878,53 +879,14 @@ export const getCart = async (req, res) => {
         const user = await User.findById(userId).select('-password_hash').lean();
         if (!user) return res.redirect('/auth/login');
 
-        let cart = await Cart.findOne({ userId }).populate('items.product').lean();
-        if (!cart) {
-            cart = { items: [] };
-        }
-
-        const CategoryModel = (await import('../models/Category.js')).default;
-        let subtotal = 0;
-        let hasUnavailableProduct = false;
-        for (let item of cart.items) {
-            if (item.product) {
-                item.product = { ...item.product };
-                if (item.product.status === 'Hidden') {
-                    hasUnavailableProduct = true;
-                }
-                let catObj = null;
-                if (item.product.category) {
-                    if (mongoose.Types.ObjectId.isValid(item.product.category)) {
-                        catObj = await CategoryModel.findById(item.product.category).lean();
-                    } else {
-                        catObj = await CategoryModel.findOne({ name: item.product.category }).lean();
-                    }
-                }
-                const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
-                item.product.categoryDiscount = discount;
-                
-                let basePrice = item.product.price || 0;
-                if (item.product.platform_stock && item.product.platform_stock.length > 0) {
-                    const platStock = item.product.platform_stock.find(ps => ps.platform === item.platform);
-                    if (platStock && typeof platStock.price === 'number') {
-                        basePrice = platStock.price;
-                    } else {
-                        const firstPlat = item.product.platform_stock[0];
-                        if (firstPlat && typeof firstPlat.price === 'number') {
-                            basePrice = firstPlat.price;
-                        }
-                    }
-                }
-                
-                const activePrice = discount > 0 ? Math.max(0, basePrice - (basePrice * (discount / 100))) : basePrice;
-                item.product.price = activePrice;
-                subtotal += activePrice * item.quantity;
-            }
-        }
-
-        const tax = subtotal * 0.18;
-        const shipping = cart.items.length > 0 ? 100 : 0;
-        const grandTotal = subtotal + tax + shipping;
+        const {
+            cart,
+            subtotal,
+            tax,
+            shipping,
+            grandTotal,
+            hasUnavailableProduct
+        } = await cartService.getCartDetails(userId);
 
         res.render('user/cart', {
             user,
@@ -1098,73 +1060,32 @@ export const updateCartQuantity = async (req, res) => {
             }
             await cart.save();
 
-            // Populate items.product for calculation
-            await cart.populate('items.product');
+            const cartDetails = await cartService.getCartDetails(userId);
+            const itemsData = cartDetails.cart.items.map(item => {
+                const itemSubtotal = item.product.price * item.quantity;
+                return {
+                    productId: item.product._id.toString(),
+                    platform: item.platform || 'PC',
+                    quantity: item.quantity,
+                    price: item.product.price,
+                    displayPrice: item.product.displayPrice,
+                    itemSubtotal: itemSubtotal,
+                    isMinQty: item.quantity <= 1,
+                    isMaxQty: item.quantity >= 3 || item.quantity >= item.product.stock,
+                    stock: item.product.stock
+                };
+            });
 
-            const CategoryModel = (await import('../models/Category.js')).default;
-            let subtotal = 0;
-            let hasUnavailableProduct = false;
-            let itemsData = [];
-
-            for (let item of cart.items) {
-                if (item.product) {
-                    item.product = item.product.toObject ? item.product.toObject() : { ...item.product };
-                    if (item.product.status === 'Hidden') {
-                        hasUnavailableProduct = true;
-                    }
-                    let catObj = null;
-                    if (item.product.category) {
-                        if (mongoose.Types.ObjectId.isValid(item.product.category)) {
-                            catObj = await CategoryModel.findById(item.product.category).lean();
-                        } else {
-                            catObj = await CategoryModel.findOne({ name: item.product.category }).lean();
-                        }
-                    }
-                    const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
-                    
-                    let basePrice = item.product.price || 0;
-                    if (item.product.platform_stock && item.product.platform_stock.length > 0) {
-                        const platStock = item.product.platform_stock.find(ps => ps.platform === item.platform);
-                        if (platStock && typeof platStock.price === 'number') {
-                            basePrice = platStock.price;
-                        } else {
-                            const firstPlat = item.product.platform_stock[0];
-                            if (firstPlat && typeof firstPlat.price === 'number') {
-                                basePrice = firstPlat.price;
-                            }
-                        }
-                    }
-                    
-                    const activePrice = discount > 0 ? Math.max(0, basePrice - (basePrice * (discount / 100))) : basePrice;
-                    const itemSubtotal = activePrice * item.quantity;
-                    subtotal += itemSubtotal;
-                    
-                    itemsData.push({
-                        productId: item.product._id.toString(),
-                        platform: item.platform || 'PC',
-                        quantity: item.quantity,
-                        price: activePrice,
-                        itemSubtotal: itemSubtotal,
-                        isMinQty: item.quantity <= 1,
-                        isMaxQty: item.quantity >= 3 || item.quantity >= item.product.stock,
-                        stock: item.product.stock
-                    });
-                }
-            }
-
-            const tax = subtotal * 0.18;
-            const shipping = cart.items.length > 0 ? 100 : 0;
-            const grandTotal = subtotal + tax + shipping;
-            const cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+            const cartCount = cartDetails.cart.items.reduce((acc, item) => acc + item.quantity, 0);
 
             return res.status(200).json({
                 success: true,
                 cartCount,
-                subtotal,
-                tax,
-                shipping,
-                grandTotal,
-                hasUnavailableProduct,
+                subtotal: cartDetails.subtotal,
+                tax: cartDetails.tax,
+                shipping: cartDetails.shipping,
+                grandTotal: cartDetails.grandTotal,
+                hasUnavailableProduct: cartDetails.hasUnavailableProduct,
                 items: itemsData
             });
         }
@@ -1291,7 +1212,10 @@ export const getOrderDetails = async (req, res) => {
             tax: dbOrder.tax,
             shipping: dbOrder.shipping,
             grandTotal: dbOrder.finalAmount,
-            items: dbOrder.items
+            items: dbOrder.items,
+            cancellationDate: dbOrder.cancellationDate,
+            cancellationReason: dbOrder.cancellationReason,
+            cancellationComments: dbOrder.cancellationComments
         };
 
         res.render('user/order-details', { order: mappedOrder, user, cartCount });
@@ -1311,30 +1235,41 @@ export const getOrderHistory = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const sort = req.query.sort || 'newest';
         const filter = req.query.filter || 'All';
+        const viewType = req.query.viewType || 'orders';
 
-        const { orders, totalPages, currentPage } = await orderService.getOrdersByUserPaginated(userId, page, limit, sort, filter);
+        const result = await orderService.getOrdersByUserPaginated(userId, page, limit, sort, filter, viewType);
+        const { totalPages, currentPage } = result;
 
         const cart = await Cart.findOne({ userId });
         const cartCount = cart ? cart.items.reduce((acc, item) => acc + item.quantity, 0) : 0;
 
-        const mappedOrders = orders.map(order => {
-            let mappedStatus = order.orderStatus || 'Processing';
-            if (mappedStatus.toUpperCase() === 'PENDING') {
-                mappedStatus = 'Processing';
-            }
-            return {
-                ...order,
-                status: mappedStatus
-            };
-        });
+        let mappedOrders = [];
+        let paginatedItems = [];
+
+        if (viewType === 'items') {
+            paginatedItems = result.items;
+        } else {
+            mappedOrders = result.orders.map(order => {
+                let mappedStatus = order.orderStatus || 'Processing';
+                if (mappedStatus.toUpperCase() === 'PENDING') {
+                    mappedStatus = 'Processing';
+                }
+                return {
+                    ...order,
+                    status: mappedStatus
+                };
+            });
+        }
 
         res.render('user/order-history', {
             user,
             orders: mappedOrders,
+            items: paginatedItems,
             currentPage,
             totalPages,
             sort,
             filter,
+            viewType,
             cartCount
         });
     } catch (error) {
@@ -1345,5 +1280,262 @@ export const getOrderHistory = async (req, res) => {
             publishers: [],
             error: 'An error occurred while loading order history.'
         });
+    }
+};
+
+export const getCancelOrder = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const dbOrder = await orderService.getOrderById(orderId);
+
+        const loggedInUserId = req.session.user.id || req.session.user;
+        const user = await User.findById(loggedInUserId).lean();
+        if (!dbOrder || dbOrder.userId.toString() !== loggedInUserId.toString()) {
+            return res.redirect('/auth/orders');
+        }
+
+        if (dbOrder.orderStatus !== 'Processing' && dbOrder.orderStatus !== 'Pending') {
+            return res.redirect(`/user/orders/${orderId}`);
+        }
+
+        const cart = await Cart.findOne({ userId: loggedInUserId });
+        const cartCount = cart ? cart.items.reduce((acc, item) => acc + item.quantity, 0) : 0;
+
+        let mappedStatus = dbOrder.orderStatus || 'Processing';
+        if (mappedStatus.toUpperCase() === 'PENDING') {
+            mappedStatus = 'Processing';
+        }
+
+        const mappedOrder = {
+            _id: dbOrder._id,
+            orderId: dbOrder.orderId,
+            createdAt: dbOrder.createdAt,
+            status: mappedStatus,
+            address: dbOrder.deliveryAddress,
+            paymentMethod: dbOrder.paymentMethod,
+            subtotal: dbOrder.subtotal,
+            couponDiscount: dbOrder.discount,
+            tax: dbOrder.tax,
+            shipping: dbOrder.shipping,
+            grandTotal: dbOrder.finalAmount,
+            items: dbOrder.items
+        };
+
+        res.render('user/order-cancel', { order: mappedOrder, user, cartCount, product: null, item: null, error: req.query.error || null });
+    } catch (error) {
+        console.error('[getCancelOrder] Error:', error);
+        res.redirect('/auth/orders');
+    }
+};
+
+export const postCancelOrder = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const { cancel_reason, additional_comments } = req.body;
+
+        if (!cancel_reason) {
+            return res.redirect(`/user/orders/cancel/${orderId}?error=Cancellation reason is required`);
+        }
+        if (cancel_reason === 'Other reason' && (!additional_comments || additional_comments.trim().length < 10)) {
+            return res.redirect(`/user/orders/cancel/${orderId}?error=Additional comments must be at least 10 characters long for "Other reason"`);
+        }
+        if (additional_comments && additional_comments.trim().length > 100) {
+            return res.redirect(`/user/orders/cancel/${orderId}?error=Additional comments cannot exceed 100 characters`);
+        }
+
+        const loggedInUserId = req.session.user.id || req.session.user;
+
+        await orderService.cancelOrder(orderId, loggedInUserId, cancel_reason, additional_comments);
+
+        res.redirect(`/user/orders/${orderId}?notification=Order cancelled successfully`);
+    } catch (error) {
+        console.error('[postCancelOrder] Error:', error);
+        res.redirect('/auth/orders');
+    }
+};
+
+export const getCancelItem = async (req, res) => {
+    try {
+        const { orderId, productId } = req.params;
+        const { platform } = req.query;
+        const dbOrder = await orderService.getOrderById(orderId);
+
+        const loggedInUserId = req.session.user.id || req.session.user;
+        const user = await User.findById(loggedInUserId).lean();
+        if (!dbOrder || dbOrder.userId.toString() !== loggedInUserId.toString()) {
+            return res.redirect('/auth/orders');
+        }
+
+        const item = dbOrder.items.find(i => i.product._id.toString() === productId.toString() && (!platform || i.platform === platform));
+        if (!item) {
+            return res.redirect(`/user/orders/${orderId}`);
+        }
+
+        if (item.status === 'Cancelled' || (dbOrder.orderStatus !== 'Processing' && dbOrder.orderStatus !== 'Pending')) {
+            return res.redirect(`/user/orders/${orderId}`);
+        }
+
+        const cart = await Cart.findOne({ userId: loggedInUserId });
+        const cartCount = cart ? cart.items.reduce((acc, item) => acc + item.quantity, 0) : 0;
+
+        let mappedStatus = dbOrder.orderStatus || 'Processing';
+        if (mappedStatus.toUpperCase() === 'PENDING') {
+            mappedStatus = 'Processing';
+        }
+
+        const mappedOrder = {
+            _id: dbOrder._id,
+            orderId: dbOrder.orderId,
+            createdAt: dbOrder.createdAt,
+            status: mappedStatus,
+            address: dbOrder.deliveryAddress,
+            paymentMethod: dbOrder.paymentMethod,
+            subtotal: dbOrder.subtotal,
+            couponDiscount: dbOrder.discount,
+            tax: dbOrder.tax,
+            shipping: dbOrder.shipping,
+            grandTotal: dbOrder.finalAmount,
+            items: dbOrder.items
+        };
+
+        res.render('user/order-cancel', {
+            order: mappedOrder,
+            product: item.product,
+            item: item,
+            user,
+            cartCount,
+            error: req.query.error || null
+        });
+    } catch (error) {
+        console.error('[getCancelItem] Error:', error);
+        res.redirect('/auth/orders');
+    }
+};
+
+export const postCancelItem = async (req, res) => {
+    try {
+        const { orderId, productId } = req.params;
+        const { platform } = req.query;
+        const { cancel_reason, additional_comments, quantity } = req.body;
+        const cancelQty = parseInt(quantity, 10) || 1;
+
+        if (!cancel_reason) {
+            return res.redirect(`/user/orders/cancel/${orderId}/${productId}?error=Cancellation reason is required`);
+        }
+        if (cancel_reason === 'Other reason' && (!additional_comments || additional_comments.trim().length < 10)) {
+            return res.redirect(`/user/orders/cancel/${orderId}/${productId}?error=Additional comments must be at least 10 characters long for "Other reason"`);
+        }
+        if (additional_comments && additional_comments.trim().length > 100) {
+            return res.redirect(`/user/orders/cancel/${orderId}/${productId}?error=Additional comments cannot exceed 100 characters`);
+        }
+
+        const loggedInUserId = req.session.user.id || req.session.user;
+
+        await orderService.cancelItem(orderId, loggedInUserId, productId, cancel_reason, additional_comments, cancelQty, platform);
+
+        res.redirect(`/user/orders/${orderId}?notification=Item cancelled successfully`);
+    } catch (error) {
+        console.error('[postCancelItem] Error:', error);
+        res.redirect('/auth/orders');
+    }
+};
+
+export const getReturnOrder = async (req, res) => {
+    try {
+        const { orderId, productId } = req.params;
+        const { platform } = req.query;
+        const dbOrder = await orderService.getOrderById(orderId);
+
+        const loggedInUserId = req.session.user.id || req.session.user;
+        const user = await User.findById(loggedInUserId).lean();
+        if (!dbOrder || dbOrder.userId.toString() !== loggedInUserId.toString()) {
+            return res.redirect('/auth/orders');
+        }
+
+        if (dbOrder.orderStatus !== 'Delivered' && dbOrder.orderStatus !== 'Return Requested' && dbOrder.orderStatus !== 'Returned') {
+            return res.redirect(`/user/orders/${orderId}`);
+        }
+
+        const cart = await Cart.findOne({ userId: loggedInUserId });
+        const cartCount = cart ? cart.items.reduce((acc, item) => acc + item.quantity, 0) : 0;
+
+        const item = dbOrder.items.find(i => i.product._id.toString() === productId.toString() && (!platform || i.platform === platform) && (i.status === 'Ordered' || !i.status));
+        if (!item) {
+            return res.redirect(`/user/orders/${orderId}`);
+        }
+
+        const mappedOrder = {
+            _id: dbOrder._id,
+            orderId: dbOrder.orderId,
+            createdAt: dbOrder.createdAt,
+            status: dbOrder.orderStatus,
+            address: dbOrder.deliveryAddress,
+            paymentMethod: dbOrder.paymentMethod,
+            subtotal: dbOrder.subtotal,
+            couponDiscount: dbOrder.discount,
+            tax: dbOrder.tax,
+            shipping: dbOrder.shipping,
+            grandTotal: dbOrder.finalAmount
+        };
+
+        res.render('user/order-return', {
+            order: mappedOrder,
+            product: item.product,
+            item: item,
+            user,
+            cartCount,
+            error: req.query.error || null
+        });
+    } catch (error) {
+        console.error('[getReturnOrder] Error:', error);
+        res.redirect('/auth/orders');
+    }
+};
+
+export const postReturnOrder = async (req, res) => {
+    try {
+        const { orderId, productId } = req.params;
+        const { platform } = req.query;
+        const { return_reason, additional_details, quantity } = req.body;
+        const returnQty = parseInt(quantity, 10) || 1;
+
+        if (!return_reason) {
+            return res.redirect(`/user/orders/return/${orderId}/${productId}?error=Return reason is required`);
+        }
+        if (return_reason === 'other' && (!additional_details || additional_details.trim().length < 10)) {
+            return res.redirect(`/user/orders/return/${orderId}/${productId}?error=Additional comments must be at least 10 characters long for "Other reason"`);
+        }
+        if (additional_details && additional_details.trim().length > 100) {
+            return res.redirect(`/user/orders/return/${orderId}/${productId}?error=Additional comments cannot exceed 100 characters`);
+        }
+
+        const loggedInUserId = req.session.user.id || req.session.user;
+
+        await orderService.requestItemReturn(orderId, loggedInUserId, productId, return_reason, additional_details, returnQty, platform);
+
+        res.redirect(`/user/orders/${orderId}?notification=Return requested successfully`);
+    } catch (error) {
+        console.error('[postReturnOrder] Error:', error);
+        res.redirect('/auth/orders');
+    }
+};
+
+export const downloadInvoice = async (req, res) => {
+    const { orderId } = req.params;
+    try {
+        const loggedInUserId = req.session.user.id || req.session.user;
+
+        // Set response headers to force download the PDF
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=Invoice-${orderId}.pdf`);
+
+        await invoiceService.generateInvoicePDF(orderId, loggedInUserId, res);
+    } catch (error) {
+        console.error('[downloadInvoice] Error:', error);
+        if (error.message === 'Order not found' || error.message === 'Unauthorized access') {
+            res.redirect('/auth/orders');
+        } else {
+            res.redirect(`/user/orders/${orderId}?error=${encodeURIComponent(error.message)}`);
+        }
     }
 };

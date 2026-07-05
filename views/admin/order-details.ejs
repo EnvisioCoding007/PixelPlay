@@ -110,6 +110,19 @@
                     <div class="text-gray-400 font-mono">
                         Placed on: <%= new Date(order.createdAt).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
                     </div>
+                    <% if (order.orderStatus === 'Cancelled' && order.cancellationDate) { %>
+                        <div class="text-red-400 font-mono mt-1 text-xs">
+                            Cancelled on: <%= new Date(order.cancellationDate).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %>
+                        </div>
+                        <div class="text-red-400 font-mono text-xs">
+                            Reason: <%= order.cancellationReason || 'N/A' %>
+                        </div>
+                        <% if (order.cancellationComments) { %>
+                            <div class="text-red-400 font-mono text-xs">
+                                Comments: <%= order.cancellationComments %>
+                            </div>
+                        <% } %>
+                    <% } %>
                     <% 
                         let badgeClass = 'border-yellow-500/50 text-yellow-400 bg-yellow-500/10';
                         let spinClass = '';
@@ -149,33 +162,85 @@
                             <% order.items.forEach(function(item) { %>
                                 <% 
                                     const isLegendary = item.product && item.product.edition_type === 'LEGENDARY';
-                                    const itemBorderColor = isLegendary ? 'bg-amber-500' : 'bg-cyan-500';
+                                    const itemBorderColor = item.status === 'Cancelled' ? 'bg-red-500' : (item.status === 'Return Requested' ? 'bg-amber-500' : (isLegendary ? 'bg-amber-500' : 'bg-cyan-500'));
                                     const itemPriceGlow = isLegendary ? 'text-amber-400' : 'text-gray-100';
                                 %>
-                                <div class="relative flex items-center justify-between p-4 bg-[#14161a] rounded-xl border border-gray-700/30 overflow-hidden">
+                                <div class="relative flex flex-col p-4 bg-[#14161a] rounded-xl border border-gray-700/30 overflow-hidden">
                                     <div class="absolute left-0 top-0 bottom-0 w-1 <%= itemBorderColor %>"></div>
-                                    <div class="flex items-center gap-4 pl-2">
-                                        <div class="h-16 w-16 bg-gray-700 rounded-lg flex-shrink-0 overflow-hidden">
-                                            <img alt="<%= item.product ? item.product.title : 'Game Cover' %>" class="w-full h-full object-cover opacity-80"
-                                                src="<%= item.product ? item.product.cover_image : '/placeholder.jpg' %>" />
-                                        </div>
-                                        <div>
-                                            <h3 class="font-semibold text-gray-100 text-lg">
-                                                <%= item.product ? item.product.title : 'Unknown Game' %>
-                                            </h3>
-                                            <div class="flex items-center gap-3 mt-1.5 text-xs font-medium text-gray-400">
-                                                <span>Platform: <%= item.platform.toUpperCase() %></span>
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded border <%= isLegendary ? 'border-amber-500/30 text-amber-500 bg-amber-500/10' : 'border-cyan-500/30 text-cyan-400 bg-cyan-500/10' %>">
-                                                    <i class="<%= isLegendary ? 'fa-regular fa-clock' : 'fa-solid fa-compact-disc' %> mr-1.5 text-[10px]"></i>
-                                                    <%= isLegendary ? 'LEGEND' : 'STANDARD' %>
-                                                </span>
-                                                <span class="text-gray-400">Qty: <%= item.quantity %></span>
+                                    <div class="flex items-center justify-between w-full">
+                                        <div class="flex items-center gap-4 pl-2">
+                                            <div class="h-16 w-16 bg-gray-700 rounded-lg flex-shrink-0 overflow-hidden">
+                                                <img alt="<%= item.product ? item.product.title : 'Game Cover' %>" class="w-full h-full object-cover opacity-80"
+                                                    src="<%= item.product ? item.product.cover_image : '/placeholder.jpg' %>" />
+                                            </div>
+                                            <div>
+                                                <h3 class="font-semibold text-gray-100 text-lg">
+                                                    <%= item.product ? item.product.title : 'Unknown Game' %>
+                                                </h3>
+                                                <div class="flex items-center gap-3 mt-1.5 text-xs font-medium text-gray-400">
+                                                    <span>Platform: <%= item.platform.toUpperCase() %></span>
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded border <%= isLegendary ? 'border-amber-500/30 text-amber-500 bg-amber-500/10' : 'border-cyan-500/30 text-cyan-400 bg-cyan-500/10' %>">
+                                                        <i class="<%= isLegendary ? 'fa-regular fa-clock' : 'fa-solid fa-compact-disc' %> mr-1.5 text-[10px]"></i>
+                                                        <%= isLegendary ? 'LEGEND' : 'STANDARD' %>
+                                                    </span>
+                                                    <span class="text-gray-400">Qty: <%= item.quantity %></span>
+                                                </div>
+                                                <% if (item.status === 'Cancelled') { %>
+                                                    <div class="mt-2 text-xs text-red-400 font-mono">
+                                                        <span class="px-1.5 py-0.5 border border-red-500/30 bg-red-500/10 rounded font-bold">CANCELLED</span>
+                                                        <% if (item.cancellationDate) { %>
+                                                            <span class="ml-2">Date: <%= new Date(item.cancellationDate).toLocaleDateString() %></span>
+                                                            <span class="ml-2">Reason: <%= item.cancellationReason %></span>
+                                                        <% } %>
+                                                    </div>
+                                                <% } %>
                                             </div>
                                         </div>
+                                        <div class="text-xl font-mono font-bold <%= itemPriceGlow %>">
+                                            ₹<%= ((item.price * item.quantity) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                        </div>
                                     </div>
-                                    <div class="text-xl font-mono font-bold <%= itemPriceGlow %>">
-                                        $<%= (item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                                    </div>
+                                    
+                                    <!-- Return Requested / Returned / Rejected details -->
+                                    <% if (item.status === 'Return Requested') { %>
+                                        <div class="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm text-gray-200 w-full">
+                                            <h4 class="font-semibold text-amber-400 mb-2 flex items-center gap-2">
+                                                <i class="fa-solid fa-rotate-left"></i> Return Request Details
+                                            </h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono text-gray-300 mb-4 w-full break-words">
+                                                <div class="break-words max-w-full">Return Reason: <span class="text-white font-sans whitespace-pre-wrap"><%= item.returnReason === 'other' ? item.returnComments : item.returnReason %></span></div>
+                                                <% if (item.returnDate) { %>
+                                                    <div>Request Date: <span class="text-white"><%= new Date(item.returnDate).toLocaleDateString() %></span></div>
+                                                <% } %>
+                                                <% if (item.returnComments) { %>
+                                                    <div class="col-span-2 break-words max-w-full">User Comments: <span class="text-white font-sans whitespace-pre-wrap"><%= item.returnComments %></span></div>
+                                                <% } %>
+                                            </div>
+                                            <div class="flex gap-3">
+                                                <button onclick="handleReturnAction('<%= order._id %>', '<%= item.product._id || item.product %>', 'approve', '<%= item.platform %>')" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors flex items-center gap-1.5 text-xs">
+                                                    <i class="fa-solid fa-check"></i> Approve Return
+                                                </button>
+                                                <button onclick="handleReturnAction('<%= order._id %>', '<%= item.product._id || item.product %>', 'reject', '<%= item.platform %>')" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-colors flex items-center gap-1.5 text-xs">
+                                                    <i class="fa-solid fa-xmark"></i> Reject Return
+                                                </button>
+                                            </div>
+                                        </div>
+                                    <% } else if (item.status === 'Returned') { %>
+                                        <div class="mt-2 text-xs text-green-400 font-mono pl-2 w-full break-words">
+                                            <span class="px-1.5 py-0.5 border border-green-500/30 bg-green-500/10 rounded font-bold">RETURNED <%= item.quantity > 1 ? `(${item.quantity} COPIES)` : '' %></span>
+                                            <% if (item.returnReason) { %>
+                                                <div class="mt-1 text-gray-400 font-sans">Reason: <span class="text-gray-300"><%= item.returnReason === 'other' ? item.returnComments : item.returnReason %></span></div>
+                                            <% } %>
+                                            <% if (item.adminReturnComment) { %>
+                                                <div class="mt-1 text-gray-400 font-sans">Admin Comment: <span class="text-gray-300 whitespace-pre-wrap"><%= item.adminReturnComment %></span></div>
+                                            <% } %>
+                                        </div>
+                                    <% } else if (item.adminReturnComment) { %>
+                                        <div class="mt-2 text-xs text-red-400 font-mono pl-2 w-full break-words">
+                                            <span class="px-1.5 py-0.5 border border-red-500/30 bg-red-500/10 rounded font-bold">RETURN REJECTED</span>
+                                            <div class="mt-1 text-gray-400 font-sans">Rejection Reason: <span class="text-gray-300 whitespace-pre-wrap"><%= item.adminReturnComment %></span></div>
+                                        </div>
+                                    <% } %>
                                 </div>
                             <% }); %>
                         </div>
@@ -190,26 +255,26 @@
                         <div class="space-y-4 font-mono text-sm">
                             <div class="flex justify-between text-gray-300">
                                 <span>Subtotal (<%= order.items.length %> <%= order.items.length === 1 ? 'Item' : 'Items' %>)</span>
-                                <span>$<%= order.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                                <span>₹<%= (order.subtotal / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
                             </div>
                             <div class="flex justify-between text-gray-300">
                                 <span>Shipping &amp; Handling</span>
-                                <span>$<%= order.shipping.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                                <span>₹<%= (order.shipping / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
                             </div>
                             <% if (order.discount > 0) { %>
                                 <div class="flex justify-between text-emerald-400">
                                     <span>Discount Applied</span>
-                                    <span>-$<%= order.discount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                                    <span>-₹<%= (order.discount / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
                                 </div>
                             <% } %>
                             <div class="flex justify-between text-gray-300">
                                 <span>Tax (GST - 18%)</span>
-                                <span>$<%= order.tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                                <span>₹<%= (order.tax / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
                             </div>
                         </div>
                         <div class="mt-6 pt-6 border-t border-dashed border-gray-700 flex justify-between items-center">
                             <span class="text-xl font-semibold text-white">Total Amount</span>
-                            <span class="text-2xl font-bold font-mono text-cyan-400">$<%= order.finalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                            <span class="text-2xl font-bold font-mono text-cyan-400">₹<%= (order.finalAmount / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
                         </div>
                     </section>
                 </div>
@@ -285,8 +350,8 @@
                                 <div class="relative">
                                     <select
                                         class="block w-full pl-3 pr-10 py-2.5 text-sm bg-gray-800 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 appearance-none cursor-pointer"
-                                        id="order-status-select">
-                                        <% ['Processing', 'Shipped', 'Delivered', 'Cancelled'].forEach(function(st) { %>
+                                        id="order-status-select" <%= (currentStatus === 'Cancelled' || currentStatus === 'Returned' || currentStatus === 'Return Requested') ? 'disabled' : '' %>>
+                                        <% ['Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested'].forEach(function(st) { %>
                                             <option value="<%= st %>" <%= currentStatus === st ? 'selected' : '' %>><%= st %></option>
                                         <% }); %>
                                     </select>
@@ -295,10 +360,20 @@
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" id="save-status-btn"
-                                class="w-full bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 mt-2">
-                                <i class="fa-regular fa-floppy-disk"></i> Save Status Update
-                            </button>
+                            <% if (currentStatus === 'Cancelled') { %>
+                                <div class="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 text-xs font-semibold mt-2 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Cancelled orders cannot be modified.
+                                </div>
+                            <% } else if (currentStatus === 'Returned' || currentStatus === 'Return Requested') { %>
+                                <div class="bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg p-3 text-xs font-semibold mt-2 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Returned or return requested orders cannot be modified.
+                                </div>
+                            <% } else { %>
+                                <button type="button" id="save-status-btn"
+                                    class="w-full bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 mt-2">
+                                    <i class="fa-regular fa-floppy-disk"></i> Save Status Update
+                                </button>
+                            <% } %>
                         </div>
                     </section>
                 </div>
@@ -379,6 +454,74 @@
                     });
                 }
             });
+
+            window.handleReturnAction = async function(orderId, productId, action, platform = '') {
+                const actionText = action === 'approve' ? 'Approve' : 'Reject';
+                const { value: reason } = await Swal.fire({
+                    title: `${actionText} Return Request`,
+                    input: 'text',
+                    inputLabel: `Enter a reason for ${action === 'approve' ? 'approving' : 'rejecting'} the return:`,
+                    inputPlaceholder: 'Reason...',
+                    showCancelButton: true,
+                    confirmButtonColor: action === 'approve' ? '#10b981' : '#ef4444',
+                    cancelButtonColor: '#9ca3af',
+                    background: '#15171E',
+                    color: '#C8CFDD',
+                    inputValidator: (value) => {
+                        if (!value || !value.trim()) {
+                            return 'You must enter a reason!';
+                        }
+                    }
+                });
+
+                if (!reason) return;
+
+                try {
+                    const res = await fetch(`/admin/orders/return/${action}/${orderId}/${productId}?platform=${encodeURIComponent(platform)}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ reason })
+                    });
+
+                    const data = await res.json();
+
+                    if (!res.ok || !data.success) {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message || 'Failed to process request.',
+                            icon: 'error',
+                            background: '#15171E',
+                            color: '#C8CFDD'
+                        });
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message,
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        background: '#15171E',
+                        color: '#C8CFDD'
+                    });
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } catch (err) {
+                    Swal.fire({
+                        title: 'Network Error',
+                        text: 'Could not connect to the server.',
+                        icon: 'error',
+                        background: '#15171E',
+                        color: '#C8CFDD'
+                    });
+                }
+            };
         })();
     </script>
 </body>

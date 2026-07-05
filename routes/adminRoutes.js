@@ -39,6 +39,8 @@ router.post('/admin/categories/delete/:id', isAdminAuth, adminController.deleteC
 router.get('/admin/orders', isAdminAuth, adminController.renderOrderManagement);
 router.get('/admin/orders/:id', isAdminAuth, adminController.renderAdminOrderDetails);
 router.post('/admin/orders/update-status/:id', isAdminAuth, adminController.updateAdminOrderStatus);
+router.post('/admin/orders/return/approve/:orderId/:productId', isAdminAuth, adminController.approveReturn);
+router.post('/admin/orders/return/reject/:orderId/:productId', isAdminAuth, adminController.rejectReturn);
 
 router.post('/admin/logout', isAdminAuth, adminController.adminLogout);
 

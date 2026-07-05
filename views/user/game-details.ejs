@@ -289,14 +289,14 @@
         <div id="platformPriceContainer" class="flex items-end justify-between mb-4">
           <% if (hasDiscount) { %>
             <div class="flex flex-col">
-              <span class="text-xs text-gray-500 line-through">₹<%= Number(initialBasePrice).toFixed(2) %></span>
-              <span class="text-3xl font-bold text-pixel-white">₹<%= Number(displayPrice).toFixed(2) %></span>
+              <span class="text-xs text-gray-500 line-through">₹<%= Number(initialBasePrice / 100).toFixed(2) %></span>
+              <span class="text-3xl font-bold text-pixel-white">₹<%= Number(displayPrice / 100).toFixed(2) %></span>
             </div>
             <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
               <%= product.categoryDiscount %>% OFF
             </span>
           <% } else { %>
-            <span class="text-3xl font-bold text-pixel-white">₹<%= Number(initialBasePrice).toFixed(2) %></span>
+            <span class="text-3xl font-bold text-pixel-white">₹<%= Number(initialBasePrice / 100).toFixed(2) %></span>
           <% } %>
         </div>
         <!-- Action Buttons -->
@@ -500,11 +500,11 @@
             <div class="flex items-center justify-between">
               <% if (typeof game.categoryDiscount !== 'undefined' && game.categoryDiscount > 0) { %>
                 <div class="flex flex-col">
-                  <span class="line-through text-gray-500 text-[10px]">₹<%= Number(game.price).toFixed(2) %></span>
-                  <span class="<%= gameIsLegendary ? 'text-pixel-gold' : 'text-pixel-cyan' %> font-bold text-sm">₹<%= Number(game.discountedPrice).toFixed(2) %></span>
+                  <span class="line-through text-gray-500 text-[10px]">₹<%= Number(game.price / 100).toFixed(2) %></span>
+                  <span class="<%= gameIsLegendary ? 'text-pixel-gold' : 'text-pixel-cyan' %> font-bold text-sm">₹<%= Number(game.discountedPrice / 100).toFixed(2) %></span>
                 </div>
               <% } else { %>
-                <span class="<%= gameIsLegendary ? 'text-pixel-gold' : 'text-pixel-cyan' %> font-bold text-sm">₹<%= Number(game.price).toFixed(2) %></span>
+                <span class="<%= gameIsLegendary ? 'text-pixel-gold' : 'text-pixel-cyan' %> font-bold text-sm">₹<%= Number(game.price / 100).toFixed(2) %></span>
               <% } %>
               <button onclick="event.stopPropagation(); window.location.href='/products/<%= game._id || game.id %>'" class="text-[10px] <%= gameIsLegendary ? 'bg-pixel-gold/10 hover:bg-pixel-gold/20 text-pixel-gold border border-pixel-gold/30' : 'bg-gray-800 hover:bg-gray-700 text-white' %> px-3 py-1.5 rounded font-medium transition-colors">View</button>
             </div>
@@ -770,8 +770,8 @@
         if (categoryDiscount > 0) {
           priceContainer.innerHTML = `
             <div class="flex flex-col">
-              <span class="text-xs text-gray-500 line-through">₹${Number(basePrice).toFixed(2)}</span>
-              <span class="text-3xl font-bold text-pixel-white">₹${Number(discountedPrice).toFixed(2)}</span>
+              <span class="text-xs text-gray-500 line-through">₹${Number(basePrice / 100).toFixed(2)}</span>
+              <span class="text-3xl font-bold text-pixel-white">₹${Number(discountedPrice / 100).toFixed(2)}</span>
             </div>
             <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
               ${categoryDiscount}% OFF
@@ -779,7 +779,7 @@
           `;
         } else {
           priceContainer.innerHTML = `
-            <span class="text-3xl font-bold text-pixel-white">₹${Number(basePrice).toFixed(2)}</span>
+            <span class="text-3xl font-bold text-pixel-white">₹${Number(basePrice / 100).toFixed(2)}</span>
           `;
         }
       }

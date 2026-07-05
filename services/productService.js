@@ -58,7 +58,7 @@ export const getAllAdminProducts = async (search = '', filters = {}, sort = 'A-Z
             const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
             let discountedPrice = game.price || 0;
             if (discount > 0) {
-                discountedPrice = Math.max(0, game.price - (game.price * (discount / 100)));
+                discountedPrice = Math.round(Math.max(0, game.price - (game.price * (discount / 100))));
             }
             return {
                 ...game,
@@ -188,7 +188,7 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
 
             let discountedPrice = basePrice;
             if (discount > 0) {
-                discountedPrice = Math.max(0, basePrice - (basePrice * (discount / 100)));
+                discountedPrice = Math.round(Math.max(0, basePrice - (basePrice * (discount / 100))));
             }
             return {
                 ...game,
@@ -327,7 +327,7 @@ export const getProductsForHome = async (primaryPlatform = 'PC') => {
 
             let discountedPrice = basePrice;
             if (discount > 0) {
-                discountedPrice = Math.max(0, basePrice - (basePrice * (discount / 100)));
+                discountedPrice = Math.round(Math.max(0, basePrice - (basePrice * (discount / 100))));
             }
             const rating = 4.0 + (Math.abs(game.title.charCodeAt(0) || 0) % 11) / 10;
             const reviewsCount = 50 + (Math.abs(game.title.charCodeAt(1) || 0) % 250);
@@ -444,7 +444,7 @@ export const getRecommendationsForProduct = async (categoryId, currentProductId,
             const discount = (gameCatObj && gameCatObj.defaultOffer) ? parseFloat(gameCatObj.defaultOffer) : 0;
             let discountedPrice = basePrice;
             if (discount > 0) {
-                discountedPrice = Math.max(0, basePrice - (basePrice * (discount / 100)));
+                discountedPrice = Math.round(Math.max(0, basePrice - (basePrice * (discount / 100))));
             }
 
             return {

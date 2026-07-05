@@ -61,6 +61,13 @@ router.get('/auth/checkout', isUserAuth, userController.getCheckout);
 router.post('/auth/orders/place', isUserAuth, userController.postPlaceOrder);
 router.get('/auth/orders/success/:orderId', isUserAuth, userController.getOrderSuccess);
 router.get('/user/orders/:orderId', isUserAuth, userController.getOrderDetails);
+router.get('/user/orders/invoice/:orderId', isUserAuth, userController.downloadInvoice);
+router.get('/user/orders/cancel/:orderId', isUserAuth, userController.getCancelOrder);
+router.post('/user/orders/cancel/:orderId', isUserAuth, userController.postCancelOrder);
+router.get('/user/orders/cancel/:orderId/:productId', isUserAuth, userController.getCancelItem);
+router.post('/user/orders/cancel/:orderId/:productId', isUserAuth, userController.postCancelItem);
+router.get('/user/orders/return/:orderId/:productId', isUserAuth, userController.getReturnOrder);
+router.post('/user/orders/return/:orderId/:productId', isUserAuth, userController.postReturnOrder);
 router.get('/auth/orders', isUserAuth, userController.getOrderHistory);
 
 router.get('/auth/profile/edit', isUserAuth, userController.getProfileEdit);

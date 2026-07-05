@@ -1227,7 +1227,7 @@
         const list = JSON.parse(existingScript.textContent);
         list.forEach(item => {
           existingStockMap[item.platform] = item.stock;
-          existingPriceMap[item.platform] = item.price;
+          existingPriceMap[item.platform] = (item.price / 100).toFixed(2);
         });
       } catch(e) {}
     }
@@ -1360,11 +1360,11 @@
         hasFirstPlat = true;
       }
       formData.append(`platform_stock_${val}`, stockVal);
-      formData.append(`platform_price_${val}`, priceVal);
+      formData.append(`platform_price_${val}`, Math.round(priceVal * 100));
       formData.append('platforms[]', val);
     });
     formData.append('stock', totalStock);
-    formData.append('price', firstPlatformPrice);
+    formData.append('price', Math.round(firstPlatformPrice * 100));
 
     // Append existing gallery URLs remaining in DOM
     editForm.querySelectorAll('input[name="existing_gallery[]"]').forEach(input => {

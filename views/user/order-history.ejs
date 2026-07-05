@@ -7,6 +7,7 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>PixelPlay - Order History</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <style data-purpose="custom-colors">
         :root {
@@ -92,161 +93,245 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div class="flex flex-wrap gap-2">
                     <% 
-                      const statuses = ['All', 'Processing', 'Shipped', 'Delivered', 'Return Requested', 'Returned'];
+                      const statuses = ['All', 'Processing', 'Shipped', 'Delivered', 'Return Requested', 'Returned', 'Cancelled'];
                       const currentFilter = typeof filter !== 'undefined' ? filter : 'All';
+                      const currentViewType = typeof viewType !== 'undefined' ? viewType : 'orders';
                     %>
                     <% statuses.forEach(function(st) { %>
-                        <button onclick="window.location.href='?page=1&sort=<%= sort %>&filter=<%= encodeURIComponent(st) %>'"
+                        <button onclick="window.location.href='?page=1&sort=<%= sort %>&filter=<%= encodeURIComponent(st) %>&viewType=<%= currentViewType %>'"
                             class="px-4 py-2 rounded-full border text-sm font-medium transition-all <%= currentFilter === st ? 'border-cyan-main text-cyan-main bg-cyan-bg' : 'border-gray-800 text-muted hover:text-white hover:border-gray-700 bg-card' %>">
                             <%= st %>
                         </button>
                     <% }); %>
                 </div>
-                <div class="flex items-center gap-2">
-                    <label for="order-sort" class="text-xs font-semibold uppercase tracking-wider text-muted whitespace-nowrap">Sort By:</label>
-                    <select id="order-sort" onchange="window.location.href='?page=1&filter=<%= encodeURIComponent(currentFilter) %>&sort=' + this.value"
-                        class="bg-card text-sm text-muted hover:text-white px-4 py-2 rounded-md border border-gray-800 hover:border-gray-700 transition-colors focus:ring-0 focus:outline-none cursor-pointer">
-                        <option value="newest" <%= sort === 'newest' ? 'selected' : '' %>>Newest First</option>
-                        <option value="oldest" <%= sort === 'oldest' ? 'selected' : '' %>>Oldest First</option>
-                        <option value="price_desc" <%= sort === 'price_desc' ? 'selected' : '' %>>Price: High to Low</option>
-                        <option value="price_asc" <%= sort === 'price_asc' ? 'selected' : '' %>>Price: Low to High</option>
-                    </select>
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <label for="order-viewType" class="text-xs font-semibold uppercase tracking-wider text-muted whitespace-nowrap">View Mode:</label>
+                        <select id="order-viewType" onchange="window.location.href='?page=1&filter=<%= encodeURIComponent(currentFilter) %>&sort=<%= sort %>&viewType=' + this.value"
+                            class="bg-card text-sm text-muted hover:text-white px-4 py-2 rounded-md border border-gray-800 hover:border-gray-700 transition-colors focus:ring-0 focus:outline-none cursor-pointer">
+                            <option value="orders" <%= currentViewType === 'orders' ? 'selected' : '' %>>Orders</option>
+                            <option value="items" <%= currentViewType === 'items' ? 'selected' : '' %>>Ordered Items</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="order-sort" class="text-xs font-semibold uppercase tracking-wider text-muted whitespace-nowrap">Sort By:</label>
+                        <select id="order-sort" onchange="window.location.href='?page=1&filter=<%= encodeURIComponent(currentFilter) %>&viewType=<%= currentViewType %>&sort=' + this.value"
+                            class="bg-card text-sm text-muted hover:text-white px-4 py-2 rounded-md border border-gray-800 hover:border-gray-700 transition-colors focus:ring-0 focus:outline-none cursor-pointer">
+                            <option value="newest" <%= sort === 'newest' ? 'selected' : '' %>>Newest First</option>
+                            <option value="oldest" <%= sort === 'oldest' ? 'selected' : '' %>>Oldest First</option>
+                            <option value="price_desc" <%= sort === 'price_desc' ? 'selected' : '' %>>Price: High to Low</option>
+                            <option value="price_asc" <%= sort === 'price_asc' ? 'selected' : '' %>>Price: Low to High</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
         <!-- END: Header Section -->
         <!-- BEGIN: Order List -->
         <div class="space-y-4" data-purpose="order-list">
-            <% if (orders && orders.length > 0) { %>
-                <% orders.forEach(order => { %>
-                    <%
-                        let color = 'cyan';
-                        const status = (order.status || order.orderStatus || 'PENDING').toUpperCase();
-                        if (status === 'DELIVERED') {
-                            color = 'green';
-                        } else if (status === 'SHIPPED') {
-                            color = 'cyan';
-                        } else if (status === 'PROCESSING' || status === 'PENDING') {
-                            color = 'cyan';
-                        } else if (status === 'CANCELLED') {
-                            color = 'red';
-                        } else if (status === 'RETURN REQUESTED') {
-                            color = 'orange';
-                        } else if (status === 'RETURNED') {
-                            color = 'red';
-                        }
+            <% if (currentViewType === 'items') { %>
+                <% if (typeof items !== 'undefined' && items && items.length > 0) { %>
+                    <% items.forEach(item => { %>
+                        <%
+                            let color = 'cyan';
+                            const status = (item.status || 'Ordered').toUpperCase();
+                            if (status === 'DELIVERED') {
+                                color = 'green';
+                            } else if (status === 'SHIPPED') {
+                                color = 'cyan';
+                            } else if (status === 'PROCESSING' || status === 'PENDING') {
+                                color = 'cyan';
+                            } else if (status === 'CANCELLED') {
+                                color = 'red';
+                            } else if (status === 'RETURN REQUESTED') {
+                                color = 'orange';
+                            } else if (status === 'RETURNED') {
+                                color = 'red';
+                            }
 
-                        let shadowColor = 'rgba(0, 184, 255, 0.3)';
-                        if (color === 'green') shadowColor = 'rgba(0, 255, 136, 0.3)';
-                        else if (color === 'cyan') shadowColor = 'rgba(0, 184, 255, 0.3)';
-                        else if (color === 'orange') shadowColor = 'rgba(255, 157, 0, 0.3)';
-                        else if (color === 'red') shadowColor = 'rgba(255, 51, 102, 0.3)';
-
-                        let totalQty = 0;
-                        if (order.items && order.items.length > 0) {
-                            order.items.forEach(item => { totalQty += item.quantity; });
-                        }
-                    %>
-                    <!-- Order Card: <%= status %> -->
-                    <div
-                        class="bg-card rounded-lg border border-gray-800 p-6 flex flex-col relative overflow-hidden group hover:border-gray-700 transition-colors">
-                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-<%= color %>-main"></div>
-                        <div class="flex justify-between items-start mb-6">
-                            <div class="flex items-center gap-6 text-sm">
-                                <span class="text-<%= color %>-main font-bold">#<%= order.orderId %></span>
-                                <div class="text-muted flex gap-2">
-                                    <span>Placed:</span>
-                                    <span class="text-gray-300"><%= new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
-                                </div>
-                                <% if (status === 'DELIVERED') { %>
-                                    <div class="text-muted flex gap-2">
-                                        <span>Delivered:</span>
-                                        <span class="text-gray-300"><%= new Date(order.updatedAt || order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
-                                    </div>
-                                <% } else if (status === 'CANCELLED') { %>
-                                    <div class="text-muted flex gap-2">
-                                        <span>Cancelled:</span>
-                                        <span class="text-gray-300"><%= new Date(order.updatedAt || order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
-                                    </div>
-                                <% } else { %>
-                                    <div class="text-muted flex gap-2">
-                                        <span>Est. Delivery:</span>
-                                        <% 
-                                           const estDate = new Date(order.createdAt);
-                                           estDate.setDate(estDate.getDate() + 3);
-                                        %>
-                                        <span class="text-gray-300"><%= estDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
-                                    </div>
-                                <% } %>
-                            </div>
-                            <span
-                                class="px-3 py-1 rounded-full text-xs font-bold tracking-wider text-<%= color %>-main bg-<%= color %>-bg flex items-center gap-2 border border-<%= color %>-main/20">
-                                <span class="w-1.5 h-1.5 rounded-full bg-<%= color %>-main"></span>
-                                <%= status %>
-                            </span>
-                        </div>
-                        <div class="flex justify-between items-end">
-                            <div class="flex gap-12">
-                                <div>
-                                    <p class="text-xs text-muted mb-1 font-semibold tracking-wider uppercase">Items</p>
-                                    <div
-                                        class="flex items-center gap-2 text-sm text-<%= color %>-main bg-<%= color %>-bg px-2 py-1 rounded border border-<%= color %>-main/20 w-fit">
-                                        <i class="fa-solid fa-compact-disc"></i>
-                                        <%= totalQty %> <%= totalQty === 1 ? 'Game Disk' : 'Game Disks' %>
+                            let shadowColor = 'rgba(0, 184, 255, 0.3)';
+                            if (color === 'green') shadowColor = 'rgba(0, 255, 136, 0.3)';
+                            else if (color === 'cyan') shadowColor = 'rgba(0, 184, 255, 0.3)';
+                            else if (color === 'orange') shadowColor = 'rgba(255, 157, 0, 0.3)';
+                            else if (color === 'red') shadowColor = 'rgba(255, 51, 102, 0.3)';
+                        %>
+                        <!-- Item Card: <%= status %> -->
+                        <div class="bg-card rounded-lg border border-gray-800 p-6 flex flex-col relative overflow-hidden group hover:border-gray-700 transition-colors">
+                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-<%= color %>-main"></div>
+                            
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                                <div class="flex items-center gap-4">
+                                    <img src="<%= item.product ? item.product.cover_image : '/placeholder.jpg' %>" class="w-12 h-16 object-cover rounded border border-gray-700" />
+                                    <div>
+                                        <h4 class="text-white font-bold text-lg"><%= item.product ? item.product.title : 'Unknown Game' %></h4>
+                                        <p class="text-xs text-muted">Platform: <%= item.platform.toUpperCase() %> Disk • Qty: <%= item.quantity %></p>
                                     </div>
                                 </div>
-                                <div>
-                                    <p class="text-xs text-muted mb-1 font-semibold tracking-wider uppercase">Total</p>
-                                    <p class="text-xl font-bold text-white">$<%= order.finalAmount %></p>
+                                <div class="flex flex-col md:items-end gap-1.5">
+                                    <span class="text-<%= color %>-main font-bold">#<%= item.orderId %></span>
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold tracking-wider text-<%= color %>-main bg-<%= color %>-bg flex items-center gap-2 border border-<%= color %>-main/20">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-<%= color %>-main"></span>
+                                        <%= status === 'DELIVERED' ? 'ORDERED' : status %>
+                                    </span>
                                 </div>
                             </div>
-                            <div class="flex flex-col items-end gap-3">
-                                <% if (status === 'CANCELLED') { %>
-                                    <button onclick="window.location.href='/user/orders/<%= order._id %>'"
-                                        class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2 pt-2 border-t border-transparent">
-                                        <i class="fa-regular fa-file-lines text-xs"></i>
-                                        View Order Details
-                                    </button>
-                                <% } else { %>
-                                    <button onclick="window.location.href='/user/orders/<%= order._id %>'"
-                                        class="bg-<%= color %>-main hover:bg-<%= color %>-main/90 text-dark px-6 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2"
-                                        style="box-shadow: 0 0 15px <%= shadowColor %>">
+                            
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <p class="text-xs text-muted mb-1 font-semibold tracking-wider uppercase">Price</p>
+                                    <p class="text-xl font-bold text-white">₹<%= ((item.price * item.quantity) / 100).toFixed(2) %></p>
+                                </div>
+                                <div class="flex flex-col items-end gap-3">
+                                    <button onclick="window.location.href='/user/orders/<%= item.orderDbId %>'"
+                                        class="bg-[#1c1d22] hover:bg-gray-800 text-white border border-gray-700 px-6 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2">
                                         <i class="fa-regular fa-file-lines"></i>
                                         View Order Details
                                     </button>
-                                <% } %>
-                                <% if (status === 'SHIPPED') { %>
-                                    <button class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
-                                        <i class="fa-solid fa-location-arrow text-xs"></i>
-                                        Track Order
-                                    </button>
-                                <% } else if (status === 'DELIVERED') { %>
-                                    <button class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
-                                        <i class="fa-solid fa-download text-xs"></i>
-                                        Download Invoice
-                                    </button>
-                                <% } else if (status === 'PROCESSING' || status === 'PENDING') { %>
-                                    <button class="text-sm text-muted hover:text-red-main transition-colors flex items-center gap-2">
-                                        <i class="fa-regular fa-circle-xmark text-xs"></i>
-                                        Cancel Order
-                                    </button>
-                                <% } %>
+                                </div>
                             </div>
                         </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="text-center py-12 bg-card rounded-lg border border-gray-800">
+                        <i class="fa-solid fa-box-open text-4xl text-muted mb-4"></i>
+                        <p class="text-muted">No items found.</p>
                     </div>
-                <% }) %>
+                <% } %>
             <% } else { %>
-                <div class="text-center py-12 bg-card rounded-lg border border-gray-800">
-                    <i class="fa-solid fa-box-open text-4xl text-muted mb-4"></i>
-                    <p class="text-muted">No orders found.</p>
-                </div>
+                <% if (orders && orders.length > 0) { %>
+                    <% orders.forEach(order => { %>
+                        <%
+                            let color = 'cyan';
+                            const status = (order.status || order.orderStatus || 'PENDING').toUpperCase();
+                            if (status === 'DELIVERED') {
+                                color = 'green';
+                            } else if (status === 'SHIPPED') {
+                                color = 'cyan';
+                            } else if (status === 'PROCESSING' || status === 'PENDING') {
+                                color = 'cyan';
+                            } else if (status === 'CANCELLED') {
+                                color = 'red';
+                            } else if (status === 'RETURN REQUESTED') {
+                                color = 'orange';
+                            } else if (status === 'RETURNED') {
+                                color = 'red';
+                            }
+
+                            let shadowColor = 'rgba(0, 184, 255, 0.3)';
+                            if (color === 'green') shadowColor = 'rgba(0, 255, 136, 0.3)';
+                            else if (color === 'cyan') shadowColor = 'rgba(0, 184, 255, 0.3)';
+                            else if (color === 'orange') shadowColor = 'rgba(255, 157, 0, 0.3)';
+                            else if (color === 'red') shadowColor = 'rgba(255, 51, 102, 0.3)';
+
+                            let totalQty = 0;
+                            if (order.items && order.items.length > 0) {
+                                order.items.forEach(item => {
+                                    if (item.status !== 'Cancelled') {
+                                        totalQty += item.quantity;
+                                    }
+                                });
+                            }
+                        %>
+                        <!-- Order Card: <%= status %> -->
+                        <div class="bg-card rounded-lg border border-gray-800 p-6 flex flex-col relative overflow-hidden group hover:border-gray-700 transition-colors">
+                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-<%= color %>-main"></div>
+                            <div class="flex justify-between items-start mb-6">
+                                <div class="flex items-center gap-6 text-sm">
+                                    <span class="text-<%= color %>-main font-bold">#<%= order.orderId %></span>
+                                    <div class="text-muted flex gap-2">
+                                        <span>Placed:</span>
+                                        <span class="text-gray-300"><%= new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
+                                    </div>
+                                    <% if (status === 'DELIVERED') { %>
+                                        <div class="text-muted flex gap-2">
+                                            <span>Delivered:</span>
+                                            <span class="text-gray-300"><%= new Date(order.updatedAt || order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
+                                        </div>
+                                    <% } else if (status === 'CANCELLED') { %>
+                                        <div class="text-muted flex gap-2">
+                                            <span>Cancelled:</span>
+                                            <span class="text-gray-300"><%= new Date(order.updatedAt || order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
+                                        </div>
+                                    <% } else { %>
+                                        <div class="text-muted flex gap-2">
+                                            <span>Est. Delivery:</span>
+                                            <% 
+                                               const estDate = new Date(order.createdAt);
+                                               estDate.setDate(estDate.getDate() + 3);
+                                            %>
+                                            <span class="text-gray-300"><%= estDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
+                                        </div>
+                                    <% } %>
+                                </div>
+                                <span
+                                    class="px-3 py-1 rounded-full text-xs font-bold tracking-wider text-<%= color %>-main bg-<%= color %>-bg flex items-center gap-2 border border-<%= color %>-main/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-<%= color %>-main"></span>
+                                    <%= status %>
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-end">
+                                <div class="flex gap-12">
+                                    <div>
+                                        <p class="text-xs text-muted mb-1 font-semibold tracking-wider uppercase">Items</p>
+                                        <div
+                                            class="flex items-center gap-2 text-sm text-<%= color %>-main bg-<%= color %>-bg px-2 py-1 rounded border border-<%= color %>-main/20 w-fit">
+                                            <i class="fa-solid fa-compact-disc"></i>
+                                            <%= totalQty %> <%= totalQty === 1 ? 'Game Disk' : 'Game Disks' %>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-muted mb-1 font-semibold tracking-wider uppercase">Total</p>
+                                        <p class="text-xl font-bold text-white">₹<%= (order.finalAmount / 100).toFixed(2) %></p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end gap-3">
+                                    <% if (status === 'CANCELLED') { %>
+                                        <button onclick="window.location.href='/user/orders/<%= order._id %>'"
+                                            class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2 pt-2 border-t border-transparent">
+                                            <i class="fa-regular fa-file-lines text-xs"></i>
+                                            View Order Details
+                                        </button>
+                                    <% } else { %>
+                                        <button onclick="window.location.href='/user/orders/<%= order._id %>'"
+                                            class="bg-<%= color %>-main hover:bg-<%= color %>-main/90 text-dark px-6 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2"
+                                            style="box-shadow: 0 0 15px <%= shadowColor %>">
+                                            <i class="fa-regular fa-file-lines"></i>
+                                            View Order Details
+                                        </button>
+                                    <% } %>
+                                    <% if (status === 'SHIPPED') { %>
+                                        <button class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
+                                            <i class="fa-solid fa-location-arrow text-xs"></i>
+                                            Track Order
+                                        </button>
+                                    <% } else if (status === 'DELIVERED') { %>
+                                        <button onclick="window.location.href='/user/orders/invoice/<%= order._id %>'" class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
+                                            <i class="fa-solid fa-download text-xs"></i>
+                                            Download Invoice
+                                        </button>
+                                    <% } else if (status === 'PROCESSING' || status === 'PENDING') { %>
+                                        <button onclick="confirmCancelOrder('<%= order._id %>')" class="text-sm text-muted hover:text-red-main transition-colors flex items-center gap-2">
+                                            <i class="fa-regular fa-circle-xmark text-xs"></i>
+                                            Cancel Order
+                                        </button>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="text-center py-12 bg-card rounded-lg border border-gray-800">
+                        <i class="fa-solid fa-box-open text-4xl text-muted mb-4"></i>
+                        <p class="text-muted">No orders found.</p>
+                    </div>
+                <% } %>
             <% } %>
         </div>
         <!-- END: Order List -->
         <!-- BEGIN: Pagination -->
         <div class="mt-8 flex justify-center" data-purpose="pagination">
             <nav class="flex items-center gap-1">
-                <button onclick="window.location.href='?page=<%= currentPage - 1 %>&sort=<%= sort %>&filter=<%= encodeURIComponent(filter) %>'" <%= currentPage <= 1 ? 'disabled' : '' %>
+                <button onclick="window.location.href='?page=<%= currentPage - 1 %>&sort=<%= sort %>&filter=<%= encodeURIComponent(filter) %>&viewType=<%= currentViewType %>'" <%= currentPage <= 1 ? 'disabled' : '' %>
                     class="px-3 py-2 text-sm text-muted hover:text-white bg-card border border-gray-800 rounded-md disabled:opacity-50 transition-colors flex items-center gap-1">
                     <i class="fa-solid fa-chevron-left text-xs"></i>
                     Previous
@@ -254,15 +339,15 @@
                 <div class="flex items-center gap-1 mx-2">
                     <% for (let i = 1; i <= totalPages; i++) { %>
                         <% if (i === currentPage) { %>
-                            <button onclick="window.location.href='?page=<%= i %>&sort=<%= sort %>&filter=<%= encodeURIComponent(filter) %>'"
+                            <button onclick="window.location.href='?page=<%= i %>&sort=<%= sort %>&filter=<%= encodeURIComponent(filter) %>&viewType=<%= currentViewType %>'"
                                 class="w-8 h-8 flex items-center justify-center text-sm font-medium text-cyan-main border border-cyan-main bg-cyan-bg rounded-md"><%= i %></button>
                         <% } else { %>
-                            <button onclick="window.location.href='?page=<%= i %>&sort=<%= sort %>&filter=<%= encodeURIComponent(filter) %>'"
+                            <button onclick="window.location.href='?page=<%= i %>&sort=<%= sort %>&filter=<%= encodeURIComponent(filter) %>&viewType=<%= currentViewType %>'"
                                 class="w-8 h-8 flex items-center justify-center text-sm font-medium text-muted hover:text-white hover:bg-hover border border-transparent rounded-md transition-colors"><%= i %></button>
                         <% } %>
                     <% } %>
                 </div>
-                <button onclick="window.location.href='?page=<%= currentPage + 1 %>&sort=<%= sort %>&filter=<%= encodeURIComponent(filter) %>'" <%= currentPage >= totalPages ? 'disabled' : '' %>
+                <button onclick="window.location.href='?page=<%= currentPage + 1 %>&sort=<%= sort %>&filter=<%= encodeURIComponent(filter) %>&viewType=<%= currentViewType %>'" <%= currentPage >= totalPages ? 'disabled' : '' %>
                     class="px-3 py-2 text-sm text-muted hover:text-white bg-card border border-gray-800 rounded-md disabled:opacity-50 transition-colors flex items-center gap-1">
                     Next
                     <i class="fa-solid fa-chevron-right text-xs"></i>
@@ -272,6 +357,26 @@
         <!-- END: Pagination -->
     </main>
     <!-- END: Main Content -->
-</body>
 
+    <script>
+        function confirmCancelOrder(orderId) {
+            Swal.fire({
+                title: 'Cancel Entire Order?',
+                text: 'Disclaimer: All products in this order will be cancelled on clicking the confirm button. If you wish to cancel only one product, you may navigate to the order details page and cancel the item individually.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff3366',
+                cancelButtonColor: '#8a8a93',
+                confirmButtonText: 'Confirm',
+                cancelButtonText: 'Cancel',
+                background: '#15161a',
+                color: '#e2e4eb'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/user/orders/cancel/${orderId}`;
+                }
+            });
+        }
+    </script>
+</body>
 </html>

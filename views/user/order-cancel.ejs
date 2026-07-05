@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title><%= typeof product !== 'undefined' && product ? 'Cancel Item' : 'Cancel Your Order' %> - PixelPlay</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style data-purpose="custom-styles">
+        body {
+            background-color: #0f1014;
+            color: #e5e7eb;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Custom Radio Button Styling */
+        .custom-radio input:checked + div {
+            border-color: #0ea5e9;
+            background-color: rgba(14, 165, 233, 0.05);
+        }
+
+        .custom-radio input:checked + div .radio-circle {
+            border-color: #0ea5e9;
+        }
+
+        .custom-radio input:checked + div .radio-dot {
+            background-color: #0ea5e9;
+        }
+
+        .glow-button {
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8 font-sans antialiased">
+    <!-- BEGIN: MainContent -->
+    <main class="w-full max-w-2xl flex flex-col gap-6">
+        <!-- BEGIN: Header Section -->
+        <header class="flex flex-col gap-4">
+            <a class="text-gray-400 hover:text-white flex items-center text-sm font-medium transition-colors w-fit"
+                href="/user/orders/<%= order._id %>">
+                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                Back to Order Details
+            </a>
+            <h1 class="text-3xl font-bold text-white tracking-tight">
+                <%= typeof product !== 'undefined' && product ? 'Cancel Item' : 'Cancel Your Order' %>
+            </h1>
+
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="bg-red-500/10 border border-red-500/30 text-red-500 rounded-lg p-4 text-sm font-medium">
+                    <i class="fa-solid fa-triangle-exclamation mr-1.5"></i><%= error %>
+                </div>
+            <% } %>
+
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                <div class="flex items-center text-gray-400">
+                    <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    Order ID: <span class="text-gray-300 font-mono ml-1 text-xs bg-[#1c1d21] px-1.5 py-0.5 rounded">#<%= order.orderId %></span>
+                </div>
+                <div class="flex items-center text-gray-400">
+                    <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    Placed on: <span class="text-gray-300 font-mono ml-1 text-xs bg-[#1c1d21] px-1.5 py-0.5 rounded"><%= new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
+                </div>
+
+                <% if (typeof product !== 'undefined' && product) { %>
+                    <div class="flex items-center text-gray-400 w-full mt-2">
+                        <svg class="h-4 w-4 mr-1.5 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke-linecap="round"
+                                stroke-linejoin="round"></path>
+                        </svg>
+                        Item to Cancel: <span class="text-sky-400 font-medium ml-1"><%= product.title %> (<%= item.platform %> Disk) x <%= item.quantity %></span>
+                    </div>
+                <% } %>
+
+                <% 
+                   const refundVal = (typeof product !== 'undefined' && product) ? (item.price * item.quantity) : order.grandTotal;
+                %>
+                <div class="flex items-center text-green-500 bg-green-500/10 px-2.5 py-1 rounded-md font-medium text-xs mt-1">
+                    <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                            stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    Total Refund Amount: &nbsp;<span id="refund-amount-display" class="font-bold">₹<%= (refundVal / 100).toFixed(2) %></span>
+                </div>
+            </div>
+        </header>
+        <!-- END: Header Section -->
+
+        <form action="<%= typeof product !== 'undefined' && product ? '/user/orders/cancel/' + order._id + '/' + product._id + '?platform=' + encodeURIComponent(item.platform) : '/user/orders/cancel/' + order._id %>" method="POST" class="flex flex-col gap-6">
+            <% if (typeof product !== 'undefined' && product && item.quantity > 1) { %>
+            <!-- Quantity adjustment Section -->
+            <section class="bg-[#15161a] border border-[#23252a] rounded-xl overflow-hidden shadow-sm p-6 flex flex-col gap-3">
+                <h2 class="text-xs font-bold text-[#0ea5e9] tracking-wider uppercase mb-1">Quantity to Cancel</h2>
+                <div class="flex items-center gap-3">
+                    <button type="button" id="qty-minus-btn" class="w-10 h-10 rounded border border-gray-700 bg-gray-800 text-white flex items-center justify-center font-bold text-lg select-none hover:bg-gray-700 transition-colors">-</button>
+                    <input type="number" id="qty-input" name="quantity" value="<%= item.quantity %>" min="1" max="<%= item.quantity %>" readonly class="w-16 h-10 border border-gray-700 bg-[#111216] text-white text-center font-semibold rounded select-none focus:outline-none" />
+                    <button type="button" id="qty-plus-btn" class="w-10 h-10 rounded border border-gray-700 bg-gray-800 text-white flex items-center justify-center font-bold text-lg select-none hover:bg-gray-700 transition-colors">+</button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1 font-mono">Total copies ordered: <%= item.quantity %></p>
+            </section>
+            <% } else { %>
+                <input type="hidden" name="quantity" value="1" />
+            <% } %>
+            <!-- BEGIN: Cancellation Reason Form -->
+            <section class="bg-[#15161a] border border-[#23252a] rounded-xl overflow-hidden shadow-sm">
+                <div class="bg-[#1c1d21] px-6 py-4 border-b border-[#23252a]">
+                    <h2 class="text-xs font-bold text-[#0ea5e9] tracking-wider uppercase">Reason for Cancellation</h2>
+                </div>
+                <div class="p-6">
+                    <p class="text-sm text-gray-400 mb-4">Please select a reason for cancellation:</p>
+                    <div class="flex flex-col gap-3">
+                        <!-- Option 1 -->
+                        <label class="custom-radio cursor-pointer group">
+                            <input class="sr-only" name="cancel_reason" type="radio" value="Delivery time is too long" required />
+                            <div class="flex items-center p-4 border border-[#2a2c33] bg-[#1a1b20] rounded-lg hover:border-[#3a3c45] transition-all">
+                                <div class="flex items-center justify-center w-4 h-4 rounded-full border border-gray-600 mr-3 radio-circle transition-colors relative">
+                                    <div class="w-2 h-2 rounded-full radio-dot transition-colors"></div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-300 group-hover:text-white">Delivery time is too long</span>
+                            </div>
+                        </label>
+                        <!-- Option 2 -->
+                        <label class="custom-radio cursor-pointer group">
+                            <input class="sr-only" name="cancel_reason" type="radio" value="Found a better price elsewhere" required />
+                            <div class="flex items-center p-4 border border-[#2a2c33] bg-[#1a1b20] rounded-lg hover:border-[#3a3c45] transition-all">
+                                <div class="flex items-center justify-center w-4 h-4 rounded-full border border-gray-600 mr-3 radio-circle transition-colors relative">
+                                    <div class="w-2 h-2 rounded-full radio-dot transition-colors"></div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-300 group-hover:text-white">Found a better price elsewhere</span>
+                            </div>
+                        </label>
+                        <!-- Option 3 -->
+                        <label class="custom-radio cursor-pointer group">
+                            <input class="sr-only" name="cancel_reason" type="radio" value="Shipping address is incorrect (Need to re-order)" required />
+                            <div class="flex items-center p-4 border border-[#2a2c33] bg-[#1a1b20] rounded-lg hover:border-[#3a3c45] transition-all">
+                                <div class="flex items-center justify-center w-4 h-4 rounded-full border border-gray-600 mr-3 radio-circle transition-colors relative">
+                                    <div class="w-2 h-2 rounded-full radio-dot transition-colors"></div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-300 group-hover:text-white">Shipping address is incorrect (Need to re-order)</span>
+                            </div>
+                        </label>
+                        <!-- Option 4 -->
+                        <label class="custom-radio cursor-pointer group">
+                            <input class="sr-only" name="cancel_reason" type="radio" value="Ordered by mistake / Changed my mind" required />
+                            <div class="flex items-center p-4 border border-[#2a2c33] bg-[#1a1b20] rounded-lg hover:border-[#3a3c45] transition-all">
+                                <div class="flex items-center justify-center w-4 h-4 rounded-full border border-gray-600 mr-3 radio-circle transition-colors relative">
+                                    <div class="w-2 h-2 rounded-full radio-dot transition-colors"></div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-300 group-hover:text-white">Ordered by mistake / Changed my mind</span>
+                            </div>
+                        </label>
+                        <!-- Option 5 -->
+                        <label class="custom-radio cursor-pointer group">
+                            <input class="sr-only" name="cancel_reason" type="radio" value="Other reason" required />
+                            <div class="flex items-center p-4 border border-[#2a2c33] bg-[#1a1b20] rounded-lg hover:border-[#3a3c45] transition-all">
+                                <div class="flex items-center justify-center w-4 h-4 rounded-full border border-gray-600 mr-3 radio-circle transition-colors relative">
+                                    <div class="w-2 h-2 rounded-full radio-dot transition-colors"></div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-300 group-hover:text-white">Other reason</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </section>
+            <!-- END: Cancellation Reason Form -->
+
+            <!-- BEGIN: Additional Comments -->
+            <section class="bg-[#15161a] border border-[#23252a] rounded-xl overflow-hidden shadow-sm">
+                <div class="bg-[#1c1d21] px-6 py-4 border-b border-[#23252a]">
+                    <h2 class="text-xs font-bold text-[#0ea5e9] tracking-wider uppercase">Additional Comments</h2>
+                </div>
+                <div class="p-6">
+                    <textarea
+                        name="additional_comments"
+                        id="additional_comments"
+                        maxlength="100"
+                        class="block w-full bg-[#111216] border border-[#2a2c33] rounded-lg text-sm text-gray-300 placeholder-gray-500 focus:ring-1 focus:ring-[#0ea5e9] focus:border-[#0ea5e9] resize-none p-4"
+                        placeholder="Please add any extra comments here (Required if 'Other reason' is selected)..."
+                        rows="3"></textarea>
+                    <div class="text-[11px] text-gray-500 mt-2 text-right" id="char-counter">0 / 100 characters</div>
+                </div>
+            </section>
+            <!-- END: Additional Comments -->
+
+            <!-- BEGIN: Policy Notice -->
+            <div class="bg-[#1a1711] border border-[#3b2e15] rounded-xl p-5 flex items-start">
+                <svg class="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2"
+                    viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                <div class="ml-3 text-sm text-gray-300 leading-relaxed">
+                    <strong class="text-white font-semibold">Instant Refund Policy:</strong> Because this order has not yet
+                    been shipped from our facility, your cancellation will be processed instantly. The amount of
+                    <strong id="policy-refund-display" class="text-white font-semibold">₹<%= (refundVal / 100).toFixed(2) %></strong> will be credited directly and exclusively to
+                    your <strong class="text-yellow-500 font-semibold">PixelWallet</strong> the moment you confirm below.
+                </div>
+            </div>
+            <!-- END: Policy Notice -->
+
+            <!-- BEGIN: Actions -->
+            <div class="flex flex-col items-center gap-4">
+                <button
+                    class="w-full flex items-center justify-center px-4 py-3.5 border border-transparent text-sm font-semibold rounded-lg text-white bg-[#0ea5e9] hover:bg-[#0284c7] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0ea5e9] focus:ring-offset-[#0f1014] transition-colors glow-button"
+                    type="submit">
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    Confirm Cancellation
+                </button>
+                <a class="text-sm font-medium text-[#0ea5e9] hover:text-[#38bdf8] hover:underline transition-colors flex items-center mt-2"
+                    href="/user/orders/<%= order._id %>">
+                    <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    Keep my order and go back
+                </a>
+            </div>
+            <!-- END: Actions -->
+        </form>
+    </main>
+    <!-- END: MainContent -->
+
+    <script>
+        (function() {
+            const radioButtons = document.querySelectorAll('input[name="cancel_reason"]');
+            const additionalComments = document.getElementById('additional_comments');
+
+            function updateCommentsRequired() {
+                const selected = document.querySelector('input[name="cancel_reason"]:checked');
+                if (selected && selected.value === 'Other reason') {
+                    additionalComments.required = true;
+                    additionalComments.minLength = 10;
+                    additionalComments.placeholder = "Please explain your reason here (Minimum 10 characters required)...";
+                } else {
+                    additionalComments.required = false;
+                    additionalComments.removeAttribute('minlength');
+                    additionalComments.placeholder = "Please add any extra comments here (Required if 'Other reason' is selected)...";
+                }
+            }
+
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', updateCommentsRequired);
+            });
+
+            // Run initially
+            updateCommentsRequired();
+
+            // Character counter
+            const counter = document.getElementById('char-counter');
+            if (additionalComments && counter) {
+                additionalComments.addEventListener('input', () => {
+                    counter.textContent = `${additionalComments.value.length} / 100 characters`;
+                });
+            }
+
+            // Quantity adjusters
+            const minusBtn = document.getElementById('qty-minus-btn');
+            const plusBtn = document.getElementById('qty-plus-btn');
+            const qtyInput = document.getElementById('qty-input');
+            const refundDisplay = document.getElementById('refund-amount-display');
+            const policyRefundDisplay = document.getElementById('policy-refund-display');
+
+            const itemPrice = parseFloat('<%= typeof item !== "undefined" && item ? item.price : 0 %>');
+
+            function updateRefund(qty) {
+                if (itemPrice > 0) {
+                    const totalRefund = (itemPrice * qty) / 100;
+                    const text = '₹' + totalRefund.toFixed(2);
+                    if (refundDisplay) refundDisplay.textContent = text;
+                    if (policyRefundDisplay) policyRefundDisplay.textContent = text;
+                }
+            }
+
+            if (minusBtn && plusBtn && qtyInput) {
+                const maxVal = parseInt(qtyInput.max);
+                minusBtn.addEventListener('click', () => {
+                    let current = parseInt(qtyInput.value) || 1;
+                    if (current > 1) {
+                        qtyInput.value = current - 1;
+                        updateRefund(current - 1);
+                    }
+                });
+
+                plusBtn.addEventListener('click', () => {
+                    let current = parseInt(qtyInput.value) || 1;
+                    if (current < maxVal) {
+                        qtyInput.value = current + 1;
+                        updateRefund(current + 1);
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Request a Return - PixelPlay</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'pixel-dark': '#111215',
+                        'pixel-card': '#1a1b1f',
+                        'pixel-border': '#2a2d35',
+                        'pixel-cyan': '#0ea5e9',
+                        'pixel-cyan-dark': '#0369a1',
+                        'pixel-gold': '#fbbf24',
+                        'pixel-gold-dark': '#b45309',
+                        'pixel-muted': '#9ca3af',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style data-purpose="custom-styles">
+        body {
+            background-color: #111215;
+            color: #f3f4f6;
+        }
+
+        /* Custom Radio Button Styling */
+        .custom-radio input:checked+div {
+            border-color: #0ea5e9;
+            background-color: rgba(14, 165, 233, 0.1);
+        }
+
+        .custom-radio input:checked+div .radio-circle {
+            border-color: #0ea5e9;
+        }
+
+        .custom-radio input:checked+div .radio-dot {
+            background-color: #0ea5e9;
+        }
+
+        /* Textarea Customization */
+        textarea {
+            resize: none;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 1px #0ea5e9;
+        }
+
+        /* Button Glow Effect */
+        .btn-glow {
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+            background-color: #38bdf8;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans antialiased text-gray-200">
+    <div class="w-full max-w-3xl flex flex-col gap-8">
+        <!-- BEGIN: Header Section -->
+        <header class="flex flex-col gap-6">
+            <a class="text-pixel-muted hover:text-white flex items-center gap-2 text-sm font-medium w-fit transition-colors"
+                href="/user/orders/<%= order._id %>">
+                <svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                    stroke-width="2" viewbox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m15 18-6-6 6-6"></path>
+                </svg>
+                Back to Order Details
+            </a>
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-3 tracking-tight">Request a Return</h1>
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-pixel-muted font-mono">
+                    <p>Order ID: <span class="text-gray-300">#<%= order.orderId %></span></p>
+                    <p>Item: <span class="text-pixel-cyan font-semibold"><%= product.title %></span> <span
+                            class="text-gray-400">(<%= item.platform %> Disk)</span></p>
+                </div>
+            </div>
+        </header>
+        <!-- END: Header Section -->
+
+        <!-- BEGIN: Main Form -->
+        <main>
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="bg-red-500/10 border border-red-500/30 text-red-500 rounded-lg p-4 text-sm font-medium mb-6">
+                    <%= error %>
+                </div>
+            <% } %>
+            <form action="/user/orders/return/<%= order._id %>/<%= product._id %>?platform=<%= encodeURIComponent(item.platform) %>" class="flex flex-col gap-6" method="POST">
+                <% if (item && item.quantity > 1) { %>
+                <!-- Quantity selection Section -->
+                <div class="bg-pixel-card rounded-xl p-6 shadow-sm border border-pixel-border flex flex-col gap-3">
+                    <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Quantity to Return</label>
+                    <div class="flex items-center gap-3">
+                        <button type="button" id="qty-minus-btn" class="w-10 h-10 rounded border border-pixel-border bg-pixel-card text-white flex items-center justify-center font-bold text-lg select-none hover:bg-gray-800 transition-colors">-</button>
+                        <input type="number" id="qty-input" name="quantity" value="<%= item.quantity %>" min="1" max="<%= item.quantity %>" readonly class="w-16 h-10 border border-pixel-border bg-pixel-dark text-white text-center font-semibold rounded select-none focus:outline-none" />
+                        <button type="button" id="qty-plus-btn" class="w-10 h-10 rounded border border-pixel-border bg-pixel-card text-white flex items-center justify-center font-bold text-lg select-none hover:bg-gray-800 transition-colors">+</button>
+                    </div>
+                    <p class="text-xs text-pixel-muted mt-1 font-mono">Total copies ordered: <%= item.quantity %></p>
+                </div>
+                <% } else { %>
+                    <input type="hidden" name="quantity" value="1" />
+                <% } %>
+                <!-- Return Reason Card -->
+                <div class="bg-pixel-card rounded-xl p-6 shadow-sm border border-pixel-border flex flex-col gap-5">
+                    <h2 class="text-base font-semibold text-white">Why are you returning this item?</h2>
+                    <div class="flex flex-col gap-3">
+                        <!-- Option 1 -->
+                        <label class="custom-radio cursor-pointer group">
+                            <input class="sr-only" name="return_reason" type="radio" value="damaged" required />
+                            <div
+                                class="flex items-center p-4 rounded-lg border border-pixel-border bg-pixel-card hover:bg-gray-800/50 transition-colors">
+                                <div
+                                    class="flex items-center justify-center w-5 h-5 rounded-full border-2 border-gray-500 mr-4 radio-circle transition-colors">
+                                    <div class="w-2.5 h-2.5 rounded-full radio-dot transition-colors"></div>
+                                </div>
+                                <div
+                                    class="flex items-center gap-3 text-sm font-medium text-gray-200 group-hover:text-white">
+                                    <svg class="text-pixel-cyan" fill="none" height="18" stroke="currentColor"
+                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        viewbox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path>
+                                        <path d="m9 12 2 2 4-4"></path>
+                                    </svg>
+                                    Damaged disk or case received
+                                </div>
+                            </div>
+                        </label>
+                        <!-- Option 2 -->
+                        <label class="custom-radio cursor-pointer group">
+                            <input class="sr-only" name="return_reason" type="radio" value="wrong_item" required />
+                            <div
+                                class="flex items-center p-4 rounded-lg border border-pixel-border bg-pixel-card hover:bg-gray-800/50 transition-colors">
+                                <div
+                                    class="flex items-center justify-center w-5 h-5 rounded-full border-2 border-gray-500 mr-4 radio-circle transition-colors">
+                                    <div class="w-2.5 h-2.5 rounded-full radio-dot transition-colors"></div>
+                                </div>
+                                <div
+                                    class="flex items-center gap-3 text-sm font-medium text-gray-200 group-hover:text-white">
+                                    <svg class="text-pixel-muted" fill="none" height="18" stroke="currentColor"
+                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        viewbox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                                        </path>
+                                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                        <line x1="12" x2="12" y1="22.08" y2="12"></line>
+                                    </svg>
+                                    Wrong game or platform delivered
+                                </div>
+                            </div>
+                        </label>
+                        <!-- Option 3 -->
+                        <label class="custom-radio cursor-pointer group">
+                            <input class="sr-only" name="return_reason" type="radio" value="not_working" required />
+                            <div
+                                class="flex items-center p-4 rounded-lg border border-pixel-border bg-pixel-card hover:bg-gray-800/50 transition-colors">
+                                <div
+                                    class="flex items-center justify-center w-5 h-5 rounded-full border-2 border-gray-500 mr-4 radio-circle transition-colors">
+                                    <div class="w-2.5 h-2.5 rounded-full radio-dot transition-colors"></div>
+                                </div>
+                                <div
+                                    class="flex items-center gap-3 text-sm font-medium text-gray-200 group-hover:text-white">
+                                    <svg class="text-pixel-muted" fill="none" height="18" stroke="currentColor"
+                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        viewbox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+                                        <path d="M2 12h20"></path>
+                                    </svg>
+                                    Game does not work / disk unreadable
+                                </div>
+                            </div>
+                        </label>
+                        <!-- Option 4 -->
+                        <label class="custom-radio cursor-pointer group">
+                            <input class="sr-only" name="return_reason" type="radio" value="mistake" required />
+                            <div
+                                class="flex items-center p-4 rounded-lg border border-pixel-border bg-pixel-card hover:bg-gray-800/50 transition-colors">
+                                <div
+                                    class="flex items-center justify-center w-5 h-5 rounded-full border-2 border-gray-500 mr-4 radio-circle transition-colors">
+                                    <div class="w-2.5 h-2.5 rounded-full radio-dot transition-colors"></div>
+                                </div>
+                                <div
+                                    class="flex items-center gap-3 text-sm font-medium text-gray-200 group-hover:text-white">
+                                    <svg class="text-pixel-muted" fill="none" height="18" stroke="currentColor"
+                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        viewbox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                    </svg>
+                                    Ordered by mistake
+                                </div>
+                            </div>
+                        </label>
+                        <!-- Option 5 -->
+                        <label class="custom-radio cursor-pointer group">
+                            <input class="sr-only" name="return_reason" type="radio" value="other" required />
+                            <div
+                                class="flex items-center p-4 rounded-lg border border-pixel-border bg-pixel-card hover:bg-gray-800/50 transition-colors">
+                                <div
+                                    class="flex items-center justify-center w-5 h-5 rounded-full border-2 border-gray-500 mr-4 radio-circle transition-colors">
+                                    <div class="w-2.5 h-2.5 rounded-full radio-dot transition-colors"></div>
+                                </div>
+                                <div
+                                    class="flex items-center gap-3 text-sm font-medium text-gray-200 group-hover:text-white">
+                                    <svg class="text-pixel-muted" fill="none" height="18" stroke="currentColor"
+                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        viewbox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                    Other reason
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <!-- Additional Details Textarea -->
+                    <div class="mt-4 flex flex-col gap-2">
+                        <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider"
+                            for="additional_details">Additional Details</label>
+                        <textarea
+                            class="w-full bg-pixel-dark border border-pixel-border rounded-lg p-4 text-sm text-gray-300 placeholder-gray-500 focus:ring-1 focus:ring-pixel-cyan focus:border-pixel-cyan transition-colors"
+                            id="additional_details" name="additional_details"
+                            maxlength="100"
+                            placeholder="Required if 'Other reason' is selected. Describe your issue in detail so our support team can review your request accurately..."
+                            rows="3"></textarea>
+                        <div class="text-[11px] text-gray-500 mt-1 text-right" id="char-counter">0 / 100 characters</div>
+                    </div>
+                </div>
+                <!-- Policy Notices -->
+                <div class="flex flex-col gap-4">
+                    <!-- Mandatory Condition Policy -->
+                    <div class="bg-[#1a1c18] border border-pixel-gold/30 rounded-xl p-5 flex gap-4 items-start">
+                        <div class="text-pixel-gold mt-0.5 shrink-0">
+                            <svg fill="none" height="20" stroke="currentColor" stroke-linecap="round"
+                                stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z">
+                                </path>
+                                <path d="M12 9v4"></path>
+                                <path d="M12 17h.01"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold text-pixel-gold uppercase tracking-wider mb-1">Mandatory
+                                Condition — Damage &amp; Completeness Policy</h3>
+                            <p class="text-sm text-gray-400 leading-relaxed">
+                                Returns will only be accepted if the product is in the <strong
+                                    class="text-gray-200 font-semibold">exact same condition as delivered</strong>, with
+                                no damage caused by the consumer. All contents originally included in the box — <strong
+                                    class="text-gray-200 font-semibold">disk, manual, case inserts, and any bonus
+                                    items</strong> — must be present and accounted for. Incomplete returns will be
+                                automatically rejected and returned at the sender's cost.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Refund Destination Policy -->
+                    <div class="bg-[#131b24] border border-pixel-cyan/30 rounded-xl p-5 flex gap-4 items-start">
+                        <div class="text-pixel-cyan mt-0.5 shrink-0">
+                            <svg fill="none" height="20" stroke="currentColor" stroke-linecap="round"
+                                stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <rect height="14" rx="2" width="20" x="2" y="5"></rect>
+                                <line x1="2" x2="22" y1="10" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold text-pixel-cyan uppercase tracking-wider mb-1">PixelWallet
+                                Refund Destination Policy</h3>
+                            <p class="text-sm text-gray-400 leading-relaxed">
+                                All validated returns are credited <strong class="text-gray-200 font-semibold">directly
+                                    and exclusively to your PixelWallet</strong> immediately after verification and
+                                physical inspection. Refunds are non-transferable to external payment methods. Your
+                                PixelWallet credit can be used toward any future order on the PixelPlay platform.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Submit Button Section -->
+                <div class="mt-4 flex flex-col items-center gap-3">
+                    <button
+                        class="w-full bg-pixel-cyan hover:bg-[#38bdf8] text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-2 btn-glow text-sm tracking-wide"
+                        type="submit">
+                        <svg fill="none" height="18" stroke="currentColor" stroke-linecap="round"
+                            stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="18"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <line x1="22" x2="11" y1="2" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        SUBMIT RETURN REQUEST
+                    </button>
+                    <div class="flex items-center gap-1.5 text-xs text-pixel-muted">
+                        <svg class="text-pixel-cyan" fill="none" height="12" stroke="currentColor"
+                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24"
+                            width="12" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path>
+                            <path d="m9 12 2 2 4-4"></path>
+                        </svg>
+                        Your request is securely processed via the PixelPlay logistics network.
+                    </div>
+                </div>
+            </form>
+        </main>
+        <!-- END: Main Form -->
+    </div>
+
+    <script>
+        (function() {
+            const radioButtons = document.querySelectorAll('input[name="return_reason"]');
+            const additionalDetails = document.getElementById('additional_details');
+
+            function updateDetailsRequired() {
+                const selected = document.querySelector('input[name="return_reason"]:checked');
+                if (selected && selected.value === 'other') {
+                    additionalDetails.required = true;
+                    additionalDetails.minLength = 10;
+                    additionalDetails.placeholder = "Required. Describe your issue in detail (Minimum 10 characters required)...";
+                } else {
+                    additionalDetails.required = false;
+                    additionalDetails.removeAttribute('minlength');
+                    additionalDetails.placeholder = "Required if 'Other reason' is selected. Describe your issue in detail so our support team can review your request accurately...";
+                }
+            }
+
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', updateDetailsRequired);
+            });
+
+            // Run initially
+            updateDetailsRequired();
+
+            // Character counter
+            const counter = document.getElementById('char-counter');
+            if (additionalDetails && counter) {
+                additionalDetails.addEventListener('input', () => {
+                    counter.textContent = `${additionalDetails.value.length} / 100 characters`;
+                });
+            }
+
+            // Quantity adjusters
+            const minusBtn = document.getElementById('qty-minus-btn');
+            const plusBtn = document.getElementById('qty-plus-btn');
+            const qtyInput = document.getElementById('qty-input');
+
+            if (minusBtn && plusBtn && qtyInput) {
+                const maxVal = parseInt(qtyInput.max);
+                minusBtn.addEventListener('click', () => {
+                    let current = parseInt(qtyInput.value) || 1;
+                    if (current > 1) {
+                        qtyInput.value = current - 1;
+                    }
+                });
+
+                plusBtn.addEventListener('click', () => {
+                    let current = parseInt(qtyInput.value) || 1;
+                    if (current < maxVal) {
+                        qtyInput.value = current + 1;
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
