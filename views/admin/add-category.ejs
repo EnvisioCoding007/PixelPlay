@@ -537,6 +537,17 @@
     </script>
   <% } %>
 
+  <% if (typeof success !== 'undefined' && success) { %>
+    <script>
+      Swal.fire({
+        title: 'Success',
+        text: '<%= success %>',
+        icon: 'success',
+        confirmButtonColor: '#2cb5e8'
+      });
+    </script>
+  <% } %>
+
   <%- include('../partials/admin/footer') %>
 </body>
 </html>

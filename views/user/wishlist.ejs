@@ -54,6 +54,18 @@
           <% 
             const isLegendary = (item.product.edition_type === 'LEGENDARY');
             const itemCover = item.product.cover_image || item.product.coverImage || item.product.coverImageUrl || '/img/placeholder.png';
+            const itemPlatform = item.platform || 'PC';
+
+            // Gather platform stock details
+            let isOutOfStock = false;
+            if (item.product.platform_stock && item.product.platform_stock.length > 0) {
+              const ps = item.product.platform_stock.find(p => p.platform.toLowerCase() === itemPlatform.toLowerCase());
+              if (ps && ps.stock === 0) {
+                isOutOfStock = true;
+              }
+            } else if (typeof item.product.stock !== 'undefined' && item.product.stock === 0) {
+              isOutOfStock = true;
+            }
             
             // Gather categories/genres
             let tags = [];
@@ -83,6 +95,11 @@
               
               <!-- Tags -->
               <div class="flex flex-wrap gap-2 mb-4">
+                <% if (isOutOfStock) { %>
+                  <span class="bg-[#f92a40]/10 text-pixel-red border border-[#f92a40]/20 text-xs font-semibold px-2.5 py-1 rounded uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-exclamation text-[10px]"></i> Out of Stock
+                  </span>
+                <% } %>
                 <% tags.forEach(tag => { %>
                   <span class="bg-app-tag text-gray-300 text-xs px-2.5 py-1 rounded"><%= tag %></span>
                 <% }) %>
@@ -142,6 +159,10 @@
                 <div class="w-full bg-red-950/40 border border-red-800/60 text-red-400 font-semibold py-2 px-4 rounded flex items-center justify-center gap-2 select-none text-sm text-center">
                   Product unavailable
                 </div>
+              <% } else if (isOutOfStock) { %>
+                <button disabled class="w-full <%= isLegendary ? 'bg-app-orange' : 'bg-app-cyan' %> opacity-50 cursor-not-allowed pointer-events-none text-black font-semibold py-2 px-4 rounded flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-cart-shopping text-sm"></i> Move to Cart
+                </button>
               <% } else if (isLegendary) { %>
                 <button onclick="moveToCart('<%= item.product._id %>', '<%= itemPlatform %>', '<%= item.product.title.replace(/'/g, "\\'") %>')" class="w-full bg-app-orange hover:bg-[#fbd394] text-black font-semibold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2">
                   <i class="fa-solid fa-cart-shopping text-sm"></i> Move to Cart

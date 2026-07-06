@@ -257,12 +257,22 @@ export const updateOrderStatus = async (id, status) => {
         throw new Error('Order not found');
     }
 
+    if (['Cancelled', 'Returned', 'Return Requested'].includes(status)) {
+        throw new Error('This status can only be initiated from the user side');
+    }
+
     const oldStatus = order.orderStatus;
     if (oldStatus === 'Cancelled') {
         throw new Error('Cannot change the status of a cancelled order');
     }
     if (oldStatus === 'Returned' || oldStatus === 'Return Requested') {
         throw new Error('Cannot change the status of a returned or return requested order');
+    }
+    if (oldStatus === 'Delivered') {
+        throw new Error('Cannot change the status of a delivered order');
+    }
+    if (oldStatus === 'Shipped' && status === 'Processing') {
+        throw new Error('Cannot revert status from Shipped back to Processing');
     }
 
     order.orderStatus = status;

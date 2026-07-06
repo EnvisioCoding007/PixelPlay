@@ -614,6 +614,19 @@
       console.error('Network error toggling wishlist:', err);
     }
   }
+
+  <% if (typeof notification !== 'undefined' && notification) { %>
+    document.addEventListener('DOMContentLoaded', () => {
+      showToast("<%= notification %>", "info");
+      try {
+        const url = new URL(window.location);
+        url.searchParams.delete('notification');
+        window.history.replaceState({}, document.title, url.toString());
+      } catch (e) {
+        console.error('Error clearing notification query param:', e);
+      }
+    });
+  <% } %>
 </script>
 
 <%- include('../partials/user/footer') %>

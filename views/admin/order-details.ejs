@@ -217,10 +217,10 @@
                                                 <% } %>
                                             </div>
                                             <div class="flex gap-3">
-                                                <button onclick="handleReturnAction('<%= order._id %>', '<%= item.product._id || item.product %>', 'approve', '<%= item.platform %>')" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors flex items-center gap-1.5 text-xs">
+                                                <button onclick="handleReturnAction('<%= order._id %>', '<%= (item.product && item.product._id) ? item.product._id : (item.product || "") %>', 'approve', '<%= item.platform %>')" class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors flex items-center gap-1.5 text-xs">
                                                     <i class="fa-solid fa-check"></i> Approve Return
                                                 </button>
-                                                <button onclick="handleReturnAction('<%= order._id %>', '<%= item.product._id || item.product %>', 'reject', '<%= item.platform %>')" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-colors flex items-center gap-1.5 text-xs">
+                                                <button onclick="handleReturnAction('<%= order._id %>', '<%= (item.product && item.product._id) ? item.product._id : (item.product || "") %>', 'reject', '<%= item.platform %>')" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg transition-colors flex items-center gap-1.5 text-xs">
                                                     <i class="fa-solid fa-xmark"></i> Reject Return
                                                 </button>
                                             </div>
@@ -350,8 +350,14 @@
                                 <div class="relative">
                                     <select
                                         class="block w-full pl-3 pr-10 py-2.5 text-sm bg-gray-800 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 appearance-none cursor-pointer"
-                                        id="order-status-select" <%= (currentStatus === 'Cancelled' || currentStatus === 'Returned' || currentStatus === 'Return Requested') ? 'disabled' : '' %>>
-                                        <% ['Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned', 'Return Requested'].forEach(function(st) { %>
+                                        id="order-status-select" <%= (currentStatus === 'Cancelled' || currentStatus === 'Returned' || currentStatus === 'Return Requested' || currentStatus === 'Delivered') ? 'disabled' : '' %>>
+                                        <% 
+                                           let allowedStatuses = ['Processing', 'Shipped', 'Delivered'];
+                                           if (currentStatus === 'Shipped') {
+                                               allowedStatuses = ['Shipped', 'Delivered'];
+                                           }
+                                        %>
+                                        <% allowedStatuses.forEach(function(st) { %>
                                             <option value="<%= st %>" <%= currentStatus === st ? 'selected' : '' %>><%= st %></option>
                                         <% }); %>
                                     </select>
@@ -367,6 +373,10 @@
                             <% } else if (currentStatus === 'Returned' || currentStatus === 'Return Requested') { %>
                                 <div class="bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg p-3 text-xs font-semibold mt-2 flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-triangle-exclamation"></i> Returned or return requested orders cannot be modified.
+                                </div>
+                            <% } else if (currentStatus === 'Delivered') { %>
+                                <div class="bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg p-3 text-xs font-semibold mt-2 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Delivered orders cannot be modified.
                                 </div>
                             <% } else { %>
                                 <button type="button" id="save-status-btn"
@@ -388,72 +398,74 @@
             const saveBtn = document.getElementById('save-status-btn');
             const orderId = '<%= order._id %>';
 
-            saveBtn.addEventListener('click', async function() {
-                const newStatus = selectEl.value;
+            if (saveBtn) {
+                saveBtn.addEventListener('click', async function() {
+                    const newStatus = selectEl.value;
 
-                const confirmResult = await Swal.fire({
-                    title: 'Update Order Status',
-                    text: `Are you sure you want to update this order's status to "${newStatus}"?`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#06b6d4',
-                    cancelButtonColor: '#ff3366',
-                    confirmButtonText: 'Yes, update it!',
-                    cancelButtonText: 'Cancel',
-                    background: '#15171E',
-                    color: '#C8CFDD'
-                });
-
-                if (!confirmResult.isConfirmed) return;
-
-                try {
-                    const res = await fetch(`/admin/orders/update-status/${orderId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({ orderStatus: newStatus })
+                    const confirmResult = await Swal.fire({
+                        title: 'Update Order Status',
+                        text: `Are you sure you want to update this order's status to "${newStatus}"?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#06b6d4',
+                        cancelButtonColor: '#ff3366',
+                        confirmButtonText: 'Yes, update it!',
+                        cancelButtonText: 'Cancel',
+                        background: '#15171E',
+                        color: '#C8CFDD'
                     });
 
-                    const data = await res.json();
+                    if (!confirmResult.isConfirmed) return;
 
-                    if (!res.ok || !data.success) {
+                    try {
+                        const res = await fetch(`/admin/orders/update-status/${orderId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({ orderStatus: newStatus })
+                        });
+
+                        const data = await res.json();
+
+                        if (!res.ok || !data.success) {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Failed to update status.',
+                                icon: 'error',
+                                background: '#15171E',
+                                color: '#C8CFDD'
+                            });
+                            return;
+                        }
+
                         Swal.fire({
-                            title: 'Error',
-                            text: data.message || 'Failed to update status.',
+                            title: 'Success!',
+                            text: data.message,
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false,
+                            background: '#15171E',
+                            color: '#C8CFDD'
+                        });
+
+                        // Reload page after a delay to reflect updates
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+
+                    } catch (err) {
+                        Swal.fire({
+                            title: 'Network Error',
+                            text: 'Could not connect to the server.',
                             icon: 'error',
                             background: '#15171E',
                             color: '#C8CFDD'
                         });
-                        return;
                     }
-
-                    Swal.fire({
-                        title: 'Success!',
-                        text: data.message,
-                        icon: 'success',
-                        timer: 2000,
-                        showConfirmButton: false,
-                        background: '#15171E',
-                        color: '#C8CFDD'
-                    });
-
-                    // Reload page after a delay to reflect updates
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-
-                } catch (err) {
-                    Swal.fire({
-                        title: 'Network Error',
-                        text: 'Could not connect to the server.',
-                        icon: 'error',
-                        background: '#15171E',
-                        color: '#C8CFDD'
-                    });
-                }
-            });
+                });
+            }
 
             window.handleReturnAction = async function(orderId, productId, action, platform = '') {
                 const actionText = action === 'approve' ? 'Approve' : 'Reject';

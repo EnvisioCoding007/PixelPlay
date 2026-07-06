@@ -11,15 +11,23 @@
           </div>
           <div class="flex items-center gap-4">
             <!-- Search Bar -->
-            <form action="/admin/publishers" method="get" class="relative">
-              <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
-              <input id="pubSearchInput" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>"
-                class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue text-sm rounded-lg pl-9 pr-10 py-2.5 w-64 placeholder-gray-500"
-                placeholder="Search Publishers..." type="text" />
-              <button type="button" id="clearPubSearchBtn"
-                class="<%= (typeof search !== 'undefined' && search) ? '' : 'hidden' %> absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
-                <i class="fa-solid fa-xmark text-sm"></i>
-              </button>
+            <form action="/admin/publishers" method="get" class="flex items-center gap-3">
+              <div class="relative">
+                <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                <input id="pubSearchInput" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>"
+                  class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue text-sm rounded-lg pl-9 pr-10 py-2.5 w-64 placeholder-gray-500"
+                  placeholder="Search Publishers..." type="text" />
+                <button type="button" id="clearPubSearchBtn"
+                  class="<%= (typeof search !== 'undefined' && search) ? '' : 'hidden' %> absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                  <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+              </div>
+              <select name="sort" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue text-sm rounded-lg px-3 py-2.5 appearance-none cursor-pointer pr-8 relative" onchange="this.form.submit()">
+                <option value="latest" <%= typeof sort !== 'undefined' && sort === 'latest' ? 'selected' : '' %>>Sort: Latest First</option>
+                <option value="oldest" <%= typeof sort !== 'undefined' && sort === 'oldest' ? 'selected' : '' %>>Sort: Oldest First</option>
+                <option value="A-Z" <%= typeof sort !== 'undefined' && sort === 'A-Z' ? 'selected' : '' %>>Sort: Alphabetical (A-Z)</option>
+                <option value="Z-A" <%= typeof sort !== 'undefined' && sort === 'Z-A' ? 'selected' : '' %>>Sort: Alphabetical (Z-A)</option>
+              </select>
             </form>
             <!-- Add Button -->
             <a href="/admin/publishers/add"
@@ -174,7 +182,7 @@
                 </div>
                 <div class="flex items-center gap-1">
                   <% if (currentPage> 1) { %>
-                    <a href="/admin/publishers?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>"
+                    <a href="/admin/publishers?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>&sort=<%= encodeURIComponent(typeof sort !== 'undefined' ? sort : '') %>"
                       class="px-3 py-1.5 rounded border border-border-dark bg-card-bg text-gray-400 hover:text-white transition-colors text-sm font-medium flex items-center gap-1">
                       <i class="fa-solid fa-chevron-left text-xs"></i> Previous
                     </a>
@@ -186,14 +194,14 @@
                             <%= p %>
                           </span>
                           <% } else { %>
-                            <a href="/admin/publishers?page=<%= p %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>"
+                            <a href="/admin/publishers?page=<%= p %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>&sort=<%= encodeURIComponent(typeof sort !== 'undefined' ? sort : '') %>"
                               class="w-8 h-8 rounded bg-transparent text-gray-400 hover:bg-card-bg hover:text-white transition-colors font-medium flex items-center justify-center text-sm">
                               <%= p %>
                             </a>
                             <% } %>
                               <% } %>
                                 <% if (currentPage < totalPages) { %>
-                                  <a href="/admin/publishers?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>"
+                                  <a href="/admin/publishers?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>&sort=<%= encodeURIComponent(typeof sort !== 'undefined' ? sort : '') %>"
                                     class="px-3 py-1.5 rounded border border-border-dark bg-card-bg text-pixel-blue hover:bg-content-bg transition-colors text-sm font-medium flex items-center gap-1 ml-2">
                                     Next <i class="fa-solid fa-chevron-right text-xs"></i>
                                   </a>
@@ -234,5 +242,16 @@
           }
         })();
       </script>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+        <script>
+          Swal.fire({
+            title: 'Success',
+            text: '<%= success %>',
+            icon: 'success',
+            confirmButtonColor: '#2cb5e8'
+          });
+        </script>
+      <% } %>
 
       <%- include('../partials/admin/footer') %>

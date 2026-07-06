@@ -101,7 +101,7 @@
                             Manage your identity, personal details, and account security.</p>
                     </div>
                 </section>
-                <form
+                <form id="profile-edit-form"
                     method="post" action="/auth/profile/edit"
                     class="flex flex-col items-start gap-14 p-12 relative self-stretch w-full flex-[0_0_auto] bg-[#121215bf] rounded-xl border border-solid border-zinc-700 shadow-[inset_0px_1px_0px_1px_#ffffff0d,0px_8px_32px_#00000066] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
                     <section class="flex items-center gap-8 relative self-stretch w-full flex-[0_0_auto]">
@@ -423,6 +423,37 @@
         editBtn.addEventListener('click', () => {
             isEditing ? disableEdit() : enableEdit();
         });
+
+        const profileForm = document.getElementById('profile-edit-form');
+        if (profileForm) {
+            profileForm.addEventListener('submit', function(e) {
+                const phoneInput = document.getElementById('phone-number');
+                if (phoneInput && phoneInput.value.trim()) {
+                    const phoneVal = phoneInput.value.trim();
+                    const cleanPhone = phoneVal.replace(/[\s-]/g, '');
+                    const phoneRegex = /^(?:\+91|91|0)?[6-9]\d{9}$/;
+                    let errEl = document.getElementById('profile-phone-error');
+                    if (!phoneRegex.test(cleanPhone)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!errEl) {
+                            errEl = document.createElement('p');
+                            errEl.id = 'profile-phone-error';
+                            errEl.className = 'mt-1.5 text-xs text-red-500 font-medium';
+                            phoneInput.parentNode.appendChild(errEl);
+                        }
+                        errEl.textContent = 'Please enter a valid phone number (10 to 12 digits, optional +91).';
+                        phoneInput.parentNode.classList.add('border-red-500');
+                    } else {
+                        if (errEl) {
+                            errEl.remove();
+                        }
+                        phoneInput.parentNode.classList.remove('border-red-500');
+                        phoneInput.value = cleanPhone;
+                    }
+                }
+            });
+        }
     })();
 </script>
 

@@ -178,7 +178,7 @@ export const adminLogout = (req, res) => {
 
 export const renderProductManagement = async (req, res) => {
     try {
-        const { search = '', category = 'All', type = 'All', sort = 'A-Z', page = 1, platform = 'All', developer = 'All', status = 'All' } = req.query;
+        const { search = '', category = 'All', type = 'All', sort = 'latest', page = 1, platform = 'All', developer = 'All', status = 'All' } = req.query;
         const limit = 10;
 
         const result = await productService.getAllAdminProducts(
@@ -314,6 +314,9 @@ export const editProduct = async (req, res) => {
         const galleryFiles = req.files && req.files.gallery ? req.files.gallery : [];
 
         const totalGalleryCount = existingGallery.filter(url => url && url.trim() !== '').length + galleryFiles.length;
+        if (totalGalleryCount < 3) {
+            return res.status(400).json({ success: false, message: 'Game gallery must have at least 3 images/videos.' });
+        }
         if (totalGalleryCount > 5) {
             return res.status(400).json({ success: false, message: 'Game gallery image limit must be capped to 5.' });
         }
@@ -447,8 +450,8 @@ export const addProduct = async (req, res) => {
         if (coverFiles.length === 0) {
             return res.status(400).json({ success: false, message: 'Cover image is required.' });
         }
-        if (galleryFiles.length < 1) {
-            return res.status(400).json({ success: false, message: 'At least 1 gallery file is required.' });
+        if (galleryFiles.length < 3) {
+            return res.status(400).json({ success: false, message: 'Game gallery must have at least 3 images/videos.' });
         }
 
         const coverUploadResult = await uploadToCloudinary(coverFiles[0], 'pixelplay_uploads');
@@ -487,7 +490,7 @@ export const addProduct = async (req, res) => {
 
 export const renderCategoryManagement = async (req, res) => {
     try {
-        const { search = '', page = 1, error } = req.query;
+        const { search = '', page = 1, error, success } = req.query;
         const pageNum = Math.max(1, parseInt(page, 10));
         const limitNum = 8;
 
@@ -501,6 +504,7 @@ export const renderCategoryManagement = async (req, res) => {
             limit: limitNum,
             search,
             error: error || null,
+            success: success || null,
             user: req.session.admin || null
         });
     } catch (err) {
@@ -539,7 +543,7 @@ export const createCategory = async (req, res) => {
             description: description?.trim() || '',
             icon: iconUrl
         });
-        res.redirect('/admin/categories');
+        res.redirect('/admin/categories?success=Category added successfully.');
     } catch (err) {
         console.error('[createCategory]', err);
         res.redirect(`/admin/categories?error=${encodeURIComponent(err.message || 'Internal Server Error')}`);
@@ -643,7 +647,7 @@ export const editCategory = async (req, res) => {
         category.icon = iconUrl;
 
         await category.save();
-        res.redirect('/admin/categories');
+        res.redirect('/admin/categories?success=Category updated successfully.');
     } catch (err) {
         console.error('[editCategory]', err);
         res.status(500).send('Internal Server Error');
@@ -672,18 +676,27 @@ export const deleteCategory = async (req, res) => {
 
 export const renderPublisherManagement = async (req, res) => {
     try {
-        const { search = '', page = 1, limit = 8 } = req.query;
+        const { search = '', page = 1, limit = 8, sort = 'latest', success } = req.query;
         const pageNum = Math.max(1, parseInt(page, 10));
         const limitNum = Math.max(1, parseInt(limit, 10));
 
-        let savedPublishers = await Publisher.find({}).lean();
+        let sortConfig = { createdAt: -1 };
+        if (sort === 'oldest') {
+            sortConfig = { createdAt: 1 };
+        } else if (sort === 'A-Z') {
+            sortConfig = { name: 1 };
+        } else if (sort === 'Z-A') {
+            sortConfig = { name: -1 };
+        }
+
+        let savedPublishers = await Publisher.find({}).sort(sortConfig).lean();
         if (savedPublishers.length === 0) {
             const productPubs = await Product.distinct('publisher');
             if (productPubs.length > 0) {
                 await Promise.all(productPubs.map(name => 
                     Publisher.create({ name, description: 'Seeded from existing products' })
                 ));
-                savedPublishers = await Publisher.find({}).lean();
+                savedPublishers = await Publisher.find({}).sort(sortConfig).lean();
             }
         }
 
@@ -704,8 +717,6 @@ export const renderPublisherManagement = async (req, res) => {
             };
         }));
 
-        publishers.sort((a, b) => a.name.localeCompare(b.name));
-
         const totalCount = publishers.length;
         const totalPages = Math.ceil(totalCount / limitNum);
         const startIndex = (pageNum - 1) * limitNum;
@@ -718,6 +729,8 @@ export const renderPublisherManagement = async (req, res) => {
             totalCount,
             limit: limitNum,
             search,
+            sort,
+            success: success || null,
             user: req.session.admin || null
         });
     } catch (err) {
@@ -765,7 +778,7 @@ export const createPublisher = async (req, res) => {
             description: brief_description?.trim() || ''
         });
 
-        res.redirect('/admin/publishers');
+        res.redirect('/admin/publishers?success=Publisher added successfully.');
     } catch (err) {
         console.error('[createPublisher]', err);
         res.redirect(`/admin/publishers/add?error=${encodeURIComponent(err.message || 'Internal Server Error')}`);
@@ -830,7 +843,12 @@ export const editPublisher = async (req, res) => {
             await Product.updateMany({ publisher: oldName }, { publisher: newName });
         }
 
-        res.redirect('/admin/publishers');
+        // Cascade unlist all affiliated games if the publisher is unlisted
+        if (publisher.is_listed === false) {
+            await Product.updateMany({ publisher: newName }, { status: 'Hidden' });
+        }
+
+        res.redirect('/admin/publishers?success=Publisher updated successfully.');
     } catch (err) {
         console.error('[editPublisher]', err);
         res.status(500).send('Internal Server Error');

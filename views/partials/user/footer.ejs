@@ -1,2 +1,101 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enable custom validation on all existing forms
+    document.querySelectorAll('form').forEach(form => {
+        form.setAttribute('novalidate', 'true');
+    });
+
+    // Also watch for dynamically added forms
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+                if (node.tagName === 'FORM') {
+                    node.setAttribute('novalidate', 'true');
+                } else if (node.querySelectorAll) {
+                    node.querySelectorAll('form').forEach(form => {
+                        form.setAttribute('novalidate', 'true');
+                    });
+                }
+            });
+        });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+});
+
+document.addEventListener('submit', function(e) {
+    const form = e.target;
+    const requiredFields = form.querySelectorAll('[required]');
+    let isFormValid = true;
+
+    // Clear existing validation messages and input highlight borders
+    form.querySelectorAll('.validation-error-message').forEach(el => el.remove());
+    form.querySelectorAll('.border-red-500, .border-red-600').forEach(el => {
+        el.classList.remove('border-red-500', 'border-red-600');
+    });
+
+    requiredFields.forEach(field => {
+        // Skip validation for hidden or display-none fields
+        const isVisible = !!(field.offsetWidth || field.offsetHeight || field.getClientRects().length);
+        if (!isVisible) return;
+
+        let isFieldValid = true;
+
+        if (field.type === 'checkbox') {
+            if (!field.checked) {
+                isFieldValid = false;
+            }
+        } else if (field.type === 'radio') {
+            const groupName = field.name;
+            const checkedInGroup = form.querySelector(`input[name="${groupName}"]:checked`);
+            if (!checkedInGroup) {
+                isFieldValid = false;
+            }
+        } else if (field.type === 'file') {
+            if (!field.files || field.files.length === 0) {
+                isFieldValid = false;
+            }
+        } else {
+            if (!field.value || !field.value.trim()) {
+                isFieldValid = false;
+            }
+        }
+
+        if (!isFieldValid) {
+            isFormValid = false;
+            field.classList.add('border-red-500');
+
+            // Find name to display
+            let fieldName = '';
+            const label = form.querySelector(`label[for="${field.id}"]`) || field.closest('label');
+            if (label) {
+                fieldName = label.textContent.replace(/[*:]/g, '').trim();
+            } else if (field.placeholder) {
+                fieldName = field.placeholder;
+            } else if (field.name) {
+                fieldName = field.name.charAt(0).toUpperCase() + field.name.slice(1);
+            }
+
+            const errMsg = document.createElement('div');
+            errMsg.className = 'validation-error-message text-red-500 text-xs mt-1 font-semibold flex items-center gap-1.5';
+            errMsg.innerHTML = `<i class="fa-solid fa-circle-exclamation text-[10px]"></i> ${fieldName || 'This field'} is required.`;
+            
+            // Insert under field
+            field.parentNode.appendChild(errMsg);
+        }
+    });
+
+    if (!isFormValid) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        // Scroll first invalid field into view
+        const firstInvalid = form.querySelector('.border-red-500');
+        if (firstInvalid) {
+            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstInvalid.focus();
+        }
+    }
+}, true);
+</script>
 </body>
 </html>

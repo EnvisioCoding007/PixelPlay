@@ -175,7 +175,7 @@
                 
                 <!-- Media Gallery -->
                 <div>
-                  <label class="block text-sm font-medium text-text-muted mb-2">Media Gallery (Min 1 Screenshot/Video, Unbounded Max)</label>
+                  <label class="block text-sm font-medium text-text-muted mb-2">Media Gallery (Min 3 Screenshots/Videos, Max 5)</label>
                   <div class="border-2 border-dashed border-border-dark rounded-xl p-6 bg-background-dark/50 hover:border-text-muted transition-colors">
                     <div id="galleryPreviews" class="flex flex-wrap gap-3 items-center justify-start">
                       <!-- Stateful thumbnail previews will render here -->
@@ -1033,10 +1033,10 @@
       return;
     }
     
-    if (croppedGalleryBlobs.length < 1) {
+    if (croppedGalleryBlobs.length < 3) {
       Swal.fire({
         title: 'Validation Error',
-        text: `Please select at least 1 file for the Media Gallery. Current: ${croppedGalleryBlobs.length}`,
+        text: `Please select at least 3 files for the Media Gallery. Current: ${croppedGalleryBlobs.length}`,
         icon: 'error',
         confirmButtonColor: '#2cb5e8'
       });

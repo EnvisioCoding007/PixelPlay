@@ -96,6 +96,8 @@
           <!-- Sort Option -->
           <div class="relative flex-1">
             <select name="sort" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full appearance-none pl-4 pr-10 py-2.5 rounded text-sm cursor-pointer" onchange="this.form.submit()">
+              <option value="latest" <%= typeof sort !== 'undefined' && sort === 'latest' ? 'selected' : '' %>>Sort: Latest First</option>
+              <option value="oldest" <%= typeof sort !== 'undefined' && sort === 'oldest' ? 'selected' : '' %>>Sort: Oldest First</option>
               <option value="A-Z" <%= typeof sort !== 'undefined' && sort === 'A-Z' ? 'selected' : '' %>>Sort: Alphabetical (A-Z)</option>
               <option value="Z-A" <%= typeof sort !== 'undefined' && sort === 'Z-A' ? 'selected' : '' %>>Sort: Alphabetical (Z-A)</option>
               <option value="Price-Low" <%= typeof sort !== 'undefined' && sort === 'Price-Low' ? 'selected' : '' %>>Sort: Price (Low to High)</option>

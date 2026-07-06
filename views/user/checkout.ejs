@@ -658,6 +658,14 @@
                     return false;
                 }
 
+                const cleanPhone = phone.replace(/[\s-]/g, '');
+                const phoneRegex = /^(?:\+91|91|0)?[6-9]\d{9}$/;
+                if (!phoneRegex.test(cleanPhone)) {
+                    errorDiv.textContent = 'Please enter a valid phone number (10 to 12 digits, optional +91)';
+                    errorDiv.classList.remove('hidden');
+                    return false;
+                }
+
                 if (!/^\d{6}$/.test(postal_code)) {
                     errorDiv.textContent = 'Postal code must be exactly 6 digits';
                     errorDiv.classList.remove('hidden');
@@ -885,9 +893,10 @@
                 submitPayBtn.addEventListener('click', async () => {
                     const phoneInput = document.getElementById('checkout-phone');
                     const phoneVal = phoneInput ? phoneInput.value.trim() : '';
-                    const phoneRegex = /^[6-9]\d{9}$/;
-                    if (!phoneVal || !phoneRegex.test(phoneVal)) {
-                        showToast('Please enter a valid 10-digit phone number in Contact Information.', 'error');
+                    const cleanPhone = phoneVal.replace(/[\s-]/g, '');
+                    const phoneRegex = /^(?:\+91|91|0)?[6-9]\d{9}$/;
+                    if (!phoneVal || !phoneRegex.test(cleanPhone)) {
+                        showToast('Please enter a valid phone number (10 to 12 digits, optional +91) in Contact Information.', 'error');
                         return;
                     }
 

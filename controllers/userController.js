@@ -368,9 +368,17 @@ export const updateProfile = async (req, res) => {
         const currentUser = await User.findById(req.session.user).select('email').lean();
         if (!currentUser) return res.redirect('/auth/login');
 
+        if (phone && phone.trim()) {
+            const cleanPhone = phone.replace(/[\s-]/g, '');
+            const phoneRegex = /^(?:\+91|91|0)?[6-9]\d{9}$/;
+            if (!phoneRegex.test(cleanPhone)) {
+                return res.status(400).json({ success: false, message: 'Please enter a valid phone number (10 to 12 digits, optional +91).' });
+            }
+        }
+
         const updateFields = {
             username: username.trim(),
-            phone: phone?.trim() || null,
+            phone: (phone && phone.trim()) ? phone.replace(/[\s-]/g, '') : null,
         };
 
         if (profile_image && profile_image.startsWith('data:image/')) {
@@ -494,6 +502,12 @@ export const addAddress = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please fill in all required fields.' });
         }
 
+        const cleanPhone = phone ? phone.replace(/[\s-]/g, '') : '';
+        const phoneRegex = /^(?:\+91|91|0)?[6-9]\d{9}$/;
+        if (!phoneRegex.test(cleanPhone)) {
+            return res.status(400).json({ success: false, message: 'Please enter a valid phone number (10 to 12 digits, optional +91).' });
+        }
+
         const user = await User.findById(req.session.user);
         if (!user) return res.status(401).json({ success: false, message: 'Session expired.' });
 
@@ -528,6 +542,12 @@ export const editAddress = async (req, res) => {
 
         if (!fullName || !phone || !addressLine1 || !city || !state || !postal_code) {
             return res.status(400).json({ success: false, message: 'Please fill in all required fields.' });
+        }
+
+        const cleanPhone = phone ? phone.replace(/[\s-]/g, '') : '';
+        const phoneRegex = /^(?:\+91|91|0)?[6-9]\d{9}$/;
+        if (!phoneRegex.test(cleanPhone)) {
+            return res.status(400).json({ success: false, message: 'Please enter a valid phone number (10 to 12 digits, optional +91).' });
         }
 
         const user = await User.findById(req.session.user);
@@ -607,7 +627,7 @@ export const updateAvatar = async(req,res)=>{
 
 export const getBrowsePage = async (req, res) => {
     try {
-        const { search, genre, platform, price, rating, publisher, sort, vault, page } = req.query;
+        const { search, genre, platform, price, rating, publisher, sort, vault, page, notification } = req.query;
 
         // Normalize array queries to ensure consistent rendering in EJS helpers
         const queryGenre = Array.isArray(genre) ? genre : (genre ? [genre] : []);
@@ -667,6 +687,7 @@ export const getBrowsePage = async (req, res) => {
             publishers: result.dbPublishers,
             categories: result.dbCategories,
             primaryPlatform,
+            notification: notification || null,
             query: {
                 search: search || '',
                 genre: queryGenre,
@@ -694,7 +715,7 @@ export const getProductDetails = async (req, res) => {
         const { id } = req.params;
         const product = await Product.findById(id).lean();
         if (!product || product.status === 'Hidden') {
-            return res.redirect('/browse');
+            return res.redirect('/browse?notification=The game was unlisted by the admin.');
         }
 
         const Category = (await import('../models/Category.js')).default;

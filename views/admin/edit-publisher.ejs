@@ -324,8 +324,26 @@
   const statusInput = document.getElementById('publisherStatusInput');
 
   if (toggle && statusInput) {
-    toggle.addEventListener('click', function() {
+    toggle.addEventListener('click', async function() {
       const isChecked = this.getAttribute('aria-checked') === 'true';
+      
+      const confirmText = isChecked 
+        ? "Warning: Unlisting this publisher will automatically unlist all affiliated games from the storefront. Are you sure you want to proceed?"
+        : "Listing this publisher will make it visible in the storefront directory. Are you sure you want to proceed?";
+        
+      const confirmResult = await Swal.fire({
+        title: isChecked ? 'Unlist Publisher?' : 'List Publisher?',
+        text: confirmText,
+        icon: isChecked ? 'warning' : 'question',
+        showCancelButton: true,
+        confirmButtonColor: isChecked ? '#f92a40' : '#0ea5e9',
+        cancelButtonColor: '#1f232b',
+        confirmButtonText: isChecked ? 'Yes, unlist it!' : 'Yes, list it!',
+        cancelButtonText: 'Cancel'
+      });
+
+      if (!confirmResult.isConfirmed) return;
+
       if (isChecked) {
         this.setAttribute('aria-checked', 'false');
         this.classList.remove('bg-pixel-blue');

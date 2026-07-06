@@ -788,23 +788,19 @@
         if (buyNowBtn) {
           buyNowBtn.disabled = true;
           buyNowBtn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
-          buyNowBtn.innerHTML = `<span>OUT OF STOCK</span>`;
         }
         if (addToCartBtn) {
           addToCartBtn.disabled = true;
           addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
-          addToCartBtn.innerHTML = `<span>OUT OF STOCK</span>`;
         }
       } else {
         if (buyNowBtn) {
           buyNowBtn.disabled = false;
           buyNowBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
-          buyNowBtn.innerHTML = originalBuyNowHtml;
         }
         if (addToCartBtn) {
           addToCartBtn.disabled = false;
           addToCartBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
-          addToCartBtn.innerHTML = originalAddToCartHtml;
         }
       }
 

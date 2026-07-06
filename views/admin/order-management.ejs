@@ -152,7 +152,7 @@
           <div class="flex flex-wrap items-center gap-3">
             <!-- Search Input -->
             <div class="relative w-64">
-              <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-textMuted"></i>
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-textMuted"></i>
               <input type="text" name="search" placeholder="Search Order ID or Email..." 
                      class="w-full bg-bgDark border border-borderDark rounded-lg pl-9 pr-4 py-2 text-sm text-gray-300 focus:border-neonBlue focus:ring-1 focus:ring-neonBlue focus:outline-none transition-colors"
                      value="<%= typeof search !== 'undefined' ? search : '' %>">
@@ -267,28 +267,38 @@
                     </td>
                     <td class="px-6 py-4 text-center relative">
                       <div class="inline-block text-left">
-                        <button type="button" class="action-menu-trigger text-textMuted hover:text-white transition-colors focus:outline-none"
+                        <button type="button" class="action-menu-trigger flex h-8 w-8 items-center justify-center rounded border border-solid border-[#ffffff0f] bg-[#121215] hover:bg-[#1e1e24] transition-colors cursor-pointer text-[#9aa6ab] hover:text-[#e6eef2] focus:outline-none mx-auto"
                                 data-order-id="<%= order._id %>"
                                 data-order-status="<%= orderStatus %>">
-                          <i class="ph ph-dots-three-vertical text-lg"></i>
+                          <svg class="w-4 h-4 pointer-events-none" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                          </svg>
                         </button>
                         <div id="dropdown-<%= order._id %>" class="action-dropdown hidden fixed w-48 bg-[#201f22] border border-[#353437] z-[9999] rounded-md shadow-xl overflow-hidden text-left" role="menu">
                           <a href="/admin/orders/<%= order._id %>" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-gray-300 hover:bg-[#2a2a2f] hover:text-white transition-colors">
-                            <i class="ph ph-eye text-sm"></i>
+                            <i class="fa-solid fa-eye text-xs"></i>
                             View Details
                           </a>
-                          <div class="border-t border-[#353437]"></div>
-                          <div class="px-4 py-1.5 text-[10px] text-textMuted font-bold uppercase tracking-wider">Update Status</div>
-                          <% ['Processing', 'Shipped', 'Delivered', 'Cancelled'].forEach(function(s) { %>
-                            <% if (s !== orderStatus) { %>
+                          <% if (orderStatus !== 'Delivered' && orderStatus !== 'Cancelled' && orderStatus !== 'Returned' && orderStatus !== 'Return Requested') { %>
+                            <div class="border-t border-[#353437]"></div>
+                            <div class="px-4 py-1.5 text-[10px] text-textMuted font-bold uppercase tracking-wider">Update Status</div>
+                            <% 
+                              let allowed = [];
+                              if (orderStatus === 'Processing') {
+                                allowed = ['Shipped', 'Delivered'];
+                              } else if (orderStatus === 'Shipped') {
+                                allowed = ['Delivered'];
+                              }
+                              allowed.forEach(function(s) {
+                            %>
                               <button type="button" class="update-status-btn w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-gray-300 hover:bg-[#2a2a2f] hover:text-white transition-colors"
                                       data-order-id="<%= order._id %>"
                                       data-status="<%= s %>">
                                 <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
                                 <%= s %>
                               </button>
-                            <% } %>
-                          <% }) %>
+                            <% }); %>
+                          <% } %>
                         </div>
                       </div>
                     </td>
@@ -298,7 +308,7 @@
                 <tr>
                   <td colspan="8" class="px-6 py-12 text-center text-textMuted">
                     <div class="flex flex-col items-center gap-3">
-                      <i class="ph ph-shopping-cart text-4xl"></i>
+                      <i class="fa-solid fa-cart-shopping text-4xl"></i>
                       <span>No orders found matching the criteria.</span>
                     </div>
                   </td>
@@ -323,11 +333,11 @@
               <% if (currentPage > 1) { %>
                 <a href="/admin/orders?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(search) %>&status=<%= encodeURIComponent(status) %>&paymentMethod=<%= encodeURIComponent(paymentMethod) %>&sort=<%= encodeURIComponent(sort) %>&limit=<%= limit %>"
                    class="px-3 py-1.5 rounded bg-bgDark border border-borderDark hover:bg-gray-800 transition-colors text-gray-400">
-                  <i class="ph ph-caret-left"></i>
+                  <i class="fa-solid fa-chevron-left"></i>
                 </a>
               <% } else { %>
                 <span class="px-3 py-1.5 rounded bg-bgDark border border-borderDark text-gray-600 cursor-not-allowed">
-                  <i class="ph ph-caret-left"></i>
+                  <i class="fa-solid fa-chevron-left"></i>
                 </span>
               <% } %>
 
@@ -351,11 +361,11 @@
               <% if (currentPage < totalPages) { %>
                 <a href="/admin/orders?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(search) %>&status=<%= encodeURIComponent(status) %>&paymentMethod=<%= encodeURIComponent(paymentMethod) %>&sort=<%= encodeURIComponent(sort) %>&limit=<%= limit %>"
                    class="px-3 py-1.5 rounded bg-bgDark border border-borderDark hover:bg-gray-800 transition-colors text-gray-400">
-                  <i class="ph ph-caret-right"></i>
+                  <i class="fa-solid fa-chevron-right"></i>
                 </a>
               <% } else { %>
                 <span class="px-3 py-1.5 rounded bg-bgDark border border-borderDark text-gray-600 cursor-not-allowed">
-                  <i class="ph ph-caret-right"></i>
+                  <i class="fa-solid fa-chevron-right"></i>
                 </span>
               <% } %>
             </div>

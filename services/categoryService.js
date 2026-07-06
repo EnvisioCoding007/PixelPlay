@@ -24,6 +24,7 @@ export const getAllCategoriesAdmin = async (search = '', page = 1, limit = 8) =>
         const currentPage = Math.max(1, Math.min(page, totalPages || 1));
 
         const categoriesRaw = await Category.find(query)
+            .sort({ createdAt: -1 })
             .skip((currentPage - 1) * limit)
             .limit(limit)
             .lean();

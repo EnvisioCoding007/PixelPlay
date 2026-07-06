@@ -3,7 +3,7 @@ import Product from '../models/Product.js';
 import Category from '../models/Category.js';
 import Publisher from '../models/Publisher.js';
 
-export const getAllAdminProducts = async (search = '', filters = {}, sort = 'A-Z', page = 1, limit = 10) => {
+export const getAllAdminProducts = async (search = '', filters = {}, sort = 'latest', page = 1, limit = 10) => {
     try {
         const query = {};
 
@@ -29,7 +29,11 @@ export const getAllAdminProducts = async (search = '', filters = {}, sort = 'A-Z
 
         // Sort configuration
         let sortConfig = { createdAt: -1 };
-        if (sort === 'A-Z') {
+        if (sort === 'latest') {
+            sortConfig = { createdAt: -1 };
+        } else if (sort === 'oldest') {
+            sortConfig = { createdAt: 1 };
+        } else if (sort === 'A-Z') {
             sortConfig = { title: 1 };
         } else if (sort === 'Z-A') {
             sortConfig = { title: -1 };

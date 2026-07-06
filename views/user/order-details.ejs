@@ -421,6 +421,7 @@
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
             const notification = urlParams.get('notification');
+            const error = urlParams.get('error');
             if (notification) {
                 Swal.fire({
                     title: 'Success!',
@@ -434,7 +435,20 @@
                     color: '#e5e7eb',
                     iconColor: '#00b8ff'
                 });
-                // Remove notification from URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else if (error) {
+                Swal.fire({
+                    title: 'Error',
+                    text: error,
+                    icon: 'error',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    background: '#151518',
+                    color: '#e5e7eb',
+                    iconColor: '#ef4444'
+                });
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         })();
