@@ -68,12 +68,12 @@
                     <!-- Account navigation -->
                     <nav aria-label="Account sections"
                         class="flex flex-col w-full py-3 bg-[#071827] rounded-xl border border-solid border-[#00000014]">
-                        <a href="/auth/profile"
+                        <a href="/user/profile"
                             class="flex items-center gap-3 px-6 py-3 self-stretch hover:bg-[#0ea5e90d] transition-colors">
                             <svg class="w-[18px] h-[18px] text-[#bfeaf6] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                             <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-sm">Account Overview</span>
                         </a>
-                        <a href="/auth/orders" class="flex items-center gap-3 px-6 py-3 self-stretch">
+                        <a href="/user/orders" class="flex items-center gap-3 px-6 py-3 self-stretch">
                             <svg class="w-[18px] h-[18px] text-[#bfeaf6] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v5"/><path d="M14 21l2 2 4-4"/></svg>
                             <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-sm">Order History</span>
                         </a>
@@ -81,13 +81,13 @@
                             <svg class="w-[18px] h-[18px] text-[#bfeaf6] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
                             <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-sm">Billing &amp; Payment</span>
                         </a>
-                        <a href="/auth/profile/addresses" aria-current="page"
+                        <a href="/user/profile/addresses" aria-current="page"
                             class="flex items-center gap-3 pl-[21px] pr-6 py-3 self-stretch bg-[#0ea5e91a] border-l-[3px] border-l-sky-500">
                             <svg class="w-[18px] h-[18px] text-sky-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                             <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-sky-500 text-sm">Saved Addresses</span>
                         </a>
                         <% if (user.password_hash) { %>
-                        <a href="/auth/profile/password" class="flex items-center gap-3 px-6 py-3 self-stretch hover:bg-[#0ea5e90d] transition-colors">
+                        <a href="/user/profile/password" class="flex items-center gap-3 px-6 py-3 self-stretch hover:bg-[#0ea5e90d] transition-colors">
                             <svg class="w-[18px] h-[18px] text-[#bfeaf6] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
                             <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-sm">Password</span>
                         </a>
@@ -626,7 +626,7 @@
                 if (!payload) return;
 
                 try {
-                    const response = await fetch('/auth/profile/addresses/add', {
+                    const response = await fetch('/user/profile/addresses', {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -660,7 +660,7 @@
                 const addressId = document.getElementById('edit-id').value;
 
                 try {
-                    const response = await fetch(`/auth/profile/addresses/edit/${addressId}`, {
+                    const response = await fetch(`/user/profile/addresses/${addressId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -702,7 +702,7 @@
                 if (!result.isConfirmed) return;
 
                 try {
-                    const response = await fetch(`/auth/profile/addresses/delete/${addressId}`, {
+                    const response = await fetch(`/user/profile/addresses/${addressId}`, {
                         method: 'DELETE',
                         headers: { 'Content-Type': 'application/json' }
                     });

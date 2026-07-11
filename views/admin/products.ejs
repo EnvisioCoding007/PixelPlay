@@ -5,7 +5,7 @@
   <!-- Header -->
   <header class="flex items-center justify-between px-8 py-6">
     <h1 class="text-2xl font-semibold text-gray-100">Listed Games Management</h1>
-    <a href="/admin/products/add" class="bg-pixel-blue hover:bg-pixel-blue-hover text-white px-5 py-2.5 rounded flex items-center gap-2 font-medium transition-colors">
+    <a href="/admin/products/new" class="bg-pixel-blue hover:bg-pixel-blue-hover text-white px-5 py-2.5 rounded flex items-center gap-2 font-medium transition-colors">
       <i class="fa-solid fa-plus text-xs"></i> Add New Game
     </a>
   </header>
@@ -162,7 +162,7 @@
                 
                 <!-- Action Controls -->
                 <td class="px-6 py-3 text-right">
-                  <a href="/admin/products/edit/<%= game._id %>" class="text-gray-500 hover:text-white transition-colors">
+                  <a href="/admin/products/<%= game._id %>/edit" class="text-gray-500 hover:text-white transition-colors">
                     <i class="fa-solid fa-pen"></i>
                   </a>
                 </td>

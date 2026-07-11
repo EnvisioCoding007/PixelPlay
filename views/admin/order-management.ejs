@@ -462,8 +462,8 @@
             if (!confirmResult.isConfirmed) return;
 
             try {
-                const res = await fetch(`/admin/orders/update-status/${orderId}`, {
-                    method: 'POST',
+                const res = await fetch(`/admin/orders/${orderId}/status`, {
+                    method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'

@@ -224,7 +224,7 @@
               Please remove unavailable products from your cart to proceed.
             </p>
           <% } else { %>
-            <a href="/auth/checkout" class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
+            <a href="/user/checkout" class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
               <i class="fa-solid fa-lock"></i>
               PROCEED TO CHECKOUT
             </a>
@@ -245,8 +245,8 @@
 <script>
   async function updateQty(productId, platform, action) {
     try {
-      const response = await fetch('/auth/cart/update-quantity', {
-        method: 'POST',
+      const response = await fetch('/user/cart', {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
         },
@@ -354,8 +354,8 @@
 
   async function removeCartItem(productId, platform, productTitle) {
     try {
-      const response = await fetch('/auth/cart/remove', {
-        method: 'POST',
+      const response = await fetch('/user/cart', {
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'
         },

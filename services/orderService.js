@@ -328,6 +328,13 @@ export const getOrderDetailsAdmin = async (id) => {
 };
 
 export const cancelOrder = async (orderId, userId, reason, comments) => {
+    if (reason && reason.length > 100) {
+        throw new Error('Cancellation reason cannot exceed 100 characters.');
+    }
+    if (comments && comments.length > 100) {
+        throw new Error('Cancellation comments cannot exceed 100 characters.');
+    }
+
     const order = await Order.findOne({ _id: orderId, userId });
     if (!order) {
         throw new Error('Order not found');
@@ -380,6 +387,13 @@ export const cancelOrder = async (orderId, userId, reason, comments) => {
 };
 
 export const cancelItem = async (orderId, userId, productId, reason, comments, cancelQty = 1, platform = null) => {
+    if (reason && reason.length > 100) {
+        throw new Error('Cancellation reason cannot exceed 100 characters.');
+    }
+    if (comments && comments.length > 100) {
+        throw new Error('Cancellation comments cannot exceed 100 characters.');
+    }
+
     const order = await Order.findOne({ _id: orderId, userId });
     if (!order) {
         throw new Error('Order not found');
@@ -446,7 +460,7 @@ export const cancelItem = async (orderId, userId, productId, reason, comments, c
     if (order.paymentMethod !== 'COD') {
         const user = await User.findById(order.userId);
         if (user) {
-            const refundAmount = targetItem.price * qtyToCancel;
+            const refundAmount = Math.round(targetItem.price * qtyToCancel / 0.82);
             user.walletBalance = (user.walletBalance || 0) + refundAmount;
             await user.save();
         }
@@ -473,6 +487,13 @@ export const cancelItem = async (orderId, userId, productId, reason, comments, c
 };
 
 export const requestItemReturn = async (orderId, userId, productId, reason, comments, returnQty = 1, platform = null) => {
+    if (reason && reason.length > 100) {
+        throw new Error('Return reason cannot exceed 100 characters.');
+    }
+    if (comments && comments.length > 100) {
+        throw new Error('Return comments cannot exceed 100 characters.');
+    }
+
     const order = await Order.findOne({ _id: orderId, userId });
     if (!order) {
         throw new Error('Order not found');
@@ -482,10 +503,16 @@ export const requestItemReturn = async (orderId, userId, productId, reason, comm
         throw new Error('Only delivered orders can be returned');
     }
 
-    const item = order.items.find(i => {
+    let item = order.items.find(i => {
         const itemProdId = i.product && i.product._id ? i.product._id.toString() : i.product.toString();
-        return itemProdId === productId.toString() && (!platform || i.platform === platform) && (i.status === 'Ordered' || !i.status);
+        return itemProdId === productId.toString() && (!platform || i.platform === platform) && i.status === 'Ordered' && i.adminReturnComment;
     });
+    if (!item) {
+        item = order.items.find(i => {
+            const itemProdId = i.product && i.product._id ? i.product._id.toString() : i.product.toString();
+            return itemProdId === productId.toString() && (!platform || i.platform === platform) && (i.status === 'Ordered' || !i.status);
+        });
+    }
     if (!item) {
         throw new Error('Item not found or already returned/cancelled');
     }
@@ -507,7 +534,8 @@ export const requestItemReturn = async (orderId, userId, productId, reason, comm
             status: 'Return Requested',
             returnDate: new Date(),
             returnReason: reason,
-            returnComments: comments
+            returnComments: comments,
+            adminReturnComment: null
         };
         order.items.push(newItem);
     } else {
@@ -515,6 +543,7 @@ export const requestItemReturn = async (orderId, userId, productId, reason, comm
         item.returnDate = new Date();
         item.returnReason = reason;
         item.returnComments = comments;
+        item.adminReturnComment = null;
     }
 
     order.orderStatus = 'Return Requested';
@@ -541,7 +570,7 @@ export const approveItemReturn = async (orderId, productId, adminComment, platfo
 
     const user = await User.findById(order.userId);
     if (user) {
-        const refundAmount = item.price * item.quantity;
+        const refundAmount = Math.round(item.price * item.quantity / 0.82);
         user.walletBalance = (user.walletBalance || 0) + refundAmount;
         await user.save();
     }

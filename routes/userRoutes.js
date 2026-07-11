@@ -41,7 +41,7 @@ router.get('/auth/google', passport.authenticate('google', {
 router.get('/auth/google/callback', handleGoogleAuth);
 
 router.get('/', userController.getHome);
-router.post('/set-primary-platform', userController.setPrimaryPlatform);
+router.patch('/profile/primary-platform', userController.setPrimaryPlatform);
 
 router.get('/home', userController.getHome);
 
@@ -49,48 +49,42 @@ router.get('/browse', userController.getBrowsePage);
 router.get('/products/:id', userController.getProductDetails);
 router.get('/products/status/:id', userController.checkProductStatus);
 
-router.get('/auth/profile', isUserAuth, userController.getProfile);
-router.get('/auth/wishlist', isUserAuth, userController.getWishlist);
-router.post('/auth/wishlist/toggle', isUserAuth, userController.toggleWishlist);
+router.get('/user/profile', isUserAuth, userController.getProfile);
+router.get('/user/wishlist', isUserAuth, userController.getWishlist);
+router.post('/user/wishlist', isUserAuth, userController.toggleWishlist);
 
-router.get('/auth/cart', isUserAuth, userController.getCart);
-router.post('/auth/cart/add', isUserAuth, userController.addToCart);
-router.post('/auth/cart/update-quantity', isUserAuth, userController.updateCartQuantity);
-router.post('/auth/cart/remove', isUserAuth, userController.removeFromCart);
-router.get('/auth/checkout', isUserAuth, userController.getCheckout);
-router.post('/auth/orders/place', isUserAuth, userController.postPlaceOrder);
-router.get('/auth/orders/success/:orderId', isUserAuth, userController.getOrderSuccess);
+router.get('/user/cart', isUserAuth, userController.getCart);
+router.post('/user/cart', isUserAuth, userController.addToCart);
+router.patch('/user/cart', isUserAuth, userController.updateCartQuantity);
+router.delete('/user/cart', isUserAuth, userController.removeFromCart);
+router.get('/user/checkout', isUserAuth, userController.getCheckout);
+router.post('/user/orders', isUserAuth, userController.postPlaceOrder);
+router.get('/user/orders/success/:orderId', isUserAuth, userController.getOrderSuccess);
 router.get('/user/orders/:orderId', isUserAuth, userController.getOrderDetails);
-router.get('/user/orders/invoice/:orderId', isUserAuth, userController.downloadInvoice);
-router.get('/user/orders/cancel/:orderId', isUserAuth, userController.getCancelOrder);
-router.post('/user/orders/cancel/:orderId', isUserAuth, userController.postCancelOrder);
-router.get('/user/orders/cancel/:orderId/:productId', isUserAuth, userController.getCancelItem);
-router.post('/user/orders/cancel/:orderId/:productId', isUserAuth, userController.postCancelItem);
-router.get('/user/orders/return/:orderId/:productId', isUserAuth, userController.getReturnOrder);
-router.post('/user/orders/return/:orderId/:productId', isUserAuth, userController.postReturnOrder);
-router.get('/auth/orders', isUserAuth, userController.getOrderHistory);
+router.get('/user/orders/:orderId/invoice', isUserAuth, userController.downloadInvoice);
+router.get('/user/orders/:orderId/cancellation', isUserAuth, userController.getCancelOrder);
+router.delete('/user/orders/:orderId', isUserAuth, userController.postCancelOrder);
+router.get('/user/orders/:orderId/items/:productId/cancellation', isUserAuth, userController.getCancelItem);
+router.delete('/user/orders/:orderId/items/:productId', isUserAuth, userController.postCancelItem);
+router.get('/user/orders/:orderId/items/:productId/returns', isUserAuth, userController.getReturnOrder);
+router.post('/user/orders/:orderId/items/:productId/returns', isUserAuth, userController.postReturnOrder);
+router.get('/user/orders', isUserAuth, userController.getOrderHistory);
 
-router.get('/auth/profile/edit', isUserAuth, userController.getProfileEdit);
+router.get('/user/profile/edit', isUserAuth, userController.getProfileEdit);
+router.patch('/user/profile', isUserAuth, userController.updateProfile);
 
-router.post('/auth/profile/edit', isUserAuth, userController.updateProfile);
+router.get('/user/verify-email-update', isUserAuth, userController.getVerifyEmailUpdate);
+router.post('/user/verify-email-update', isUserAuth, userController.verifyEmailUpdate);
 
-router.get('/auth/verify-email-update', isUserAuth, userController.getVerifyEmailUpdate);
+router.get('/user/profile/password', isUserAuth, userController.getProfilePassword);
+router.patch('/user/profile/password', isUserAuth, userController.updatePassword);
 
-router.post('/auth/verify-email-update', isUserAuth, userController.verifyEmailUpdate);
+router.get('/user/profile/addresses', isUserAuth, userController.getAddresses);
+router.post('/user/profile/addresses', isUserAuth, userController.addAddress);
+router.patch('/user/profile/addresses/:addressId', isUserAuth, userController.editAddress);
+router.delete('/user/profile/addresses/:addressId', isUserAuth, userController.deleteAddress);
 
-router.get('/auth/profile/password', isUserAuth, userController.getProfilePassword);
-
-router.post('/auth/profile/password', isUserAuth, userController.updatePassword);
-
-router.get('/auth/profile/addresses', isUserAuth, userController.getAddresses);
-
-router.put('/auth/profile/addresses/add', isUserAuth, userController.addAddress);
-
-router.patch('/auth/profile/addresses/edit/:addressId', isUserAuth, userController.editAddress);
-
-router.delete('/auth/profile/addresses/delete/:addressId', isUserAuth, userController.deleteAddress);
-
-router.post('/profile/update-avatar',upload.single('avatar'),userController.updateAvatar);
+router.patch('/user/profile/avatar', upload.single('avatar'), userController.updateAvatar);
 
 router.post('/auth/logout', userController.logout);
 

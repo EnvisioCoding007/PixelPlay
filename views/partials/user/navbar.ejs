@@ -15,24 +15,24 @@
                             class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'browse' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Browse</span></a>
                 </li>
                 <% if (typeof user !== 'undefined' && user) { %>
-                <li><a href="/auth/wishlist"
+                <li><a href="/user/wishlist"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'wishlist' ? 'bg-[#ffffff10]' : '' %>"><span
-                            class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'wishlist' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Wishlist</span></a>
+                             class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'wishlist' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Wishlist</span></a>
                 </li>
                 <% } %>
                 <li><a href="#"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'offers' ? 'bg-[#ffffff10]' : '' %>"><span
-                            class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'offers' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Offers</span></a>
+                             class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'offers' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Offers</span></a>
                 </li>
                 <% if (typeof user !== 'undefined' && user) { %>
                 <li><a href="#"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'wallet' ? 'bg-[#ffffff10]' : '' %>"><span
-                            class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'wallet' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] leading-[normal]">Wallet</span></a>
+                             class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'wallet' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] leading-[normal]">Wallet</span></a>
                 </li>
                 <% } %>
                 <li><a href="#"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'support' ? 'bg-[#ffffff10]' : '' %>"><span
-                            class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'support' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Support</span></a>
+                             class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'support' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Support</span></a>
                 </li>
             </ul>
         </div>
@@ -55,7 +55,7 @@
             </form>
             <% if (typeof user !== 'undefined' && user) { %>
             <%# Authenticated: show cart, bell, and profile avatar %>
-            <a href="/auth/cart" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors"
+            <a href="/user/cart" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors"
                 aria-label="Cart">
                 <i class="fa-solid fa-cart-shopping text-[#9aa6b3] hover:text-white transition-colors text-lg"></i>
                 <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
@@ -68,7 +68,7 @@
                 aria-label="Notifications">
                 <img class="relative w-5 h-5" src="/icons/notification-bell.svg" alt="Notifications" />
             </button>
-            <a href="/auth/profile"
+            <a href="/user/profile"
                 class="relative w-9 h-9 rounded-[18px] border-2 border-solid border-[#00000014] flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer overflow-hidden bg-[#1a2a3a] text-sky-400 font-bold"
                 aria-label="Profile">
                 <% if (user.profile_image) { %>

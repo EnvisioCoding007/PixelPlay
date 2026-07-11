@@ -370,7 +370,7 @@
       return;
     }
     try {
-      const response = await fetch('/auth/cart/add', {
+      const response = await fetch('/user/cart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -435,8 +435,8 @@
         return;
       }
       try {
-        const response = await fetch('/auth/cart/update-quantity', {
-          method: 'POST',
+        const response = await fetch('/user/cart', {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId, platform, action: 'increase' })
         });
@@ -473,8 +473,8 @@
       if (currentQty === 1) {
         // Remove from cart
         try {
-          const response = await fetch('/auth/cart/remove', {
-            method: 'POST',
+          const response = await fetch('/user/cart', {
+            method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ productId, platform })
           });
@@ -510,8 +510,8 @@
         }
       } else {
         try {
-          const response = await fetch('/auth/cart/update-quantity', {
-            method: 'POST',
+          const response = await fetch('/user/cart', {
+            method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ productId, platform, action: 'decrease' })
           });
@@ -553,7 +553,7 @@
     let badge = document.getElementById(badgeId);
     if (count > 0) {
       if (!badge) {
-        const cartLink = document.querySelector('a[href="/auth/cart"]');
+        const cartLink = document.querySelector('a[href="/user/cart"]');
         if (cartLink) {
           badge = document.createElement('span');
           badge.id = badgeId;
@@ -578,7 +578,7 @@
     }
 
     try {
-      const response = await fetch('/auth/wishlist/toggle', {
+      const response = await fetch('/user/wishlist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

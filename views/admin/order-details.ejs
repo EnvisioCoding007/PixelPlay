@@ -418,8 +418,8 @@
                     if (!confirmResult.isConfirmed) return;
 
                     try {
-                        const res = await fetch(`/admin/orders/update-status/${orderId}`, {
-                            method: 'POST',
+                        const res = await fetch(`/admin/orders/${orderId}/status`, {
+                            method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-Requested-With': 'XMLHttpRequest'
@@ -489,13 +489,13 @@
                 if (!reason) return;
 
                 try {
-                    const res = await fetch(`/admin/orders/return/${action}/${orderId}/${productId}?platform=${encodeURIComponent(platform)}`, {
-                        method: 'POST',
+                    const res = await fetch(`/admin/orders/${orderId}/items/${productId}/returns?platform=${encodeURIComponent(platform)}`, {
+                        method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: JSON.stringify({ reason })
+                        body: JSON.stringify({ action, reason })
                     });
 
                     const data = await res.json();

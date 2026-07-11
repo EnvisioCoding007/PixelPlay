@@ -13,7 +13,7 @@
 </div>
 
 <main class="content-bg flex-1 flex flex-col overflow-y-auto relative">
-  <form id="edit-publisher-form" action="/admin/publishers/edit/<%= publisher._id %>" method="POST" enctype="multipart/form-data" class="w-full">
+  <form id="edit-publisher-form" action="/admin/publishers/<%= publisher._id %>?_method=PUT" method="POST" enctype="multipart/form-data" class="w-full">
     <div class="max-w-4xl w-full mx-auto p-6 lg:p-10">
       <!-- Back & Header -->
       <div class="flex items-center gap-6 mb-8">

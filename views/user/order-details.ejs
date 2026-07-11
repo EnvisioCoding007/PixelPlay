@@ -51,7 +51,7 @@
         <!-- Top Navigation & Title -->
         <div class="mb-8">
             <a class="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-6 transition-colors font-medium"
-                href="/auth/orders">
+                href="/user/orders">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                     <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round"
                         stroke-width="2"></path>
@@ -228,7 +228,7 @@
                                                     <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
                                                         stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
                                                 </svg>
-                                                Item Cancelled
+                                                Item Cancelled <%= item.quantity > 1 ? `(${item.quantity} copies)` : '' %>
                                             </span>
                                             <% if (item.cancellationDate) { %>
                                                 <p class="text-xs text-gray-400">Cancelled: <span class="text-gray-300 font-mono"><%= new Date(item.cancellationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span></p>
@@ -261,10 +261,34 @@
                                                 <p class="text-xs text-gray-400">Reason: <span class="text-gray-300"><%= item.returnReason === 'other' ? item.returnComments : item.returnReason %></span></p>
                                             <% } %>
                                         </div>
+                                    <% } else if (item.status === 'Ordered' && item.adminReturnComment) { %>
+                                        <div class="flex flex-col gap-1.5">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-pixelplay-red/10 border border-pixelplay-red/30 text-pixelplay-red text-xs font-semibold rounded-full select-none w-fit">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                                    <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                </svg>
+                                                Return Rejected <%= item.quantity > 1 ? `(${item.quantity} copies)` : '' %>
+                                            </span>
+                                            <div class="text-xs text-pixelplay-red bg-pixelplay-red/10 border border-pixelplay-red/20 rounded p-3 max-w-md break-words">
+                                                <span class="font-bold block mb-1 uppercase tracking-wider text-[10px] text-pixelplay-red">Rejection Reason</span>
+                                                <span class="text-gray-300 font-sans"><%= item.adminReturnComment %></span>
+                                            </div>
+                                            <% if (order.status === 'Delivered' || order.status === 'Return Requested' || order.status === 'Returned') { %>
+                                                <button onclick="window.location.href='/user/orders/<%= order._id %>/items/<%= item.product._id %>/returns?platform=<%= encodeURIComponent(item.platform) %>'"
+                                                    class="mt-2 px-4 py-1.5 text-xs font-medium text-pixelplay-gold border border-pixelplay-gold/40 rounded-md hover:bg-pixelplay-gold/10 transition-colors flex items-center gap-1.5 w-fit">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                                        <path d="M16 15v-6a4 4 0 00-4-4H4m12 10l3-3m-3 3l-3-3"
+                                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                    </svg>
+                                                    Retry Return
+                                                </button>
+                                            <% } %>
+                                        </div>
                                     <% } else { %>
                                         <div class="flex flex-col gap-2">
                                             <% if (order.status === 'Processing') { %>
-                                                <button onclick="window.location.href='/user/orders/cancel/<%= order._id %>/<%= item.product._id %>?platform=<%= encodeURIComponent(item.platform) %>'"
+                                                <button onclick="window.location.href='/user/orders/<%= order._id %>/items/<%= item.product._id %>/cancellation?platform=<%= encodeURIComponent(item.platform) %>'"
                                                     class="px-4 py-1.5 text-xs font-medium text-pixelplay-red border border-pixelplay-red/40 rounded-md hover:bg-pixelplay-red/10 transition-colors flex items-center gap-1.5 w-fit">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                                                         <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
@@ -275,7 +299,7 @@
                                             <% } else if (order.status === 'Shipped') { %>
                                                 <!-- No buttons or links for Shipped status -->
                                             <% } else if (order.status === 'Delivered' || order.status === 'Return Requested' || order.status === 'Returned') { %>
-                                                <button onclick="window.location.href='/user/orders/return/<%= order._id %>/<%= item.product._id %>?platform=<%= encodeURIComponent(item.platform) %>'"
+                                                <button onclick="window.location.href='/user/orders/<%= order._id %>/items/<%= item.product._id %>/returns?platform=<%= encodeURIComponent(item.platform) %>'"
                                                     class="px-4 py-1.5 text-xs font-medium text-pixelplay-gold border border-pixelplay-gold/40 rounded-md hover:bg-pixelplay-gold/10 transition-colors flex items-center gap-1.5 w-fit">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                                                         <path d="M16 15v-6a4 4 0 00-4-4H4m12 10l3-3m-3 3l-3-3"
@@ -283,12 +307,6 @@
                                                     </svg>
                                                     Return This Disk
                                                 </button>
-                                            <% } %>
-                                            <% if (item.adminReturnComment) { %>
-                                                <div class="mt-1 text-xs text-red-500 bg-red-500/10 border border-red-500/20 rounded p-3 max-w-md break-words">
-                                                    <span class="font-bold block mb-1 uppercase tracking-wider text-[10px] text-red-400">Return Rejected</span>
-                                                    Reason: <span class="text-gray-300 font-sans"><%= item.adminReturnComment %></span>
-                                                </div>
                                             <% } %>
                                         </div>
                                     <% } %>
@@ -379,6 +397,16 @@
                                 <span class="font-bold text-white">Grand Total</span>
                                 <span class="text-xl font-bold text-pixelplay-accent font-mono">₹<%= (order.grandTotal / 100).toFixed(2) %></span>
                             </div>
+                            
+                            <% if (order.status === 'Delivered' || order.status === 'Return Requested' || order.status === 'Returned') { %>
+                                <div class="mt-4 pt-4 border-t border-pixelplay-border">
+                                    <button onclick="window.location.href='/user/orders/<%= order._id %>/invoice'" 
+                                        class="w-full bg-pixelplay-accent hover:bg-pixelplay-accentHover text-black font-bold py-2.5 px-4 rounded transition-colors flex items-center justify-center gap-2 text-sm shadow-md">
+                                        <i class="fa-solid fa-download text-xs"></i>
+                                        Download Invoice
+                                    </button>
+                                </div>
+                            <% } %>
                         </div>
                         <% if (order.status !== 'Shipped' && order.status !== 'Delivered') { %>
                         <!-- Notice -->

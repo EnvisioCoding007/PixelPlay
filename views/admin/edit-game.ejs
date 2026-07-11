@@ -1444,8 +1444,8 @@
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<span class="material-icons-outlined animate-spin text-sm">sync</span> Saving...';
 
-      const response = await fetch('/admin/products/edit/<%= product._id %>', {
-        method: 'POST',
+      const response = await fetch('/admin/products/<%= product._id %>', {
+        method: 'PUT',
         body: formData
       });
 

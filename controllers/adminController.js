@@ -1,19 +1,14 @@
-import User from '../models/User.js';
-import Product from '../models/Product.js';
-import Category from '../models/Category.js';
-import Publisher from '../models/Publisher.js';
 import bcrypt from 'bcrypt';
 import * as productService from '../services/productService.js';
 import * as categoryService from '../services/categoryService.js';
 import * as orderService from '../services/orderService.js';
+import * as userService from '../services/userService.js';
+import * as publisherService from '../services/publisherService.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
-
-
 
 export const getAdminLogin = (req, res) => {
     res.render('admin/login', { error: null });
 };
-
 
 export const adminLogin = async (req, res) => {
     try {
@@ -23,7 +18,7 @@ export const adminLogin = async (req, res) => {
             return res.render('admin/login', { error: 'Email and password are required.' });
         }
 
-        const user = await User.findOne({ email: email.toLowerCase().trim() });
+        const user = await userService.getAdminByEmail(email);
 
         if (!user) {
             return res.render('admin/login', { error: 'Invalid credentials.' });
@@ -60,57 +55,11 @@ export const adminLogin = async (req, res) => {
     }
 };
 
-
 export const getCustomers = async (req, res) => {
     try {
         const { page = 1, search = '', limit = 10, status = '', tier = '', sort = '-createdAt', verification = '' } = req.query;
-        const pageNum = Math.max(1, parseInt(page, 10));
-        const limitNum = Math.max(1, parseInt(limit, 10));
 
-        const queryFilter = search
-            ? {
-                $or: [
-                    { username: { $regex: search, $options: 'i' } },
-                    { email: { $regex: search, $options: 'i' } },
-                ],
-            }
-            : {};
-
-        const filter = { ...queryFilter, role: 'user' };
-
-        if (status === 'active') {
-            filter.is_blocked = false;
-        } else if (status === 'suspended') {
-            filter.is_blocked = true;
-        }
-
-        if (verification === 'verified') {
-            filter.is_verified = true;
-        } else if (verification === 'unverified') {
-            filter.is_verified = false;
-        }
-
-        let sortConfig = { createdAt: -1 };
-        if (sort === '-createdAt') {
-            sortConfig = { createdAt: -1 };
-        } else if (sort === 'createdAt') {
-            sortConfig = { createdAt: 1 };
-        } else if (sort === 'name_asc') {
-            sortConfig = { username: 1 };
-        } else if (sort === 'name_desc') {
-            sortConfig = { username: -1 };
-        }
-
-        const [users, totalCount] = await Promise.all([
-            User.find(filter)
-                .sort(sortConfig)
-                .skip((pageNum - 1) * limitNum)
-                .limit(limitNum)
-                .lean(),
-            User.countDocuments(filter),
-        ]);
-
-        const totalPages = Math.ceil(totalCount / limitNum);
+        const result = await userService.getCustomers(search, status, verification, sort, page, limit);
 
         const currentFilters = {};
         if (search) currentFilters.search = search;
@@ -120,10 +69,10 @@ export const getCustomers = async (req, res) => {
         if (verification) currentFilters.verification = verification;
 
         res.render('admin/customer-management', {
-            users,
-            currentPage: pageNum,
-            totalPages,
-            totalCount,
+            users: result.users,
+            currentPage: result.currentPage,
+            totalPages: result.totalPages,
+            totalCount: result.totalCount,
             search,
             status,
             tier,
@@ -134,7 +83,7 @@ export const getCustomers = async (req, res) => {
             currentSort: sort,
             currentVerification: verification,
             currentFilters,
-            limit: limitNum,
+            limit: parseInt(limit, 10),
         });
     } catch (err) {
         console.error('[getCustomers]', err);
@@ -142,39 +91,27 @@ export const getCustomers = async (req, res) => {
     }
 };
 
-
 export const toggleBlock = async (req, res) => {
     try {
         const { id } = req.params;
-        const user = await User.findById(id);
-
-        if (!user || user.role === 'admin') {
-            return res.status(404).json({ success: false, message: 'User not found.' });
-        }
-
-        user.is_blocked = !user.is_blocked;
-        await user.save();
+        const result = await userService.toggleUserBlock(id);
 
         return res.status(200).json({
             success: true,
-            is_blocked: user.is_blocked,
-            message: user.is_blocked
-                ? 'User has been suspended.'
-                : 'User has been reinstated.',
+            is_blocked: result.is_blocked,
+            message: result.message,
         });
     } catch (err) {
         console.error('[toggleBlock]', err);
-        return res.status(500).json({ success: false, message: 'An unexpected error occurred.' });
+        return res.status(500).json({ success: false, message: err.message || 'An unexpected error occurred.' });
     }
 };
-
 
 export const adminLogout = (req, res) => {
     req.session.destroy(() => {
         res.redirect('/admin/login');
     });
 };
-
 
 export const renderProductManagement = async (req, res) => {
     try {
@@ -224,7 +161,7 @@ export const renderEditGamePage = async (req, res) => {
             return res.status(404).send('Product not found');
         }
         const categories = await categoryService.getAllCategories();
-        const publishers = await Publisher.find({}).sort({ name: 1 }).lean();
+        const publishers = await publisherService.getAllPublishersSorted();
         res.render('admin/edit-game', {
             product,
             categories,
@@ -301,10 +238,12 @@ export const editProduct = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Game not found.' });
         }
 
-        const selectedCategory = await Category.findById(category);
-        if (!selectedCategory) {
+        const categoryDetails = await categoryService.getCategoryDetailsAdmin(category);
+        if (!categoryDetails || !categoryDetails.category) {
             return res.status(400).json({ success: false, message: 'Selected category does not exist.' });
         }
+        const selectedCategory = categoryDetails.category;
+
         if (status === 'Live' && selectedCategory.status === 'Hidden') {
             return res.status(400).json({ success: false, message: 'Cannot list a game under an unlisted category. Please change the game category to list the game.' });
         }
@@ -364,7 +303,7 @@ export const editProduct = async (req, res) => {
 export const renderAddGamePage = async (req, res) => {
     try {
         const categories = await categoryService.getAllCategories();
-        const publishers = await Publisher.find({}).sort({ name: 1 }).lean();
+        const publishers = await publisherService.getAllPublishersSorted();
         res.render('admin/add-game', {
             categories,
             publishers,
@@ -436,10 +375,12 @@ export const addProduct = async (req, res) => {
         const coverFiles = req.files && req.files.cover_image ? req.files.cover_image : [];
         const galleryFiles = req.files && req.files.gallery ? req.files.gallery : [];
 
-        const selectedCategory = await Category.findById(category);
-        if (!selectedCategory) {
+        const categoryDetails = await categoryService.getCategoryDetailsAdmin(category);
+        if (!categoryDetails || !categoryDetails.category) {
             return res.status(400).json({ success: false, message: 'Selected category does not exist.' });
         }
+        const selectedCategory = categoryDetails.category;
+
         if (selectedCategory.status === 'Hidden') {
             return res.status(400).json({ success: false, message: 'Cannot list a game under an unlisted category. Please change the game category to list the game.' });
         }
@@ -516,20 +457,6 @@ export const renderCategoryManagement = async (req, res) => {
 export const createCategory = async (req, res) => {
     try {
         const { name, defaultOffer, description } = req.body;
-        if (!name || !name.trim()) {
-            return res.redirect('/admin/categories?error=Category name is required.');
-        }
-
-        const existing = await Category.findOne({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
-        if (existing) {
-            return res.redirect('/admin/categories?error=Category already exists.');
-        }
-
-        let parsedOffer = 0;
-        if (defaultOffer) {
-            const cleaned = defaultOffer.replace(/[^\d.]/g, '');
-            parsedOffer = parseFloat(cleaned) || 0;
-        }
 
         let iconUrl = '';
         if (req.file) {
@@ -537,10 +464,10 @@ export const createCategory = async (req, res) => {
             iconUrl = uploadResult.secure_url;
         }
 
-        await Category.create({ 
-            name: name.trim(),
-            defaultOffer: parsedOffer,
-            description: description?.trim() || '',
+        await categoryService.createCategory({ 
+            name,
+            defaultOffer,
+            description,
             icon: iconUrl
         });
         res.redirect('/admin/categories?success=Category added successfully.');
@@ -553,46 +480,30 @@ export const createCategory = async (req, res) => {
 export const toggleCategoryStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const category = await Category.findById(id);
-        if (!category) {
-            return res.status(404).json({ success: false, message: 'Category not found.' });
-        }
-
-        const currentStatus = category.status || 'Live';
-        const newStatus = currentStatus === 'Live' ? 'Hidden' : 'Live';
-
-        if (newStatus === 'Hidden') {
-            // Automatically unlist all linked games
-            await Product.updateMany({ category: id }, { status: 'Hidden' });
-        }
-
-        category.status = newStatus;
-        await category.save();
+        const result = await categoryService.toggleCategoryStatus(id);
 
         return res.status(200).json({
             success: true,
-            status: newStatus,
-            message: `Category has been ${newStatus === 'Live' ? 'listed' : 'unlisted'}.`
+            status: result.status,
+            message: result.message
         });
     } catch (err) {
         console.error('[toggleCategoryStatus]', err);
-        return res.status(500).json({ success: false, message: 'Internal Server Error.' });
+        return res.status(500).json({ success: false, message: err.message || 'Internal Server Error.' });
     }
 };
 
 export const renderEditCategory = async (req, res) => {
     try {
         const { id } = req.params;
-        const category = await Category.findById(id).lean();
-        if (!category) {
+        const details = await categoryService.getCategoryDetailsAdmin(id);
+        if (!details) {
             return res.status(404).send('Category not found');
         }
 
-        const linkedGamesCount = await Product.countDocuments({ category: id });
-
         res.render('admin/edit-category', {
-            category,
-            linkedGamesCount,
+            category: details.category,
+            linkedGamesCount: details.linkedGamesCount,
             user: req.session.admin || null
         });
     } catch (err) {
@@ -605,129 +516,51 @@ export const editCategory = async (req, res) => {
     try {
         const { id } = req.params;
         const { name, defaultOffer, description, status } = req.body;
-        
-        if (!name || !name.trim()) {
-            return res.status(400).send('Category name is required.');
-        }
 
-        const category = await Category.findById(id);
-        if (!category) {
-            return res.status(404).send('Category not found.');
-        }
-
-        if (status === 'Hidden') {
-            // Automatically unlist all linked games
-            await Product.updateMany({ category: id }, { status: 'Hidden' });
-        }
-
-        const conflict = await Category.findOne({ 
-            name: { $regex: new RegExp(`^${name.trim()}$`, 'i') }, 
-            _id: { $ne: id } 
-        });
-        if (conflict) {
-            return res.status(400).send('Category name already exists.');
-        }
-
-        let parsedOffer = 0;
-        if (defaultOffer) {
-            const cleaned = defaultOffer.replace(/[^\d.]/g, '');
-            parsedOffer = parseFloat(cleaned) || 0;
-        }
-
-        let iconUrl = category.icon;
+        let iconUrl = undefined;
         if (req.file) {
             const uploadResult = await uploadToCloudinary(req.file, 'pixelplay_uploads');
             iconUrl = uploadResult.secure_url;
         }
 
-        category.name = name.trim();
-        category.defaultOffer = parsedOffer;
-        category.description = description?.trim() || '';
-        category.status = status || category.status || 'Live';
-        category.icon = iconUrl;
-
-        await category.save();
+        await categoryService.updateCategory(id, {
+            name,
+            defaultOffer,
+            description,
+            status,
+            icon: iconUrl
+        });
         res.redirect('/admin/categories?success=Category updated successfully.');
     } catch (err) {
         console.error('[editCategory]', err);
-        res.status(500).send('Internal Server Error');
+        res.status(500).send(err.message || 'Internal Server Error');
     }
 };
 
 export const deleteCategory = async (req, res) => {
     try {
         const { id } = req.params;
-        const linkedGamesCount = await Product.countDocuments({ category: id });
-        if (linkedGamesCount > 0) {
-            return res.status(400).json({ success: false, message: 'Deletion blocked: change the category of associated games first.' });
-        }
-
-        const deleted = await Category.findByIdAndDelete(id);
-        if (!deleted) {
-            return res.status(404).json({ success: false, message: 'Category not found.' });
-        }
+        await categoryService.deleteCategory(id);
 
         return res.status(200).json({ success: true, message: 'Category deleted successfully.' });
     } catch (err) {
         console.error('[deleteCategory]', err);
-        return res.status(500).json({ success: false, message: 'Internal Server Error.' });
+        return res.status(400).json({ success: false, message: err.message || 'Internal Server Error.' });
     }
 };
 
 export const renderPublisherManagement = async (req, res) => {
     try {
         const { search = '', page = 1, limit = 8, sort = 'latest', success } = req.query;
-        const pageNum = Math.max(1, parseInt(page, 10));
-        const limitNum = Math.max(1, parseInt(limit, 10));
 
-        let sortConfig = { createdAt: -1 };
-        if (sort === 'oldest') {
-            sortConfig = { createdAt: 1 };
-        } else if (sort === 'A-Z') {
-            sortConfig = { name: 1 };
-        } else if (sort === 'Z-A') {
-            sortConfig = { name: -1 };
-        }
-
-        let savedPublishers = await Publisher.find({}).sort(sortConfig).lean();
-        if (savedPublishers.length === 0) {
-            const productPubs = await Product.distinct('publisher');
-            if (productPubs.length > 0) {
-                await Promise.all(productPubs.map(name => 
-                    Publisher.create({ name, description: 'Seeded from existing products' })
-                ));
-                savedPublishers = await Publisher.find({}).sort(sortConfig).lean();
-            }
-        }
-
-        if (search && search.trim()) {
-            const queryStr = search.trim().toLowerCase();
-            savedPublishers = savedPublishers.filter(pub => pub.name.toLowerCase().includes(queryStr));
-        }
-
-        let publishers = await Promise.all(savedPublishers.map(async (pub) => {
-            const gameCount = await Product.countDocuments({ publisher: pub.name });
-            return {
-                _id: pub._id,
-                name: pub.name,
-                logo: pub.logo || null,
-                website: pub.website || null,
-                description: pub.description || 'Dynamically aggregated from product catalog',
-                gameCount
-            };
-        }));
-
-        const totalCount = publishers.length;
-        const totalPages = Math.ceil(totalCount / limitNum);
-        const startIndex = (pageNum - 1) * limitNum;
-        const paginatedPublishers = publishers.slice(startIndex, startIndex + limitNum);
+        const result = await publisherService.getAllPublishersAdmin(search, sort, page, limit);
 
         res.render('admin/listed-publishers', {
-            publishers: paginatedPublishers,
-            currentPage: pageNum,
-            totalPages,
-            totalCount,
-            limit: limitNum,
+            publishers: result.publishers,
+            currentPage: result.currentPage,
+            totalPages: result.totalPages,
+            totalCount: result.totalCount,
+            limit: parseInt(limit, 10),
             search,
             sort,
             success: success || null,
@@ -755,15 +588,6 @@ export const renderAddPublisherPage = (req, res) => {
 export const createPublisher = async (req, res) => {
     try {
         const { publisher_name, official_website, brief_description } = req.body;
-        
-        if (!publisher_name || !publisher_name.trim()) {
-            return res.redirect('/admin/publishers/add?error=Publisher name is required.');
-        }
-
-        const existing = await Publisher.findOne({ name: { $regex: new RegExp(`^${publisher_name.trim()}$`, 'i') } });
-        if (existing) {
-            return res.redirect('/admin/publishers/add?error=Publisher already exists.');
-        }
 
         let logoUrl = '';
         if (req.file) {
@@ -771,11 +595,11 @@ export const createPublisher = async (req, res) => {
             logoUrl = uploadResult.secure_url;
         }
 
-        await Publisher.create({
-            name: publisher_name.trim(),
-            website: official_website?.trim() || '',
+        await publisherService.createPublisher({
+            name: publisher_name,
+            website: official_website,
             logo: logoUrl,
-            description: brief_description?.trim() || ''
+            description: brief_description
         });
 
         res.redirect('/admin/publishers?success=Publisher added successfully.');
@@ -787,7 +611,7 @@ export const createPublisher = async (req, res) => {
 
 export const renderEditPublisherPage = async (req, res) => {
     try {
-        const publisher = await Publisher.findById(req.params.id).lean();
+        const publisher = await publisherService.getPublisherById(req.params.id);
         if (!publisher) {
             return res.status(404).send('Publisher not found');
         }
@@ -803,55 +627,26 @@ export const renderEditPublisherPage = async (req, res) => {
 
 export const editPublisher = async (req, res) => {
     try {
-        const publisher = await Publisher.findById(req.params.id);
-        if (!publisher) {
-            return res.status(404).send('Publisher not found');
-        }
-
         const { publisher_name, official_website, studio_description, is_listed } = req.body;
-        
-        if (!publisher_name || !publisher_name.trim()) {
-            return res.status(400).send('Publisher name is required.');
-        }
 
-        const existing = await Publisher.findOne({ 
-            name: { $regex: new RegExp(`^${publisher_name.trim()}$`, 'i') }, 
-            _id: { $ne: publisher._id } 
-        });
-        if (existing) {
-            return res.status(400).send('Publisher already exists.');
-        }
-
-        let logoUrl = publisher.logo;
+        let logoUrl = undefined;
         if (req.file) {
             const uploadResult = await uploadToCloudinary(req.file, 'pixelplay_uploads');
             logoUrl = uploadResult.secure_url;
         }
 
-        const oldName = publisher.name;
-        const newName = publisher_name.trim();
-
-        publisher.name = newName;
-        publisher.website = official_website?.trim() || '';
-        publisher.logo = logoUrl;
-        publisher.description = studio_description?.trim() || '';
-        publisher.is_listed = is_listed === 'true';
-
-        await publisher.save();
-
-        if (oldName !== newName) {
-            await Product.updateMany({ publisher: oldName }, { publisher: newName });
-        }
-
-        // Cascade unlist all affiliated games if the publisher is unlisted
-        if (publisher.is_listed === false) {
-            await Product.updateMany({ publisher: newName }, { status: 'Hidden' });
-        }
+        await publisherService.updatePublisher(req.params.id, {
+            name: publisher_name,
+            website: official_website,
+            logo: logoUrl,
+            description: studio_description,
+            is_listed: is_listed
+        });
 
         res.redirect('/admin/publishers?success=Publisher updated successfully.');
     } catch (err) {
         console.error('[editPublisher]', err);
-        res.status(500).send('Internal Server Error');
+        res.status(400).send(err.message || 'Internal Server Error');
     }
 };
 
@@ -952,48 +747,34 @@ export const updateAdminOrderStatus = async (req, res) => {
     }
 };
 
-export const approveReturn = async (req, res) => {
+export const handleItemReturn = async (req, res) => {
     try {
         const { orderId, productId } = req.params;
         const { platform } = req.query;
-        const { reason } = req.body;
+        const { reason, decision } = req.body;
 
         if (!reason || !reason.trim()) {
-            return res.status(400).json({ success: false, message: 'Approval reason/comment is required.' });
+            return res.status(400).json({ success: false, message: 'Comment/reason is required.' });
+        }
+        if (!decision || (decision !== 'approve' && decision !== 'reject')) {
+            return res.status(400).json({ success: false, message: 'Invalid decision.' });
         }
 
-        await orderService.approveItemReturn(orderId, productId, reason, platform);
-
-        return res.status(200).json({
-            success: true,
-            message: 'Return request approved successfully.'
-        });
-    } catch (err) {
-        console.error('[approveReturn]', err);
-        return res.status(500).json({ success: false, message: err.message || 'Failed to approve return.' });
-    }
-};
-
-export const rejectReturn = async (req, res) => {
-    try {
-        const { orderId, productId } = req.params;
-        const { platform } = req.query;
-        const { reason } = req.body;
-
-        if (!reason || !reason.trim()) {
-            return res.status(400).json({ success: false, message: 'Rejection reason/comment is required.' });
+        if (decision === 'approve') {
+            await orderService.approveItemReturn(orderId, productId, reason, platform);
+            return res.status(200).json({
+                success: true,
+                message: 'Return request approved successfully.'
+            });
+        } else {
+            await orderService.rejectItemReturn(orderId, productId, reason, platform);
+            return res.status(200).json({
+                success: true,
+                message: 'Return request rejected successfully.'
+            });
         }
-
-        await orderService.rejectItemReturn(orderId, productId, reason, platform);
-
-        return res.status(200).json({
-            success: true,
-            message: 'Return request rejected successfully.'
-        });
     } catch (err) {
-        console.error('[rejectReturn]', err);
-        return res.status(500).json({ success: false, message: err.message || 'Failed to reject return.' });
+        console.error('[handleItemReturn]', err);
+        return res.status(500).json({ success: false, message: err.message || 'Failed to process return request.' });
     }
 };
-
-

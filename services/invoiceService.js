@@ -19,8 +19,8 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
         throw new Error('Unauthorized access');
     }
 
-    if (dbOrder.orderStatus !== 'Delivered') {
-        throw new Error('Invoice is only available after order is delivered');
+    if (!['Delivered', 'Returned', 'Return Requested'].includes(dbOrder.orderStatus)) {
+        throw new Error('Invoice is only available after order is delivered or returned');
     }
 
     // Initialize PDF Document
@@ -104,6 +104,8 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
     doc.font('Helvetica').fontSize(8.5).fillColor('#374151');
     let computedSubtotal = 0;
     let computedTotalTax = 0;
+    let cancelledRefundRupees = 0;
+    let returnedRefundRupees = 0;
     
     for (let item of dbOrder.items) {
         // Find base/original price of the platform version from the product
@@ -131,19 +133,66 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
         computedSubtotal += itemTotalTaxExclusive;
         computedTotalTax += gstAmountRupees;
 
+        if (item.status === 'Cancelled') {
+            if (dbOrder.paymentMethod !== 'COD') {
+                cancelledRefundRupees += itemTotalInclusive;
+            }
+        } else if (item.status === 'Returned') {
+            returnedRefundRupees += itemTotalInclusive;
+        }
+
         // Draw line
         doc.moveTo(50, y).lineTo(545, y).strokeColor('#f3f4f6').lineWidth(1).stroke();
 
         const title = item.product ? item.product.title : 'Unknown Product';
-        doc.text(title, 55, y + 6, { width: 160 })
-           .text(item.platform.toUpperCase(), 220, y + 6, { width: 80 })
+        let displayTitle = title;
+        if (item.status === 'Cancelled') {
+            displayTitle += ' [CANCELLED]';
+        } else if (item.status === 'Returned') {
+            displayTitle += ' [RETURNED]';
+        } else if (item.status === 'Return Requested') {
+            displayTitle += ' [RETURN REQUESTED]';
+        }
+
+        if (item.status === 'Cancelled' || item.status === 'Returned' || item.status === 'Return Requested') {
+            doc.fillColor('#ef4444').font('Helvetica-Bold');
+        } else {
+            doc.fillColor('#374151').font('Helvetica');
+        }
+
+        doc.text(displayTitle, 55, y + 6, { width: 160 });
+
+        let subText = '';
+        if (item.status === 'Cancelled') {
+            if (dbOrder.paymentMethod === 'COD') {
+                subText = 'Refund: Cancelled (COD - No Refund)';
+            } else {
+                subText = `Refund: Refunded to PixelWallet (₹${itemTotalInclusive.toFixed(2)})`;
+            }
+        } else if (item.status === 'Return Requested') {
+            subText = 'Refund: Return Requested (Refund Pending)';
+        }
+
+        if (subText) {
+            doc.fontSize(7).font('Helvetica-Oblique').fillColor('#ef4444').text(subText, 55, y + 17, { width: 160 });
+        }
+
+        // Reset columns style
+        doc.fontSize(8.5).font('Helvetica');
+        if (item.status === 'Cancelled' || item.status === 'Returned' || item.status === 'Return Requested') {
+            doc.fillColor('#9ca3af');
+        } else {
+            doc.fillColor('#374151');
+        }
+
+        doc.text(item.platform.toUpperCase(), 220, y + 6, { width: 80 })
            .text(item.quantity.toString(), 305, y + 6, { width: 20, align: 'center' })
            .text(`₹${origBaseRupees.toFixed(2)}`, 330, y + 6, { width: 50, align: 'right' })
            .text(`${categoryDiscountPercent}%`, 385, y + 6, { width: 40, align: 'right' })
            .text(`₹${gstAmountRupees.toFixed(2)}`, 430, y + 6, { width: 50, align: 'right' })
            .text(`₹${itemTotalInclusive.toFixed(2)}`, 485, y + 6, { width: 55, align: 'right' });
 
-        y += 20;
+        y += subText ? 30 : 20;
     }
 
     // Table Bottom Border
@@ -181,10 +230,57 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
     doc.moveTo(summaryX, y).lineTo(545, y).strokeColor('#d1d5db').lineWidth(1).stroke();
     y += 8;
 
-    // Grand Total
-    doc.fontSize(11).font('Helvetica-Bold');
-    doc.fillColor('#111827').text('Grand Total:', summaryX, y);
-    doc.fillColor('#0ea5e9').text(`₹${(dbOrder.finalAmount / 100).toFixed(2)}`, 485, y, { align: 'right' });
+    const originalGrandTotalRupees = dbOrder.finalAmount / 100;
+    const finalAmountPaidRupees = originalGrandTotalRupees - cancelledRefundRupees;
+    const netAmountPaidRupees = finalAmountPaidRupees - returnedRefundRupees;
+
+    if (cancelledRefundRupees > 0 || returnedRefundRupees > 0) {
+        // Show detailed breakdown
+        doc.fontSize(9).font('Helvetica-Bold');
+        doc.fillColor('#4b5563').text('Original Grand Total:', summaryX, y);
+        doc.fillColor('#111827').text(`₹${originalGrandTotalRupees.toFixed(2)}`, 485, y, { align: 'right' });
+        y += 15;
+
+        if (cancelledRefundRupees > 0) {
+            doc.fontSize(9).font('Helvetica-Bold');
+            doc.fillColor('#ef4444').text('Less: Cancelled Refund (PixelWallet):', summaryX, y);
+            doc.fillColor('#ef4444').text(`- ₹${cancelledRefundRupees.toFixed(2)}`, 485, y, { align: 'right' });
+            y += 15;
+        }
+
+        doc.fontSize(9).font('Helvetica-Bold');
+        doc.fillColor('#4b5563').text('Final Amount Paid:', summaryX, y);
+        doc.fillColor('#111827').text(`₹${finalAmountPaidRupees.toFixed(2)}`, 485, y, { align: 'right' });
+        y += 15;
+
+        if (returnedRefundRupees > 0) {
+            doc.fontSize(9).font('Helvetica-Bold');
+            doc.fillColor('#ef4444').text('Less: Return Credit (PixelWallet):', summaryX, y);
+            doc.fillColor('#ef4444').text(`- ₹${returnedRefundRupees.toFixed(2)}`, 485, y, { align: 'right' });
+            y += 15;
+
+            // Divider before Net Amount Paid
+            doc.moveTo(summaryX, y).lineTo(545, y).strokeColor('#d1d5db').lineWidth(1).stroke();
+            y += 8;
+
+            doc.fontSize(11).font('Helvetica-Bold');
+            doc.fillColor('#111827').text('Net Amount Paid:', summaryX, y);
+            doc.fillColor('#0ea5e9').text(`₹${netAmountPaidRupees.toFixed(2)}`, 485, y, { align: 'right' });
+        } else {
+            // Net Amount Paid is just Final Amount Paid (since no returns)
+            doc.moveTo(summaryX, y).lineTo(545, y).strokeColor('#d1d5db').lineWidth(1).stroke();
+            y += 8;
+
+            doc.fontSize(11).font('Helvetica-Bold');
+            doc.fillColor('#111827').text('Final Amount Paid:', summaryX, y);
+            doc.fillColor('#0ea5e9').text(`₹${finalAmountPaidRupees.toFixed(2)}`, 485, y, { align: 'right' });
+        }
+    } else {
+        // No cancellations, no returns: just show Final Amount Paid as the grand total
+        doc.fontSize(11).font('Helvetica-Bold');
+        doc.fillColor('#111827').text('Final Amount Paid:', summaryX, y);
+        doc.fillColor('#0ea5e9').text(`₹${originalGrandTotalRupees.toFixed(2)}`, 485, y, { align: 'right' });
+    }
 
     // Footer Section
     doc.fontSize(9)

@@ -51,7 +51,7 @@
         <main class="flex flex-col w-full items-center gap-12 pt-8 pb-16 relative">
             <!-- Primary Platform Selector -->
             <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 w-full flex justify-end mb-[-24px] z-10">
-                <form id="primaryPlatformForm" action="/set-primary-platform" method="POST" class="inline-flex items-center gap-3 bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-lg shadow-lg">
+                <form id="primaryPlatformForm" action="/profile/primary-platform?_method=PATCH" method="POST" class="inline-flex items-center gap-3 bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-lg shadow-lg">
                     <label for="primaryPlatformSelect" class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Primary Platform:</label>
                     <select id="primaryPlatformSelect" name="platform" onchange="this.form.submit()" class="bg-zinc-950 border border-zinc-800 text-white rounded px-2.5 py-1 text-xs focus:outline-none focus:border-sky-500 transition-colors cursor-pointer">
                         <% if (typeof allPlatforms !== 'undefined' && allPlatforms) { %>
@@ -712,7 +712,7 @@
                 return;
               }
               try {
-                const response = await fetch('/auth/cart/add', {
+                const response = await fetch('/user/cart', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json'
@@ -723,7 +723,7 @@
                 if (data.success) {
                   showToast(`${productTitle} (${defaultPlatform}) added to cart!`, "success");
                   setTimeout(() => {
-                    window.location.href = '/auth/cart';
+                    window.location.href = '/user/cart';
                   }, 800);
                 } else {
                   showToast(data.message || "Failed to add item to cart.", "error");

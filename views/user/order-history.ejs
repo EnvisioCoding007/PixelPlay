@@ -84,7 +84,7 @@
     <main class="max-w-6xl mx-auto px-6 py-8" data-purpose="main-content">
         <!-- BEGIN: Header Section -->
         <div class="mb-8" data-purpose="page-header">
-            <button onclick="window.location.href='/auth/profile'"
+            <button onclick="window.location.href='/user/profile'"
                 class="flex items-center gap-2 text-cyan-main hover:text-white transition-colors text-sm font-medium mb-6 px-3 py-1.5 rounded-md border border-cyan-main/30 hover:border-cyan-main bg-cyan-bg/50 w-fit">
                 <i class="fa-solid fa-chevron-left text-xs"></i>
                 BACK
@@ -304,7 +304,7 @@
                                             <i class="fa-solid fa-location-arrow text-xs"></i>
                                             Track Order
                                         </button>
-                                    <% } else if (status === 'DELIVERED') { %>
+                                    <% } else if (status === 'DELIVERED' || status === 'RETURNED' || status === 'RETURN REQUESTED') { %>
                                         <button onclick="window.location.href='/user/orders/invoice/<%= order._id %>'" class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
                                             <i class="fa-solid fa-download text-xs"></i>
                                             Download Invoice

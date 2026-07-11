@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import Product from '../models/Product.js';
 import Category from '../models/Category.js';
 import Publisher from '../models/Publisher.js';
+import User from '../models/User.js';
+import Wishlist from '../models/Wishlist.js';
 
 export const getAllAdminProducts = async (search = '', filters = {}, sort = 'latest', page = 1, limit = 10) => {
     try {
@@ -103,8 +105,54 @@ export const getAllAdminProducts = async (search = '', filters = {}, sort = 'lat
     }
 };
 
+const validateProductData = (productData) => {
+    if (productData.title && productData.title.length > 100) {
+        throw new Error('Game title cannot exceed 100 characters.');
+    }
+    if (productData.publisher && productData.publisher.length > 100) {
+        throw new Error('Publisher name cannot exceed 100 characters.');
+    }
+    if (productData.description && productData.description.length > 2000) {
+        throw new Error('Description cannot exceed 2000 characters.');
+    }
+
+    // Validate Stock Limit (max 300)
+    if (typeof productData.stock === 'number' && productData.stock > 300) {
+        throw new Error('Maximum product stock cannot exceed 300.');
+    }
+    if (productData.platform_stock) {
+        for (const ps of productData.platform_stock) {
+            if (typeof ps.stock === 'number' && ps.stock > 300) {
+                throw new Error(`Maximum variant stock for platform ${ps.platform} cannot exceed 300.`);
+            }
+        }
+    }
+
+    // Validate System Requirements
+    if (productData.system_requirements) {
+        const reqs = productData.system_requirements;
+        const checkReqGroup = (groupName) => {
+            const group = reqs[groupName];
+            if (group) {
+                const fields = ['architecture', 'os', 'processor', 'memory', 'graphics', 'storage', 'sound_card'];
+                for (const f of fields) {
+                    if (group[f] && group[f].length > 200) {
+                        throw new Error(`System requirements ${groupName} ${f} cannot exceed 200 characters.`);
+                    }
+                }
+                if (group.additional_notes && group.additional_notes.length > 500) {
+                    throw new Error(`System requirements ${groupName} additional notes cannot exceed 500 characters.`);
+                }
+            }
+        };
+        checkReqGroup('minimum');
+        checkReqGroup('recommended');
+    }
+};
+
 export const createProduct = async (productData) => {
     try {
+        validateProductData(productData);
         const product = new Product(productData);
         return await product.save();
     } catch (error) {
@@ -124,6 +172,7 @@ export const getProductById = async (id) => {
 
 export const updateProduct = async (id, productData) => {
     try {
+        validateProductData(productData);
         return await Product.findByIdAndUpdate(id, productData, { new: true, runValidators: true });
     } catch (error) {
         console.error('[productService.updateProduct] Error:', error);
@@ -472,4 +521,73 @@ export const getRecommendationsForProduct = async (categoryId, currentProductId,
         throw error;
     }
 };
+
+export const getDistinctPlatforms = async () => {
+    try {
+        return await Product.distinct('platforms');
+    } catch (error) {
+        console.error('[productService.getDistinctPlatforms] Error:', error);
+        throw error;
+    }
+};
+
+export const getProductDetailsForUser = async (productId, userId = null, primaryPlatform = 'PC') => {
+    try {
+        const product = await Product.findById(productId).lean();
+        if (!product || product.status === 'Hidden') {
+            return null;
+        }
+
+        let catObj = null;
+        if (product.category) {
+            if (mongoose.Types.ObjectId.isValid(product.category)) {
+                catObj = await Category.findById(product.category).lean();
+            } else {
+                catObj = await Category.findOne({ name: product.category }).lean();
+            }
+        }
+        product.categoryName = catObj ? catObj.name : 'N/A';
+        const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
+        product.categoryDiscount = discount;
+        product.discountedPrice = discount > 0 ? Math.max(0, product.price - (product.price * (discount / 100))) : product.price;
+
+        let user = null;
+        let inWishlist = false;
+        let wishlistPlatforms = [];
+        if (userId) {
+            user = await User.findById(userId).select('-password_hash').lean();
+            const wishlist = await Wishlist.findOne({ userId });
+            if (wishlist) {
+                wishlistPlatforms = wishlist.items
+                    .filter(item => item.product && item.product.toString() === productId.toString())
+                    .map(item => (item.platform || 'PC').toLowerCase());
+                inWishlist = wishlistPlatforms.length > 0;
+            }
+        }
+
+        const similarGames = await getRecommendationsForProduct(product.category, product._id, primaryPlatform);
+
+        return {
+            product,
+            user,
+            inWishlist,
+            wishlistPlatforms,
+            similarGames
+        };
+    } catch (error) {
+        console.error('[productService.getProductDetailsForUser] Error:', error);
+        throw error;
+    }
+};
+
+export const getProductStatus = async (productId) => {
+    try {
+        const product = await Product.findById(productId).lean();
+        return product ? product.status : null;
+    } catch (error) {
+        console.error('[productService.getProductStatus] Error:', error);
+        throw error;
+    }
+};
+
 

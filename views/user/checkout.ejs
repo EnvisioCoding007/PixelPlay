@@ -53,7 +53,7 @@
     <!-- BEGIN: Checkout Container -->
     <div class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 relative">
         <!-- Close Button -->
-        <a href="/auth/cart"
+        <a href="/user/cart"
             class="absolute top-0 right-0 text-text-secondary hover:text-white mt-[-2rem] mr-[-1rem] lg:mt-0 lg:mr-0 z-50">
             <i class="fa-solid fa-xmark text-xl"></i>
         </a>
@@ -694,7 +694,7 @@
                 if (!payload) return;
 
                 try {
-                    const response = await fetch('/auth/profile/addresses/add', {
+                    const response = await fetch('/user/profile/addresses', {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -728,7 +728,7 @@
                 const addressId = document.getElementById('edit-id').value;
 
                 try {
-                    const response = await fetch(`/auth/profile/addresses/edit/${addressId}`, {
+                    const response = await fetch(`/user/profile/addresses/${addressId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -914,7 +914,7 @@
                         submitPayBtn.innerText = 'Processing Order...';
 
                         try {
-                            const response = await fetch('/auth/orders/place', {
+                            const response = await fetch('/user/orders', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ paymentMethod: 'COD', addressId })
@@ -924,7 +924,7 @@
                             if (response.ok && data.success) {
                                 showToast(data.message || 'Order placed successfully.');
                                 setTimeout(() => {
-                                    window.location.href = `/auth/orders/success/${data.orderId}`;
+                                    window.location.href = `/user/orders/${data.orderId}/success`;
                                 }, 800);
                             } else {
                                 showToast(data.message || 'Failed to place order.', 'error');

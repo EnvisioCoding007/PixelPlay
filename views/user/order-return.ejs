@@ -104,7 +104,7 @@
                     <%= error %>
                 </div>
             <% } %>
-            <form action="/user/orders/return/<%= order._id %>/<%= product._id %>?platform=<%= encodeURIComponent(item.platform) %>" class="flex flex-col gap-6" method="POST">
+            <form action="/user/orders/<%= order._id %>/items/<%= product._id %>/returns?platform=<%= encodeURIComponent(item.platform) %>" class="flex flex-col gap-6" method="POST">
                 <% if (item && item.quantity > 1) { %>
                 <!-- Quantity selection Section -->
                 <div class="bg-pixel-card rounded-xl p-6 shadow-sm border border-pixel-border flex flex-col gap-3">

@@ -936,7 +936,7 @@
         const productTitle = '<%= product.title.replace(/'/g, "\\'") %>';
 
         try {
-          const response = await fetch('/auth/cart/add', {
+          const response = await fetch('/user/cart', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -948,7 +948,7 @@
           if (data.success) {
             showToast(`${productTitle} (${selectedPlatform}) added to cart!`, "success");
             setTimeout(() => {
-              window.location.href = '/auth/cart';
+              window.location.href = '/user/cart';
             }, 800);
           } else {
             showToast(data.message || "Failed to add item to cart.", "error");
@@ -974,7 +974,7 @@
         const productTitle = '<%= product.title.replace(/'/g, "\\'") %>';
 
         try {
-          const response = await fetch('/auth/cart/add', {
+          const response = await fetch('/user/cart', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -986,7 +986,7 @@
           if (data.success) {
             showToast(`${productTitle} (${selectedPlatform}) added to cart!`, "success");
             setTimeout(() => {
-              window.location.href = '/auth/cart';
+              window.location.href = '/user/cart';
             }, 800);
           } else {
             showToast(data.message || "Failed to add item to cart.", "error");
@@ -1012,7 +1012,7 @@
     const selectedPlatform = activeBtn ? activeBtn.dataset.platform : 'PC';
 
     try {
-      const response = await fetch('/auth/wishlist/toggle', {
+      const response = await fetch('/user/wishlist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
