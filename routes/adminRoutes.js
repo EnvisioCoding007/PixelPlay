@@ -1,45 +1,49 @@
 import express from 'express';
 import { isAdminAuth, isAdminUnAuth } from '../middleware/auth.js';
-import * as adminController from '../controllers/adminController.js';
 import { upload } from '../config/cloudinary.js';
 import { handleProductUploads } from '../middleware/uploadMiddleware.js';
 
+import * as authController from '../controllers/admin/authController.js';
+import * as userController from '../controllers/admin/userController.js';
+import * as productController from '../controllers/admin/productController.js';
+import * as categoryController from '../controllers/admin/categoryController.js';
+import * as publisherController from '../controllers/admin/publisherController.js';
+import * as orderController from '../controllers/admin/orderController.js';
+
 const router = express.Router();
 
+router.get('/admin/login', isAdminUnAuth, authController.getAdminLogin);
+router.post('/admin/login', isAdminUnAuth, authController.adminLogin);
 
-router.get('/admin/login', isAdminUnAuth, adminController.getAdminLogin);
-router.post('/admin/login', isAdminUnAuth, adminController.adminLogin);
+router.get('/admin/users', isAdminAuth, userController.getCustomers);
+router.get('/admin/customers', isAdminAuth, userController.getCustomers);
+router.patch('/admin/users/:id/block-status', isAdminAuth, userController.toggleBlock);
 
+router.get('/admin/products', isAdminAuth, productController.renderProductManagement);
+router.get('/admin/products/:id/edit', isAdminAuth, productController.renderEditGamePage);
+router.put('/admin/products/:id', isAdminAuth, handleProductUploads, productController.editProduct);
+router.get('/admin/products/new', isAdminAuth, productController.renderAddGamePage);
+router.post('/admin/products', isAdminAuth, handleProductUploads, productController.addProduct);
 
-router.get('/admin/users', isAdminAuth, adminController.getCustomers);
-router.get('/admin/customers', isAdminAuth, adminController.getCustomers);
+router.get('/admin/categories', isAdminAuth, categoryController.renderCategoryManagement);
+router.get('/admin/categories/add', isAdminAuth, categoryController.renderAddCategory);
+router.post('/admin/categories', isAdminAuth, upload.single('icon'), categoryController.createCategory);
+router.patch('/admin/categories/:id/status', isAdminAuth, categoryController.toggleCategoryStatus);
+router.get('/admin/categories/:id/edit', isAdminAuth, categoryController.renderEditCategory);
+router.put('/admin/categories/:id', isAdminAuth, upload.single('icon'), categoryController.editCategory);
+router.delete('/admin/categories/:id', isAdminAuth, categoryController.deleteCategory);
 
-router.get('/admin/products', isAdminAuth, adminController.renderProductManagement);
-router.get('/admin/products/:id/edit', isAdminAuth, adminController.renderEditGamePage);
-router.put('/admin/products/:id', isAdminAuth, handleProductUploads, adminController.editProduct);
-router.get('/admin/products/new', isAdminAuth, adminController.renderAddGamePage);
-router.post('/admin/products', isAdminAuth, handleProductUploads, adminController.addProduct);
+router.get('/admin/publishers', isAdminAuth, publisherController.renderPublisherManagement);
+router.get('/admin/publishers/add', isAdminAuth, publisherController.renderAddPublisherPage);
+router.post('/admin/publishers', isAdminAuth, upload.single('logo'), publisherController.createPublisher);
+router.get('/admin/publishers/:id/edit', isAdminAuth, publisherController.renderEditPublisherPage);
+router.put('/admin/publishers/:id', isAdminAuth, upload.single('logo'), publisherController.editPublisher);
 
-router.patch('/admin/users/:id/block-status', isAdminAuth, adminController.toggleBlock);
+router.get('/admin/orders', isAdminAuth, orderController.renderOrderManagement);
+router.get('/admin/orders/:id', isAdminAuth, orderController.renderAdminOrderDetails);
+router.patch('/admin/orders/:id/status', isAdminAuth, orderController.updateAdminOrderStatus);
+router.patch('/admin/orders/:orderId/items/:productId/returns', isAdminAuth, orderController.handleItemReturn);
 
-router.get('/admin/categories', isAdminAuth, adminController.renderCategoryManagement);
-router.get('/admin/publishers', isAdminAuth, adminController.renderPublisherManagement);
-router.get('/admin/publishers/new', isAdminAuth, adminController.renderAddPublisherPage);
-router.post('/admin/publishers', isAdminAuth, upload.single('logo'), adminController.createPublisher);
-router.get('/admin/publishers/:id/edit', isAdminAuth, adminController.renderEditPublisherPage);
-router.put('/admin/publishers/:id', isAdminAuth, upload.single('logo'), adminController.editPublisher);
-router.post('/admin/categories', isAdminAuth, upload.single('icon'), adminController.createCategory);
-router.patch('/admin/categories/:id/status', isAdminAuth, adminController.toggleCategoryStatus);
-router.get('/admin/categories/:id/edit', isAdminAuth, adminController.renderEditCategory);
-router.put('/admin/categories/:id', isAdminAuth, upload.single('icon'), adminController.editCategory);
-router.delete('/admin/categories/:id', isAdminAuth, adminController.deleteCategory);
-
-router.get('/admin/orders', isAdminAuth, adminController.renderOrderManagement);
-router.get('/admin/orders/:id', isAdminAuth, adminController.renderAdminOrderDetails);
-router.patch('/admin/orders/:id/status', isAdminAuth, adminController.updateAdminOrderStatus);
-router.patch('/admin/orders/:orderId/items/:productId/return', isAdminAuth, adminController.handleItemReturn);
-
-router.post('/admin/logout', isAdminAuth, adminController.adminLogout);
+router.post('/admin/logout', isAdminAuth, authController.adminLogout);
 
 export default router;
-

@@ -10,7 +10,7 @@ export const getAllActiveCategories = async () => {
     }
 };
 
-export const getAllCategoriesAdmin = async (search = '', page = 1, limit = 8) => {
+export const getAllCategoriesAdmin = async (search = '', sort = 'latest', page = 1, limit = 8) => {
     try {
         const query = {};
         if (search && search.trim()) {
@@ -19,17 +19,10 @@ export const getAllCategoriesAdmin = async (search = '', page = 1, limit = 8) =>
                 { description: { $regex: search.trim(), $options: 'i' } }
             ];
         }
-        const totalCount = await Category.countDocuments(query);
-        const totalPages = Math.ceil(totalCount / limit);
-        const currentPage = Math.max(1, Math.min(page, totalPages || 1));
 
-        const categoriesRaw = await Category.find(query)
-            .sort({ createdAt: -1 })
-            .skip((currentPage - 1) * limit)
-            .limit(limit)
-            .lean();
+        const categoriesRaw = await Category.find(query).lean();
         
-        const categories = await Promise.all(categoriesRaw.map(async (cat) => {
+        const allMapped = await Promise.all(categoriesRaw.map(async (cat) => {
             const gameCount = await Product.countDocuments({ category: cat._id });
             return {
                 ...cat,
@@ -38,9 +31,29 @@ export const getAllCategoriesAdmin = async (search = '', page = 1, limit = 8) =>
                 status: cat.status || 'Live'
             };
         }));
+
+        if (sort === 'oldest') {
+            allMapped.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+        } else if (sort === 'alphabetical') {
+            allMapped.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        } else if (sort === 'alphabetical_desc') {
+            allMapped.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+        } else if (sort === 'games_asc') {
+            allMapped.sort((a, b) => a.gameCount - b.gameCount);
+        } else if (sort === 'games_desc') {
+            allMapped.sort((a, b) => b.gameCount - a.gameCount);
+        } else {
+            allMapped.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        }
+
+        const totalCount = allMapped.length;
+        const totalPages = Math.ceil(totalCount / limit);
+        const currentPage = Math.max(1, Math.min(page, totalPages || 1));
+
+        const paginatedCategories = allMapped.slice((currentPage - 1) * limit, currentPage * limit);
         
         return {
-            categories,
+            categories: paginatedCategories,
             currentPage,
             totalPages,
             totalCount

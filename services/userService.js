@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import bcrypt from 'bcrypt';
 import OTP from '../models/Otpmodel.js';
 import { sendEmail } from '../utils/emailSender.js';
+import { uploadToCloudinary } from '../config/cloudinary.js';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9][a-zA-Z0-9.\-]*\.[a-zA-Z]{2,}$/;
 export const registerLocalUser = async (username, email, password, referralCode) => {
@@ -356,7 +357,7 @@ export const getUserProfile = async (userId) => {
     }
 };
 
-export const updateUserProfile = async (userId, { username, phone, email, profile_image }) => {
+export const updateUserProfile = async (userId, { username, phone, email }, file) => {
     try {
         if (!username || !username.trim()) {
             throw new Error('Username cannot be empty.');
@@ -385,13 +386,19 @@ export const updateUserProfile = async (userId, { username, phone, email, profil
             }
         }
 
+        let profile_image_url = undefined;
+        if (file) {
+            const uploadResult = await uploadToCloudinary(file, 'pixelplay_uploads');
+            profile_image_url = uploadResult.secure_url;
+        }
+
         const updateFields = {
             username: username.trim(),
             phone: (phone && phone.trim()) ? phone.replace(/[\s-]/g, '') : null,
         };
 
-        if (profile_image && profile_image.startsWith('data:image/')) {
-            updateFields.profile_image = profile_image;
+        if (profile_image_url) {
+            updateFields.profile_image = profile_image_url;
         }
 
         const submittedEmail = email?.trim().toLowerCase();

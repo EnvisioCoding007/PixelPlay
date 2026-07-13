@@ -102,7 +102,7 @@
                     </div>
                 </section>
                 <form id="profile-edit-form"
-                    method="post" action="/user/profile/edit?_method=PUT"
+                    method="post" action="/user/profile?_method=PATCH" enctype="multipart/form-data"
                     class="flex flex-col items-start gap-14 p-12 relative self-stretch w-full flex-[0_0_auto] bg-[#121215bf] rounded-xl border border-solid border-zinc-700 shadow-[inset_0px_1px_0px_1px_#ffffff0d,0px_8px_32px_#00000066] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
                     <section class="flex items-center gap-8 relative self-stretch w-full flex-[0_0_auto]">
                         <div class="relative mt-[-20px] mb-[-20px] ml-[-20px] shrink-0" style="width:152px;height:152px">
@@ -129,9 +129,9 @@
                                 </div>
                             </button>
                             <!-- Hidden file input -->
-                            <input type="file" id="avatar-file-input" accept="image/*" class="sr-only" aria-label="Upload profile picture" />
+                            <input type="file" id="avatar-file-input" name="profile_image" accept="image/*" class="sr-only" aria-label="Upload profile picture" />
                             <!-- Hidden form field carries the base64 data URL -->
-                            <input type="hidden" id="profile-image-data" name="profile_image" value="" />
+                            <input type="hidden" id="profile-image-data" value="" />
                         </div>
                         <div class="inline-flex flex-col items-start gap-3 relative flex-[0_0_auto]">
                             <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
@@ -376,7 +376,18 @@
             if (fallback) {
                 fallback.classList.add('hidden');
             }
-            imageData.value = dataUrl; // base64 sent to server
+            
+            // Convert cropped canvas to blob and set it to file input
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const croppedFile = new File([blob], 'cropped-profile-image.png', { type: 'image/png' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(croppedFile);
+                    fileInput.files = dataTransfer.files;
+                }
+            }, 'image/png');
+
+            imageData.value = dataUrl; // Keep for client side preview references
             closeCropper();
         });
 
