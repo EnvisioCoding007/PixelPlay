@@ -71,7 +71,13 @@ const orderSchema = new mongoose.Schema({
         addressLine2: { type: String, default: "" },
         city: { type: String, required: true },
         state: { type: String, required: true },
-        postal_code: { type: Number, required: true },
+        postal_code: {
+            type: String,
+            required: true,
+            trim: true,
+            minLength: 6,
+            maxLength: 6
+        },
         country: { type: String, required: true }
     },
     paymentMethod: {

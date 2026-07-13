@@ -276,6 +276,58 @@
                             <span class="text-xl font-semibold text-white">Total Amount</span>
                             <span class="text-2xl font-bold font-mono text-cyan-400">₹<%= (order.finalAmount / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
                         </div>
+                        <% 
+                            let totalCancelledAmount = 0;
+                            let totalReturnedAmount = 0;
+                            let allCancelled = true;
+                            if (order.items && order.items.length > 0) {
+                                order.items.forEach(item => {
+                                    if (item.status === 'Cancelled') {
+                                        totalCancelledAmount += Math.round(item.price * item.quantity / 0.82);
+                                    } else {
+                                        allCancelled = false;
+                                        if (item.status === 'Returned') {
+                                            totalReturnedAmount += Math.round(item.price * item.quantity / 0.82);
+                                        }
+                                    }
+                                });
+                            } else {
+                                allCancelled = false;
+                            }
+                        %>
+                        <% if (allCancelled) { %>
+                            <div class="mt-3 flex justify-between items-center text-pixel-red text-sm font-mono">
+                                <span>Cancelled Item(s) Deduction</span>
+                                <span>-₹<%= (totalCancelledAmount / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                            </div>
+                            <div class="mt-3 flex justify-between items-center text-pixel-red text-sm font-mono">
+                                <span>Shipping Charge Waiver</span>
+                                <span>-₹<%= (order.shipping / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                            </div>
+                            <div class="mt-3 pt-3 border-t border-dashed border-gray-700 flex justify-between items-center text-green-400 font-mono">
+                                <span class="font-bold text-white font-sans">Net Final Amount</span>
+                                <span class="text-2xl font-bold">₹0.00</span>
+                            </div>
+                        <% } else { %>
+                            <% if (totalCancelledAmount > 0) { %>
+                                <div class="mt-3 flex justify-between items-center text-pixel-red text-sm font-mono">
+                                    <span>Cancelled Item(s) Deduction</span>
+                                    <span>-₹<%= (totalCancelledAmount / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                                </div>
+                            <% } %>
+                            <% if (totalReturnedAmount > 0) { %>
+                                <div class="mt-3 flex justify-between items-center text-pixel-red text-sm font-mono">
+                                    <span>Returned Item(s) Deduction</span>
+                                    <span>-₹<%= (totalReturnedAmount / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                                </div>
+                            <% } %>
+                            <% if (totalCancelledAmount > 0 || totalReturnedAmount > 0) { %>
+                                <div class="mt-3 pt-3 border-t border-dashed border-gray-700 flex justify-between items-center text-green-400 font-mono">
+                                    <span class="font-bold text-white font-sans">Net Final Amount</span>
+                                    <span class="text-2xl font-bold">₹<%= ((order.finalAmount - totalCancelledAmount - totalReturnedAmount) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                                </div>
+                            <% } %>
+                        <% } %>
                     </section>
                 </div>
 

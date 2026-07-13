@@ -101,7 +101,8 @@ export const handleItemReturn = async (req, res) => {
     try {
         const { orderId, productId } = req.params;
         const { platform } = req.query;
-        const { reason, decision } = req.body;
+        const { reason } = req.body;
+        const decision = req.body.decision || req.body.action;
 
         if (!reason || !reason.trim()) {
             return res.status(400).json({ success: false, message: 'Comment/reason is required.' });

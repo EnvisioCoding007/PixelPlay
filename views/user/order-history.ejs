@@ -305,7 +305,7 @@
                                             Track Order
                                         </button>
                                     <% } else if (status === 'DELIVERED' || status === 'RETURNED' || status === 'RETURN REQUESTED') { %>
-                                        <button onclick="window.location.href='/user/orders/invoice/<%= order._id %>'" class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
+                                        <button onclick="window.location.href='/user/orders/<%= order._id %>/invoice'" class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
                                             <i class="fa-solid fa-download text-xs"></i>
                                             Download Invoice
                                         </button>
@@ -373,7 +373,7 @@
                 color: '#e2e4eb'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = `/user/orders/cancel/${orderId}`;
+                    window.location.href = `/user/orders/${orderId}/cancellation`;
                 }
             });
         }

@@ -32,8 +32,11 @@ const addressSchema = new mongoose.Schema({
         trim: true,
     },
     postal_code: {
-        type: Number,
+        type: String,
         required: true,
+        trim:true,
+        minLength: 6,
+        maxLength: 6
     },
     country: {
         type: String,

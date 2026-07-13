@@ -127,16 +127,14 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
         
         const taxExclusivePriceRupees = item.price / 100;
         const itemTotalTaxExclusive = taxExclusivePriceRupees * item.quantity;
-        const gstAmountRupees = (item.price * item.quantity * 0.18 / 0.82) / 100;
-        const itemTotalInclusive = (item.price * item.quantity / 0.82) / 100;
+        const itemTotalInclusive = Math.round(item.price * item.quantity / 0.82) / 100;
+        const gstAmountRupees = Number((itemTotalInclusive - itemTotalTaxExclusive).toFixed(2));
         
         computedSubtotal += itemTotalTaxExclusive;
         computedTotalTax += gstAmountRupees;
 
         if (item.status === 'Cancelled') {
-            if (dbOrder.paymentMethod !== 'COD') {
-                cancelledRefundRupees += itemTotalInclusive;
-            }
+            cancelledRefundRupees += itemTotalInclusive;
         } else if (item.status === 'Returned') {
             returnedRefundRupees += itemTotalInclusive;
         }
@@ -231,6 +229,10 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
     y += 8;
 
     const originalGrandTotalRupees = dbOrder.finalAmount / 100;
+    const allCancelled = dbOrder.items.length > 0 && dbOrder.items.every(item => item.status === 'Cancelled');
+    if (allCancelled) {
+        cancelledRefundRupees += dbOrder.shipping / 100;
+    }
     const finalAmountPaidRupees = originalGrandTotalRupees - cancelledRefundRupees;
     const netAmountPaidRupees = finalAmountPaidRupees - returnedRefundRupees;
 
@@ -242,8 +244,11 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
         y += 15;
 
         if (cancelledRefundRupees > 0) {
+            const label = dbOrder.paymentMethod === 'COD' 
+                ? 'Less: Cancelled Item(s) Deduction:' 
+                : 'Less: Cancelled Refund (PixelWallet):';
             doc.fontSize(9).font('Helvetica-Bold');
-            doc.fillColor('#ef4444').text('Less: Cancelled Refund (PixelWallet):', summaryX, y);
+            doc.fillColor('#ef4444').text(label, summaryX, y);
             doc.fillColor('#ef4444').text(`- ₹${cancelledRefundRupees.toFixed(2)}`, 485, y, { align: 'right' });
             y += 15;
         }

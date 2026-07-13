@@ -477,9 +477,9 @@ export const addAddress = async (userId, { fullName, phone, addressLine1, addres
             throw new Error('Address type cannot exceed 50 characters.');
         }
         if (postal_code) {
-            const pcStr = String(postal_code);
-            if (pcStr.length > 10 || isNaN(Number(pcStr)) || Number(pcStr) < 0) {
-                throw new Error('Postal code must be a valid positive number within 10 digits.');
+            const pcStr = String(postal_code).trim();
+            if (!/^\d{6}$/.test(pcStr)) {
+                throw new Error('Postal code must be exactly 6 digits.');
             }
         }
 
@@ -494,6 +494,22 @@ export const addAddress = async (userId, { fullName, phone, addressLine1, addres
             throw new Error('User not found.');
         }
 
+        const isDuplicate = user.addresses.some(addr => 
+            addr.fullName.trim().toLowerCase() === fullName.trim().toLowerCase() &&
+            addr.phone.trim() === phone.trim() &&
+            addr.addressLine1.trim().toLowerCase() === addressLine1.trim().toLowerCase() &&
+            (addr.addressLine2 || '').trim().toLowerCase() === (addressLine2 || '').trim().toLowerCase() &&
+            addr.city.trim().toLowerCase() === city.trim().toLowerCase() &&
+            addr.state.trim().toLowerCase() === state.trim().toLowerCase() &&
+            addr.postal_code.trim() === String(postal_code).trim() &&
+            addr.country.trim().toLowerCase() === (country || 'India').trim().toLowerCase() &&
+            addr.address_type === (address_type || 'home')
+        );
+
+        if (isDuplicate) {
+            throw new Error('This address already exists in your saved addresses.');
+        }
+
         if (isDefault === 'true' || isDefault === true) {
             user.addresses.forEach(addr => { addr.isDefault = false; });
         }
@@ -505,7 +521,7 @@ export const addAddress = async (userId, { fullName, phone, addressLine1, addres
             addressLine2: addressLine2?.trim() || '',
             city: city.trim(),
             state: state.trim(),
-            postal_code: Number(postal_code),
+            postal_code: String(postal_code).trim(),
             country: country?.trim() || 'India',
             address_type: address_type || 'home',
             isDefault: isDefault === 'true' || isDefault === true,
@@ -550,9 +566,9 @@ export const editAddress = async (userId, addressId, { fullName, phone, addressL
             throw new Error('Address type cannot exceed 50 characters.');
         }
         if (postal_code) {
-            const pcStr = String(postal_code);
-            if (pcStr.length > 10 || isNaN(Number(pcStr)) || Number(pcStr) < 0) {
-                throw new Error('Postal code must be a valid positive number within 10 digits.');
+            const pcStr = String(postal_code).trim();
+            if (!/^\d{6}$/.test(pcStr)) {
+                throw new Error('Postal code must be exactly 6 digits.');
             }
         }
 
@@ -572,6 +588,23 @@ export const editAddress = async (userId, addressId, { fullName, phone, addressL
             throw new Error('Address not found.');
         }
 
+        const isDuplicate = user.addresses.some(addr => 
+            addr._id.toString() !== addressId &&
+            addr.fullName.trim().toLowerCase() === fullName.trim().toLowerCase() &&
+            addr.phone.trim() === phone.trim() &&
+            addr.addressLine1.trim().toLowerCase() === addressLine1.trim().toLowerCase() &&
+            (addr.addressLine2 || '').trim().toLowerCase() === (addressLine2 || '').trim().toLowerCase() &&
+            addr.city.trim().toLowerCase() === city.trim().toLowerCase() &&
+            addr.state.trim().toLowerCase() === state.trim().toLowerCase() &&
+            addr.postal_code.trim() === String(postal_code).trim() &&
+            addr.country.trim().toLowerCase() === (country || 'India').trim().toLowerCase() &&
+            addr.address_type === (address_type || 'home')
+        );
+
+        if (isDuplicate) {
+            throw new Error('Another address with these details already exists.');
+        }
+
         if (isDefault === 'true' || isDefault === true) {
             user.addresses.forEach(addr => { addr.isDefault = false; });
         }
@@ -583,7 +616,7 @@ export const editAddress = async (userId, addressId, { fullName, phone, addressL
             addressLine2: addressLine2?.trim() || '',
             city: city.trim(),
             state: state.trim(),
-            postal_code: Number(postal_code),
+            postal_code: String(postal_code).trim(),
             country: country?.trim() || 'India',
             address_type: address_type || 'home',
             isDefault: isDefault === 'true' || isDefault === true,

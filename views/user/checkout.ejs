@@ -680,7 +680,7 @@
                     addressLine2: form.querySelector('[name="addressLine2"]').value.trim(),
                     city,
                     state,
-                    postal_code: Number(postal_code),
+                    postal_code: postal_code,
                     country,
                     address_type: form.querySelector('[name="address_type"]').value,
                     isDefault: form.querySelector('[name="isDefault"]').checked
@@ -695,7 +695,7 @@
 
                 try {
                     const response = await fetch('/user/profile/addresses', {
-                        method: 'PUT',
+                        method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
@@ -924,7 +924,7 @@
                             if (response.ok && data.success) {
                                 showToast(data.message || 'Order placed successfully.');
                                 setTimeout(() => {
-                                    window.location.href = `/user/orders/${data.orderId}/success`;
+                                    window.location.href = `/user/orders/success/${data.orderId}`;
                                 }, 800);
                             } else {
                                 showToast(data.message || 'Failed to place order.', 'error');
