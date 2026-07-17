@@ -48,7 +48,7 @@ export const getCheckout = async (req, res) => {
             return res.redirect('/user/cart');
         }
 
-        if (cartDetails.hasUnavailableProduct) {
+        if (cartDetails.hasUnavailableProduct || cartDetails.hasInsufficientStockProduct) {
             return res.redirect('/user/cart');
         }
 

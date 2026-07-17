@@ -96,23 +96,23 @@ const orderSchema = new mongoose.Schema({
         default: 'Processing'
     },
     subtotal: {
-        type: Number, // Stored in Paisa (whole integer)
+        type: Number, 
         required: true
     },
     tax: {
-        type: Number, // Stored in Paisa (whole integer)
+        type: Number, 
         required: true
     },
     shipping: {
-        type: Number, // Stored in Paisa (whole integer)
+        type: Number, 
         required: true
     },
     discount: {
-        type: Number, // Stored in Paisa (whole integer)
+        type: Number, 
         default: 0
     },
     finalAmount: {
-        type: Number, // Stored in Paisa (whole integer)
+        type: Number, 
         required: true
     },
     transactionId: {

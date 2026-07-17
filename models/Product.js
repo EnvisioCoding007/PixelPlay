@@ -18,8 +18,8 @@ const productSchema = new mongoose.Schema({
     price: {
         type: Number, // Stored in Paisa (whole integer)
         required: true,
-        default: 0,
-        min: 0,
+        default: 10000,
+        min: 10000,
     },
     stock: {
         type: Number,
@@ -40,7 +40,7 @@ const productSchema = new mongoose.Schema({
         type: [{
             platform: { type: String, required: true },
             stock: { type: Number, required: true, min: 0, default: 0 },
-            price: { type: Number, required: true, min: 0, default: 0 } // Stored in Paisa (whole integer)
+            price: { type: Number, required: true, min: 10000, default: 10000 } // Stored in Paisa (whole integer)
         }],
         default: []
     },

@@ -15,6 +15,7 @@
             },
             plugins: []
         };
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
@@ -254,6 +255,7 @@
                 <svg class="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                 <span>Add New Address</span>
             </h2>
+            <p class="text-xs text-zinc-400 mb-4 [font-family:'Inter-Regular',Helvetica]">Fields marked with <span class="text-red-500">*</span> are required to be filled.</p>
             
             <form id="add-address-form" class="space-y-4" novalidate>
                 <div id="add-error" class="hidden text-red-500 text-xs bg-red-950/50 border border-red-500/20 p-3 rounded [font-family:'Inter-Regular',Helvetica]"></div>
@@ -263,11 +265,13 @@
                         <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="add-fullName">Full Name *</label>
                         <input type="text" id="add-fullName" name="fullName" required
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                     <div class="col-span-2 sm:col-span-1">
                         <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="add-phone">Phone Number *</label>
                         <input type="tel" id="add-phone" name="phone" required
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                 </div>
                 
@@ -275,6 +279,7 @@
                     <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="add-addressLine1">Address Line 1 *</label>
                     <input type="text" id="add-addressLine1" name="addressLine1" required placeholder="Street address, P.O. box, company name"
                         class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                    <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                 </div>
                 
                 <div>
@@ -288,11 +293,13 @@
                         <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="add-city">City *</label>
                         <input type="text" id="add-city" name="city" required
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                     <div class="col-span-2 sm:col-span-1">
                         <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="add-state">State *</label>
                         <input type="text" id="add-state" name="state" required
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                 </div>
                 
@@ -301,11 +308,13 @@
                         <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="add-postal_code">Postal Code *</label>
                         <input type="text" id="add-postal_code" name="postal_code" required maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                     <div class="col-span-2 sm:col-span-1">
                         <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="add-country">Country *</label>
                         <input type="text" id="add-country" name="country" required value="India"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                 </div>
                 
@@ -352,6 +361,7 @@
                 <svg class="w-5 h-5 text-sky-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
                 <span>Edit Address</span>
             </h2>
+            <p class="text-xs text-zinc-400 mb-4 [font-family:'Inter-Regular',Helvetica]">Fields marked with <span class="text-red-500">*</span> are required to be filled.</p>
             
             <form id="edit-address-form" class="space-y-4" novalidate>
                 <input type="hidden" id="edit-id" name="id" />
@@ -362,11 +372,13 @@
                         <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="edit-fullName">Full Name *</label>
                         <input type="text" id="edit-fullName" name="fullName" required
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                     <div class="col-span-2 sm:col-span-1">
                         <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="edit-phone">Phone Number *</label>
                         <input type="tel" id="edit-phone" name="phone" required
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                 </div>
                 
@@ -374,6 +386,7 @@
                     <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="edit-addressLine1">Address Line 1 *</label>
                     <input type="text" id="edit-addressLine1" name="addressLine1" required placeholder="Street address, P.O. box, company name"
                         class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                    <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                 </div>
                 
                 <div>
@@ -387,11 +400,13 @@
                         <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="edit-city">City *</label>
                         <input type="text" id="edit-city" name="city" required
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                     <div class="col-span-2 sm:col-span-1">
                         <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="edit-state">State *</label>
                         <input type="text" id="edit-state" name="state" required
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                 </div>
                 
@@ -400,11 +415,13 @@
                         <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="edit-postal_code">Postal Code *</label>
                         <input type="text" id="edit-postal_code" name="postal_code" required maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                     <div class="col-span-2 sm:col-span-1">
                         <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2 [font-family:'Inter-Medium',Helvetica]" for="edit-country">Country *</label>
                         <input type="text" id="edit-country" name="country" required
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                 </div>
                 
@@ -505,6 +522,14 @@
                 addBtn.addEventListener('click', () => {
                     addForm.reset();
                     addError.classList.add('hidden');
+                    addForm.querySelectorAll('.validation-error').forEach(span => {
+                        span.textContent = '';
+                        span.classList.add('hidden');
+                    });
+                    addForm.querySelectorAll('input').forEach(input => {
+                        input.classList.remove('border-red-500');
+                        input.classList.add('border-zinc-800');
+                    });
                     addModal.classList.remove('hidden');
                     addModal.classList.add('flex');
                     document.body.classList.add('overflow-hidden');
@@ -556,6 +581,14 @@
             // Populate and open edit modal
             window.openEditModal = function(address) {
                 editError.classList.add('hidden');
+                editForm.querySelectorAll('.validation-error').forEach(span => {
+                    span.textContent = '';
+                    span.classList.add('hidden');
+                });
+                editForm.querySelectorAll('input').forEach(input => {
+                    input.classList.remove('border-red-500');
+                    input.classList.add('border-zinc-800');
+                });
                 
                 document.getElementById('edit-id').value = address._id || '';
                 document.getElementById('edit-fullName').value = address.fullName || '';
@@ -576,44 +609,106 @@
 
             // Form validation helper
             function validateAddressForm(form, errorDiv) {
-                const fullName = form.querySelector('[name="fullName"]').value.trim();
-                const phone = form.querySelector('[name="phone"]').value.trim();
-                const addressLine1 = form.querySelector('[name="addressLine1"]').value.trim();
-                const city = form.querySelector('[name="city"]').value.trim();
-                const state = form.querySelector('[name="state"]').value.trim();
-                const postal_code = form.querySelector('[name="postal_code"]').value.trim();
-                const country = form.querySelector('[name="country"]').value.trim();
+                // Clear general error
+                errorDiv.textContent = '';
+                errorDiv.classList.add('hidden');
 
-                if (!fullName || !phone || !addressLine1 || !city || !state || !postal_code || !country) {
+                // Clear all field-specific errors
+                const errorSpans = form.querySelectorAll('.validation-error');
+                errorSpans.forEach(span => {
+                    span.textContent = '';
+                    span.classList.add('hidden');
+                });
+
+                // Clear input highlight borders
+                const inputs = form.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.classList.remove('border-red-500');
+                    input.classList.add('border-zinc-800');
+                });
+
+                let isValid = true;
+
+                const fullNameInput = form.querySelector('[name="fullName"]');
+                const phoneInput = form.querySelector('[name="phone"]');
+                const addressLine1Input = form.querySelector('[name="addressLine1"]');
+                const cityInput = form.querySelector('[name="city"]');
+                const stateInput = form.querySelector('[name="state"]');
+                const postalCodeInput = form.querySelector('[name="postal_code"]');
+                const countryInput = form.querySelector('[name="country"]');
+
+                const requiredFields = [
+                    { input: fullNameInput, name: 'Full Name' },
+                    { input: phoneInput, name: 'Phone Number' },
+                    { input: addressLine1Input, name: 'Address Line 1' },
+                    { input: cityInput, name: 'City' },
+                    { input: stateInput, name: 'State' },
+                    { input: postalCodeInput, name: 'Postal Code' },
+                    { input: countryInput, name: 'Country' }
+                ];
+
+                requiredFields.forEach(field => {
+                    const val = field.input.value.trim();
+                    if (!val) {
+                        const errorSpan = field.input.parentNode.querySelector('.validation-error');
+                        if (errorSpan) {
+                            errorSpan.textContent = `${field.name} is required.`;
+                            errorSpan.classList.remove('hidden');
+                        }
+                        field.input.classList.remove('border-zinc-800');
+                        field.input.classList.add('border-red-500');
+                        isValid = false;
+                    }
+                });
+
+                if (!isValid) {
                     errorDiv.textContent = 'Please fill in all required fields marked with *';
                     errorDiv.classList.remove('hidden');
                     return false;
                 }
 
+                // Phone Validation
+                const phone = phoneInput.value.trim();
                 const cleanPhone = phone.replace(/[\s-]/g, '');
                 const phoneRegex = /^(?:\+91|91|0)?[6-9]\d{9}$/;
                 if (!phoneRegex.test(cleanPhone)) {
-                    errorDiv.textContent = 'Please enter a valid phone number (10 to 12 digits, optional +91)';
-                    errorDiv.classList.remove('hidden');
-                    return false;
+                    const errorSpan = phoneInput.parentNode.querySelector('.validation-error');
+                    if (errorSpan) {
+                        errorSpan.textContent = 'Please enter a valid phone number (10 to 12 digits, optional +91)';
+                        errorSpan.classList.remove('hidden');
+                    }
+                    phoneInput.classList.remove('border-zinc-800');
+                    phoneInput.classList.add('border-red-500');
+                    isValid = false;
                 }
 
+                // Postal Code Validation
+                const postal_code = postalCodeInput.value.trim();
                 if (!/^\d{6}$/.test(postal_code)) {
-                    errorDiv.textContent = 'Postal code must be exactly 6 digits';
-                    errorDiv.classList.remove('hidden');
+                    const errorSpan = postalCodeInput.parentNode.querySelector('.validation-error');
+                    if (errorSpan) {
+                        errorSpan.textContent = 'Postal code must be exactly 6 digits';
+                        errorSpan.classList.remove('hidden');
+                    }
+                    postalCodeInput.classList.remove('border-zinc-800');
+                    postalCodeInput.classList.add('border-red-500');
+                    isValid = false;
+                }
+
+                if (!isValid) {
                     return false;
                 }
 
                 errorDiv.classList.add('hidden');
                 return {
-                    fullName,
-                    phone,
-                    addressLine1,
+                    fullName: fullNameInput.value.trim(),
+                    phone: phoneInput.value.trim(),
+                    addressLine1: addressLine1Input.value.trim(),
                     addressLine2: form.querySelector('[name="addressLine2"]').value.trim(),
-                    city,
-                    state,
-                    postal_code: postal_code,
-                    country,
+                    city: cityInput.value.trim(),
+                    state: stateInput.value.trim(),
+                    postal_code: postalCodeInput.value.trim(),
+                    country: countryInput.value.trim(),
                     address_type: form.querySelector('[name="address_type"]').value,
                     isDefault: form.querySelector('[name="isDefault"]').checked
                 };

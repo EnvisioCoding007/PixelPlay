@@ -22,6 +22,7 @@ export const getCartDetails = async (userId) => {
     let subtotal = 0;
     let discount = 0;
     let hasUnavailableProduct = false;
+    let hasInsufficientStockProduct = false;
     for (let item of cart.items) {
         if (item.product) {
             item.product = { ...item.product };
@@ -40,16 +41,24 @@ export const getCartDetails = async (userId) => {
             item.product.categoryDiscount = catDiscount;
             
             let basePrice = item.product.price || 0;
+            let platformStock = item.product.stock || 0;
             if (item.product.platform_stock && item.product.platform_stock.length > 0) {
-                const platStock = item.product.platform_stock.find(ps => ps.platform === item.platform);
+                const platStock = item.product.platform_stock.find(ps => ps.platform.toLowerCase() === item.platform.toLowerCase());
                 if (platStock && typeof platStock.price === 'number') {
                     basePrice = platStock.price;
+                    platformStock = platStock.stock;
                 } else {
                     const firstPlat = item.product.platform_stock[0];
                     if (firstPlat && typeof firstPlat.price === 'number') {
                         basePrice = firstPlat.price;
+                        platformStock = firstPlat.stock;
                     }
                 }
+            }
+            
+            item.product.stock = platformStock;
+            if (item.quantity > platformStock) {
+                hasInsufficientStockProduct = true;
             }
             
             const activePrice = catDiscount > 0 ? Math.round(Math.max(0, basePrice - (basePrice * (catDiscount / 100)))) : basePrice;
@@ -71,7 +80,8 @@ export const getCartDetails = async (userId) => {
         shipping: Math.round(shipping),
         discount: Math.round(discount),
         grandTotal: Math.round(grandTotal),
-        hasUnavailableProduct
+        hasUnavailableProduct,
+        hasInsufficientStockProduct
     };
 };
 
@@ -113,21 +123,29 @@ export const addToCart = async (userId, productId, platform, quantity) => {
             (item.platform || 'PC').toLowerCase() === platform.toLowerCase()
         );
 
+        let platformStock = product.stock || 0;
+        if (product.platform_stock && product.platform_stock.length > 0) {
+            const platStock = product.platform_stock.find(ps => ps.platform.toLowerCase() === platform.toLowerCase());
+            if (platStock) {
+                platformStock = platStock.stock;
+            }
+        }
+
         if (itemIndex > -1) {
             const newQty = cart.items[itemIndex].quantity + qty;
             if (newQty > 3) {
                 throw new Error('Maximum of 3 should be the limit to add to cart.');
             }
-            if (newQty > product.stock) {
-                throw new Error(`Only ${product.stock} items available in stock.`);
+            if (newQty > platformStock) {
+                throw new Error(`Only ${platformStock} items available in stock.`);
             }
             cart.items[itemIndex].quantity = newQty;
         } else {
             if (qty > 3) {
                 throw new Error('Maximum of 3 should be the limit to add to cart.');
             }
-            if (qty > product.stock) {
-                throw new Error(`Only ${product.stock} items available in stock.`);
+            if (qty > platformStock) {
+                throw new Error(`Only ${platformStock} items available in stock.`);
             }
             cart.items.push({ product: productId, platform, quantity: qty });
         }
@@ -182,13 +200,21 @@ export const updateCartQuantity = async (userId, productId, platform, action) =>
             throw new Error('Product is currently unavailable.');
         }
 
+        let platformStock = product.stock || 0;
+        if (product.platform_stock && product.platform_stock.length > 0) {
+            const platStock = product.platform_stock.find(ps => ps.platform.toLowerCase() === platform.toLowerCase());
+            if (platStock) {
+                platformStock = platStock.stock;
+            }
+        }
+
         if (action === 'increase') {
             const currentQty = cart.items[itemIndex].quantity;
             if (currentQty >= 3) {
                 throw new Error('Maximum of 3 should be the limit to add to cart.');
             }
-            if (currentQty >= product.stock) {
-                throw new Error(`Only ${product.stock} items available in stock.`);
+            if (currentQty >= platformStock) {
+                throw new Error(`Only ${platformStock} items available in stock.`);
             }
             cart.items[itemIndex].quantity += 1;
         } else if (action === 'decrease') {

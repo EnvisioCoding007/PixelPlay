@@ -171,6 +171,7 @@
                                     <label
                                         class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#c0c0c8] text-sm tracking-[0] leading-[normal]"
                                         for="email-address">Email Address</label>
+                                    <% if (!user.google_id && user.password_hash) { %>
                                     <button type="button" id="email-edit-btn"
                                         title="Edit email address"
                                         class="flex items-center gap-1 text-zinc-500 hover:text-sky-400 transition-colors text-xs [font-family:'Inter-Medium',Helvetica]">
@@ -180,6 +181,7 @@
                                         </svg>
                                         <span id="email-edit-label">Change</span>
                                     </button>
+                                    <% } %>
                                 </div>
                                 <div id="email-input-wrapper"
                                     class="flex items-center px-5 py-4 relative self-stretch w-full flex-[0_0_auto] bg-[#121215] rounded-lg overflow-hidden border border-solid border-zinc-700 opacity-60 transition-all duration-200">
@@ -399,11 +401,12 @@
         const wrapper    = document.getElementById('email-input-wrapper');
         const input      = document.getElementById('email-address');
         const hint       = document.getElementById('email-edit-hint');
-        const originalEmail = input.value;
+        const originalEmail = input ? input.value : '';
 
         let isEditing = false;
 
         function enableEdit() {
+            if (!input || !wrapper || !lockIcon || !penIcon || !editLabel || !hint) return;
             isEditing = true;
             input.readOnly = false;
             input.classList.remove('text-zinc-400', 'cursor-not-allowed');
@@ -418,6 +421,7 @@
         }
 
         function disableEdit() {
+            if (!input || !wrapper || !lockIcon || !penIcon || !editLabel || !hint) return;
             isEditing = false;
             input.readOnly = true;
             input.value = originalEmail;
@@ -431,9 +435,11 @@
             hint.classList.add('hidden');
         }
 
-        editBtn.addEventListener('click', () => {
-            isEditing ? disableEdit() : enableEdit();
-        });
+        if (editBtn) {
+            editBtn.addEventListener('click', () => {
+                isEditing ? disableEdit() : enableEdit();
+            });
+        }
 
         const profileForm = document.getElementById('profile-edit-form');
         if (profileForm) {

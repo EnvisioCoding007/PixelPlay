@@ -202,16 +202,17 @@
       }
       
       const data = await response.json();
-      if (data.success) {
+      if (response.ok && data.success) {
         showToast(`${productTitle} (${platform}) added to cart!`, "success");
         setTimeout(() => {
           window.location.href = '/user/cart';
         }, 800);
       } else {
-        console.error('Error moving to cart:', data.message);
+        showToast(data.message || 'Failed to add item to cart.', 'error');
       }
     } catch (err) {
       console.error('Network error moving to cart:', err);
+      showToast('Network error adding to cart.', 'error');
     }
   }
 
@@ -222,6 +223,20 @@
       const productTitle = this.dataset.title;
       const platform = this.dataset.platform;
       const article = this.closest('article');
+
+      const result = await Swal.fire({
+        title: 'Remove from Wishlist?',
+        text: `Are you sure you want to remove ${productTitle} (${platform}) from your wishlist?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, remove it!',
+        cancelButtonText: 'Cancel',
+        background: '#13161b',
+        color: '#fff',
+        confirmButtonColor: '#00d9e1',
+        cancelButtonColor: '#1c2028'
+      });
+      if (!result.isConfirmed) return;
       
       try {
         const response = await fetch('/user/wishlist', {

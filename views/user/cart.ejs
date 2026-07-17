@@ -215,13 +215,13 @@
             <span>If a product is returned or cancelled, the amount will be credited to the pixelWallet once the return/cancellation is being confirmed.</span>
           </div>
           <!-- Checkout Action -->
-          <% if (typeof hasUnavailableProduct !== 'undefined' && hasUnavailableProduct) { %>
+          <% if ((typeof hasUnavailableProduct !== 'undefined' && hasUnavailableProduct) || (typeof hasInsufficientStockProduct !== 'undefined' && hasInsufficientStockProduct)) { %>
             <button disabled class="w-full bg-gray-800 text-gray-500 font-bold py-4 rounded flex items-center justify-center gap-2 mb-4 tracking-wide cursor-not-allowed opacity-50 select-none" style="pointer-events: none;">
               <i class="fa-solid fa-ban text-sm"></i>
               CHECKOUT UNAVAILABLE
             </button>
             <p class="text-xs text-red-500 text-center mb-4">
-              Please remove unavailable products from your cart to proceed.
+              Please resolve stock or availability issues in your cart to proceed.
             </p>
           <% } else { %>
             <a href="/user/checkout" class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
@@ -353,6 +353,20 @@
   }
 
   async function removeCartItem(productId, platform, productTitle) {
+    const result = await Swal.fire({
+      title: 'Remove Item?',
+      text: `Are you sure you want to remove ${productTitle} (${platform}) from your cart?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, remove it!',
+      cancelButtonText: 'Cancel',
+      background: '#141416',
+      color: '#fff',
+      confirmButtonColor: '#ff4d4f',
+      cancelButtonColor: '#2a2a2d'
+    });
+    if (!result.isConfirmed) return;
+
     try {
       const response = await fetch('/user/cart', {
         method: 'DELETE',

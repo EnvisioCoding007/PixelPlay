@@ -143,6 +143,9 @@ export const handleGoogleAuth = async (profile) => {
             throw error;
         }
         user.last_login_at = new Date();
+        if (!user.google_id) {
+            user.google_id = profile.id;
+        }
         await user.save();
         return user;
     }
@@ -150,6 +153,7 @@ export const handleGoogleAuth = async (profile) => {
     user = new User({
         username: profile.displayName,
         email: profile.emails[0].value,
+        google_id: profile.id,
         is_verified: true,
         last_login_at: new Date()
     });
@@ -373,7 +377,7 @@ export const updateUserProfile = async (userId, { username, phone, email }, file
             throw new Error('Email cannot exceed 100 characters.');
         }
 
-        const currentUser = await User.findById(userId).select('email').lean();
+        const currentUser = await User.findById(userId).select('email google_id password_hash').lean();
         if (!currentUser) {
             throw new Error('User not found.');
         }
@@ -403,6 +407,10 @@ export const updateUserProfile = async (userId, { username, phone, email }, file
 
         const submittedEmail = email?.trim().toLowerCase();
         if (submittedEmail && submittedEmail !== currentUser.email) {
+            if (currentUser.google_id || !currentUser.password_hash) {
+                throw new Error('Google OAuth accounts cannot change their email address.');
+            }
+
             const conflict = await User.findOne({ email: submittedEmail });
             if (conflict) {
                 throw new Error('This email address is already in use.');

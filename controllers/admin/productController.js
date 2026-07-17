@@ -84,14 +84,20 @@ export const editProduct = async (req, res) => {
 
         const platform_stock = [];
         let calculatedTotalStock = 0;
-        platforms.forEach(platform => {
+        for (const platform of platforms) {
             const stockKey = `platform_stock_${platform}`;
             const priceKey = `platform_price_${platform}`;
-            const pStock = Number(req.body[stockKey]) || 0;
-            const pPrice = Number(req.body[priceKey]) || 0;
+            const pStock = Number(req.body[stockKey]);
+            const pPrice = Number(req.body[priceKey]);
+            if (isNaN(pStock) || pStock < 0) {
+                return res.status(400).json({ success: false, message: `Stock for platform ${platform} must be a non-negative number.` });
+            }
+            if (isNaN(pPrice) || pPrice < 10000) {
+                return res.status(400).json({ success: false, message: `Price for platform ${platform} must be at least ₹100.00.` });
+            }
             platform_stock.push({ platform, stock: pStock, price: pPrice });
             calculatedTotalStock += pStock;
-        });
+        }
 
         const fallbackValue = (val, defaultValue) => {
             if (val === undefined || val === null || String(val).trim() === '') {
@@ -223,14 +229,20 @@ export const addProduct = async (req, res) => {
 
         const platform_stock = [];
         let calculatedTotalStock = 0;
-        platforms.forEach(platform => {
+        for (const platform of platforms) {
             const stockKey = `platform_stock_${platform}`;
             const priceKey = `platform_price_${platform}`;
-            const pStock = Number(req.body[stockKey]) || 0;
-            const pPrice = Number(req.body[priceKey]) || 0;
+            const pStock = Number(req.body[stockKey]);
+            const pPrice = Number(req.body[priceKey]);
+            if (isNaN(pStock) || pStock < 0) {
+                return res.status(400).json({ success: false, message: `Stock for platform ${platform} must be a non-negative number.` });
+            }
+            if (isNaN(pPrice) || pPrice < 10000) {
+                return res.status(400).json({ success: false, message: `Price for platform ${platform} must be at least ₹100.00.` });
+            }
             platform_stock.push({ platform, stock: pStock, price: pPrice });
             calculatedTotalStock += pStock;
-        });
+        }
 
         const fallbackValue = (val, defaultValue) => {
             if (val === undefined || val === null || String(val).trim() === '') {

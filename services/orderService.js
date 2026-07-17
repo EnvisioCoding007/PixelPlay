@@ -13,6 +13,9 @@ export const placeOrder = async (userId, paymentMethod, addressId) => {
     if (cartDetails.hasUnavailableProduct) {
         throw new Error('Your cart contains unavailable products. Please remove them before checking out.');
     }
+    if (cartDetails.hasInsufficientStockProduct) {
+        throw new Error('Your cart contains products with insufficient stock. Please adjust quantities before checking out.');
+    }
 
     // 2. Retrieve user and delivery address
     const user = await User.findById(userId);
