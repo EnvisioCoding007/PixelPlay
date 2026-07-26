@@ -633,3 +633,15 @@ export const rejectItemReturn = async (orderId, productId, adminComment, platfor
 
 
 
+// export const paginationLogic = async(limit = 8, userId, currentPage = 1 ) =>{
+
+//     const skip = (currentPage - 1) * limit;
+
+//     const 
+// }
+
+
+// const userName = req.body.username;
+// const email = req.body.email;
+
+// await User.save()

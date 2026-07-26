@@ -444,6 +444,30 @@
         const profileForm = document.getElementById('profile-edit-form');
         if (profileForm) {
             profileForm.addEventListener('submit', function(e) {
+                const fullNameInput = document.getElementById('full-name');
+                if (fullNameInput) {
+                    const nameVal = fullNameInput.value.trim();
+                    const usernameRegex = /^(?=.*[a-zA-Z])[a-zA-Z0-9_ -]{3,50}$/;
+                    let nameErrEl = document.getElementById('profile-name-error');
+                    if (!nameVal || nameVal.length < 3 || nameVal.length > 50 || !usernameRegex.test(nameVal)) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!nameErrEl) {
+                            nameErrEl = document.createElement('p');
+                            nameErrEl.id = 'profile-name-error';
+                            nameErrEl.className = 'mt-1.5 text-xs text-red-500 font-medium';
+                            fullNameInput.parentNode.parentNode.appendChild(nameErrEl);
+                        }
+                        nameErrEl.textContent = 'Username must be 3-50 characters long, contain at least one letter, and can only include letters, numbers, spaces, underscores, and hyphens.';
+                        fullNameInput.parentNode.classList.add('border-red-500');
+                    } else {
+                        if (nameErrEl) {
+                            nameErrEl.remove();
+                        }
+                        fullNameInput.parentNode.classList.remove('border-red-500');
+                    }
+                }
+
                 const phoneInput = document.getElementById('phone-number');
                 if (phoneInput && phoneInput.value.trim()) {
                     const phoneVal = phoneInput.value.trim();

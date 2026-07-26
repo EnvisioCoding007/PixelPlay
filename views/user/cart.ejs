@@ -215,20 +215,23 @@
             <span>If a product is returned or cancelled, the amount will be credited to the pixelWallet once the return/cancellation is being confirmed.</span>
           </div>
           <!-- Checkout Action -->
-          <% if ((typeof hasUnavailableProduct !== 'undefined' && hasUnavailableProduct) || (typeof hasInsufficientStockProduct !== 'undefined' && hasInsufficientStockProduct)) { %>
-            <button disabled class="w-full bg-gray-800 text-gray-500 font-bold py-4 rounded flex items-center justify-center gap-2 mb-4 tracking-wide cursor-not-allowed opacity-50 select-none" style="pointer-events: none;">
-              <i class="fa-solid fa-ban text-sm"></i>
-              CHECKOUT UNAVAILABLE
-            </button>
-            <p class="text-xs text-red-500 text-center mb-4">
-              Please resolve stock or availability issues in your cart to proceed.
-            </p>
-          <% } else { %>
-            <a href="/user/checkout" class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
-              <i class="fa-solid fa-lock"></i>
-              PROCEED TO CHECKOUT
-            </a>
-          <% } %>
+          <div id="checkout-action-container">
+            <% if ((typeof hasUnavailableProduct !== 'undefined' && hasUnavailableProduct) || (typeof hasInsufficientStockProduct !== 'undefined' && hasInsufficientStockProduct)) { %>
+              <button disabled class="w-full bg-gray-800 text-gray-500 font-bold py-4 rounded flex items-center justify-center gap-2 mb-4 tracking-wide cursor-not-allowed opacity-50 select-none" style="pointer-events: none;">
+                <i class="fa-solid fa-ban text-sm"></i>
+                CHECKOUT UNAVAILABLE
+              </button>
+              <div class="flex items-center gap-2 text-pixel-danger text-sm bg-red-950/20 border border-red-800/40 p-3 rounded mb-4">
+                <i class="fa-solid fa-triangle-exclamation text-xs shrink-0"></i>
+                <span>Some items in your cart exceed available stock or are unavailable. Please adjust your cart to proceed.</span>
+              </div>
+            <% } else { %>
+              <a href="/user/checkout" class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
+                <i class="fa-solid fa-lock"></i>
+                PROCEED TO CHECKOUT
+              </a>
+            <% } %>
+          </div>
           <!-- Security Footer -->
           <div class="flex items-center justify-center gap-2 text-xs text-[#8e8e93]">
             <i class="fa-solid fa-shield-halved text-[#00b4ff]"></i>
@@ -328,6 +331,31 @@
         const grandTotalEl = document.getElementById('summary-grand-total');
         if (grandTotalEl) grandTotalEl.textContent = `₹${Number(data.grandTotal / 100).toFixed(2)}`;
 
+        // Update Checkout Action container dynamically
+        const checkoutActionContainer = document.getElementById('checkout-action-container');
+        if (checkoutActionContainer) {
+          const isBlocked = data.hasUnavailableProduct || data.hasInsufficientStockProduct;
+          if (isBlocked) {
+            checkoutActionContainer.innerHTML = `
+              <button disabled class="w-full bg-gray-800 text-gray-500 font-bold py-4 rounded flex items-center justify-center gap-2 mb-4 tracking-wide cursor-not-allowed opacity-50 select-none" style="pointer-events: none;">
+                <i class="fa-solid fa-ban text-sm"></i>
+                CHECKOUT UNAVAILABLE
+              </button>
+              <div class="flex items-center gap-2 text-pixel-danger text-sm bg-red-950/20 border border-red-800/40 p-3 rounded mb-4">
+                <i class="fa-solid fa-triangle-exclamation text-xs shrink-0"></i>
+                <span>Some items in your cart exceed available stock or are unavailable. Please adjust your cart to proceed.</span>
+              </div>
+            `;
+          } else {
+            checkoutActionContainer.innerHTML = `
+              <a href="/user/checkout" class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
+                <i class="fa-solid fa-lock"></i>
+                PROCEED TO CHECKOUT
+              </a>
+            `;
+          }
+        }
+
         // Update Cart Badge in Navbar
         const badge = document.getElementById('cart-badge');
         if (badge) {
@@ -389,6 +417,37 @@
       console.error('Network error removing item:', err);
     }
   }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error');
+    if (errorParam === 'insufficient_stock') {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Stock Unavailable',
+          text: 'One or more items in your cart exceed available stock. Please adjust item quantities before proceeding.',
+          background: '#141416',
+          color: '#fff',
+          confirmButtonColor: '#00b4ff'
+        });
+      }
+    } else if (errorParam === 'unavailable') {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Product Unavailable',
+          text: 'One or more items in your cart are currently unavailable.',
+          background: '#141416',
+          color: '#fff',
+          confirmButtonColor: '#00b4ff'
+        });
+      }
+    }
+  });
 </script>
 
 <%- include('../partials/user/footer') %>
+
+
+<!-- Line 124 debug change -->

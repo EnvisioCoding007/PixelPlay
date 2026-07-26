@@ -988,9 +988,14 @@
           const data = await response.json();
           if (data.success) {
             showToast(`${productTitle} (${selectedPlatform}) added to cart!`, "success");
-            setTimeout(() => {
-              window.location.href = '/user/cart';
-            }, 800);
+            if (typeof data.cartCount !== 'undefined') {
+              const badge = document.getElementById('cart-badge');
+              if (badge) {
+                badge.textContent = data.cartCount;
+                badge.classList.remove('hidden');
+                badge.style.display = 'flex';
+              }
+            }
           } else {
             showToast(data.message || "Failed to add item to cart.", "error");
           }

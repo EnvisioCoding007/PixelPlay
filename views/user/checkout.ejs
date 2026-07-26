@@ -160,7 +160,7 @@
                                     </span>
                                     <div class="flex items-center gap-2">
                                         <!-- Edit Address Button -->
-                                        <button type="button" class="edit-address-btn text-text-secondary hover:text-white transition-colors p-1" data-address='<%- JSON.stringify(address) %>'>
+                                        <button type="button" class="edit-address-btn text-text-secondary hover:text-white transition-colors p-1" data-address="<%= encodeURIComponent(JSON.stringify(address)) %>">
                                             <i class="fa-solid fa-pen text-[10px]"></i>
                                         </button>
                                         <i class="select-indicator <%= isSelected ? 'fa-regular fa-circle-dot' : 'fa-regular fa-circle' %>"></i>
@@ -647,7 +647,8 @@
             editButtons.forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation(); // prevent selecting the card when clicking edit
-                    const addressData = JSON.parse(btn.getAttribute('data-address'));
+                    const rawAttr = btn.getAttribute('data-address');
+                    const addressData = JSON.parse(rawAttr.includes('%') ? decodeURIComponent(rawAttr) : rawAttr);
                     openEditModal(addressData);
                 });
             });

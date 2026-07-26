@@ -251,6 +251,7 @@ export const updateCartQuantity = async (userId, productId, platform, action) =>
             shipping: cartDetails.shipping,
             grandTotal: cartDetails.grandTotal,
             hasUnavailableProduct: cartDetails.hasUnavailableProduct,
+            hasInsufficientStockProduct: cartDetails.hasInsufficientStockProduct,
             items: itemsData
         };
     } catch (error) {

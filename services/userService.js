@@ -5,10 +5,24 @@ import { sendEmail } from '../utils/emailSender.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9][a-zA-Z0-9.\-]*\.[a-zA-Z]{2,}$/;
-export const registerLocalUser = async (username, email, password, referralCode) => {
-    if (username && username.length > 50) {
-        throw new Error('Username cannot exceed 50 characters.');
+const USERNAME_REGEX = /^(?=.*[a-zA-Z])[a-zA-Z0-9_ -]{3,50}$/;
+
+const validateUsername = (username) => {
+    if (!username || !username.trim()) {
+        throw new Error('Username cannot be empty.');
     }
+    const trimmed = username.trim();
+    if (trimmed.length < 3 || trimmed.length > 50) {
+        throw new Error('Username must be between 3 and 50 characters long.');
+    }
+    if (!USERNAME_REGEX.test(trimmed)) {
+        throw new Error('Username must contain at least one letter and can only include letters, numbers, spaces, underscores, and hyphens.');
+    }
+    return trimmed;
+};
+
+export const registerLocalUser = async (username, email, password, referralCode) => {
+    username = validateUsername(username);
     if (email && email.length > 100) {
         throw new Error('Email cannot exceed 100 characters.');
     }
@@ -363,13 +377,7 @@ export const getUserProfile = async (userId) => {
 
 export const updateUserProfile = async (userId, { username, phone, email }, file) => {
     try {
-        if (!username || !username.trim()) {
-            throw new Error('Username cannot be empty.');
-        }
-
-        if (username && username.length > 50) {
-            throw new Error('Username cannot exceed 50 characters.');
-        }
+        username = validateUsername(username);
         if (phone && phone.length > 15) {
             throw new Error('Phone number cannot exceed 15 characters.');
         }

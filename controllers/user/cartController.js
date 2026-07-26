@@ -13,7 +13,8 @@ export const getCart = async (req, res) => {
             tax,
             shipping,
             grandTotal,
-            hasUnavailableProduct
+            hasUnavailableProduct,
+            hasInsufficientStockProduct
         } = await cartService.getCartDetails(userId);
 
         res.render('user/cart', {
@@ -23,7 +24,8 @@ export const getCart = async (req, res) => {
             tax,
             shipping,
             grandTotal,
-            hasUnavailableProduct
+            hasUnavailableProduct,
+            hasInsufficientStockProduct
         });
     } catch (error) {
         console.error('[getCart] Error:', error);
@@ -48,8 +50,12 @@ export const getCheckout = async (req, res) => {
             return res.redirect('/user/cart');
         }
 
-        if (cartDetails.hasUnavailableProduct || cartDetails.hasInsufficientStockProduct) {
-            return res.redirect('/user/cart');
+        if (cartDetails.hasUnavailableProduct) {
+            return res.redirect('/user/cart?error=unavailable');
+        }
+
+        if (cartDetails.hasInsufficientStockProduct) {
+            return res.redirect('/user/cart?error=insufficient_stock');
         }
 
         res.render('user/checkout', {
