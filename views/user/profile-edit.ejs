@@ -447,7 +447,7 @@
                 const fullNameInput = document.getElementById('full-name');
                 if (fullNameInput) {
                     const nameVal = fullNameInput.value.trim();
-                    const usernameRegex = /^(?=.*[a-zA-Z])[a-zA-Z0-9_ -]{3,50}$/;
+                    const usernameRegex = /^(?=.*[a-zA-Z])[a-zA-Z0-9][a-zA-Z0-9_ -]{2,49}$/;
                     let nameErrEl = document.getElementById('profile-name-error');
                     if (!nameVal || nameVal.length < 3 || nameVal.length > 50 || !usernameRegex.test(nameVal)) {
                         e.preventDefault();
@@ -458,7 +458,7 @@
                             nameErrEl.className = 'mt-1.5 text-xs text-red-500 font-medium';
                             fullNameInput.parentNode.parentNode.appendChild(nameErrEl);
                         }
-                        nameErrEl.textContent = 'Username must be 3-50 characters long, contain at least one letter, and can only include letters, numbers, spaces, underscores, and hyphens.';
+                        nameErrEl.textContent = 'Username must be 3-50 characters long, start with a letter or number, contain at least one letter, and can only include letters, numbers, spaces, underscores, and hyphens.';
                         fullNameInput.parentNode.classList.add('border-red-500');
                     } else {
                         if (nameErrEl) {

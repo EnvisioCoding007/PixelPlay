@@ -5,7 +5,8 @@ import { sendEmail } from '../utils/emailSender.js';
 import { uploadToCloudinary } from '../config/cloudinary.js';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9][a-zA-Z0-9.\-]*\.[a-zA-Z]{2,}$/;
-const USERNAME_REGEX = /^(?=.*[a-zA-Z])[a-zA-Z0-9_ -]{3,50}$/;
+const USERNAME_REGEX = /^(?=.*[a-zA-Z])[a-zA-Z0-9][a-zA-Z0-9_ -]{2,49}$/;
+const FULL_NAME_REGEX = /^[a-zA-Z][a-zA-Z ]{1,49}$/;
 
 const validateUsername = (username) => {
     if (!username || !username.trim()) {
@@ -16,7 +17,21 @@ const validateUsername = (username) => {
         throw new Error('Username must be between 3 and 50 characters long.');
     }
     if (!USERNAME_REGEX.test(trimmed)) {
-        throw new Error('Username must contain at least one letter and can only include letters, numbers, spaces, underscores, and hyphens.');
+        throw new Error('Username must start with a letter or number, contain at least one letter, and can only include letters, numbers, spaces, underscores, and hyphens.');
+    }
+    return trimmed;
+};
+
+const validateFullName = (name) => {
+    if (!name || !name.trim()) {
+        throw new Error('Full name is required.');
+    }
+    const trimmed = name.trim();
+    if (trimmed.length < 2 || trimmed.length > 50) {
+        throw new Error('Full name must be between 2 and 50 characters long.');
+    }
+    if (!FULL_NAME_REGEX.test(trimmed)) {
+        throw new Error('Full name must contain only letters and spaces.');
     }
     return trimmed;
 };
@@ -464,12 +479,9 @@ export const getAddresses = async (userId) => {
 
 export const addAddress = async (userId, { fullName, phone, addressLine1, addressLine2, city, state, postal_code, country, address_type, isDefault }) => {
     try {
-        if (!fullName || !phone || !addressLine1 || !city || !state || !postal_code) {
+        fullName = validateFullName(fullName);
+        if (!phone || !addressLine1 || !city || !state || !postal_code) {
             throw new Error('Please fill in all required fields.');
-        }
-
-        if (fullName && fullName.length > 100) {
-            throw new Error('Full name cannot exceed 100 characters.');
         }
         if (phone && phone.length > 15) {
             throw new Error('Phone number cannot exceed 15 characters.');
@@ -553,12 +565,9 @@ export const addAddress = async (userId, { fullName, phone, addressLine1, addres
 
 export const editAddress = async (userId, addressId, { fullName, phone, addressLine1, addressLine2, city, state, postal_code, country, address_type, isDefault }) => {
     try {
-        if (!fullName || !phone || !addressLine1 || !city || !state || !postal_code) {
+        fullName = validateFullName(fullName);
+        if (!phone || !addressLine1 || !city || !state || !postal_code) {
             throw new Error('Please fill in all required fields.');
-        }
-
-        if (fullName && fullName.length > 100) {
-            throw new Error('Full name cannot exceed 100 characters.');
         }
         if (phone && phone.length > 15) {
             throw new Error('Phone number cannot exceed 15 characters.');

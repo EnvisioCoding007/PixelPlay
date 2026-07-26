@@ -669,6 +669,13 @@
                     return false;
                 }
 
+                const fullNameRegex = /^[a-zA-Z][a-zA-Z ]{1,49}$/;
+                if (!fullNameRegex.test(fullName)) {
+                    errorDiv.textContent = 'Full name must be 2-50 characters long and contain only letters and spaces';
+                    errorDiv.classList.remove('hidden');
+                    return false;
+                }
+
                 const cleanPhone = phone.replace(/[\s-]/g, '');
                 const phoneRegex = /^(?:\+91|91|0)?[6-9]\d{9}$/;
                 if (!phoneRegex.test(cleanPhone)) {

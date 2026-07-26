@@ -667,6 +667,20 @@
                     return false;
                 }
 
+                // Full Name Validation
+                const fullName = fullNameInput.value.trim();
+                const fullNameRegex = /^[a-zA-Z][a-zA-Z ]{1,49}$/;
+                if (!fullNameRegex.test(fullName)) {
+                    const errorSpan = fullNameInput.parentNode.querySelector('.validation-error');
+                    if (errorSpan) {
+                        errorSpan.textContent = 'Full name must be 2-50 characters long and contain only letters and spaces';
+                        errorSpan.classList.remove('hidden');
+                    }
+                    fullNameInput.classList.remove('border-zinc-800');
+                    fullNameInput.classList.add('border-red-500');
+                    isValid = false;
+                }
+
                 // Phone Validation
                 const phone = phoneInput.value.trim();
                 const cleanPhone = phone.replace(/[\s-]/g, '');
