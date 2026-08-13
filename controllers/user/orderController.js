@@ -1,7 +1,7 @@
-import * as orderService from '../../services/orderService.js';
-import * as userService from '../../services/userService.js';
-import * as cartService from '../../services/cartService.js';
-import * as invoiceService from '../../services/invoiceService.js';
+import * as orderService from '../../services/user/orderService.js';
+import * as userService from '../../services/user/userService.js';
+import * as cartService from '../../services/user/cartService.js';
+import * as invoiceService from '../../services/user/invoiceService.js';
 
 export const postPlaceOrder = async (req, res) => {
     try {
@@ -70,6 +70,7 @@ export const getOrderDetails = async (req, res) => {
             subtotal: dbOrder.subtotal,
             couponDiscount: dbOrder.discount,
             tax: dbOrder.tax,
+            tax_rate: dbOrder.gst_rate,
             shipping: dbOrder.shipping,
             grandTotal: dbOrder.finalAmount,
             items: dbOrder.items,
@@ -392,5 +393,77 @@ export const downloadInvoice = async (req, res) => {
         } else {
             res.redirect(`/user/orders/${orderId}?error=${encodeURIComponent(error.message)}`);
         }
+    }
+};
+
+export const getEntireOrderReturn = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const dbOrder = await orderService.getOrderById(orderId);
+
+        const loggedInUserId = req.session.user.id || req.session.user;
+        const user = await userService.getUserById(loggedInUserId);
+        if (!dbOrder || dbOrder.userId.toString() !== loggedInUserId.toString()) {
+            return res.redirect('/user/orders');
+        }
+
+        if (dbOrder.orderStatus !== 'Delivered') {
+            return res.redirect(`/user/orders/${orderId}`);
+        }
+
+        const cartCount = await cartService.getCartItemCount(loggedInUserId);
+
+        const mappedOrder = {
+            _id: dbOrder._id,
+            orderId: dbOrder.orderId,
+            createdAt: dbOrder.createdAt,
+            status: dbOrder.orderStatus,
+            address: dbOrder.deliveryAddress,
+            paymentMethod: dbOrder.paymentMethod,
+            subtotal: dbOrder.subtotal,
+            couponDiscount: dbOrder.discount,
+            tax: dbOrder.tax,
+            shipping: dbOrder.shipping,
+            grandTotal: dbOrder.finalAmount,
+            items: dbOrder.items
+        };
+
+        res.render('user/order-return', {
+            order: mappedOrder,
+            product: null,
+            item: null,
+            user,
+            cartCount,
+            error: req.query.error || null
+        });
+    } catch (error) {
+        console.error('[getEntireOrderReturn] Error:', error);
+        res.redirect('/user/orders');
+    }
+};
+
+export const postEntireOrderReturn = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const { return_reason, additional_details } = req.body;
+
+        if (!return_reason) {
+            return res.redirect(`/user/orders/${orderId}/returns?error=Return reason is required`);
+        }
+        if (return_reason === 'other' && (!additional_details || additional_details.trim().length < 10)) {
+            return res.redirect(`/user/orders/${orderId}/returns?error=Additional comments must be at least 10 characters long for "Other reason"`);
+        }
+        if (additional_details && additional_details.trim().length > 100) {
+            return res.redirect(`/user/orders/${orderId}/returns?error=Additional comments cannot exceed 100 characters`);
+        }
+
+        const loggedInUserId = req.session.user.id || req.session.user;
+
+        await orderService.requestOrderReturn(orderId, loggedInUserId, return_reason, additional_details);
+
+        res.redirect(`/user/orders/${orderId}?notification=Return requested successfully for the order`);
+    } catch (error) {
+        console.error('[postEntireOrderReturn] Error:', error);
+        res.redirect('/user/orders');
     }
 };

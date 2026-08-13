@@ -1,4 +1,4 @@
-import * as categoryService from '../../services/categoryService.js';
+import * as categoryService from '../../services/admin/categoryService.js';
 import { uploadToCloudinary } from '../../config/cloudinary.js';
 
 export const renderCategoryManagement = async (req, res) => {

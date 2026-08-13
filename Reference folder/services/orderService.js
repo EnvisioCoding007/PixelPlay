@@ -44,7 +44,8 @@ export const placeOrder = async (userId, paymentMethod, addressId) => {
             product: item.product._id,
             platform: item.platform,
             quantity: item.quantity,
-            price: item.product.price // discounted price calculated by getCartDetails
+            price: item.product.price, // discounted price calculated by getCartDetails
+            gst_rate: item.product.gst_rate || 18
         };
     });
 
@@ -246,11 +247,13 @@ export const getAdminOrderStats = async () => {
 
     const pendingShipments = await Order.countDocuments({ orderStatus: 'Processing' });
     const completedProvisioning = await Order.countDocuments({ orderStatus: 'Delivered' });
+    const pendingReturns = await Order.countDocuments({orderStatus: 'Return Requested'});
 
     return {
         totalRevenue,
         pendingShipments,
-        completedProvisioning
+        completedProvisioning,
+        pendingReturns
     };
 };
 
@@ -282,41 +285,6 @@ export const updateOrderStatus = async (id, status) => {
 
     if (status === 'Delivered') {
         order.paymentStatus = 'Paid';
-    }
-
-    if (oldStatus !== 'Cancelled' && status === 'Cancelled') {
-        order.cancellationDate = new Date();
-        order.cancellationReason = 'Cancelled by Admin';
-        order.cancellationComments = 'Order status updated to Cancelled by administrator.';
-
-        if (order.paymentMethod !== 'COD') {
-            const user = await User.findById(order.userId);
-            if (user) {
-                user.walletBalance = (user.walletBalance || 0) + order.finalAmount;
-                await user.save();
-            }
-        }
-
-        for (const item of order.items) {
-            if (item.status !== 'Cancelled' && item.status !== 'Returned' && item.status !== 'Return Requested') {
-                item.status = 'Cancelled';
-                item.cancellationDate = new Date();
-                item.cancellationReason = 'Cancelled by Admin';
-                item.cancellationComments = 'Order status updated to Cancelled by administrator.';
-
-                const product = await Product.findById(item.product);
-                if (product) {
-                    product.stock = (product.stock || 0) + item.quantity;
-                    if (product.platform_stock && product.platform_stock.length > 0) {
-                        const ps = product.platform_stock.find(p => p.platform === item.platform);
-                        if (ps) {
-                            ps.stock = (ps.stock || 0) + item.quantity;
-                        }
-                    }
-                    await product.save();
-                }
-            }
-        }
     }
 
     await order.save();
@@ -463,7 +431,13 @@ export const cancelItem = async (orderId, userId, productId, reason, comments, c
     if (order.paymentMethod !== 'COD') {
         const user = await User.findById(order.userId);
         if (user) {
-            const refundAmount = Math.round(targetItem.price * qtyToCancel / 0.82);
+            let itemGstRate = targetItem.gst_rate;
+            if (typeof itemGstRate !== 'number') {
+                const prod = await Product.findById(targetItem.product);
+                itemGstRate = (prod && prod.gst_rate) ? prod.gst_rate : 18;
+            }
+            const unitTaxInclusive = Math.round((targetItem.price * 100) / (100 - itemGstRate));
+            const refundAmount = unitTaxInclusive * qtyToCancel;
             user.walletBalance = (user.walletBalance || 0) + refundAmount;
             await user.save();
         }
@@ -573,7 +547,13 @@ export const approveItemReturn = async (orderId, productId, adminComment, platfo
 
     const user = await User.findById(order.userId);
     if (user) {
-        const refundAmount = Math.round(item.price * item.quantity / 0.82);
+        let itemGstRate = item.gst_rate;
+        if (typeof itemGstRate !== 'number') {
+            const prod = await Product.findById(item.product && item.product._id ? item.product._id : item.product);
+            itemGstRate = (prod && prod.gst_rate) ? prod.gst_rate : 18;
+        }
+        const unitTaxInclusive = Math.round((item.price * 100) / (100 - itemGstRate));
+        const refundAmount = unitTaxInclusive * item.quantity;
         user.walletBalance = (user.walletBalance || 0) + refundAmount;
         await user.save();
     }
@@ -630,18 +610,41 @@ export const rejectItemReturn = async (orderId, productId, adminComment, platfor
     return order;
 };
 
+export const requestOrderReturn = async (orderId, userId, reason, comments) => {
+    if (reason && reason.length > 100) {
+        throw new Error('Return reason cannot exceed 100 characters.');
+    }
+    if (comments && comments.length > 100) {
+        throw new Error('Return comments cannot exceed 100 characters.');
+    }
 
+    const order = await Order.findOne({ _id: orderId, userId });
+    if (!order) {
+        throw new Error('Order not found');
+    }
 
+    if (order.orderStatus !== 'Delivered') {
+        throw new Error('Only delivered orders can be returned');
+    }
 
-// export const paginationLogic = async(limit = 8, userId, currentPage = 1 ) =>{
+    let hasReturnableItems = false;
+    order.items.forEach(item => {
+        if (item.status === 'Ordered' || !item.status) {
+            item.status = 'Return Requested';
+            item.returnDate = new Date();
+            item.returnReason = reason;
+            item.returnComments = comments;
+            item.adminReturnComment = null;
+            hasReturnableItems = true;
+        }
+    });
 
-//     const skip = (currentPage - 1) * limit;
+    if (!hasReturnableItems) {
+        throw new Error('No items in this order are eligible for return');
+    }
 
-//     const 
-// }
+    order.orderStatus = 'Return Requested';
+    await order.save();
+    return order;
+};
 
-
-// const userName = req.body.username;
-// const email = req.body.email;
-
-// await User.save()

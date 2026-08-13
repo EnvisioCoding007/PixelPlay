@@ -1,5 +1,5 @@
-import * as cartService from '../../services/cartService.js';
-import * as userService from '../../services/userService.js';
+import * as cartService from '../../services/user/cartService.js';
+import * as userService from '../../services/user/userService.js';
 
 export const getCart = async (req, res) => {
     try {
@@ -11,6 +11,7 @@ export const getCart = async (req, res) => {
             cart,
             subtotal,
             tax,
+            gst_rate,
             shipping,
             grandTotal,
             hasUnavailableProduct,
@@ -22,6 +23,7 @@ export const getCart = async (req, res) => {
             cart,
             subtotal,
             tax,
+            gst_rate,
             shipping,
             grandTotal,
             hasUnavailableProduct,

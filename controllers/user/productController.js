@@ -1,9 +1,9 @@
-import * as productService from '../../services/productService.js';
-import * as categoryService from '../../services/categoryService.js';
-import * as publisherService from '../../services/publisherService.js';
-import * as userService from '../../services/userService.js';
-import * as wishlistService from '../../services/wishlistService.js';
-import * as cartService from '../../services/cartService.js';
+import * as productService from '../../services/user/productService.js';
+import * as categoryService from '../../services/admin/categoryService.js';
+import * as publisherService from '../../services/admin/publisherService.js';
+import * as userService from '../../services/user/userService.js';
+import * as wishlistService from '../../services/user/wishlistService.js';
+import * as cartService from '../../services/user/cartService.js';
 
 export const getHome = async (req, res) => {
     try {
@@ -21,6 +21,7 @@ export const getHome = async (req, res) => {
         const publishers = activePublishers;
 
         let userWishlist = [];
+        let userCartItems = [];
 
         if (req.session.user) {
             const userId = req.session.user.id || req.session.user;
@@ -37,12 +38,14 @@ export const getHome = async (req, res) => {
                     legendaryGames,
                     activePublishers,
                     userWishlist: [],
+                    userCartItems: [],
                     primaryPlatform,
                     allPlatforms
                 });
             }
 
             userWishlist = await wishlistService.getWishlistItems(userId);
+            userCartItems = await cartService.getCartItems(userId);
 
             return res.render('user/home', { 
                 user, 
@@ -53,6 +56,7 @@ export const getHome = async (req, res) => {
                 legendaryGames,
                 activePublishers,
                 userWishlist,
+                userCartItems,
                 primaryPlatform,
                 allPlatforms
             });
@@ -67,6 +71,7 @@ export const getHome = async (req, res) => {
             legendaryGames,
             activePublishers,
             userWishlist: [],
+            userCartItems: [],
             primaryPlatform,
             allPlatforms
         });
@@ -80,7 +85,8 @@ export const getHome = async (req, res) => {
             standardGames: [],
             legendaryGames: [],
             activePublishers: [],
-            userWishlist: []
+            userWishlist: [],
+            userCartItems: []
         });
     }
 };

@@ -1,4 +1,4 @@
-import User from '../models/User.js';
+import * as userService from '../services/user/userService.js';
 import passport from 'passport';
 import * as authController from '../controllers/user/authController.js';
 
@@ -8,13 +8,13 @@ export const isUserAuth = async (req, res, next) => {
         return res.redirect('/auth/login');
     }
     try {
-        const user = await User.findById(req.session.user)
-            .select('is_blocked role')
-            .lean();
+        const userId = req.session.user.id || req.session.user;
+        const user = await userService.getUserById(userId);
 
         if (!user || user.is_blocked || user.role === 'admin') {
-            req.session.destroy(() => {});
-            return res.redirect('/auth/login');
+            return req.session.destroy(() => {
+                res.redirect('/auth/login');
+            });
         }
 
         next();
@@ -36,10 +36,11 @@ export const isUserUnAuth = (req, res, next) => {
 export const isAdminAuth = async (req, res, next) => {
     if (req.session.admin && req.session.admin.role === 'admin') {
         try {
-            const adminUser = await User.findById(req.session.admin._id).lean();
+            const adminUser = await userService.getUserById(req.session.admin._id);
             if (!adminUser || adminUser.role !== 'admin') {
-                req.session.destroy(() => {});
-                return res.redirect('/admin/login');
+                return req.session.destroy(() => {
+                    res.redirect('/admin/login');
+                });
             }
             res.locals.user = adminUser;
             req.session.admin = adminUser;

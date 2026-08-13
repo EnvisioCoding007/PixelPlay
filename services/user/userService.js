@@ -1,8 +1,8 @@
-import User from '../models/User.js';
+import User from '../../models/User.js';
 import bcrypt from 'bcrypt';
-import OTP from '../models/Otpmodel.js';
-import { sendEmail } from '../utils/emailSender.js';
-import { uploadToCloudinary } from '../config/cloudinary.js';
+import OTP from '../../models/Otpmodel.js';
+import { sendEmail } from '../../utils/emailSender.js';
+import { uploadToCloudinary } from '../../config/cloudinary.js';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9][a-zA-Z0-9.\-]*\.[a-zA-Z]{2,}$/;
 const USERNAME_REGEX = /^(?=.*[a-zA-Z])[a-zA-Z0-9][a-zA-Z0-9_ -]{2,49}$/;
@@ -272,14 +272,16 @@ export const checkAndSendSignupOtp = async (email) => {
     return { sentNew: false };
 };
 
-export const getAdminByEmail = async (email) => {
+export const getUserByEmail = async (email) => {
     try {
         return await User.findOne({ email: email.toLowerCase().trim() });
     } catch (error) {
-        console.error('[userService.getAdminByEmail] Error:', error);
+        console.error('[userService.getUserByEmail] Error:', error);
         throw error;
     }
 };
+
+export const getAdminByEmail = getUserByEmail;
 
 export const getCustomers = async (search = '', status = '', verification = '', sort = '-createdAt', page = 1, limit = 10) => {
     try {
@@ -483,8 +485,8 @@ export const addAddress = async (userId, { fullName, phone, addressLine1, addres
         if (!phone || !addressLine1 || !city || !state || !postal_code) {
             throw new Error('Please fill in all required fields.');
         }
-        if (phone && phone.length > 15) {
-            throw new Error('Phone number cannot exceed 15 characters.');
+        if (phone && phone.length > 13) {
+            throw new Error('Phone number cannot exceed 13 characters.');
         }
         if (addressLine1 && addressLine1.length > 200) {
             throw new Error('Address Line 1 cannot exceed 200 characters.');

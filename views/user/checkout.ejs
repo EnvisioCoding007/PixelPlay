@@ -89,6 +89,15 @@
             </div>
             <p class="text-center text-text-secondary text-xs uppercase tracking-wider">Or pay with card or netbanking
             </p>
+            <%
+                let defaultAddressIndex = -1;
+                if (user && user.addresses && user.addresses.length > 0) {
+                    defaultAddressIndex = user.addresses.findIndex(addr => addr.isDefault);
+                    if (defaultAddressIndex === -1) defaultAddressIndex = 0;
+                }
+                const selectedAddress = (user && user.addresses && user.addresses.length > 0 && defaultAddressIndex !== -1) ? user.addresses[defaultAddressIndex] : null;
+                const initialPhone = selectedAddress ? (selectedAddress.phone || user.phone || '') : (user ? (user.phone || '') : '');
+            %>
             <!-- Contact Information -->
             <div class="flex flex-col gap-3">
                 <h2 class="font-semibold text-sm">Contact Information</h2>
@@ -102,7 +111,7 @@
                     <div>
                         <label class="block text-xs text-text-tertiary font-medium mb-1 uppercase tracking-wider">Phone Number *</label>
                         <input id="checkout-phone" class="w-full bg-dark-surface-2 border border-dark-border rounded-lg p-3 text-sm text-text-primary focus:border-cyber-blue focus:outline-none transition-colors"
-                            placeholder="Phone Number" type="text" value="<%= user.phone || '' %>" />
+                            placeholder="Phone Number" type="text" value="<%= initialPhone %>" />
                     </div>
                 </div>
             </div>
@@ -143,9 +152,10 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                     <% if (user.addresses && user.addresses.length > 0) { %>
                         <% user.addresses.forEach((address, index) => { %>
-                            <% const isSelected = index === 0; %>
+                            <% const isSelected = index === defaultAddressIndex; %>
                             <!-- Address Card -->
                             <div data-address-id="<%= address._id %>"
+                                data-phone="<%= address.phone || '' %>"
                                 class="address-card rounded-xl border p-4 flex flex-col gap-2 relative cursor-pointer transition-all duration-200 hover:shadow-lg <%= isSelected ? 'border-cyber-blue bg-cyber-blue/5 text-text-primary' : 'border-dark-border bg-dark-surface opacity-70 hover:opacity-100' %>">
                                 <div class="flex justify-between items-center text-xs font-semibold <%= isSelected ? 'text-cyber-blue' : 'text-[#c084fc]' %>">
                                     <span class="flex items-center gap-1">
@@ -289,7 +299,7 @@
                         <span class="text-white">₹<%= (cart.subtotal / 100).toFixed(2) %></span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-text-secondary">GST</span>
+                        <span class="text-text-secondary">GST (<%= (typeof cart !== 'undefined' && cart.items && cart.items.length > 0 && cart.items[0].product && cart.items[0].product.gst_rate) ? cart.items[0].product.gst_rate : (typeof gst_rate !== 'undefined' ? gst_rate : 18) %>%)</span>
                         <span class="text-white">₹<%= (cart.tax / 100).toFixed(2) %></span>
                     </div>
                     <div class="flex justify-between items-center">
@@ -822,6 +832,13 @@
                         badge.classList.remove('hidden');
                     }
                     
+                    // Auto-fill phone number field from selected address
+                    const cardPhone = card.getAttribute('data-phone');
+                    const phoneInput = document.getElementById('checkout-phone');
+                    if (phoneInput && cardPhone !== null) {
+                        phoneInput.value = cardPhone;
+                    }
+
                     // Optional: Store selected address ID in a variable or input
                     const addressId = card.getAttribute('data-address-id');
                     console.log('Selected Address ID:', addressId);

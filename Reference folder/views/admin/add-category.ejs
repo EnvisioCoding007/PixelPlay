@@ -1,0 +1,322 @@
+<%- include('../partials/admin/header') %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+<body class="bg-pixel-bg text-gray-300 min-h-screen flex text-sm">
+<%- include('../partials/admin/sidebar', { activeTab: 'categories' }) %>
+<main class="content-bg flex-1 flex flex-col overflow-hidden relative">
+  <!-- Header -->
+  <header class="flex items-center justify-between px-8 py-6 border-b border-border-dark">
+    <h1 class="text-2xl font-bold text-white">Add New Category</h1>
+    <a href="/admin/categories" class="px-4 py-2 border border-border-dark text-gray-400 hover:text-white rounded-lg text-sm transition-colors flex items-center gap-2 bg-transparent">
+      <i class="fa-solid fa-arrow-left"></i> Cancel &amp; Return
+    </a>
+  </header>
+
+  <!-- Content Area -->
+  <div class="flex-1 overflow-y-auto p-8">
+    <div class="max-w-2xl mx-auto bg-card-bg rounded-xl border border-border-dark p-8 shadow-2xl">
+      <div class="mb-6">
+        <h2 class="text-lg font-semibold text-white">Create Category</h2>
+        <p class="text-xs text-gray-500 mt-1">Add a new taxonomy to your library.</p>
+      </div>
+      <form id="createCategoryForm" action="/admin/categories" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Category Name</label>
+          <input name="name" type="text" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue" placeholder="e.g. RPG, Shooter" required />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Category Description</label>
+          <textarea name="description" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue resize-none" placeholder="Brief description of this category..." rows="4"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Default Offer / Discount</label>
+          <input name="defaultOffer" type="text" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue" placeholder="e.g. 10 or 10%" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Category Icon</label>
+          <div id="dropzone" class="border-2 border-dashed border-input-dark-border hover:border-pixel-blue/50 rounded-lg p-6 flex flex-col items-center justify-center text-center bg-content-bg/50 cursor-pointer transition-colors relative">
+            <input type="file" id="categoryIcon" class="hidden" accept="image/*" />
+            
+            <!-- Upload Instructions (hidden when preview is shown) -->
+            <div id="uploadInstructions" class="flex flex-col items-center justify-center">
+              <div class="w-12 h-12 rounded-full bg-pixel-blue/10 flex items-center justify-center mb-3 text-pixel-blue">
+                <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+              </div>
+              <h3 class="text-sm font-semibold text-white mb-1">Drop Category Icon Here</h3>
+              <p class="text-xs text-gray-500 mb-2">Drag &amp; drop your image, or <button id="browseBtn" class="text-pixel-blue hover:underline font-medium" type="button">browse files</button></p>
+              <p class="text-[11px] text-gray-500">Supports PNG, JPG · Max file size: 2MB ·<br/>Recommended: 300x300px</p>
+            </div>
+
+            <!-- Preview container (shown when cropped blob exists) -->
+            <div id="iconPreviewContainer" class="hidden flex flex-col items-center justify-center w-full">
+              <img id="categoryIconPreview" class="w-24 h-24 rounded-lg object-cover border border-border-dark mb-3 mx-auto" />
+              <div class="flex gap-2 justify-center">
+                <button type="button" id="removeIconBtn" class="px-3 py-1.5 text-xs bg-[#f92a40]/10 hover:bg-[#f92a40]/20 text-pixel-red rounded-lg transition-colors flex items-center gap-1.5">
+                  <i class="fa-solid fa-trash text-[10px]"></i> Remove Icon
+                </button>
+              </div>
+            </div>
+            
+            <p id="fileNameDisplay" class="text-xs text-pixel-yellow font-medium mt-3 hidden"></p>
+          </div>
+        </div>
+        <button class="w-full bg-pixel-blue hover:bg-pixel-blue-hover text-background-dark font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors" type="submit">
+          Add Category
+        </button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<!-- Cropper.js Workspace Modal overlay -->
+<div id="cropperWorkspace" class="hidden fixed inset-0 z-55 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+  <div class="bg-card-bg border border-border-dark rounded-xl max-w-2xl w-full p-6 flex flex-col gap-4 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-border-dark pb-3">
+      <h3 class="text-lg font-semibold text-white" id="cropperTitle">Crop Category Icon</h3>
+      <button type="button" id="closeCropperBtn" class="text-gray-400 hover:text-white transition-colors">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="relative w-full max-h-[50vh] bg-content-bg flex items-center justify-center overflow-hidden rounded-lg border border-border-dark">
+      <img id="cropperImage" class="max-w-full max-h-[45vh] object-contain" />
+    </div>
+    <div class="flex gap-3 justify-end border-t border-border-dark pt-3">
+      <button type="button" id="cancelCropBtn" class="px-5 py-2 text-sm text-gray-300 hover:text-white bg-content-bg border border-border-dark rounded-lg transition-colors">
+        Cancel
+      </button>
+      <button type="button" id="saveCropBtn" class="px-5 py-2 text-sm text-background-dark bg-pixel-blue hover:bg-pixel-blue-hover font-medium rounded-lg transition-colors">
+        Apply Crop
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+<script>
+  let cropper = null;
+  let croppedIconBlob = null;
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('categoryIcon');
+  const browseBtn = document.getElementById('browseBtn');
+  const fileNameDisplay = document.getElementById('fileNameDisplay');
+  const previewImg = document.getElementById('categoryIconPreview');
+  const previewContainer = document.getElementById('iconPreviewContainer');
+  const uploadInstructions = document.getElementById('uploadInstructions');
+  const removeIconBtn = document.getElementById('removeIconBtn');
+
+  const cropperWorkspace = document.getElementById('cropperWorkspace');
+  const cropperImage = document.getElementById('cropperImage');
+  const closeCropperBtn = document.getElementById('closeCropperBtn');
+  const cancelCropBtn = document.getElementById('cancelCropBtn');
+  const saveCropBtn = document.getElementById('saveCropBtn');
+
+  function startCropper(imageSrc) {
+    cropperImage.src = imageSrc;
+    cropperWorkspace.classList.remove('hidden');
+    cropperWorkspace.classList.add('flex');
+    
+    if (cropper) {
+      cropper.destroy();
+    }
+    
+    cropper = new Cropper(cropperImage, {
+      aspectRatio: 1, // 1:1 ratio
+      viewMode: 1,
+      dragMode: 'move',
+      autoCropArea: 0.9,
+      responsive: true,
+      restore: false,
+      guides: true,
+      center: true,
+      highlight: false,
+      cropBoxMovable: true,
+      cropBoxResizable: true,
+      toggleDragModeOnDblclick: false
+    });
+  }
+
+  function closeCropper() {
+    cropperWorkspace.classList.add('hidden');
+    cropperWorkspace.classList.remove('flex');
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+  }
+
+  cancelCropBtn.addEventListener('click', () => {
+    closeCropper();
+    fileInput.value = '';
+  });
+
+  closeCropperBtn.addEventListener('click', () => {
+    closeCropper();
+    fileInput.value = '';
+  });
+
+  saveCropBtn.addEventListener('click', () => {
+    if (!cropper) return;
+    const canvas = cropper.getCroppedCanvas({
+      width: 300,
+      height: 300
+    });
+    canvas.toBlob((blob) => {
+      croppedIconBlob = blob;
+      if (previewImg && previewContainer && uploadInstructions) {
+        previewImg.src = URL.createObjectURL(blob);
+        previewContainer.classList.remove('hidden');
+        uploadInstructions.classList.add('hidden');
+      }
+      fileNameDisplay.textContent = 'Selected: cropped_icon.png';
+      fileNameDisplay.classList.remove('hidden');
+      closeCropper();
+    }, 'image/png');
+  });
+
+  if (dropzone && fileInput) {
+    dropzone.addEventListener('click', (e) => {
+      if (e.target !== browseBtn && !e.target.closest('#removeIconBtn')) {
+        fileInput.click();
+      }
+    });
+
+    fileInput.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    if (browseBtn) {
+      browseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fileInput.click();
+      });
+    }
+
+    function handleIconFile(file) {
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          startCropper(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length > 0) {
+        handleIconFile(fileInput.files[0]);
+      }
+    });
+
+    // Drag and drop handlers
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('border-pixel-blue');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('border-pixel-blue');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('border-pixel-blue');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        fileInput.files = e.dataTransfer.files;
+        handleIconFile(file);
+      }
+    });
+
+    if (removeIconBtn) {
+      removeIconBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        croppedIconBlob = null;
+        fileInput.value = '';
+        if (previewContainer && uploadInstructions) {
+          previewContainer.classList.add('hidden');
+          uploadInstructions.classList.remove('hidden');
+        }
+        fileNameDisplay.textContent = '';
+        fileNameDisplay.classList.add('hidden');
+      });
+    }
+  }
+
+  // Intercept category creation form submit
+  const createCategoryForm = document.getElementById('createCategoryForm');
+  if (createCategoryForm) {
+    createCategoryForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (!croppedIconBlob) {
+        Swal.fire({
+          title: 'Validation Error',
+          text: 'Please select and crop a Category Icon.',
+          icon: 'error',
+          confirmButtonColor: '#2cb5e8'
+        });
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('name', this.name.value);
+      formData.append('description', this.description.value);
+      formData.append('defaultOffer', this.defaultOffer.value);
+      formData.append('icon', croppedIconBlob, 'icon.png');
+      
+      try {
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Adding...';
+        }
+        
+        const response = await fetch('/admin/categories', {
+          method: 'POST',
+          body: formData
+        });
+        
+        window.location.href = response.url || '/admin/categories';
+      } catch (err) {
+        console.error('Category creation error:', err);
+        Swal.fire({
+          title: 'Error',
+          text: 'Failed to create category: ' + err.message,
+          icon: 'error',
+          confirmButtonColor: '#2cb5e8'
+        });
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = 'Add Category';
+        }
+      }
+    });
+  }
+</script>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <script>
+    Swal.fire({
+      title: 'Error',
+      text: '<%= error %>',
+      icon: 'error',
+      confirmButtonColor: '#2cb5e8'
+    });
+  </script>
+<% } %>
+
+<% if (typeof success !== 'undefined' && success) { %>
+  <script>
+    Swal.fire({
+      title: 'Success',
+      text: '<%= success %>',
+      icon: 'success',
+      confirmButtonColor: '#2cb5e8'
+    });
+  </script>
+<% } %>
+
+<%- include('../partials/admin/footer') %>
+</body>
+</html>

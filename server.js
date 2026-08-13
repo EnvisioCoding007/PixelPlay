@@ -26,7 +26,7 @@ import session from 'express-session';
 import { injectCartCount } from './middleware/cartMiddleware.js';
 
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'the_forebidden_key',
+    secret: process.env.SESSION_SECRET ,
     resave: false,
     saveUninitialized: false,
     cookie: {

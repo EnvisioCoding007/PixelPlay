@@ -1,0 +1,81 @@
+<aside class="bg-sidebar-bg w-64 flex flex-col justify-between border-r border-border-dark z-10 flex-shrink-0">
+  <div>
+    <!-- Logo -->
+    <div class="h-20 flex items-center justify-center border-b border-border-dark">
+        <img src="/icons/brand_logo/pixelplay-logo.png" alt="PixelPlay Logo" class="h-18 w-auto">
+    </div>
+    <!-- Navigation Links -->
+    <nav class="mt-6 flex flex-col gap-1 px-4">
+      <% 
+        const currentTab = typeof activeTab !== 'undefined' ? activeTab : '';
+      %>
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'dashboard' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="#">
+        <i class="fa-solid fa-border-all w-5 text-center"></i>
+        <span>Dashboard</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'listed-games' || currentTab === 'products' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/products">
+        <i class="fa-solid fa-gamepad w-5 text-center"></i>
+        <span>Games</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'publishers' ? 'bg-[#1a2432] text-accent border-l-[3px] border-accent font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/publishers">
+        <i class="fa-solid fa-building w-5 text-center"></i>
+        <span>Publishers</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'order-management' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/orders">
+        <i class="fa-solid fa-cart-shopping w-5 text-center"></i>
+        <span>Order Management</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'customers' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/customers">
+        <i class="fa-solid fa-users w-5 text-center"></i>
+        <span>Customers</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'reviews' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="#">
+        <i class="fa-regular fa-star w-5 text-center"></i>
+        <span>Reviews</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'offers' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="#">
+        <i class="fa-solid fa-tags w-5 text-center"></i>
+        <span>Offers</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'banners' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="#">
+        <i class="fa-regular fa-image w-5 text-center"></i>
+        <span>Banners</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'coupons' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="#">
+        <i class="fa-solid fa-ticket w-5 text-center"></i>
+        <span>Coupons</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'categories' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/categories">
+        <i class="fa-solid fa-layer-group w-5 text-center"></i>
+        <span>Categories</span>
+      </a>
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'wallet-oversight' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="#">
+        <i class="fa-solid fa-wallet w-5 text-center"></i>
+        <span>Wallet Oversight</span>
+      </a>
+    </nav>
+  </div>
+  <!-- Bottom Actions -->
+  <div class="mb-6 px-4">
+    <form method="post" action="/admin/logout" class="mb-4">
+      <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 rounded text-pixel-red hover:bg-[#2a1114] transition-colors text-left bg-transparent border-none cursor-pointer">
+        <i class="fa-solid fa-arrow-right-from-bracket w-5 text-center"></i>
+        <span>Sign Out</span>
+      </button>
+    </form>
+    <!-- User Profile -->
+    <div class="flex items-center gap-3 bg-card-bg p-3 rounded border border-input-dark-border">
+      <% if (typeof user !== 'undefined' && user && user.profile_image) { %>
+        <img alt="<%= user.username %>" class="w-10 h-10 rounded-full object-cover" src="<%= user.profile_image %>"/>
+      <% } else { %>
+        <div class="w-10 h-10 rounded-full bg-pixel-blue/10 flex items-center justify-center text-pixel-blue border border-pixel-blue/20">
+          <i class="fa-solid fa-user-shield text-base"></i>
+        </div>
+      <% } %>
+      <div class="flex flex-col">
+        <span class="text-gray-200 font-medium text-sm"><%= typeof user !== 'undefined' && user && user.username ? (user.username.charAt(0).toUpperCase() + user.username.slice(1)) : 'Admin' %></span>
+        <span class="text-pixel-yellow text-xs"><%= typeof user !== 'undefined' && user && user.role ? (user.role === 'admin' ? 'System Administrator' : user.role) : 'System Administrator' %></span>
+      </div>
+    </div>
+  </div>
+</aside>

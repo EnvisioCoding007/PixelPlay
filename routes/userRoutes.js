@@ -47,6 +47,9 @@ router.get('/products/status/:id', productController.checkProductStatus);
 router.get('/user/profile', isUserAuth, userController.getProfile);
 router.get('/user/wishlist', isUserAuth, wishlistController.getWishlist);
 router.post('/user/wishlist', isUserAuth, wishlistController.toggleWishlist);
+router.get('/wishlist', isUserAuth, wishlistController.getWishlist);
+router.post('/wishlist', isUserAuth, wishlistController.toggleWishlist);
+router.post('/auth/wishlist/toggle', isUserAuth, wishlistController.toggleWishlist);
 
 router.get('/user/cart', isUserAuth, cartController.getCart);
 router.post('/user/cart', isUserAuth, cartController.addToCart);

@@ -1,7 +1,7 @@
-import Cart from '../models/Cart.js';
-import Category from '../models/Category.js';
-import Product from '../models/Product.js';
-import Wishlist from '../models/Wishlist.js';
+import Cart from '../../models/Cart.js';
+import Category from '../../models/Category.js';
+import Product from '../../models/Product.js';
+import Wishlist from '../../models/Wishlist.js';
 import mongoose from 'mongoose';
 
 export const getCartItemCount = async (userId) => {
@@ -23,12 +23,16 @@ export const getCartDetails = async (userId) => {
     let discount = 0;
     let hasUnavailableProduct = false;
     let hasInsufficientStockProduct = false;
+
+    let gst_rate = 0;
+
     for (let item of cart.items) {
         if (item.product) {
             item.product = { ...item.product };
             if (item.product.status === 'Hidden') {
                 hasUnavailableProduct = true;
             }
+
             let catObj = null;
             if (item.product.category) {
                 if (mongoose.Types.ObjectId.isValid(item.product.category)) {
@@ -37,6 +41,9 @@ export const getCartDetails = async (userId) => {
                     catObj = await Category.findOne({ name: item.product.category }).lean();
                 }
             }
+
+            gst_rate = item.product.gst_rate || 18;
+
             const catDiscount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
             item.product.categoryDiscount = catDiscount;
             
@@ -62,14 +69,14 @@ export const getCartDetails = async (userId) => {
             }
             
             const activePrice = catDiscount > 0 ? Math.round(Math.max(0, basePrice - (basePrice * (catDiscount / 100)))) : basePrice;
-            const cartPrice = Math.round(activePrice * 0.82);
+            const cartPrice = Math.round(activePrice * (100 - gst_rate)/100);
             item.product.price = cartPrice;
             item.product.displayPrice = activePrice;
             subtotal += cartPrice * item.quantity;
         }
     }
 
-    const tax = Math.round(subtotal * (18 / 82));
+    const tax = Math.round(subtotal * (gst_rate / (100 - gst_rate)));
     const shipping = cart.items.length > 0 ? 10000 : 0;
     const grandTotal = subtotal - discount + tax + shipping;
 
@@ -77,6 +84,7 @@ export const getCartDetails = async (userId) => {
         cart,
         subtotal: Math.round(subtotal),
         tax: Math.round(tax),
+        gst_rate: gst_rate,
         shipping: Math.round(shipping),
         discount: Math.round(discount),
         grandTotal: Math.round(grandTotal),
@@ -285,4 +293,3 @@ export const removeFromCart = async (userId, productId, platform) => {
         throw error;
     }
 };
-
