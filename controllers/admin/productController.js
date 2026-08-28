@@ -1,6 +1,6 @@
-import * as productService from '../../services/productService.js';
-import * as categoryService from '../../services/categoryService.js';
-import * as publisherService from '../../services/publisherService.js';
+import * as productService from '../../services/admin/productService.js';
+import * as categoryService from '../../services/admin/categoryService.js';
+import * as publisherService from '../../services/admin/publisherService.js';
 import { uploadToCloudinary } from '../../config/cloudinary.js';
 
 export const renderProductManagement = async (req, res) => {
@@ -71,6 +71,7 @@ export const editProduct = async (req, res) => {
             title,
             publisher,
             release_year,
+            gst_rate,
             price,
             stock,
             category,
@@ -172,6 +173,7 @@ export const editProduct = async (req, res) => {
             title,
             publisher,
             release_year: Number(release_year),
+            gst_rate: Number(gst_rate),
             price: Number(price),
             stock: calculatedTotalStock,
             platform_stock,
@@ -217,6 +219,7 @@ export const addProduct = async (req, res) => {
             title,
             publisher,
             release_year,
+            gst_rate,
             price,
             stock,
             category,
@@ -308,6 +311,7 @@ export const addProduct = async (req, res) => {
             title,
             publisher,
             release_year: Number(release_year),
+            gst_rate: Number(gst_rate),
             price: Number(price),
             stock: calculatedTotalStock,
             platform_stock,

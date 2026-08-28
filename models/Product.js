@@ -15,6 +15,10 @@ const productSchema = new mongoose.Schema({
         type:Number,
         required:true,
     },
+    gst_rate:{
+        type:Number,
+        required:true,
+    },
     price: {
         type: Number, // Stored in Paisa (whole integer)
         required: true,
@@ -92,6 +96,17 @@ const productSchema = new mongoose.Schema({
             sound_card:{type:String, default:null},
             additional_notes:{type:String, default:null}
         }
+    },
+    avgRating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5
+    },
+    reviewCount: {
+        type: Number,
+        default: 0,
+        min: 0
     }
 }, {
     timestamps: true

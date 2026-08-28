@@ -37,11 +37,10 @@
 
       <!-- Table Header -->
       <div class="grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold tracking-wider text-gray-500 uppercase">
-        <div class="col-span-4">Category Name</div>
-        <div class="col-span-2 text-center">Total Games</div>
-        <div class="col-span-3">Default Offer</div>
+        <div class="col-span-5">Category Name</div>
+        <div class="col-span-3 text-center">Total Games</div>
         <div class="col-span-2 text-center">Visibility</div>
-        <div class="col-span-1 text-right">Actions</div>
+        <div class="col-span-2 text-right">Actions</div>
       </div>
 
       <!-- Category List -->
@@ -49,7 +48,7 @@
         <% if (categories && categories.length > 0) { %>
           <% categories.forEach(cat => { %>
             <div class="bg-card-bg border border-border-dark rounded-xl p-4 grid grid-cols-12 gap-4 items-center shadow-md">
-              <div class="col-span-4 font-semibold text-gray-200 text-sm flex items-center gap-3">
+              <div class="col-span-5 font-semibold text-gray-200 text-sm flex items-center gap-3">
                 <% if (cat.icon) { %>
                   <img src="<%= cat.icon %>" alt="" class="w-8 h-8 rounded object-cover border border-border-dark" />
                 <% } else { %>
@@ -59,13 +58,10 @@
                 <% } %>
                 <span><%= cat.name %></span>
               </div>
-              <div class="col-span-2 flex justify-center">
+              <div class="col-span-3 flex justify-center">
                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#1a2432] text-pixel-blue border border-pixel-blue/20">
                   <%= cat.gameCount || 0 %> Titles
                 </span>
-              </div>
-              <div class="col-span-3 text-sm text-gray-400">
-                <%= (cat.defaultOffer && cat.defaultOffer > 0) ? cat.defaultOffer : 'None' %>
               </div>
               <div class="col-span-2 flex justify-center">
                 <button aria-checked="<%= cat.status !== 'Hidden' %>" 

@@ -73,6 +73,11 @@
                 <label class="block text-sm font-medium text-text-muted mb-2">Release Year</label>
                 <input name="release_year" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" placeholder="YYYY" type="number" min="1950" max="2100"/>
               </div>
+
+               <div>
+                <label class="block text-sm font-medium text-text-muted mb-2">GST Rate</label>
+                <input name="gst_rate" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" placeholder="GST Rate" type="number" min="0" max="100"/>
+              </div>
               
               <!-- Category -->
               <div>
@@ -1062,6 +1067,7 @@
     formData.append('title', form.title.value);
     formData.append('publisher', form.publisher.value);
     formData.append('release_year', form.release_year.value);
+    formData.append('gst_rate', form.gst_rate.value);
     formData.append('category', form.category.value);
     formData.append('edition_type', form.edition_type.value);
     formData.append('description', form.description.value);
