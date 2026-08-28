@@ -1,4 +1,4 @@
-import * as publisherService from '../../services/publisherService.js';
+import * as publisherService from '../../services/admin/publisherService.js';
 import { uploadToCloudinary } from '../../config/cloudinary.js';
 
 export const renderPublisherManagement = async (req, res) => {

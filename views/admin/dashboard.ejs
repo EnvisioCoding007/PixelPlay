@@ -1,0 +1,683 @@
+<%- include('../partials/admin/header') %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="flex h-screen bg-pixel-bg overflow-hidden text-gray-100 font-sans">
+    <%- include('../partials/admin/sidebar', { activeTab: 'dashboard', user }) %>
+
+    <main class="flex-1 overflow-y-auto bg-content-bg p-6 lg:p-8">
+        <!-- Top Header & Time Filter Bar -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-2xl lg:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                    <i class="fa-solid fa-[#0ea5e9] fa-chart-line text-pixel-blue"></i> Admin Executive Dashboard
+                </h1>
+                <p class="text-gray-400 text-sm mt-1">Real-time performance analytics, product aggregations, and sales report metrics.</p>
+            </div>
+
+            <!-- Time Period Filters for Charts & Dashboard -->
+            <div class="flex flex-wrap items-center gap-2 bg-card-bg p-1.5 rounded-xl border border-input-dark-border shadow-md">
+                <button type="button" onclick="setDashboardPeriod('daily')" id="btn-period-daily" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-all <%= filters.period === 'daily' ? 'bg-pixel-blue text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-border-dark' %>">Daily</button>
+                <button type="button" onclick="setDashboardPeriod('weekly')" id="btn-period-weekly" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-all <%= filters.period === 'weekly' ? 'bg-pixel-blue text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-border-dark' %>">Weekly</button>
+                <button type="button" onclick="setDashboardPeriod('monthly')" id="btn-period-monthly" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-all <%= filters.period === 'monthly' ? 'bg-pixel-blue text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-border-dark' %>">Monthly</button>
+                <button type="button" onclick="setDashboardPeriod('yearly')" id="btn-period-yearly" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-all <%= filters.period === 'yearly' ? 'bg-pixel-blue text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-border-dark' %>">Yearly</button>
+                <button type="button" onclick="toggleCustomDateInputs()" id="btn-period-custom" class="period-btn px-3 py-1.5 text-xs font-semibold rounded-lg transition-all <%= filters.period === 'custom' ? 'bg-pixel-blue text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-border-dark' %>">
+                    <i class="fa-regular fa-calendar-days mr-1"></i> Custom
+                </button>
+            </div>
+        </div>
+
+        <!-- Custom Date Range Form (Hidden by default unless custom preset selected) -->
+        <div id="custom-date-container" class="<%= filters.period === 'custom' ? 'block' : 'hidden' %> mb-6 p-4 bg-card-bg rounded-xl border border-input-dark-border">
+            <form id="custom-date-form" onsubmit="applyCustomDateFilter(event)" class="flex flex-wrap items-end gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Start Date</label>
+                    <input type="date" id="input-start-date" value="<%= filters.startDate %>" class="bg-sidebar-bg border border-input-dark-border text-white text-xs rounded-lg p-2.5 focus:border-pixel-blue focus:outline-none" required />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">End Date</label>
+                    <input type="date" id="input-end-date" value="<%= filters.endDate %>" class="bg-sidebar-bg border border-input-dark-border text-white text-xs rounded-lg p-2.5 focus:border-pixel-blue focus:outline-none" required />
+                </div>
+                <button type="submit" class="bg-pixel-blue hover:bg-pixel-blue-hover text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-filter"></i> Apply Range
+                </button>
+            </form>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            <!-- Card 1: Gross Sales -->
+            <div class="bg-card-bg p-5 rounded-2xl border border-border-dark shadow-lg relative overflow-hidden group hover:border-pixel-blue/40 transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Gross Order Amount</p>
+                        <h3 class="text-2xl font-bold text-white mt-2" id="stat-gross">₹<%= overview.grossSalesRupees.toLocaleString('en-IN', { minimumFractionDigits: 2 }) %></h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-pixel-blue/10 flex items-center justify-center text-pixel-blue border border-pixel-blue/20">
+                        <i class="fa-solid fa-indian-rupee-sign text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-xs text-gray-400">
+                    <span class="text-emerald-400 font-semibold flex items-center gap-1 mr-1.5"><i class="fa-solid fa-arrow-trend-up"></i> Total</span> before coupon deductions
+                </div>
+            </div>
+
+            <!-- Card 2: Coupon Deductions -->
+            <div class="bg-card-bg p-5 rounded-2xl border border-border-dark shadow-lg relative overflow-hidden group hover:border-pixel-red/40 transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Coupon Deductions</p>
+                        <h3 class="text-2xl font-bold text-pixel-red mt-2" id="stat-coupons">₹<%= overview.couponDeductionsRupees.toLocaleString('en-IN', { minimumFractionDigits: 2 }) %></h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-pixel-red/10 flex items-center justify-center text-pixel-red border border-pixel-red/20">
+                        <i class="fa-solid fa-ticket text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-xs text-gray-400">
+                    <span class="text-pixel-red font-semibold flex items-center gap-1 mr-1.5"><i class="fa-solid fa-tag"></i> Total</span> discounts redeemed
+                </div>
+            </div>
+
+            <!-- Card 3: Total Orders -->
+            <div class="bg-card-bg p-5 rounded-2xl border border-border-dark shadow-lg relative overflow-hidden group hover:border-pixel-yellow/40 transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Sales Count</p>
+                        <h3 class="text-2xl font-bold text-white mt-2" id="stat-orders"><%= overview.totalOrders %></h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-pixel-yellow/10 flex items-center justify-center text-pixel-yellow border border-pixel-yellow/20">
+                        <i class="fa-solid fa-bag-shopping text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-xs text-gray-400">
+                    <span class="text-pixel-yellow font-semibold flex items-center gap-1 mr-1.5"><i class="fa-solid fa-check"></i> Placed</span> non-cancelled orders
+                </div>
+            </div>
+
+            <!-- Card 4: Net Revenue -->
+            <div class="bg-card-bg p-5 rounded-2xl border border-border-dark shadow-lg relative overflow-hidden group hover:border-emerald-500/40 transition-all">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Net Sales Revenue</p>
+                        <h3 class="text-2xl font-bold text-emerald-400 mt-2" id="stat-net">₹<%= overview.netRevenueRupees.toLocaleString('en-IN', { minimumFractionDigits: 2 }) %></h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                        <i class="fa-solid fa-wallet text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-xs text-gray-400">
+                    <span class="text-emerald-400 font-semibold flex items-center gap-1 mr-1.5"><i class="fa-solid fa-shield-check"></i> Net</span> realized earnings
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+            <!-- Chart 1: Sales Trend (2 Cols) -->
+            <div class="lg:col-span-2 bg-card-bg p-6 rounded-2xl border border-border-dark shadow-xl">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-chart-area text-pixel-blue"></i> Revenue & Order Volume Trend
+                        </h2>
+                        <p class="text-xs text-gray-400">Financial revenue timeline over selected filter period</p>
+                    </div>
+                </div>
+                <div class="h-72 w-full">
+                    <canvas id="salesTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Category Share (1 Col) -->
+            <div class="bg-card-bg p-6 rounded-2xl border border-border-dark shadow-xl flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-chart-pie text-pixel-yellow"></i> Category Distribution
+                    </h2>
+                    <p class="text-xs text-gray-400 mb-4">Sales share by game category</p>
+                    <div class="h-60 w-full flex items-center justify-center">
+                        <canvas id="categoryDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top 5 Aggregations Section (3 Columns) -->
+        <div class="mb-12">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-crown text-pixel-yellow"></i> Top Performance Aggregations
+                    </h2>
+                    <p class="text-xs text-gray-400">Top 5 Products with Platforms, Categories, and Publishers based on sales metrics</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Column 1: Top 5 Products + Platform -->
+                <div class="bg-card-bg p-5 rounded-2xl border border-border-dark shadow-xl">
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b border-input-dark-border">
+                        <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-gamepad text-pixel-blue"></i> Top 5 Products & Platform
+                        </h3>
+                        <span class="text-[10px] bg-pixel-blue/10 text-pixel-blue font-semibold px-2 py-0.5 rounded-full border border-pixel-blue/20">By Sales</span>
+                    </div>
+                    <div class="space-y-3" id="container-top-products">
+                        <% if (topProducts && topProducts.length > 0) { %>
+                            <% topProducts.forEach((prod, index) => { %>
+                                <div class="flex items-center justify-between bg-sidebar-bg/60 p-2.5 rounded-xl border border-input-dark-border/60 hover:border-pixel-blue/40 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-xs font-bold text-gray-400 w-4 text-center">#<%= index + 1 %></span>
+                                        <img src="<%= prod.coverImage %>" alt="<%= prod.title %>" class="w-10 h-10 rounded-lg object-cover border border-input-dark-border" />
+                                        <div>
+                                            <h4 class="text-xs font-semibold text-gray-200 line-clamp-1"><%= prod.title %></h4>
+                                            <span class="text-[10px] uppercase font-bold text-pixel-blue bg-pixel-blue/10 px-1.5 py-0.5 rounded border border-pixel-blue/20"><%= prod.platform %></span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs font-bold text-white"><%= prod.totalQuantity %> sold</p>
+                                        <p class="text-[11px] font-semibold text-emerald-400">₹<%= prod.totalRevenueRupees.toLocaleString('en-IN') %></p>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <p class="text-xs text-gray-500 text-center py-6">No product sales data found for period.</p>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Column 2: Top 5 Categories -->
+                <div class="bg-card-bg p-5 rounded-2xl border border-border-dark shadow-xl">
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b border-input-dark-border">
+                        <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-pixel-yellow"></i> Top 5 Categories
+                        </h3>
+                        <span class="text-[10px] bg-pixel-yellow/10 text-pixel-yellow font-semibold px-2 py-0.5 rounded-full border border-pixel-yellow/20">By Volume</span>
+                    </div>
+                    <div class="space-y-3" id="container-top-categories">
+                        <% if (topCategories && topCategories.length > 0) { %>
+                            <% topCategories.forEach((cat, index) => { %>
+                                <div class="flex items-center justify-between bg-sidebar-bg/60 p-2.5 rounded-xl border border-input-dark-border/60 hover:border-pixel-yellow/40 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-xs font-bold text-gray-400 w-4 text-center">#<%= index + 1 %></span>
+                                        <div class="w-10 h-10 rounded-lg bg-pixel-yellow/10 flex items-center justify-center text-pixel-yellow border border-pixel-yellow/20">
+                                            <i class="fa-solid fa-gamepad"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xs font-semibold text-gray-200"><%= cat.name %></h4>
+                                            <span class="text-[10px] text-gray-400">Genre Category</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs font-bold text-white"><%= cat.totalQuantity %> items</p>
+                                        <p class="text-[11px] font-semibold text-emerald-400">₹<%= cat.totalRevenueRupees.toLocaleString('en-IN') %></p>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <p class="text-xs text-gray-500 text-center py-6">No category sales data found for period.</p>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Column 3: Top 5 Publishers -->
+                <div class="bg-card-bg p-5 rounded-2xl border border-border-dark shadow-xl">
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b border-input-dark-border">
+                        <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-building text-purple-400"></i> Top 5 Publishers
+                        </h3>
+                        <span class="text-[10px] bg-purple-500/10 text-purple-400 font-semibold px-2 py-0.5 rounded-full border border-purple-500/20">By Revenue</span>
+                    </div>
+                    <div class="space-y-3" id="container-top-publishers">
+                        <% if (topPublishers && topPublishers.length > 0) { %>
+                            <% topPublishers.forEach((pub, index) => { %>
+                                <div class="flex items-center justify-between bg-sidebar-bg/60 p-2.5 rounded-xl border border-input-dark-border/60 hover:border-purple-500/40 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-xs font-bold text-gray-400 w-4 text-center">#<%= index + 1 %></span>
+                                        <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20">
+                                            <i class="fa-solid fa-building"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xs font-semibold text-gray-200 line-clamp-1"><%= pub.name %></h4>
+                                            <span class="text-[10px] text-gray-400">Publisher</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-xs font-bold text-white"><%= pub.totalQuantity %> sold</p>
+                                        <p class="text-[11px] font-semibold text-emerald-400">₹<%= pub.totalRevenueRupees.toLocaleString('en-IN') %></p>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <p class="text-xs text-gray-500 text-center py-6">No publisher sales data found for period.</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Report Section (Scroll down target) -->
+        <div id="sales-report-section" class="bg-card-bg rounded-2xl border border-border-dark p-6 shadow-2xl mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 pb-4 border-b border-input-dark-border">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice-dollar text-pixel-blue"></i> Detailed Sales Reports
+                    </h2>
+                    <p class="text-xs text-gray-400 mt-1">Filter transaction records, review coupon deductions, and export reports to PDF or Excel.</p>
+                </div>
+
+                <!-- Export Action Buttons -->
+                <div class="flex items-center gap-3">
+                    <a id="btn-export-excel" href="/admin/dashboard/export/excel?period=<%= filters.period %>&startDate=<%= filters.startDate %>&endDate=<%= filters.endDate %>&status=<%= filters.status %>" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg hover:shadow-emerald-600/30">
+                        <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
+                    </a>
+                    <a id="btn-export-pdf" href="/admin/dashboard/export/pdf?period=<%= filters.period %>&startDate=<%= filters.startDate %>&endDate=<%= filters.endDate %>&status=<%= filters.status %>" target="_blank" class="bg-pixel-red hover:bg-red-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg hover:shadow-pixel-red/30">
+                        <i class="fa-solid fa-file-pdf text-sm"></i> Export PDF
+                    </a>
+                </div>
+            </div>
+
+            <!-- Report Filter Form Bar -->
+            <form method="GET" action="/admin/dashboard#sales-report-section" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 bg-sidebar-bg p-4 rounded-xl border border-input-dark-border">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Time Preset</label>
+                    <select name="period" onchange="this.form.submit()" class="w-full bg-card-bg border border-input-dark-border text-white text-xs rounded-lg p-2.5 focus:border-pixel-blue focus:outline-none">
+                        <option value="all" <%= filters.period === 'all' ? 'selected' : '' %>>All Time</option>
+                        <option value="daily" <%= filters.period === 'daily' ? 'selected' : '' %>>Daily (Today)</option>
+                        <option value="weekly" <%= filters.period === 'weekly' ? 'selected' : '' %>>Weekly (Last 7 Days)</option>
+                        <option value="monthly" <%= filters.period === 'monthly' ? 'selected' : '' %>>Monthly (Current Month)</option>
+                        <option value="yearly" <%= filters.period === 'yearly' ? 'selected' : '' %>>Yearly (Current Year)</option>
+                        <option value="custom" <%= filters.period === 'custom' ? 'selected' : '' %>>Custom Date Range</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Order Status</label>
+                    <select name="status" onchange="this.form.submit()" class="w-full bg-card-bg border border-input-dark-border text-white text-xs rounded-lg p-2.5 focus:border-pixel-blue focus:outline-none">
+                        <option value="All" <%= filters.status === 'All' ? 'selected' : '' %>>All Statuses</option>
+                        <option value="Processing" <%= filters.status === 'Processing' ? 'selected' : '' %>>Processing</option>
+                        <option value="Shipped" <%= filters.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
+                        <option value="Delivered" <%= filters.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+                        <option value="Return Requested" <%= filters.status === 'Return Requested' ? 'selected' : '' %>>Return Requested</option>
+                        <option value="Returned" <%= filters.status === 'Returned' ? 'selected' : '' %>>Returned</option>
+                        <option value="Cancelled" <%= filters.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Start Date</label>
+                    <input type="date" name="startDate" value="<%= filters.startDate %>" class="w-full bg-card-bg border border-input-dark-border text-white text-xs rounded-lg p-2.5 focus:border-pixel-blue focus:outline-none" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">End Date</label>
+                    <input type="date" name="endDate" value="<%= filters.endDate %>" class="w-full bg-card-bg border border-input-dark-border text-white text-xs rounded-lg p-2.5 focus:border-pixel-blue focus:outline-none" />
+                </div>
+
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-pixel-blue hover:bg-pixel-blue-hover text-white text-xs font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-md">
+                        <i class="fa-solid fa-filter"></i> Apply Filter
+                    </button>
+                </div>
+            </form>
+
+            <!-- Sales Summary Row -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 bg-card-bg p-4 rounded-xl border border-input-dark-border/80">
+                <div class="border-r border-input-dark-border/60 pr-2">
+                    <p class="text-[11px] text-gray-400 font-semibold uppercase">Total Report Orders</p>
+                    <p class="text-lg font-bold text-white mt-1"><%= salesReport.summary.totalOrders %></p>
+                </div>
+                <div class="border-r border-input-dark-border/60 pr-2">
+                    <p class="text-[11px] text-gray-400 font-semibold uppercase">Gross Sales</p>
+                    <p class="text-lg font-bold text-white mt-1">₹<%= salesReport.summary.grossSalesRupees.toLocaleString('en-IN', { minimumFractionDigits: 2 }) %></p>
+                </div>
+                <div class="border-r border-input-dark-border/60 pr-2">
+                    <p class="text-[11px] text-gray-400 font-semibold uppercase">Coupon Deductions</p>
+                    <p class="text-lg font-bold text-pixel-red mt-1">₹<%= salesReport.summary.couponDeductionsRupees.toLocaleString('en-IN', { minimumFractionDigits: 2 }) %></p>
+                </div>
+                <div>
+                    <p class="text-[11px] text-gray-400 font-semibold uppercase">Report Net Sales</p>
+                    <p class="text-lg font-bold text-emerald-400 mt-1">₹<%= salesReport.summary.netSalesRupees.toLocaleString('en-IN', { minimumFractionDigits: 2 }) %></p>
+                </div>
+            </div>
+
+            <!-- Sales Report Table -->
+            <div class="overflow-x-auto rounded-xl border border-input-dark-border">
+                <table class="w-full text-left text-xs text-gray-300">
+                    <thead class="bg-sidebar-bg text-gray-400 uppercase font-bold text-[11px] border-b border-input-dark-border">
+                        <tr>
+                            <th class="py-3 px-4">Order ID</th>
+                            <th class="py-3 px-4">Date & Time</th>
+                            <th class="py-3 px-4">Customer</th>
+                            <th class="py-3 px-4">Payment</th>
+                            <th class="py-3 px-4 text-right">Subtotal</th>
+                            <th class="py-3 px-4 text-right">Coupon Disc.</th>
+                            <th class="py-3 px-4 text-right">Net Amount</th>
+                            <th class="py-3 px-4 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-input-dark-border/60 bg-card-bg">
+                        <% if (salesReport.orders && salesReport.orders.length > 0) { %>
+                            <% salesReport.orders.forEach(order => { %>
+                                <tr class="hover:bg-sidebar-bg/60 transition-colors">
+                                    <td class="py-3 px-4 font-bold text-pixel-blue">
+                                        <a href="/admin/orders/<%= order._id %>" class="hover:underline">#<%= order.orderId %></a>
+                                    </td>
+                                    <td class="py-3 px-4 text-gray-400">
+                                        <%= new Date(order.createdAt).toLocaleDateString('en-GB') %>
+                                        <span class="block text-[10px] text-gray-500"><%= new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></span>
+                                    </td>
+                                    <td class="py-3 px-4 font-medium text-gray-200">
+                                        <%= order.userId ? (order.userId.username || order.userId.email) : 'Guest' %>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span class="bg-sidebar-bg px-2 py-1 rounded text-[11px] font-semibold border border-input-dark-border"><%= order.paymentMethod %></span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-medium text-gray-300">
+                                        ₹<%= ((order.subtotal || 0) / 100).toFixed(2) %>
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-medium text-pixel-red">
+                                        - ₹<%= ((order.discount || 0) / 100).toFixed(2) %>
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-bold text-emerald-400">
+                                        ₹<%= ((order.finalAmount || 0) / 100).toFixed(2) %>
+                                    </td>
+                                    <td class="py-3 px-4 text-center">
+                                        <% if (order.orderStatus === 'Delivered') { %>
+                                            <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full">Delivered</span>
+                                        <% } else if (order.orderStatus === 'Cancelled') { %>
+                                            <span class="bg-pixel-red/10 text-pixel-red border border-pixel-red/20 text-[10px] font-bold px-2 py-0.5 rounded-full">Cancelled</span>
+                                        <% } else if (order.orderStatus === 'Returned') { %>
+                                            <span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full">Returned</span>
+                                        <% } else { %>
+                                            <span class="bg-pixel-yellow/10 text-pixel-yellow border border-pixel-yellow/20 text-[10px] font-bold px-2 py-0.5 rounded-full"><%= order.orderStatus %></span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="8" class="py-8 text-center text-gray-500 font-medium">
+                                    No sales transactions matching current report filters.
+                                </td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Bar -->
+            <% if (salesReport.pagination && salesReport.pagination.totalPages > 1) { %>
+                <div class="flex items-center justify-between mt-6 pt-4 border-t border-input-dark-border text-xs text-gray-400">
+                    <div>
+                        Showing page <span class="font-bold text-white"><%= salesReport.pagination.currentPage %></span> of <span class="font-bold text-white"><%= salesReport.pagination.totalPages %></span> (<%= salesReport.pagination.totalCount %> total orders)
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <% if (salesReport.pagination.currentPage > 1) { %>
+                            <a href="/admin/dashboard?period=<%= filters.period %>&startDate=<%= filters.startDate %>&endDate=<%= filters.endDate %>&status=<%= filters.status %>&page=<%= salesReport.pagination.currentPage - 1 %>#sales-report-section" class="px-3 py-1.5 bg-sidebar-bg border border-input-dark-border hover:bg-border-dark text-white font-semibold rounded-lg transition-colors">
+                                <i class="fa-solid fa-chevron-left mr-1"></i> Prev
+                            </a>
+                        <% } %>
+                        <% if (salesReport.pagination.currentPage < salesReport.pagination.totalPages) { %>
+                            <a href="/admin/dashboard?period=<%= filters.period %>&startDate=<%= filters.startDate %>&endDate=<%= filters.endDate %>&status=<%= filters.status %>&page=<%= salesReport.pagination.currentPage + 1 %>#sales-report-section" class="px-3 py-1.5 bg-sidebar-bg border border-input-dark-border hover:bg-border-dark text-white font-semibold rounded-lg transition-colors">
+                                Next <i class="fa-solid fa-chevron-right ml-1"></i>
+                            </a>
+                        <% } %>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </main>
+</div>
+
+<!-- Chart.js Logic Script -->
+<script>
+    let salesTrendChartInstance = null;
+    let categoryChartInstance = null;
+
+    const initialChartData = <%- JSON.stringify(chartData) %>;
+    const initialTopCategories = <%- JSON.stringify(topCategories) %>;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initSalesTrendChart(initialChartData);
+        initCategoryDistributionChart(initialTopCategories);
+    });
+
+    function initSalesTrendChart(data) {
+        const ctx = document.getElementById('salesTrendChart').getContext('2d');
+        if (salesTrendChartInstance) salesTrendChartInstance.destroy();
+
+        salesTrendChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels && data.labels.length > 0 ? data.labels : ['No Data'],
+                datasets: [
+                    {
+                        label: 'Sales Revenue (₹)',
+                        data: data.salesDataRupees && data.salesDataRupees.length > 0 ? data.salesDataRupees : [0],
+                        borderColor: '#0ea5e9',
+                        backgroundColor: 'rgba(14, 165, 233, 0.15)',
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#0ea5e9',
+                        pointRadius: 4,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Orders Count',
+                        data: data.ordersData && data.ordersData.length > 0 ? data.ordersData : [0],
+                        borderColor: '#f0b90b',
+                        backgroundColor: 'rgba(240, 185, 11, 0.2)',
+                        type: 'bar',
+                        borderRadius: 4,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: '#9ca3af', font: { family: 'Inter', size: 11 } } },
+                    tooltip: {
+                        backgroundColor: '#16181d',
+                        borderColor: '#2d3139',
+                        borderWidth: 1,
+                        titleColor: '#ffffff',
+                        bodyColor: '#e5e7eb'
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#1f232b' },
+                        ticks: { color: '#9ca3af', font: { size: 10 } }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        grid: { color: '#1f232b' },
+                        ticks: {
+                            color: '#0ea5e9',
+                            callback: (val) => '₹' + val.toLocaleString()
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: { color: '#f0b90b', precision: 0 }
+                    }
+                }
+            }
+        });
+    }
+
+    function initCategoryDistributionChart(categories) {
+        const ctx = document.getElementById('categoryDistributionChart').getContext('2d');
+        if (categoryChartInstance) categoryChartInstance.destroy();
+
+        const labels = categories && categories.length > 0 ? categories.map(c => c.name) : ['No Data'];
+        const values = categories && categories.length > 0 ? categories.map(c => c.totalQuantity) : [1];
+        const colors = ['#0ea5e9', '#f0b90b', '#a855f7', '#10b981', '#f92a40'];
+
+        categoryChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: '#16181d'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 10 } } }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+
+    // Dynamic Filter Triggering
+    async function setDashboardPeriod(period) {
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.classList.remove('bg-pixel-blue', 'text-white', 'shadow-lg');
+            btn.classList.add('text-gray-400');
+        });
+        const activeBtn = document.getElementById(`btn-period-${period}`);
+        if (activeBtn) {
+            activeBtn.classList.add('bg-pixel-blue', 'text-white', 'shadow-lg');
+            activeBtn.classList.remove('text-gray-400');
+        }
+
+        const customContainer = document.getElementById('custom-date-container');
+        if (period === 'custom') {
+            customContainer.classList.remove('hidden');
+            return;
+        } else {
+            customContainer.classList.add('hidden');
+        }
+
+        updateDashboardData(period, '', '');
+    }
+
+    function toggleCustomDateInputs() {
+        setDashboardPeriod('custom');
+    }
+
+    function applyCustomDateFilter(e) {
+        e.preventDefault();
+        const startDate = document.getElementById('input-start-date').value;
+        const endDate = document.getElementById('input-end-date').value;
+        updateDashboardData('custom', startDate, endDate);
+    }
+
+    async function updateDashboardData(period, startDate, endDate) {
+        try {
+            const query = new URLSearchParams({ period, startDate, endDate });
+            const res = await fetch(`/admin/dashboard/chart-data?${query.toString()}`);
+            const data = await res.json();
+
+            if (!data.success) return;
+
+            // Re-render Charts
+            initSalesTrendChart(data.chartData);
+            initCategoryDistributionChart(data.topCategories);
+
+            // Update Metric Stat Cards
+            if (data.overview) {
+                document.getElementById('stat-gross').textContent = '₹' + data.overview.grossSalesRupees.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                document.getElementById('stat-coupons').textContent = '₹' + data.overview.couponDeductionsRupees.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+                document.getElementById('stat-orders').textContent = data.overview.totalOrders;
+                document.getElementById('stat-net').textContent = '₹' + data.overview.netRevenueRupees.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            }
+
+            // Update Top 5 Products Container
+            const prodContainer = document.getElementById('container-top-products');
+            if (data.topProducts && data.topProducts.length > 0) {
+                prodContainer.innerHTML = data.topProducts.map((prod, idx) => `
+                    <div class="flex items-center justify-between bg-sidebar-bg/60 p-2.5 rounded-xl border border-input-dark-border/60 hover:border-pixel-blue/40 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-gray-400 w-4 text-center">#${idx + 1}</span>
+                            <img src="${prod.coverImage}" alt="${prod.title}" class="w-10 h-10 rounded-lg object-cover border border-input-dark-border" />
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-200 line-clamp-1">${prod.title}</h4>
+                                <span class="text-[10px] uppercase font-bold text-pixel-blue bg-pixel-blue/10 px-1.5 py-0.5 rounded border border-pixel-blue/20">${prod.platform}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-white">${prod.totalQuantity} sold</p>
+                            <p class="text-[11px] font-semibold text-emerald-400">₹${prod.totalRevenueRupees.toLocaleString('en-IN')}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                prodContainer.innerHTML = `<p class="text-xs text-gray-500 text-center py-6">No product sales data found for period.</p>`;
+            }
+
+            // Update Top 5 Categories Container
+            const catContainer = document.getElementById('container-top-categories');
+            if (data.topCategories && data.topCategories.length > 0) {
+                catContainer.innerHTML = data.topCategories.map((cat, idx) => `
+                    <div class="flex items-center justify-between bg-sidebar-bg/60 p-2.5 rounded-xl border border-input-dark-border/60 hover:border-pixel-yellow/40 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-gray-400 w-4 text-center">#${idx + 1}</span>
+                            <div class="w-10 h-10 rounded-lg bg-pixel-yellow/10 flex items-center justify-center text-pixel-yellow border border-pixel-yellow/20">
+                                <i class="fa-solid fa-gamepad"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-200">${cat.name}</h4>
+                                <span class="text-[10px] text-gray-400">Genre Category</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-white">${cat.totalQuantity} items</p>
+                            <p class="text-[11px] font-semibold text-emerald-400">₹${cat.totalRevenueRupees.toLocaleString('en-IN')}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                catContainer.innerHTML = `<p class="text-xs text-gray-500 text-center py-6">No category sales data found for period.</p>`;
+            }
+
+            // Update Top 5 Publishers Container
+            const pubContainer = document.getElementById('container-top-publishers');
+            if (data.topPublishers && data.topPublishers.length > 0) {
+                pubContainer.innerHTML = data.topPublishers.map((pub, idx) => `
+                    <div class="flex items-center justify-between bg-sidebar-bg/60 p-2.5 rounded-xl border border-input-dark-border/60 hover:border-purple-500/40 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-bold text-gray-400 w-4 text-center">#${idx + 1}</span>
+                            <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20">
+                                <i class="fa-solid fa-building"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-200 line-clamp-1">${pub.name}</h4>
+                                <span class="text-[10px] text-gray-400">Publisher</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-white">${pub.totalQuantity} sold</p>
+                            <p class="text-[11px] font-semibold text-emerald-400">₹${pub.totalRevenueRupees.toLocaleString('en-IN')}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                pubContainer.innerHTML = `<p class="text-xs text-gray-500 text-center py-6">No publisher sales data found for period.</p>`;
+            }
+
+            // Update Export URLs
+            document.getElementById('btn-export-excel').href = `/admin/dashboard/export/excel?${query.toString()}`;
+            document.getElementById('btn-export-pdf').href = `/admin/dashboard/export/pdf?${query.toString()}`;
+        } catch (err) {
+            console.error('Failed to update dashboard data via AJAX:', err);
+        }
+    }
+</script>
+
+<%- include('../partials/admin/footer') %>
