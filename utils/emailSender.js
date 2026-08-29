@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-export const sendEmail = async (to, subject, text) => {
+export const sendEmail = async (to, subject, text, html = null) => {
     try {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -10,16 +10,21 @@ export const sendEmail = async (to, subject, text) => {
             }
         });
 
-        await transporter.sendMail({
+        const mailOptions = {
             from: `"PixelPlay Support" <${process.env.EMAIL_USER}>`,
             to: to,
             subject: subject,
             text: text
-        });
+        };
 
+        if (html) {
+            mailOptions.html = html;
+        }
+
+        await transporter.sendMail(mailOptions);
         console.log(`Email successfully sent to ${to}`);
     } catch (error) {
         console.error("Error sending email:", error);
-        throw new Error("Failed to send verification email.");
+        throw new Error(error.message || "Failed to send email.");
     }
 };
