@@ -6,10 +6,6 @@ const categorySchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    defaultOffer: {
-        type: Number,
-        default: 0
-    },
     status: {
         type: String,
         enum: ['Live', 'Hidden'],

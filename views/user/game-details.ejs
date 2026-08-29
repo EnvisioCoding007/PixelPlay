@@ -520,47 +520,114 @@
 
   <!-- User Reviews Section -->
   <div class="mb-12">
-    <h2 class="text-sm font-bold text-pixel-white tracking-widest uppercase mb-6 flex items-center border-l-2 <%= themeBorder %> pl-3">User Reviews</h2>
+    <h2 class="text-sm font-bold text-pixel-white tracking-widest uppercase mb-6 flex items-center border-l-2 <%= themeBorder %> pl-3">User Reviews & Ratings</h2>
     <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
       <!-- Summary Card -->
-      <div class="md:col-span-4 lg:col-span-3">
-        <div class="bg-pixel-panel border border-gray-800 rounded-lg p-8 flex flex-col items-center justify-center h-full min-h-[250px]">
-          <span class="text-6xl font-extrabold text-pixel-white mb-2"><%= avgRating %></span>
+      <div class="md:col-span-4 lg:col-span-4 space-y-4">
+        <div class="bg-pixel-panel border border-gray-800 rounded-lg p-6 flex flex-col items-center justify-center text-center">
+          <span class="text-5xl font-extrabold text-pixel-white mb-2"><%= avgRating %></span>
           <div class="flex mb-3 space-x-1">
             <%- renderStars(avgRating, 'w-5 h-5') %>
           </div>
-          <p class="text-xs text-gray-500 text-center">Based on <%= totalReviews %> <%= totalReviews === 1 ? 'verified purchase' : 'verified purchases' %></p>
+          <p class="text-xs text-gray-400 font-medium">Based on <%= totalReviews %> <%= totalReviews === 1 ? 'verified review' : 'verified reviews' %></p>
         </div>
-      </div>
-      <!-- Review List -->
-      <div class="md:col-span-8 lg:col-span-9 space-y-4">
-        <% if (productReviews.length > 0) { %>
-          <% productReviews.forEach(review => { %>
-            <div class="bg-pixel-panel border border-gray-800 rounded-lg p-5">
-              <div class="flex justify-between items-start mb-3">
-                <div class="flex items-center space-x-3">
-                  <img 
-                    alt="<%= review.username || (review.user && review.user.username) || 'User' %>" 
-                    class="w-10 h-10 rounded-full border border-gray-700 object-cover" 
-                    src="<%= review.user_avatar || (review.user && review.user.avatar) || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDFKdjn4F9YdcSZX00yNH9liOYZ3Sy2yheSAh73MPb5wiIeq5hum8NUlb9Mhgjr--VcnpGJXDnfcmL6UkWV7WKKBsKyfQvaC-myOWLr87jmbG_ZsN-JuxZSEG_z2elLpCzTtQnd3ivJIQH4JVOOLyI2PJUoLOZDpQ0FDbGrcq85B9QXJ4wvw0HfiJlGpDKwFtZOarQAT10NEEAOUnpyko8jzBvqEBks2Dh8cm7Xehrbq9sr1qt1tPdn0rx7UHxzr328gez50lDirgy6' %>"
-                  />
-                  <div>
-                    <h4 class="text-sm font-bold text-pixel-white"><%= review.username || (review.user && (review.user.name || review.user.username)) || 'Anonymous Voyager' %></h4>
-                    <% if (review.is_verified || review.verified || review.isVerified) { %>
-                      <p class="text-[10px] <%= themeText %> font-bold tracking-wider uppercase">Verified Purchase</p>
-                    <% } else { %>
-                      <p class="text-[10px] text-gray-500 font-bold tracking-wider uppercase">Visitor</p>
+
+        <!-- Review Submission Card / Eligibility Box -->
+        <div class="bg-pixel-panel border border-gray-800 rounded-lg p-5">
+          <h3 class="text-xs font-bold text-pixel-white uppercase tracking-wider mb-3">Write a Review</h3>
+          <% if (typeof user !== 'undefined' && user) { %>
+            <% if (typeof isEligible !== 'undefined' && isEligible) { %>
+              <% const userRev = typeof existingReview !== 'undefined' ? existingReview : null; %>
+              <form id="reviewForm" onsubmit="handleReviewSubmit(event)" class="space-y-4">
+                <div>
+                  <label class="block text-[11px] text-gray-400 font-semibold uppercase tracking-wider mb-1.5">Your Rating</label>
+                  <div class="flex items-center space-x-2 text-xl cursor-pointer" id="starSelector">
+                    <% const initRating = userRev ? userRev.rating : 5; %>
+                    <% for (let i = 1; i <= 5; i++) { %>
+                      <i class="fa-solid fa-star star-icon transition-colors <%= i <= initRating ? themeText : 'text-gray-600' %>" data-value="<%= i %>" onclick="setRatingValue(<%= i %>)"></i>
                     <% } %>
                   </div>
+                  <input type="hidden" id="reviewRating" value="<%= initRating %>" required />
                 </div>
-                <span class="text-xs text-gray-500">
-                  <%= review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent' %>
-                </span>
+
+                <div>
+                  <label class="block text-[11px] text-gray-400 font-semibold uppercase tracking-wider mb-1.5">Review Log</label>
+                  <textarea id="reviewComment" rows="3" class="w-full bg-[#151515] border border-gray-700 text-white text-xs rounded-lg p-3 focus:border-pixel-cyan focus:outline-none placeholder-gray-500" placeholder="Share your gameplay experience, graphics quality, or performance notes..." required><%= userRev ? userRev.comment : '' %></textarea>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button type="submit" class="flex-1 <%= themeBtnBg %> text-black text-xs font-bold py-2.5 px-4 rounded transition-colors flex items-center justify-center gap-2 shadow-md">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span><%= userRev ? 'Update Review' : 'Submit Review' %></span>
+                  </button>
+
+                  <% if (userRev) { %>
+                    <button type="button" onclick="handleReviewDelete('<%= userRev._id %>')" class="bg-red-950/60 border border-red-800/80 hover:bg-red-900 text-red-400 text-xs font-bold py-2.5 px-3 rounded transition-colors flex items-center justify-center">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  <% } %>
+                </div>
+              </form>
+            <% } else { %>
+              <div class="bg-[#0f1115] border border-gray-800/80 rounded-lg p-4 text-xs text-gray-400 leading-relaxed">
+                <div class="flex items-center gap-2 text-pixel-cyan font-bold mb-1">
+                  <i class="fa-solid fa-shield-halved text-sm"></i>
+                  <span>Verified Purchase Requirement</span>
+                </div>
+                <p class="text-[11px] text-gray-400">Rating and reviewing is available for customers who have an order with Delivered, Returned, or Return Requested status for this item.</p>
+              </div>
+            <% } %>
+          <% } else { %>
+            <div class="bg-[#0f1115] border border-gray-800/80 rounded-lg p-4 text-xs text-gray-400 text-center">
+              <p class="mb-3 text-gray-300">Sign in to your PixelPlay account to leave a review if you have ordered this game.</p>
+              <a href="/auth/login" class="inline-block bg-pixel-cyan hover:bg-pixel-cyan-hover text-black text-xs font-bold px-4 py-2 rounded transition-colors">Sign In</a>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Review List -->
+      <div class="md:col-span-8 lg:col-span-8 space-y-4">
+        <% if (productReviews.length > 0) { %>
+          <% productReviews.forEach(review => { %>
+            <% const isMyReview = (typeof user !== 'undefined' && user && review.userId && (review.userId._id ? review.userId._id.toString() === user._id.toString() : review.userId.toString() === user._id.toString())); %>
+            <div class="bg-pixel-panel border <%= isMyReview ? themeBorder : 'border-gray-800' %> rounded-lg p-5 relative">
+              <div class="flex justify-between items-start mb-3">
+                <div class="flex items-center space-x-3">
+                  <% if (review.user_avatar) { %>
+                    <img alt="<%= review.username %>" class="w-10 h-10 rounded-full border border-gray-700 object-cover" src="<%= review.user_avatar %>" />
+                  <% } else { %>
+                    <div class="w-10 h-10 rounded-full bg-pixel-cyan/10 flex items-center justify-center text-pixel-cyan border border-pixel-cyan/20">
+                      <i class="fa-solid fa-user text-sm"></i>
+                    </div>
+                  <% } %>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h4 class="text-sm font-bold text-pixel-white"><%= review.username %></h4>
+                      <% if (isMyReview) { %>
+                        <span class="text-[9px] bg-pixel-cyan/20 text-pixel-cyan border border-pixel-cyan/30 px-1.5 py-0.5 rounded font-bold uppercase">Your Review</span>
+                      <% } %>
+                    </div>
+                    <p class="text-[10px] <%= themeText %> font-bold tracking-wider uppercase flex items-center gap-1">
+                      <i class="fa-solid fa-circle-check"></i> Verified Purchase
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-gray-500">
+                    <%= review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent' %>
+                  </span>
+                  <% if (isMyReview) { %>
+                    <button type="button" onclick="handleReviewDelete('<%= review._id %>')" class="text-gray-500 hover:text-pixel-red text-xs transition-colors" title="Delete Review">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  <% } %>
+                </div>
               </div>
               <div class="flex mb-2 space-x-0.5">
-                <%- renderStars(review.rating || 5, 'w-3 h-3') %>
+                <%- renderStars(review.rating || 5, 'w-3.5 h-3.5') %>
               </div>
-              <p class="text-sm text-gray-300"><%= review.comment || review.text || '' %></p>
+              <p class="text-sm text-gray-300 leading-relaxed"><%= review.comment %></p>
             </div>
           <% }) %>
         <% } else { %>
@@ -569,14 +636,93 @@
             <svg class="w-12 h-12 text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
             </svg>
-            <p class="text-pixel-white font-medium mb-1">No Operational Transmissions</p>
-            <p class="text-xs text-gray-500 max-w-sm mx-auto">Be the first to share your logs and write a review for this operational item.</p>
+            <p class="text-pixel-white font-medium mb-1">No Verified Customer Reviews Yet</p>
+            <p class="text-xs text-gray-500 max-w-sm mx-auto">Be the first verified customer to rate and share your review for this item.</p>
           </div>
         <% } %>
       </div>
     </div>
   </div>
 </main>
+
+<script>
+  function setRatingValue(val) {
+    const input = document.getElementById('reviewRating');
+    if (input) input.value = val;
+
+    const themeClass = '<%= isLegendary ? "text-pixel-gold" : "text-pixel-cyan" %>';
+    document.querySelectorAll('#starSelector .star-icon').forEach(star => {
+      const v = parseInt(star.getAttribute('data-value'), 10);
+      if (v <= val) {
+        star.classList.remove('text-gray-600');
+        star.classList.add(themeClass);
+      } else {
+        star.classList.remove(themeClass);
+        star.classList.add('text-gray-600');
+      }
+    });
+  }
+
+  async function handleReviewSubmit(e) {
+    e.preventDefault();
+    const rating = document.getElementById('reviewRating').value;
+    const comment = document.getElementById('reviewComment').value;
+    const productId = '<%= product._id %>';
+
+    try {
+      const response = await fetch(`/products/${productId}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, comment })
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        showToast(data.message || 'Review published!', 'success');
+        setTimeout(() => { window.location.reload(); }, 800);
+      } else {
+        showToast(data.message || 'Failed to submit review.', 'error');
+      }
+    } catch (err) {
+      console.error('Review submit error:', err);
+      showToast('Network error submitting review.', 'error');
+    }
+  }
+
+  async function handleReviewDelete(reviewId) {
+    const confirmRes = await Swal.fire({
+      title: 'Delete Review?',
+      text: 'Are you sure you want to remove your review?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Delete',
+      cancelButtonText: 'Cancel',
+      background: '#16181d',
+      color: '#fff',
+      confirmButtonColor: '#f92a40',
+      cancelButtonColor: '#2d3139'
+    });
+
+    if (!confirmRes.isConfirmed) return;
+
+    try {
+      const response = await fetch(`/products/<%= product._id %>/reviews/${reviewId}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        showToast(data.message || 'Review removed.', 'success');
+        setTimeout(() => { window.location.reload(); }, 800);
+      } else {
+        showToast(data.message || 'Failed to remove review.', 'error');
+      }
+    } catch (err) {
+      console.error('Review delete error:', err);
+      showToast('Network error deleting review.', 'error');
+    }
+  }
+</script>
 
 <script id="gameDetailsData" type="application/json">
   {

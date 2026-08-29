@@ -1,4 +1,4 @@
-import * as categoryService from '../../services/categoryService.js';
+import * as categoryService from '../../services/admin/categoryService.js';
 import { uploadToCloudinary } from '../../config/cloudinary.js';
 
 export const renderCategoryManagement = async (req, res) => {
@@ -43,7 +43,7 @@ export const renderAddCategory = (req, res) => {
 
 export const createCategory = async (req, res) => {
     try {
-        const { name, defaultOffer, description } = req.body;
+        const { name, description } = req.body;
 
         let iconUrl = '';
         if (req.file) {
@@ -53,7 +53,6 @@ export const createCategory = async (req, res) => {
 
         await categoryService.createCategory({ 
             name,
-            defaultOffer,
             description,
             icon: iconUrl
         });
@@ -102,7 +101,7 @@ export const renderEditCategory = async (req, res) => {
 export const editCategory = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, defaultOffer, description, status } = req.body;
+        const { name, description, status } = req.body;
 
         let iconUrl = undefined;
         if (req.file) {
@@ -112,7 +111,6 @@ export const editCategory = async (req, res) => {
 
         await categoryService.updateCategory(id, {
             name,
-            defaultOffer,
             description,
             status,
             icon: iconUrl
