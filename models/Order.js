@@ -30,6 +30,10 @@ const orderSchema = new mongoose.Schema({
             type: Number, // Stored in Paisa (whole integer)
             required: true
         },
+        gst_rate: {
+            type: Number,
+            default: 18
+        },
         status: {
             type: String,
             enum: ['Ordered', 'Cancelled', 'Return Requested', 'Returned'],
@@ -82,7 +86,7 @@ const orderSchema = new mongoose.Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ['COD', 'Razorpay', 'PixelWallet', 'UPI'],
+        enum: ['COD', 'Razorpay', 'PixelWallet', 'Online', 'UPI'],
         default: 'COD'
     },
     paymentStatus: {
@@ -110,6 +114,10 @@ const orderSchema = new mongoose.Schema({
     discount: {
         type: Number, 
         default: 0
+    },
+    couponCode: {
+        type: String,
+        default: null
     },
     finalAmount: {
         type: Number, 

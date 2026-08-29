@@ -383,8 +383,15 @@
                                         <span class="font-mono text-white">₹<%= ((order.subtotal - order.couponDiscount) / 100).toFixed(2) %></span>
                                     </div>
                                 <% } %>
+                                <%
+                                    let effectiveGstRate = 18;
+                                    if (order.items && order.items.length > 0) {
+                                        const firstItem = order.items[0];
+                                        effectiveGstRate = firstItem.gst_rate || (firstItem.product && firstItem.product.gst_rate) || 18;
+                                    }
+                                %>
                                 <div class="flex justify-between text-gray-400">
-                                    <span>GST (18%)</span>
+                                    <span>GST (<%= effectiveGstRate %>%)</span>
                                     <span class="font-mono text-white">₹<%= (order.tax / 100).toFixed(2) %></span>
                                 </div>
                                 <div class="flex justify-between text-gray-400">
@@ -402,29 +409,53 @@
                                 let totalCancelledAmount = 0;
                                 let totalReturnedAmount = 0;
                                 let allCancelled = true;
+                                let allReturned = true;
+
+                                const totalOrderUnits = (order.items && order.items.length > 0)
+                                    ? order.items.reduce((sum, i) => sum + (i.quantity || 0), 0)
+                                    : 0;
+
+                                const couponDiscountVal = (typeof order.couponDiscount === 'number') ? order.couponDiscount : (order.discount || 0);
+                                const couponPerUnit = (couponDiscountVal > 0 && totalOrderUnits > 0)
+                                    ? Math.floor(couponDiscountVal / totalOrderUnits)
+                                    : 0;
+
+                                const shippingFeeVal = order.shipping || 0;
+                                const shippingPerUnit = (shippingFeeVal > 0 && totalOrderUnits > 0)
+                                    ? Math.floor(shippingFeeVal / totalOrderUnits)
+                                    : 0;
+
                                 if (order.items && order.items.length > 0) {
                                     order.items.forEach(item => {
+                                        const itemGstRate = item.gst_rate || (item.product && item.product.gst_rate) || 18;
+                                        const taxInclusiveUnit = Math.round((item.price * 100) / (100 - itemGstRate));
+                                        const netRefundUnit = Math.max(0, taxInclusiveUnit - couponPerUnit + shippingPerUnit);
+                                        const itemNetRefundTotal = netRefundUnit * item.quantity;
+
                                         if (item.status === 'Cancelled') {
-                                            totalCancelledAmount += Math.round(item.price * item.quantity / 0.82);
+                                            totalCancelledAmount += itemNetRefundTotal;
+                                            allReturned = false;
+                                        } else if (item.status === 'Returned') {
+                                            totalReturnedAmount += itemNetRefundTotal;
+                                            allCancelled = false;
                                         } else {
                                             allCancelled = false;
-                                            if (item.status === 'Returned') {
-                                                totalReturnedAmount += Math.round(item.price * item.quantity / 0.82);
-                                            }
+                                            allReturned = false;
                                         }
                                     });
                                 } else {
                                     allCancelled = false;
+                                    allReturned = false;
                                 }
+
+                                const netFinalPaisa = (allCancelled || allReturned)
+                                    ? 0
+                                    : Math.max(0, (order.grandTotal || order.finalAmount || 0) - totalCancelledAmount - totalReturnedAmount);
                             %>
                             <% if (allCancelled) { %>
                                 <div class="mt-3 flex justify-between items-center text-pixelplay-red text-sm">
                                     <span>Cancelled Item(s) Deduction</span>
-                                    <span class="font-mono font-bold">-₹<%= (totalCancelledAmount / 100).toFixed(2) %></span>
-                                </div>
-                                <div class="mt-3 flex justify-between items-center text-pixelplay-red text-sm">
-                                    <span>Shipping Charge Waiver</span>
-                                    <span class="font-mono font-bold">-₹<%= (order.shipping / 100).toFixed(2) %></span>
+                                    <span class="font-mono font-bold">-₹<%= ((order.grandTotal || order.finalAmount || 0) / 100).toFixed(2) %></span>
                                 </div>
                                 <div class="mt-3 pt-3 border-t border-dashed border-pixelplay-border flex justify-between items-center text-green-400">
                                     <span class="font-bold text-white">Net Final Amount</span>
@@ -433,20 +464,20 @@
                             <% } else { %>
                                 <% if (totalCancelledAmount > 0) { %>
                                     <div class="mt-3 flex justify-between items-center text-pixelplay-red text-sm">
-                                        <span>Cancelled Item(s) Deduction</span>
+                                        <span>Cancelled Item(s) Refund</span>
                                         <span class="font-mono font-bold">-₹<%= (totalCancelledAmount / 100).toFixed(2) %></span>
                                     </div>
                                 <% } %>
                                 <% if (totalReturnedAmount > 0) { %>
                                     <div class="mt-3 flex justify-between items-center text-pixelplay-red text-sm">
-                                        <span>Returned Item(s) Deduction</span>
+                                        <span>Returned Item(s) Refund</span>
                                         <span class="font-mono font-bold">-₹<%= (totalReturnedAmount / 100).toFixed(2) %></span>
                                     </div>
                                 <% } %>
                                 <% if (totalCancelledAmount > 0 || totalReturnedAmount > 0) { %>
                                     <div class="mt-3 pt-3 border-t border-dashed border-pixelplay-border flex justify-between items-center text-green-400">
                                         <span class="font-bold text-white">Net Final Amount</span>
-                                        <span class="text-xl font-bold font-mono">₹<%= ((order.grandTotal - totalCancelledAmount - totalReturnedAmount) / 100).toFixed(2) %></span>
+                                        <span class="text-xl font-bold font-mono">₹<%= (netFinalPaisa / 100).toFixed(2) %></span>
                                     </div>
                                 <% } %>
                             <% } %>

@@ -117,7 +117,17 @@
                         </div>
                         <span class="text-pixel-text-gray">Payment Method</span>
                     </div>
-                    <span class="font-semibold"><%= order.paymentMethod === 'COD' ? 'Cash on Delivery' : order.paymentMethod %></span>
+                    <span class="font-semibold">
+                        <% if (order.paymentMethod === 'COD') { %>
+                            Cash on Delivery
+                        <% } else if (order.paymentMethod === 'PixelWallet') { %>
+                            PixelWallet
+                        <% } else if (order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Online') { %>
+                            Online Payment (Razorpay)
+                        <% } else { %>
+                            <%= order.paymentMethod %>
+                        <% } %>
+                    </span>
                 </div>
                 <!-- Transaction ID -->
                 <div class="flex items-center justify-between">
@@ -131,7 +141,17 @@
                         </div>
                         <span class="text-pixel-text-gray">Transaction ID</span>
                     </div>
-                    <span class="font-medium text-gray-300"><%= order.transactionId || 'N/A (Cash on Delivery)' %></span>
+                    <span class="font-medium text-gray-300 font-mono text-xs md:text-sm">
+                        <% if (order.transactionId) { %>
+                            <%= order.transactionId %>
+                        <% } else if (order.paymentMethod === 'COD') { %>
+                            N/A (Cash on Delivery)
+                        <% } else if (order.paymentMethod === 'PixelWallet') { %>
+                            N/A (PixelWallet Payment)
+                        <% } else { %>
+                            N/A (Online Payment)
+                        <% } %>
+                    </span>
                 </div>
                 <!-- Amount Paid -->
                 <div class="flex items-center justify-between">
