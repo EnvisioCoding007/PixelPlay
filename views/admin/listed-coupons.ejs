@@ -1,0 +1,753 @@
+<%- include('../partials/admin/header') %>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<%
+  function formatDateDDMMYYYY(dateInput) {
+    if (!dateInput) return 'N/A';
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return 'N/A';
+    const pad = (n) => String(n).padStart(2, '0');
+    const day = pad(d.getDate());
+    const month = pad(d.getMonth() + 1);
+    const year = d.getFullYear();
+    let hours = d.getHours();
+    const minutes = pad(d.getMinutes());
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    return `${day}/${month}/${year} ${pad(hours)}:${minutes} ${ampm}`;
+  }
+%>
+<body class="bg-pixel-bg text-gray-300 min-h-screen flex text-sm">
+<%- include('../partials/admin/sidebar', { activeTab: 'coupons' }) %>
+<main class="content-bg flex-1 flex flex-col overflow-hidden relative">
+  <!-- Header -->
+  <header class="flex items-center justify-between px-8 py-6 border-b border-border-dark">
+    <div>
+      <h1 class="text-2xl font-bold text-white flex items-center gap-3">
+        <i class="fa-solid fa-ticket text-pixel-blue"></i> Coupon Management
+      </h1>
+      <p class="text-xs text-gray-400 mt-1">Configure discount codes, flat offers, minimum order limits, and user redemption rules</p>
+    </div>
+    <button id="openAddCouponModalBtn" class="bg-pixel-blue hover:bg-pixel-blue-hover text-background-dark font-semibold px-5 py-2.5 rounded-lg text-sm transition-all shadow-lg hover:shadow-pixel-blue/20 flex items-center gap-2 cursor-pointer">
+      <i class="fa-solid fa-plus text-xs"></i> Create Coupon
+    </button>
+  </header>
+
+  <!-- Content Area -->
+  <div class="flex-1 overflow-y-auto p-8">
+    <div class="max-w-7xl mx-auto space-y-6">
+
+      <!-- Summary Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-card-bg border border-border-dark rounded-xl p-5 shadow-lg flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Coupons</p>
+            <p class="text-2xl font-bold text-white mt-1"><%= typeof totalCouponsCount !== 'undefined' ? totalCouponsCount : 0 %></p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-pixel-blue/10 border border-pixel-blue/20 flex items-center justify-center text-pixel-blue">
+            <i class="fa-solid fa-tags text-lg"></i>
+          </div>
+        </div>
+
+        <div class="bg-card-bg border border-border-dark rounded-xl p-5 shadow-lg flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Active Offers</p>
+            <p class="text-2xl font-bold text-emerald-400 mt-1"><%= typeof activeCouponsCount !== 'undefined' ? activeCouponsCount : 0 %></p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <i class="fa-solid fa-circle-check text-lg"></i>
+          </div>
+        </div>
+
+        <div class="bg-card-bg border border-border-dark rounded-xl p-5 shadow-lg flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Expired</p>
+            <p class="text-2xl font-bold text-pixel-red mt-1"><%= typeof expiredCouponsCount !== 'undefined' ? expiredCouponsCount : 0 %></p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-pixel-red/10 border border-pixel-red/20 flex items-center justify-center text-pixel-red">
+            <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+          </div>
+        </div>
+
+        <div class="bg-card-bg border border-border-dark rounded-xl p-5 shadow-lg flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Redemptions</p>
+            <p class="text-2xl font-bold text-purple-400 mt-1"><%= typeof totalRedemptionsCount !== 'undefined' ? totalRedemptionsCount : 0 %></p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+            <i class="fa-solid fa-users text-lg"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filter Bar -->
+      <form action="/admin/coupons" method="GET" class="flex items-center gap-3 bg-card-bg p-4 rounded-xl border border-border-dark w-full shadow-2xl">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+          <input type="text" id="couponSearchInput" name="search" placeholder="Search coupon code or description..." class="w-full bg-content-bg border border-input-dark-border rounded-lg pl-10 pr-10 py-2.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue transition-colors" value="<%= typeof search !== 'undefined' ? search : '' %>">
+          <button type="button" id="clearSearchBtn" class="<%= (typeof search !== 'undefined' && search) ? '' : 'hidden' %> absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white bg-transparent border-0 cursor-pointer">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <select name="status" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue text-sm rounded-lg px-3 py-2.5 appearance-none cursor-pointer pr-8 relative" onchange="this.form.submit()">
+          <option value="all" <%= typeof statusFilter !== 'undefined' && statusFilter === 'all' ? 'selected' : '' %>>Filter: All Statuses</option>
+          <option value="active" <%= typeof statusFilter !== 'undefined' && statusFilter === 'active' ? 'selected' : '' %>>Filter: Active Only</option>
+          <option value="inactive" <%= typeof statusFilter !== 'undefined' && statusFilter === 'inactive' ? 'selected' : '' %>>Filter: Inactive Only</option>
+          <option value="expired" <%= typeof statusFilter !== 'undefined' && statusFilter === 'expired' ? 'selected' : '' %>>Filter: Expired Only</option>
+        </select>
+
+        <button type="submit" class="bg-pixel-blue hover:bg-pixel-blue-hover text-background-dark font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm whitespace-nowrap">
+          Apply Filter
+        </button>
+      </form>
+
+      <!-- Table Header -->
+      <div class="grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold tracking-wider text-gray-400 uppercase border-b border-border-dark">
+        <div class="col-span-3">Coupon Code</div>
+        <div class="col-span-2 text-center">Offer Value</div>
+        <div class="col-span-2">Limits & Thresholds</div>
+        <div class="col-span-2 text-center">Expiry & Usage</div>
+        <div class="col-span-1 text-center">Status</div>
+        <div class="col-span-2 text-right">Actions</div>
+      </div>
+
+      <!-- Coupons List -->
+      <div class="space-y-3">
+        <% if (coupons && coupons.length > 0) { %>
+          <% coupons.forEach(c => { %>
+            <div class="bg-card-bg border border-border-dark rounded-xl p-4 grid grid-cols-12 gap-4 items-center shadow-md hover:border-border-dark/80 transition-colors">
+              
+              <!-- Code & Description -->
+              <div class="col-span-3 space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono font-bold text-base text-pixel-blue tracking-wider bg-pixel-blue/10 border border-pixel-blue/30 px-3 py-1 rounded-lg inline-block">
+                    <%= c.code %>
+                  </span>
+                  <span class="text-xs uppercase px-2 py-0.5 rounded font-semibold <%= c.discountType === 'percentage' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20' %>">
+                    <%= c.discountType %>
+                  </span>
+                </div>
+                <p class="text-xs text-gray-400 truncate max-w-xs" title="<%= c.description %>">
+                  <%= c.description || 'No description provided' %>
+                </p>
+              </div>
+
+              <!-- Offer Value -->
+              <div class="col-span-2 text-center">
+                <span class="text-base font-bold text-white">
+                  <%= c.discountDisplay %>
+                </span>
+                <% if (c.discountType === 'percentage' && c.maxDiscountRupees !== 'N/A' && c.maxDiscountRupees !== '') { %>
+                  <p class="text-xs text-gray-400">Cap: ₹<%= c.maxDiscountRupees %></p>
+                <% } %>
+              </div>
+
+              <!-- Requirements & Limits -->
+              <div class="col-span-2 space-y-1 text-xs text-gray-300">
+                <div>
+                  <span class="text-gray-500">Min Order:</span> 
+                  <span class="font-medium text-white">₹<%= c.minOrderRupees %></span>
+                </div>
+                <div>
+                  <span class="text-gray-500">Per User:</span> 
+                  <span class="font-medium text-white"><%= c.perUserLimit %> use(s)</span>
+                </div>
+              </div>
+
+              <!-- Expiry & Usage Stats -->
+              <div class="col-span-2 text-center space-y-1 text-xs">
+                <div>
+                  <span class="text-gray-400">Expiry:</span> 
+                  <span class="font-medium <%= c.isExpired ? 'text-pixel-red' : 'text-gray-200' %>">
+                    <%= formatDateDDMMYYYY(c.expiryDate) %>
+                  </span>
+                </div>
+                <div class="text-gray-400">
+                  Used: <span class="font-semibold text-white"><%= c.usedCount %></span> / <%= c.usageLimit !== null ? c.usageLimit : '∞' %>
+                </div>
+              </div>
+
+              <!-- Status Badge -->
+              <div class="col-span-1 flex justify-center">
+                <% if (!c.isActive) { %>
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-500/10 text-gray-400 border border-gray-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Inactive
+                  </span>
+                <% } else if (c.isExpired) { %>
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-pixel-red/10 text-pixel-red border border-pixel-red/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-pixel-red"></span> Expired
+                  </span>
+                <% } else { %>
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Active
+                  </span>
+                <% } %>
+              </div>
+
+              <!-- Actions -->
+              <div class="col-span-2 flex items-center justify-end gap-3">
+                <!-- Status Toggle Switch -->
+                <button aria-checked="<%= c.isActive %>" 
+                        data-id="<%= c._id %>"
+                        data-code="<%= c.code %>"
+                        class="coupon-status-toggle relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none <%= c.isActive ? 'bg-pixel-blue' : 'bg-slate-700' %>" 
+                        role="switch" type="button" title="<%= c.isActive ? 'Click to Deactivate' : 'Click to Activate' %>">
+                  <span aria-hidden="true" 
+                        class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out <%= c.isActive ? 'translate-x-4' : 'translate-x-0' %>"></span>
+                </button>
+
+                <!-- Edit Button -->
+                <button data-id="<%= c._id %>" class="coupon-edit-btn p-2 text-gray-400 hover:text-white bg-content-bg hover:bg-border-dark rounded-lg border border-border-dark transition-colors" title="Edit Coupon">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+
+                <!-- Delete Button -->
+                <button data-id="<%= c._id %>" data-code="<%= c.code %>" class="coupon-delete-btn p-2 text-gray-400 hover:text-pixel-red bg-content-bg hover:bg-pixel-red/10 rounded-lg border border-border-dark hover:border-pixel-red/30 transition-colors" title="Delete Coupon">
+                  <i class="fa-solid fa-trash text-xs"></i>
+                </button>
+              </div>
+
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="bg-card-bg border border-border-dark rounded-xl p-12 text-center space-y-3">
+            <div class="w-12 h-12 rounded-full bg-pixel-blue/10 text-pixel-blue flex items-center justify-center mx-auto text-lg">
+              <i class="fa-solid fa-ticket"></i>
+            </div>
+            <p class="text-gray-300 font-medium">No coupons match your criteria</p>
+            <p class="text-xs text-gray-500 max-w-sm mx-auto">Try adjusting your search filters or click "Create Coupon" to issue new promotional discount codes.</p>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Pagination -->
+      <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+        <div class="p-4 border border-border-dark rounded-xl bg-card-bg flex items-center justify-between shadow-2xl">
+          <div class="text-gray-400 text-xs">
+            Showing <span class="font-medium text-white"><%= (currentPage - 1) * limit + 1 %>-<%= Math.min(currentPage * limit, totalCount) %></span> of <span class="font-medium text-white"><%= totalCount %></span> coupons
+          </div>
+          <div class="flex items-center gap-1">
+            <% if (currentPage > 1) { %>
+              <a href="/admin/coupons?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>&status=<%= encodeURIComponent(typeof statusFilter !== 'undefined' ? statusFilter : 'all') %>" class="px-3 py-1.5 rounded border border-border-dark bg-card-bg text-gray-400 hover:text-white transition-colors text-xs font-medium flex items-center gap-1">
+                <i class="fa-solid fa-chevron-left text-xs"></i> Previous
+              </a>
+            <% } %>
+            <% for (let p = 1; p <= totalPages; p++) { %>
+              <% if (p === currentPage) { %>
+                <span class="w-7 h-7 rounded bg-pixel-blue text-background-dark font-semibold flex items-center justify-center text-xs"><%= p %></span>
+              <% } else { %>
+                <a href="/admin/coupons?page=<%= p %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>&status=<%= encodeURIComponent(typeof statusFilter !== 'undefined' ? statusFilter : 'all') %>" class="w-7 h-7 rounded bg-transparent text-gray-400 hover:bg-card-bg hover:text-white transition-colors font-medium flex items-center justify-center text-xs"><%= p %></a>
+              <% } %>
+            <% } %>
+            <% if (currentPage < totalPages) { %>
+              <a href="/admin/coupons?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(typeof search !== 'undefined' ? search : '') %>&status=<%= encodeURIComponent(typeof statusFilter !== 'undefined' ? statusFilter : 'all') %>" class="px-3 py-1.5 rounded border border-border-dark bg-card-bg text-pixel-blue hover:bg-content-bg transition-colors text-xs font-medium flex items-center gap-1 ml-2">
+                Next <i class="fa-solid fa-chevron-right text-xs"></i>
+              </a>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+
+    </div>
+  </div>
+</main>
+
+<!-- ADD COUPON MODAL -->
+<div id="addCouponModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div class="bg-card-bg border border-border-dark rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between border-b border-border-dark pb-4">
+      <h3 class="text-lg font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-plus-circle text-pixel-blue"></i> Create New Coupon
+      </h3>
+      <button type="button" id="closeAddCouponModalBtn" class="text-gray-400 hover:text-white text-lg bg-transparent border-0 cursor-pointer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form id="addCouponForm" class="space-y-4">
+      <!-- Code & Discount Type -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Coupon Code <span class="text-pixel-red">*</span></label>
+          <input type="text" name="code" required placeholder="e.g. PLAY2026" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white uppercase focus:outline-none focus:border-pixel-blue">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Discount Type <span class="text-pixel-red">*</span></label>
+          <select id="addDiscountType" name="discountType" required class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+            <option value="percentage">Percentage (%)</option>
+            <option value="flat">Flat Amount (₹)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Discount Value & Min Order Amount -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label id="addDiscountValueLabel" class="block text-xs font-medium text-gray-400 mb-1">Discount Percentage (%) <span class="text-pixel-red">*</span></label>
+          <input type="number" step="0.01" min="0.01" name="discountValue" required placeholder="e.g. 20" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Minimum Order Amount (₹)</label>
+          <input type="number" step="0.01" min="0" name="minOrderAmountRupees" value="0" placeholder="e.g. 500" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+      </div>
+
+      <!-- Max Discount Cap & Per User Limit -->
+      <div class="grid grid-cols-2 gap-4">
+        <div id="addMaxDiscountGroup">
+          <label class="block text-xs font-medium text-gray-400 mb-1">Max Discount Cap (₹) <span class="text-gray-500 text-[10px]">(Percentage only)</span></label>
+          <input type="number" step="0.01" min="0" name="maxDiscountAmountRupees" placeholder="e.g. 200 (optional)" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Per User Limit</label>
+          <input type="number" min="1" name="perUserLimit" value="1" required class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+      </div>
+
+      <!-- Dates & Global Limit -->
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Start Date</label>
+          <input type="text" id="addStartDate" name="startDate" placeholder="dd/mm/yyyy hh:mm AM/PM" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-2 py-2 text-xs text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Expiry Date <span class="text-pixel-red">*</span></label>
+          <input type="text" id="addExpiryDate" name="expiryDate" required placeholder="dd/mm/yyyy hh:mm AM/PM" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-2 py-2 text-xs text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Global Limit</label>
+          <input type="number" min="1" name="usageLimit" placeholder="Unlimited" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1">Description / Offer Details</label>
+        <textarea name="description" rows="2" placeholder="e.g. Get 20% off on all games up to ₹200 discount." class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue resize-none"></textarea>
+      </div>
+
+      <div class="pt-4 border-t border-border-dark flex justify-end gap-3">
+        <button type="button" id="cancelAddCouponBtn" class="px-4 py-2 rounded-lg bg-content-bg hover:bg-border-dark text-gray-400 hover:text-white text-sm transition-colors cursor-pointer">Cancel</button>
+        <button type="submit" class="px-5 py-2 rounded-lg bg-pixel-blue hover:bg-pixel-blue-hover text-background-dark font-semibold text-sm transition-colors cursor-pointer">Save Coupon</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- EDIT COUPON MODAL -->
+<div id="editCouponModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div class="bg-card-bg border border-border-dark rounded-2xl w-full max-w-xl p-6 shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between border-b border-border-dark pb-4">
+      <h3 class="text-lg font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-pen-to-square text-pixel-blue"></i> Edit Coupon
+      </h3>
+      <button type="button" id="closeEditCouponModalBtn" class="text-gray-400 hover:text-white text-lg bg-transparent border-0 cursor-pointer">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <form id="editCouponForm" class="space-y-4">
+      <input type="hidden" id="editCouponId" name="id">
+
+      <!-- Code & Discount Type -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Coupon Code <span class="text-pixel-red">*</span></label>
+          <input type="text" id="editCode" name="code" required class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white uppercase focus:outline-none focus:border-pixel-blue">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Discount Type <span class="text-pixel-red">*</span></label>
+          <select id="editDiscountType" name="discountType" required class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+            <option value="percentage">Percentage (%)</option>
+            <option value="flat">Flat Amount (₹)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Discount Value & Min Order Amount -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label id="editDiscountValueLabel" class="block text-xs font-medium text-gray-400 mb-1">Discount Percentage (%) <span class="text-pixel-red">*</span></label>
+          <input type="number" step="0.01" min="0.01" id="editDiscountValue" name="discountValue" required class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Minimum Order Amount (₹)</label>
+          <input type="number" step="0.01" min="0" id="editMinOrderAmountRupees" name="minOrderAmountRupees" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+      </div>
+
+      <!-- Max Discount Cap & Per User Limit -->
+      <div class="grid grid-cols-2 gap-4">
+        <div id="editMaxDiscountGroup">
+          <label class="block text-xs font-medium text-gray-400 mb-1">Max Discount Cap (₹)</label>
+          <input type="number" step="0.01" min="0" id="editMaxDiscountAmountRupees" name="maxDiscountAmountRupees" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Per User Limit</label>
+          <input type="number" min="1" id="editPerUserLimit" name="perUserLimit" required class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+      </div>
+
+      <!-- Dates & Global Limit -->
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Start Date</label>
+          <input type="text" id="editStartDate" name="startDate" placeholder="dd/mm/yyyy hh:mm AM/PM" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-2 py-2 text-xs text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Expiry Date <span class="text-pixel-red">*</span></label>
+          <input type="text" id="editExpiryDate" name="expiryDate" required placeholder="dd/mm/yyyy hh:mm AM/PM" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-2 py-2 text-xs text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1">Global Limit</label>
+          <input type="number" min="1" id="editUsageLimit" name="usageLimit" placeholder="Unlimited" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pixel-blue">
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1">Description</label>
+        <textarea id="editDescription" name="description" rows="2" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue resize-none"></textarea>
+      </div>
+
+      <div class="pt-4 border-t border-border-dark flex justify-end gap-3">
+        <button type="button" id="cancelEditCouponBtn" class="px-4 py-2 rounded-lg bg-content-bg hover:bg-border-dark text-gray-400 hover:text-white text-sm transition-colors cursor-pointer">Cancel</button>
+        <button type="submit" class="px-5 py-2 rounded-lg bg-pixel-blue hover:bg-pixel-blue-hover text-background-dark font-semibold text-sm transition-colors cursor-pointer">Update Coupon</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Initialize Flatpickr instances for guaranteed dd/mm/yyyy hh:mm AM/PM formatting
+  const fpOptions = {
+    enableTime: true,
+    dateFormat: "Y-m-d H:i",
+    altInput: true,
+    altFormat: "d/m/Y h:i K", // Displays dd/mm/yyyy hh:mm AM/PM
+    altInputClass: "w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-pixel-blue"
+  };
+
+  const addStartFp = flatpickr("#addStartDate", fpOptions);
+  const addExpiryFp = flatpickr("#addExpiryDate", fpOptions);
+  const editStartFp = flatpickr("#editStartDate", fpOptions);
+  const editExpiryFp = flatpickr("#editExpiryDate", fpOptions);
+
+  // Clean query string from URL location bar on load so page refresh won't repeat alerts
+  if (window.history && window.history.replaceState && (window.location.search.includes('success=') || window.location.search.includes('error='))) {
+    const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+  }
+
+  // Add Coupon Modal Elements
+  const addCouponModal = document.getElementById('addCouponModal');
+  const openAddCouponModalBtn = document.getElementById('openAddCouponModalBtn');
+  const closeAddCouponModalBtn = document.getElementById('closeAddCouponModalBtn');
+  const cancelAddCouponBtn = document.getElementById('cancelAddCouponBtn');
+  const addDiscountType = document.getElementById('addDiscountType');
+  const addDiscountValueLabel = document.getElementById('addDiscountValueLabel');
+  const addMaxDiscountGroup = document.getElementById('addMaxDiscountGroup');
+
+  if (openAddCouponModalBtn) {
+    openAddCouponModalBtn.addEventListener('click', () => addCouponModal.classList.remove('hidden'));
+  }
+  [closeAddCouponModalBtn, cancelAddCouponBtn].forEach(btn => {
+    if (btn) btn.addEventListener('click', () => addCouponModal.classList.add('hidden'));
+  });
+
+  // Toggle Max Discount Cap visibility based on Discount Type
+  if (addDiscountType) {
+    addDiscountType.addEventListener('change', function() {
+      if (this.value === 'flat') {
+        addDiscountValueLabel.innerHTML = 'Flat Discount Amount (₹) <span class="text-pixel-red">*</span>';
+        addMaxDiscountGroup.classList.add('opacity-40', 'pointer-events-none');
+      } else {
+        addDiscountValueLabel.innerHTML = 'Discount Percentage (%) <span class="text-pixel-red">*</span>';
+        addMaxDiscountGroup.classList.remove('opacity-40', 'pointer-events-none');
+      }
+    });
+  }
+
+  // Handle Add Coupon Form Submission via AJAX
+  const addCouponForm = document.getElementById('addCouponForm');
+  if (addCouponForm) {
+    addCouponForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        const response = await fetch('/admin/coupons', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          addCouponModal.classList.add('hidden');
+          await Swal.fire({
+            title: 'Success',
+            text: result.message || 'Coupon created successfully',
+            icon: 'success',
+            confirmButtonColor: '#0ea5e9'
+          });
+          window.location.href = '/admin/coupons';
+        } else {
+          Swal.fire({
+            title: 'Error',
+            text: result.message || 'Failed to create coupon',
+            icon: 'error',
+            confirmButtonColor: '#0ea5e9'
+          });
+        }
+      } catch (err) {
+        console.error('Error creating coupon:', err);
+        Swal.fire({
+          title: 'Error',
+          text: 'An error occurred while creating coupon',
+          icon: 'error',
+          confirmButtonColor: '#0ea5e9'
+        });
+      }
+    });
+  }
+
+  // Edit Coupon Modal Elements
+  const editCouponModal = document.getElementById('editCouponModal');
+  const closeEditCouponModalBtn = document.getElementById('closeEditCouponModalBtn');
+  const cancelEditCouponBtn = document.getElementById('cancelEditCouponBtn');
+  const editDiscountType = document.getElementById('editDiscountType');
+  const editDiscountValueLabel = document.getElementById('editDiscountValueLabel');
+  const editMaxDiscountGroup = document.getElementById('editMaxDiscountGroup');
+
+  [closeEditCouponModalBtn, cancelEditCouponBtn].forEach(btn => {
+    if (btn) btn.addEventListener('click', () => editCouponModal.classList.add('hidden'));
+  });
+
+  if (editDiscountType) {
+    editDiscountType.addEventListener('change', function() {
+      if (this.value === 'flat') {
+        editDiscountValueLabel.innerHTML = 'Flat Discount Amount (₹) <span class="text-pixel-red">*</span>';
+        editMaxDiscountGroup.classList.add('opacity-40', 'pointer-events-none');
+      } else {
+        editDiscountValueLabel.innerHTML = 'Discount Percentage (%) <span class="text-pixel-red">*</span>';
+        editMaxDiscountGroup.classList.remove('opacity-40', 'pointer-events-none');
+      }
+    });
+  }
+
+  // Handle Edit Coupon Click
+  document.querySelectorAll('.coupon-edit-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      const couponId = this.getAttribute('data-id');
+      try {
+        const response = await fetch(`/admin/coupons/${couponId}`, {
+          headers: { 'Accept': 'application/json' }
+        });
+        const result = await response.json();
+
+        if (response.ok && result.success && result.coupon) {
+          const c = result.coupon;
+          document.getElementById('editCouponId').value = c._id;
+          document.getElementById('editCode').value = c.code;
+          document.getElementById('editDiscountType').value = c.discountType;
+          document.getElementById('editDiscountValue').value = c.discountValueRupees;
+          document.getElementById('editMinOrderAmountRupees').value = c.minOrderRupees;
+          document.getElementById('editMaxDiscountAmountRupees').value = c.maxDiscountRupees;
+          document.getElementById('editPerUserLimit').value = c.perUserLimit;
+
+          // Set Flatpickr dates cleanly in dd/mm/yyyy hh:mm AM/PM format
+          if (c.startDate) {
+            editStartFp.setDate(new Date(c.startDate));
+          } else {
+            editStartFp.clear();
+          }
+
+          if (c.expiryDate) {
+            editExpiryFp.setDate(new Date(c.expiryDate));
+          } else {
+            editExpiryFp.clear();
+          }
+
+          document.getElementById('editUsageLimit').value = c.usageLimit || '';
+          document.getElementById('editDescription').value = c.description || '';
+
+          // Trigger change event to format labels
+          editDiscountType.dispatchEvent(new Event('change'));
+
+          editCouponModal.classList.remove('hidden');
+        } else {
+          Swal.fire({ title: 'Error', text: result.message || 'Failed to fetch coupon details', icon: 'error', confirmButtonColor: '#0ea5e9' });
+        }
+      } catch (err) {
+        console.error('Error fetching coupon:', err);
+        Swal.fire({ title: 'Error', text: 'Failed to fetch coupon details', icon: 'error', confirmButtonColor: '#0ea5e9' });
+      }
+    });
+  });
+
+  // Handle Edit Coupon Form Submit
+  const editCouponForm = document.getElementById('editCouponForm');
+  if (editCouponForm) {
+    editCouponForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const couponId = document.getElementById('editCouponId').value;
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        const response = await fetch(`/admin/coupons/${couponId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          editCouponModal.classList.add('hidden');
+          await Swal.fire({
+            title: 'Success',
+            text: result.message || 'Coupon updated successfully',
+            icon: 'success',
+            confirmButtonColor: '#0ea5e9'
+          });
+          window.location.href = '/admin/coupons';
+        } else {
+          Swal.fire({ title: 'Error', text: result.message || 'Failed to update coupon', icon: 'error', confirmButtonColor: '#0ea5e9' });
+        }
+      } catch (err) {
+        console.error('Error updating coupon:', err);
+        Swal.fire({ title: 'Error', text: 'An error occurred while updating coupon', icon: 'error', confirmButtonColor: '#0ea5e9' });
+      }
+    });
+  }
+
+  // Handle Coupon Status Toggle
+  document.querySelectorAll('.coupon-status-toggle').forEach(button => {
+    button.addEventListener('click', async function() {
+      const couponId = this.getAttribute('data-id');
+      const code = this.getAttribute('data-code');
+      const isCurrentlyActive = this.getAttribute('aria-checked') === 'true';
+      const actionText = isCurrentlyActive ? 'deactivate' : 'activate';
+
+      const confirmToggle = await Swal.fire({
+        title: `${isCurrentlyActive ? 'Deactivate' : 'Activate'} Coupon?`,
+        text: `Are you sure you want to ${actionText} coupon '${code}'?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: isCurrentlyActive ? '#f92a40' : '#0ea5e9',
+        cancelButtonColor: '#1f232b',
+        confirmButtonText: `Yes, ${actionText} it!`,
+        cancelButtonText: 'Cancel'
+      });
+      if (!confirmToggle.isConfirmed) return;
+
+      try {
+        const response = await fetch(`/admin/coupons/${couponId}/status`, {
+          method: 'PATCH',
+          headers: { 'Accept': 'application/json' }
+        });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          await Swal.fire({
+            title: 'Success',
+            text: result.message || `Coupon '${code}' ${isCurrentlyActive ? 'deactivated' : 'activated'} successfully`,
+            icon: 'success',
+            confirmButtonColor: '#0ea5e9'
+          });
+          window.location.href = '/admin/coupons';
+        } else {
+          Swal.fire({ title: 'Error', text: result.message || 'Failed to toggle status', icon: 'error', confirmButtonColor: '#0ea5e9' });
+        }
+      } catch (err) {
+        console.error('Error toggling coupon status:', err);
+        Swal.fire({ title: 'Error', text: 'Failed to update status', icon: 'error', confirmButtonColor: '#0ea5e9' });
+      }
+    });
+  });
+
+  // Handle Coupon Delete
+  document.querySelectorAll('.coupon-delete-btn').forEach(button => {
+    button.addEventListener('click', async function() {
+      const couponId = this.getAttribute('data-id');
+      const code = this.getAttribute('data-code');
+
+      const confirmDelete = await Swal.fire({
+        title: 'Delete Coupon?',
+        text: `Are you sure you want to permanently delete coupon '${code}'? This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f92a40',
+        cancelButtonColor: '#1f232b',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+      });
+      if (!confirmDelete.isConfirmed) return;
+
+      try {
+        const response = await fetch(`/admin/coupons/${couponId}`, {
+          method: 'DELETE',
+          headers: { 'Accept': 'application/json' }
+        });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          await Swal.fire({
+            title: 'Deleted!',
+            text: result.message || `Coupon '${code}' deleted successfully`,
+            icon: 'success',
+            confirmButtonColor: '#0ea5e9'
+          });
+          window.location.href = '/admin/coupons';
+        } else {
+          Swal.fire({ title: 'Error', text: result.message || 'Failed to delete coupon', icon: 'error', confirmButtonColor: '#0ea5e9' });
+        }
+      } catch (err) {
+        console.error('Error deleting coupon:', err);
+        Swal.fire({ title: 'Error', text: 'Failed to delete coupon', icon: 'error', confirmButtonColor: '#0ea5e9' });
+      }
+    });
+  });
+
+  // Search input clear button
+  const couponSearchInput = document.getElementById('couponSearchInput');
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+  if (couponSearchInput && clearSearchBtn) {
+    couponSearchInput.addEventListener('input', function() {
+      if (this.value.trim().length > 0) {
+        clearSearchBtn.classList.remove('hidden');
+      } else {
+        clearSearchBtn.classList.add('hidden');
+      }
+    });
+    clearSearchBtn.addEventListener('click', function() {
+      couponSearchInput.value = '';
+      clearSearchBtn.classList.add('hidden');
+      couponSearchInput.form.submit();
+    });
+  }
+</script>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <script>
+    Swal.fire({ title: 'Error', text: '<%= error %>', icon: 'error', confirmButtonColor: '#0ea5e9' });
+  </script>
+<% } %>
+
+<% if (typeof success !== 'undefined' && success) { %>
+  <script>
+    Swal.fire({ title: 'Success', text: '<%= success %>', icon: 'success', confirmButtonColor: '#0ea5e9' });
+  </script>
+<% } %>
+
+<%- include('../partials/admin/footer') %>
+</body>
+</html>
