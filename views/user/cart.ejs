@@ -195,10 +195,12 @@
               <span>Subtotal</span>
               <span id="summary-subtotal">₹<%= Number(subtotal / 100).toFixed(2) %></span>
             </div>
+
             <div class="flex justify-between text-pixel-muted">
-              <span>GST (18%)</span>
+              <span>GST <%= Number(gst_rate).toFixed(2) %> % </span>
               <span id="summary-tax">₹<%= Number(tax / 100).toFixed(2) %></span>
             </div>
+
             <div class="flex justify-between text-[#8e8e93]">
               <span>Shipping (Standard charge)</span>
               <span id="summary-shipping">₹<%= Number(shipping / 100).toFixed(2) %></span>

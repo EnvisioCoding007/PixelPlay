@@ -1,5 +1,5 @@
-import * as wishlistService from '../../services/wishlistService.js';
-import * as userService from '../../services/userService.js';
+import * as wishlistService from '../../services/user/wishlistService.js';
+import * as userService from '../../services/user/userService.js';
 
 export const getWishlist = async (req, res) => {
     try {
