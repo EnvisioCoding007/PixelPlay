@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Wallet Oversight · Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bgDark: '#0f0f11',
+            sidebarDark: '#141416',
+            cardDark: '#1a1a1d',
+            borderDark: '#2a2a30',
+            textMuted: '#8b8b93',
+            neonYellow: '#d6b840',
+            neonBlue: '#00a8e8',
+            neonRed: '#ff3366',
+            neonGreen: '#39ff14',
+            accentGold: '#c5a365',
+            accentTeal: '#00ced1'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="flex h-screen overflow-hidden bg-bgDark antialiased text-gray-300 font-sans">
+  <!-- BEGIN: Sidebar Navigation -->
+  <%- include('../partials/admin/sidebar', { currentTab: 'wallet-oversight' }) %>
+  <!-- END: Sidebar Navigation -->
+
+  <!-- BEGIN: Main Content Area -->
+  <main class="flex-1 overflow-y-auto" data-purpose="main-content">
+    <div class="w-full p-8">
+      <!-- Header -->
+      <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-white flex items-center gap-3">
+            <i class="fa-solid fa-wallet text-neonBlue"></i> Wallet Oversight &amp; Audit
+          </h1>
+          <p class="text-xs text-textMuted mt-1">Monitor user platform balances, audit transaction ledgers, and issue manual adjustments.</p>
+        </div>
+        <button type="button" id="open-adjust-modal-btn"
+          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-neonBlue hover:bg-sky-400 text-bgDark font-semibold rounded-lg shadow-lg shadow-neonBlue/20 transition-all cursor-pointer text-sm">
+          <i class="fa-solid fa-sliders"></i> Manual Balance Adjustment
+        </button>
+      </header>
+
+      <!-- BEGIN: Summary Cards -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Total Liability -->
+        <div class="bg-cardDark border border-borderDark rounded-xl p-6 relative overflow-hidden">
+          <div class="absolute right-0 top-0 w-32 h-32 bg-neonBlue/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+          <h3 class="text-xs font-semibold text-textMuted tracking-wider uppercase mb-2">Total System Liability</h3>
+          <p class="text-3xl font-mono font-bold text-neonBlue">₹<%= totalLiabilityRupees %></p>
+          <span class="text-[11px] text-textMuted mt-1 block">Sum of all active user balances</span>
+        </div>
+
+        <!-- Monitored Wallets -->
+        <div class="bg-cardDark border border-borderDark rounded-xl p-6 relative overflow-hidden">
+          <h3 class="text-xs font-semibold text-textMuted tracking-wider uppercase mb-2">Active Wallets</h3>
+          <p class="text-3xl font-mono font-bold text-white"><%= totalCount %></p>
+          <span class="text-[11px] text-textMuted mt-1 block">Total user accounts with initialized wallet</span>
+        </div>
+
+        <!-- Total Ledger Entries -->
+        <div class="bg-cardDark border border-borderDark rounded-xl p-6 relative overflow-hidden">
+          <h3 class="text-xs font-semibold text-textMuted tracking-wider uppercase mb-2">Ledger Transactions</h3>
+          <p class="text-3xl font-mono font-bold text-neonYellow"><%= totalTransactionsCount %></p>
+          <span class="text-[11px] text-textMuted mt-1 block">Total credit and debit audit entries</span>
+        </div>
+      </section>
+      <!-- END: Summary Cards -->
+
+      <!-- BEGIN: Filters and Table Section -->
+      <section class="bg-cardDark border border-borderDark rounded-xl p-6 flex flex-col min-h-[500px]">
+        <!-- Toolbar -->
+        <form action="/admin/wallet-oversight" method="GET" class="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Search Input -->
+            <div class="relative w-72">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-textMuted"></i>
+              <input type="text" name="search" placeholder="Search Username, Email or Order ID..." 
+                     class="w-full bg-bgDark border border-borderDark rounded-lg pl-9 pr-4 py-2 text-sm text-gray-300 focus:border-neonBlue focus:ring-1 focus:ring-neonBlue focus:outline-none transition-colors"
+                     value="<%= typeof search !== 'undefined' ? search : '' %>">
+            </div>
+            <% if (search) { %>
+              <a href="/admin/wallet-oversight" class="px-4 py-2 bg-bgDark border border-borderDark rounded-lg text-sm text-gray-400 hover:text-white transition-colors">
+                Clear Search
+              </a>
+            <% } %>
+          </div>
+        </form>
+
+        <!-- Table Container -->
+        <div class="flex-1 overflow-x-auto border border-borderDark rounded-lg bg-bgDark">
+          <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-sidebarDark border-b border-borderDark text-xs font-semibold text-textMuted uppercase tracking-wider">
+              <tr>
+                <th class="px-6 py-4" scope="col">User</th>
+                <th class="px-6 py-4" scope="col">Email</th>
+                <th class="px-6 py-4" scope="col">Current Balance (₹)</th>
+                <th class="px-6 py-4" scope="col">Total Txns</th>
+                <th class="px-6 py-4" scope="col">Latest Transaction</th>
+                <th class="px-6 py-4 text-center" scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-borderDark text-gray-300">
+              <% if (wallets && wallets.length > 0) { %>
+                <% wallets.forEach(function(w) { %>
+                  <tr class="hover:bg-white/5 transition-colors">
+                    <td class="px-6 py-4 font-medium text-white flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-neonBlue/10 text-neonBlue flex items-center justify-center font-bold text-xs">
+                        <%= w.userId && w.userId.username ? w.userId.username.charAt(0).toUpperCase() : 'U' %>
+                      </div>
+                      <span><%= w.userId ? w.userId.username : 'Unknown User' %></span>
+                    </td>
+                    <td class="px-6 py-4 text-textMuted">
+                      <%= w.userId ? w.userId.email : 'N/A' %>
+                    </td>
+                    <td class="px-6 py-4 font-mono font-bold text-neonBlue">
+                      ₹<%= w.balanceRupees %>
+                    </td>
+                    <td class="px-6 py-4 font-mono">
+                      <%= (w.transactions || []).length %>
+                    </td>
+                    <td class="px-6 py-4 text-xs">
+                      <% if (w.transactions && w.transactions.length > 0) { %>
+                        <% const latest = w.transactions[0]; %>
+                        <span class="inline-flex items-center gap-1.5">
+                          <span class="<%= latest.type === 'credit' ? 'text-emerald-400' : 'text-red-400' %> font-mono font-bold">
+                            <%= latest.type === 'credit' ? '+' : '-' %>₹<%= (latest.amount / 100).toFixed(2) %>
+                          </span>
+                          <span class="text-textMuted">• <%= latest.description %></span>
+                        </span>
+                      <% } else { %>
+                        <span class="text-textMuted">No transactions</span>
+                      <% } %>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                      <button type="button" class="adjust-user-btn px-3 py-1.5 bg-bgDark border border-borderDark hover:border-neonBlue hover:text-neonBlue rounded text-xs transition-colors"
+                        data-user-id="<%= w.userId ? w.userId._id : '' %>"
+                        data-username="<%= w.userId ? w.userId.username : '' %>"
+                        data-balance="<%= w.balanceRupees %>">
+                        <i class="fa-solid fa-pen-to-square"></i> Adjust
+                      </button>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="6" class="px-6 py-12 text-center text-textMuted">
+                    <i class="fa-solid fa-wallet text-4xl mb-2 block"></i>
+                    No user wallets found.
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+          <div class="mt-4 flex items-center justify-between text-sm text-textMuted">
+            <div>Showing page <span class="font-medium text-white"><%= currentPage %></span> of <span class="font-medium text-white"><%= totalPages %></span></div>
+            <div class="flex items-center space-x-1">
+              <% if (currentPage > 1) { %>
+                <a href="/admin/wallet-oversight?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(search) %>" class="px-3 py-1.5 rounded bg-bgDark border border-borderDark text-gray-300 hover:text-white">Previous</a>
+              <% } %>
+              <% if (currentPage < totalPages) { %>
+                <a href="/admin/wallet-oversight?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(search) %>" class="px-3 py-1.5 rounded bg-bgDark border border-borderDark text-gray-300 hover:text-white">Next</a>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+      </section>
+      <!-- END: Filters and Table Section -->
+
+    </div>
+  </main>
+
+  <!-- Adjustment Modal -->
+  <div id="adjust-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-cardDark border border-borderDark rounded-2xl max-w-md w-full p-6 shadow-2xl relative text-gray-200">
+      <button type="button" id="close-adjust-modal" class="absolute top-4 right-4 text-textMuted hover:text-white text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <h3 class="text-xl font-bold text-white mb-1 flex items-center gap-2">
+        <i class="fa-solid fa-sliders text-neonBlue"></i> Adjust Wallet Balance
+      </h3>
+      <p class="text-xs text-textMuted mb-6">Issue an administrative credit or debit transaction to a user's wallet.</p>
+
+      <form action="/admin/wallet-oversight/adjust" method="POST" id="adjust-form">
+        <input type="hidden" name="userId" id="modal-user-id" />
+
+        <div class="mb-4">
+          <label class="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-1">Target User</label>
+          <input type="text" id="modal-username-display" readonly class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-sm font-bold text-neonBlue outline-none cursor-not-allowed" />
+        </div>
+
+        <div class="mb-4">
+          <label for="adjust-type" class="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-1">Adjustment Type</label>
+          <select name="type" id="adjust-type" required class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-neonBlue outline-none">
+            <option value="credit">Credit (+ Add Funds)</option>
+            <option value="debit">Debit (- Deduct Funds)</option>
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label for="adjust-amount" class="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-1">Amount (₹)</label>
+          <input type="number" name="amount" id="adjust-amount" min="1" step="0.01" placeholder="e.g. 500" required
+            class="w-full bg-bgDark border border-borderDark focus:border-neonBlue rounded-lg px-3 py-2 text-sm font-mono text-white outline-none" />
+        </div>
+
+        <div class="mb-6">
+          <label for="adjust-desc" class="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-1">Reason / Description</label>
+          <input type="text" name="description" id="adjust-desc" placeholder="e.g. Promotional credit / Support adjustment" required
+            class="w-full bg-bgDark border border-borderDark focus:border-neonBlue rounded-lg px-3 py-2 text-sm text-gray-300 outline-none" />
+        </div>
+
+        <div class="flex items-center justify-end gap-3">
+          <button type="button" id="cancel-adjust-modal" class="px-4 py-2 bg-bgDark border border-borderDark rounded-lg text-sm text-gray-300 hover:text-white">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-neonBlue hover:bg-sky-400 text-bgDark font-bold rounded-lg text-sm transition-all shadow-md">Apply Adjustment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const modal = document.getElementById('adjust-modal');
+      const closeBtn = document.getElementById('close-adjust-modal');
+      const cancelBtn = document.getElementById('cancel-adjust-modal');
+      const adjustBtns = document.querySelectorAll('.adjust-user-btn');
+      const openTopBtn = document.getElementById('open-adjust-modal-btn');
+
+      const modalUserId = document.getElementById('modal-user-id');
+      const modalUsername = document.getElementById('modal-username-display');
+
+      const openModal = (userId = '', username = '') => {
+        modalUserId.value = userId;
+        modalUsername.value = username ? username : 'Select or search user';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      };
+
+      const closeModal = () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      };
+
+      adjustBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          openModal(btn.dataset.userId, btn.dataset.username);
+        });
+      });
+
+      if (openTopBtn) {
+        openTopBtn.addEventListener('click', () => {
+          // If wallets exist, pick first user as default target
+          const firstBtn = document.querySelector('.adjust-user-btn');
+          if (firstBtn) {
+            openModal(firstBtn.dataset.userId, firstBtn.dataset.username);
+          } else {
+            openModal('', '');
+          }
+        });
+      }
+
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    });
+  </script>
+</body>
+
+</html>

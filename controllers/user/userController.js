@@ -1,4 +1,4 @@
-import * as userService from '../../services/userService.js';
+import * as userService from '../../services/user/userService.js';
 import { uploadToCloudinary } from '../../config/cloudinary.js';
 
 export const getProfile = async (req, res) => {
@@ -41,7 +41,14 @@ export const updateProfile = async (req, res) => {
 
         res.redirect('/user/profile');
     } catch (error) {
-        res.status(400).json({ success: false, message: error.message });
+        console.error('[updateProfile] Error:', error);
+        try {
+            const userId = req.session.user.id || req.session.user;
+            const user = await userService.getUserProfile(userId);
+            return res.status(400).render('user/profile-edit', { user, error: error.message });
+        } catch (innerErr) {
+            return res.status(500).send(error.message || 'Internal Server Error');
+        }
     }
 };
 
