@@ -123,7 +123,8 @@
                 
                 <!-- Rating -->
                 <div class="flex items-center gap-1">
-                  <% const ratingVal = Math.round(parseFloat(item.product.rating || '4.8')) %>
+                  <% const displayRating = (typeof item.product.avgRating !== 'undefined' && item.product.avgRating > 0) ? item.product.avgRating.toFixed(1) : (item.product.rating || '0.0'); %>
+                  <% const ratingVal = Math.round(parseFloat(displayRating)); %>
                   <% for (let i = 1; i <= 5; i++) { %>
                     <% if (i <= ratingVal) { %>
                       <i class="fa-solid fa-star text-[#f59e0b] text-xs"></i>
@@ -131,8 +132,8 @@
                       <i class="fa-regular fa-star text-gray-600 text-xs"></i>
                     <% } %>
                   <% } %>
-                  <span class="text-yellow-500 font-medium ml-1.5"><%= item.product.rating || '4.8' %></span>
-                  <span class="text-app-muted ml-1"><%= item.product.reviewsCount || '(120)' %></span>
+                  <span class="text-yellow-500 font-medium ml-1.5"><%= displayRating %></span>
+                  <span class="text-app-muted ml-1"><%= item.product.reviewsCount || (typeof item.product.reviewCount !== 'undefined' ? '(' + item.product.reviewCount + ')' : '(0)') %></span>
                 </div>
               </div>
             </div>
@@ -163,11 +164,11 @@
                   <i class="fa-solid fa-cart-shopping text-sm"></i> Move to Cart
                 </button>
               <% } else if (isLegendary) { %>
-                <button onclick="moveToCart('<%= item.product._id %>', '<%= itemPlatform %>', '<%= item.product.title.replace(/'/g, "\\'") %>')" class="w-full bg-app-orange hover:bg-[#fbd394] text-black font-semibold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2">
+                <button onclick="moveToCart('<%= item.product._id %>', '<%= itemPlatform %>', '<%= item.product.title.replace(/'/g, "\\'") %>', this)" class="w-full bg-app-orange hover:bg-[#fbd394] text-black font-semibold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2">
                   <i class="fa-solid fa-cart-shopping text-sm"></i> Move to Cart
                 </button>
               <% } else { %>
-                <button onclick="moveToCart('<%= item.product._id %>', '<%= itemPlatform %>', '<%= item.product.title.replace(/'/g, "\\'") %>')" class="w-full bg-app-cyan hover:bg-cyan-400 text-black font-semibold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2">
+                <button onclick="moveToCart('<%= item.product._id %>', '<%= itemPlatform %>', '<%= item.product.title.replace(/'/g, "\\'") %>', this)" class="w-full bg-app-cyan hover:bg-cyan-400 text-black font-semibold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2">
                   <i class="fa-solid fa-cart-shopping text-sm"></i> Move to Cart
                 </button>
               <% } %>
@@ -186,7 +187,7 @@
 <!-- END: MainContent -->
 
 <script>
-  async function moveToCart(productId, platform, productTitle) {
+  async function moveToCart(productId, platform, productTitle, btn) {
     try {
       const response = await fetch('/user/cart', {
         method: 'POST',
@@ -211,6 +212,23 @@
             badge.classList.remove('hidden');
             badge.style.display = 'flex';
           }
+        }
+
+        // Instantly remove item from wishlist UI
+        let article = btn ? btn.closest('article') : null;
+        if (!article) {
+          const removeBtn = document.querySelector(`.remove-btn[data-id="${productId}"][data-platform="${platform}"]`);
+          if (removeBtn) article = removeBtn.closest('article');
+        }
+        if (article) {
+          article.remove();
+        }
+
+        const section = document.querySelector('section.flex-col');
+        if (section && section.querySelectorAll('article').length === 0) {
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         }
       } else {
         showToast(data.message || 'Failed to add item to cart.', 'error');

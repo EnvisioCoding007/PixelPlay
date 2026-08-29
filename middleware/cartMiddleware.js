@@ -1,4 +1,4 @@
-import { getCartItemCount } from '../services/cartService.js';
+import { getCartItemCount } from '../services/user/cartService.js';
 
 export const injectCartCount = async (req, res, next) => {
     res.locals.cartCount = 0;
