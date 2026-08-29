@@ -104,6 +104,12 @@
                 <form id="profile-edit-form"
                     method="post" action="/user/profile?_method=PATCH" enctype="multipart/form-data"
                     class="flex flex-col items-start gap-14 p-12 relative self-stretch w-full flex-[0_0_auto] bg-[#121215bf] rounded-xl border border-solid border-zinc-700 shadow-[inset_0px_1px_0px_1px_#ffffff0d,0px_8px_32px_#00000066] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
+                    <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="w-full p-4 text-sm text-red-400 bg-red-950/60 border border-red-800 rounded-lg flex items-center gap-2">
+                        <svg class="w-5 h-5 shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span><%= error %></span>
+                    </div>
+                    <% } %>
                     <section class="flex items-center gap-8 relative self-stretch w-full flex-[0_0_auto]">
                         <div class="relative mt-[-20px] mb-[-20px] ml-[-20px] shrink-0" style="width:152px;height:152px">
                             <!-- Clickable avatar -->
