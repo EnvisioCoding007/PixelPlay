@@ -9,6 +9,10 @@ import * as productController from '../controllers/user/productController.js';
 import * as wishlistController from '../controllers/user/wishlistController.js';
 import * as cartController from '../controllers/user/cartController.js';
 import * as orderController from '../controllers/user/orderController.js';
+import * as walletController from '../controllers/user/walletController.js';
+import * as supportController from '../controllers/user/supportController.js';
+import * as notificationController from '../controllers/user/notificationController.js';
+import * as reviewController from '../controllers/user/reviewController.js';
 
 const router = express.Router();
 
@@ -41,20 +45,40 @@ router.patch('/profile/primary-platform', productController.setPrimaryPlatform);
 router.get('/home', productController.getHome);
 
 router.get('/browse', productController.getBrowsePage);
+router.get('/offers', productController.getOffersPage);
+router.get('/user/offers', productController.getOffersPage);
 router.get('/products/:id', productController.getProductDetails);
 router.get('/products/status/:id', productController.checkProductStatus);
+
+// Review & Rating Routes
+router.post('/products/:id/reviews', isUserAuth, reviewController.postReview);
+router.delete('/products/:id/reviews/:reviewId', isUserAuth, reviewController.deleteReview);
+router.get('/products/:id/reviews/eligibility', isUserAuth, reviewController.checkEligibility);
 
 router.get('/user/profile', isUserAuth, userController.getProfile);
 router.get('/user/wishlist', isUserAuth, wishlistController.getWishlist);
 router.post('/user/wishlist', isUserAuth, wishlistController.toggleWishlist);
+router.get('/wishlist', isUserAuth, wishlistController.getWishlist);
+router.post('/wishlist', isUserAuth, wishlistController.toggleWishlist);
+router.post('/auth/wishlist/toggle', isUserAuth, wishlistController.toggleWishlist);
 
 router.get('/user/cart', isUserAuth, cartController.getCart);
 router.post('/user/cart', isUserAuth, cartController.addToCart);
 router.patch('/user/cart', isUserAuth, cartController.updateCartQuantity);
 router.delete('/user/cart', isUserAuth, cartController.removeFromCart);
 router.get('/user/checkout', isUserAuth, cartController.getCheckout);
+router.post('/user/cart/apply-coupon', isUserAuth, cartController.applyCoupon);
+router.post('/user/cart/remove-coupon', isUserAuth, cartController.removeCoupon);
+
+router.get('/user/wallet', isUserAuth, walletController.getWalletPage);
+router.post('/user/wallet/add-funds', isUserAuth, walletController.addFunds);
+router.post('/user/wallet/razorpay-create', isUserAuth, walletController.createWalletRazorpayOrder);
+router.post('/user/wallet/razorpay-verify', isUserAuth, walletController.verifyWalletRazorpayPayment);
 
 router.post('/user/orders', isUserAuth, orderController.postPlaceOrder);
+router.post('/user/orders/razorpay-create', isUserAuth, orderController.createRazorpayOrder);
+router.post('/user/orders/razorpay-verify', isUserAuth, orderController.verifyRazorpayPayment);
+router.get('/user/checkout/failure', isUserAuth, cartController.getCheckoutFailure);
 router.get('/user/orders/success/:orderId', isUserAuth, orderController.getOrderSuccess);
 router.get('/user/orders/:orderId', isUserAuth, orderController.getOrderDetails);
 router.get('/user/orders/:orderId/invoice', isUserAuth, orderController.downloadInvoice);
@@ -64,6 +88,8 @@ router.get('/user/orders/:orderId/items/:productId/cancellation', isUserAuth, or
 router.delete('/user/orders/:orderId/items/:productId', isUserAuth, orderController.postCancelItem);
 router.get('/user/orders/:orderId/items/:productId/returns', isUserAuth, orderController.getReturnOrder);
 router.post('/user/orders/:orderId/items/:productId/returns', isUserAuth, orderController.postReturnOrder);
+router.get('/user/orders/:orderId/returns', isUserAuth, orderController.getEntireOrderReturn);
+router.post('/user/orders/:orderId/returns', isUserAuth, orderController.postEntireOrderReturn);
 router.get('/user/orders', isUserAuth, orderController.getOrderHistory);
 
 router.get('/user/profile/edit', isUserAuth, userController.getProfileEdit);
@@ -80,7 +106,15 @@ router.post('/user/profile/addresses', isUserAuth, userController.addAddress);
 router.patch('/user/profile/addresses/:addressId', isUserAuth, userController.editAddress);
 router.delete('/user/profile/addresses/:addressId', isUserAuth, userController.deleteAddress);
 
-router.patch('/user/profile/avatar', upload.single('avatar'), userController.updateAvatar);
+router.get('/user/support', supportController.getSupportPage);
+router.post('/user/support', supportController.submitSupportRequest);
+router.get('/support', supportController.getSupportPage);
+
+router.get('/user/notifications', isUserAuth, notificationController.getNotifications);
+router.patch('/user/notifications/read-all', isUserAuth, notificationController.markAllAsRead);
+router.patch('/user/notifications/:id/read', isUserAuth, notificationController.markAsRead);
+router.delete('/user/notifications/read', isUserAuth, notificationController.deleteReadNotifications);
+router.delete('/user/notifications/:id', isUserAuth, notificationController.deleteNotification);
 
 router.post('/auth/logout', authController.logout);
 

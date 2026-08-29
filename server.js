@@ -1,9 +1,11 @@
 import express from 'express';
+import { createServer } from 'http';
 import 'dotenv/config';
 import connectDB from './db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import methodOverride from 'method-override';
+import { initSocket } from './config/socket.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,6 +13,7 @@ const __dirname = path.dirname(__filename);
 await connectDB();
 
 const app = express();
+const server = createServer(app);
 const port = process.env.PORT || 4090;
 
 app.use(express.json({ limit: '5mb' }));
@@ -24,16 +27,20 @@ app.set('views', path.join(__dirname, 'views'));
 import passport from './config/passport.js';
 import session from 'express-session';
 import { injectCartCount } from './middleware/cartMiddleware.js';
+import { injectNotificationCount } from './middleware/notificationMiddleware.js';
 
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'the_forebidden_key',
+const sessionMiddleware = session({
+    secret: process.env.SESSION_SECRET || 'pixelplay_secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
         secure: false,
         httpOnly: true
     }
-}));
+});
+
+app.use(sessionMiddleware);
+initSocket(server, sessionMiddleware);
 
 app.use(passport.initialize());
 
@@ -43,6 +50,7 @@ app.use((req, res, next) => {
 });
 
 app.use(injectCartCount);
+app.use(injectNotificationCount);
 
 import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
@@ -50,6 +58,6 @@ import adminRoutes from './routes/adminRoutes.js';
 app.use('/', userRoutes);
 app.use('/', adminRoutes);
 
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`PixelPlay is running on\nhttp://localhost:${port}`);
 });
