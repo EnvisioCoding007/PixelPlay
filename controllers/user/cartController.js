@@ -7,7 +7,7 @@ export const getCart = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(userId);
-        if (!user) return res.redirect('/auth/login');
+        if (!user) return res.redirect('/login');
 
         const {
             cart,
@@ -46,20 +46,20 @@ export const getCheckout = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(userId);
-        if (!user) return res.redirect('/auth/login');
+        if (!user) return res.redirect('/login');
 
         const initialCartDetails = await cartService.getCartDetails(userId);
 
         if (!initialCartDetails.cart || !initialCartDetails.cart.items || initialCartDetails.cart.items.length === 0) {
-            return res.redirect('/user/cart');
+            return res.redirect('/cart');
         }
 
         if (initialCartDetails.hasUnavailableProduct) {
-            return res.redirect('/user/cart?error=unavailable');
+            return res.redirect('/cart?error=unavailable');
         }
 
         if (initialCartDetails.hasInsufficientStockProduct) {
-            return res.redirect('/user/cart?error=insufficient_stock');
+            return res.redirect('/cart?error=insufficient_stock');
         }
 
         // Fetch available coupons, wallet balance, and evaluate highest savings coupon (bestCoupon)
@@ -144,7 +144,7 @@ export const getCheckoutFailure = async (req, res) => {
         ]);
 
         if (!cartDetails.cart || cartDetails.cart.items.length === 0) {
-            return res.redirect('/user/cart');
+            return res.redirect('/cart');
         }
 
         const cartCount = await cartService.getCartItemCount(userId);
@@ -175,7 +175,7 @@ export const getCheckoutFailure = async (req, res) => {
         });
     } catch (error) {
         console.error('[getCheckoutFailure] Error:', error);
-        res.redirect('/user/cart');
+        res.redirect('/cart');
     }
 };
 

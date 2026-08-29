@@ -5,7 +5,7 @@ import * as authController from '../controllers/user/authController.js';
 
 export const isUserAuth = async (req, res, next) => {
     if (!req.session.user) {
-        return res.redirect('/auth/login');
+        return res.redirect('/login');
     }
     try {
         const userId = req.session.user.id || req.session.user;
@@ -13,14 +13,14 @@ export const isUserAuth = async (req, res, next) => {
 
         if (!user || user.is_blocked || user.role === 'admin') {
             return req.session.destroy(() => {
-                res.redirect('/auth/login');
+                res.redirect('/login');
             });
         }
 
         next();
     } catch (err) {
         console.error('[isUserAuth]', err);
-        res.redirect('/auth/login');
+        res.redirect('/login');
     }
 };
 

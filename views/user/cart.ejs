@@ -228,7 +228,7 @@
                 <span>Some items in your cart exceed available stock or are unavailable. Please adjust your cart to proceed.</span>
               </div>
             <% } else { %>
-              <a href="/user/checkout" class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
+              <a href="/checkout" class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
                 <i class="fa-solid fa-lock"></i>
                 PROCEED TO CHECKOUT
               </a>
@@ -250,7 +250,7 @@
 <script>
   async function updateQty(productId, platform, action) {
     try {
-      const response = await fetch('/user/cart', {
+      const response = await fetch('/cart', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
@@ -350,7 +350,7 @@
             `;
           } else {
             checkoutActionContainer.innerHTML = `
-              <a href="/user/checkout" class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
+              <a href="/checkout" class="w-full bg-[#00b4ff] hover:bg-[#0090cc] text-[#0f0f11] font-bold py-4 rounded transition-colors flex items-center justify-center gap-2 mb-4 tracking-wide">
                 <i class="fa-solid fa-lock"></i>
                 PROCEED TO CHECKOUT
               </a>
@@ -398,7 +398,7 @@
     if (!result.isConfirmed) return;
 
     try {
-      const response = await fetch('/user/cart', {
+      const response = await fetch('/cart', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json'

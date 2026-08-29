@@ -158,10 +158,10 @@
 
                     <!-- Navigation Links -->
                     <div class="flex items-center justify-between pt-2">
-                        <a href="/user/cart" class="text-xs text-text-secondary hover:text-white transition-colors flex items-center gap-1.5">
+                        <a href="/cart" class="text-xs text-text-secondary hover:text-white transition-colors flex items-center gap-1.5">
                             <i class="fa-solid fa-cart-shopping"></i> Return to Shopping Cart
                         </a>
-                        <a href="/user/checkout" class="text-xs text-cyber-blue hover:underline flex items-center gap-1.5">
+                        <a href="/checkout" class="text-xs text-cyber-blue hover:underline flex items-center gap-1.5">
                             Modify Delivery Address <i class="fa-solid fa-arrow-right"></i>
                         </a>
                     </div>
@@ -273,7 +273,7 @@
                     retryBtn.innerText = 'Initiating Secure Payment...';
 
                     try {
-                        const createRes = await fetch('/user/orders/razorpay-create', {
+                        const createRes = await fetch('/orders/razorpay-create', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -300,7 +300,7 @@
                             handler: async function (response) {
                                 retryBtn.innerText = 'Verifying Payment...';
                                 try {
-                                    const verifyRes = await fetch('/user/orders/razorpay-verify', {
+                                    const verifyRes = await fetch('/orders/razorpay-verify', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({
@@ -315,7 +315,7 @@
                                     const verifyData = await verifyRes.json();
                                     if (verifyRes.ok && verifyData.success) {
                                         Swal.fire({ icon: 'success', title: 'Payment Successful!', timer: 1500, showConfirmButton: false }).then(() => {
-                                            window.location.href = `/user/orders/success/${verifyData.orderId}`;
+                                            window.location.href = `/orders/success/${verifyData.orderId}`;
                                         });
                                     } else {
                                         Swal.fire({ icon: 'error', title: 'Verification Failed', text: verifyData.message || 'Signature verification failed.' });
@@ -375,7 +375,7 @@
                     changeBtn.innerText = 'Processing Order...';
 
                     try {
-                        const res = await fetch('/user/orders', {
+                        const res = await fetch('/orders', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 
@@ -388,7 +388,7 @@
                         const data = await res.json();
                         if (res.ok && data.success) {
                             Swal.fire({ icon: 'success', title: 'Order Placed!', text: data.message, timer: 1500, showConfirmButton: false }).then(() => {
-                                window.location.href = `/user/orders/success/${data.orderId}`;
+                                window.location.href = `/orders/success/${data.orderId}`;
                             });
                         } else {
                             Swal.fire({ icon: 'error', title: 'Order Placement Failed', text: data.message || 'Could not place order.' });

@@ -84,7 +84,7 @@
     <main class="max-w-6xl mx-auto px-6 py-8" data-purpose="main-content">
         <!-- BEGIN: Header Section -->
         <div class="mb-8" data-purpose="page-header">
-            <button onclick="window.location.href='/user/profile'"
+            <button onclick="window.location.href='/profile'"
                 class="flex items-center gap-2 text-cyan-main hover:text-white transition-colors text-sm font-medium mb-6 px-3 py-1.5 rounded-md border border-cyan-main/30 hover:border-cyan-main bg-cyan-bg/50 w-fit">
                 <i class="fa-solid fa-chevron-left text-xs"></i>
                 BACK
@@ -182,7 +182,7 @@
                                     <p class="text-xl font-bold text-white">₹<%= ((item.price * item.quantity) / 100).toFixed(2) %></p>
                                 </div>
                                 <div class="flex flex-col items-end gap-3">
-                                    <button onclick="window.location.href='/user/orders/<%= item.orderDbId %>'"
+                                    <button onclick="window.location.href='/orders/<%= item.orderDbId %>'"
                                         class="bg-[#1c1d22] hover:bg-gray-800 text-white border border-gray-700 px-6 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2">
                                         <i class="fa-regular fa-file-lines"></i>
                                         View Order Details
@@ -286,13 +286,13 @@
                                 </div>
                                 <div class="flex flex-col items-end gap-3">
                                     <% if (status === 'CANCELLED') { %>
-                                        <button onclick="window.location.href='/user/orders/<%= order._id %>'"
+                                        <button onclick="window.location.href='/orders/<%= order._id %>'"
                                             class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2 pt-2 border-t border-transparent">
                                             <i class="fa-regular fa-file-lines text-xs"></i>
                                             View Order Details
                                         </button>
                                     <% } else { %>
-                                        <button onclick="window.location.href='/user/orders/<%= order._id %>'"
+                                        <button onclick="window.location.href='/orders/<%= order._id %>'"
                                             class="bg-<%= color %>-main hover:bg-<%= color %>-main/90 text-dark px-6 py-2 rounded font-bold text-sm transition-colors flex items-center gap-2"
                                             style="box-shadow: 0 0 15px <%= shadowColor %>">
                                             <i class="fa-regular fa-file-lines"></i>
@@ -305,16 +305,16 @@
                                             Track Order
                                         </button>
                                     <% } else if (status === 'DELIVERED') { %>
-                                        <button onclick="window.location.href='/user/orders/<%= order._id %>/invoice'" class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
+                                        <button onclick="window.location.href='/orders/<%= order._id %>/invoice'" class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
                                             <i class="fa-solid fa-download text-xs"></i>
                                             Download Invoice
                                         </button>
-                                        <button onclick="window.location.href='/user/orders/<%= order._id %>/returns'" class="text-sm text-muted hover:text-gold-main transition-colors flex items-center gap-2">
+                                        <button onclick="window.location.href='/orders/<%= order._id %>/returns'" class="text-sm text-muted hover:text-gold-main transition-colors flex items-center gap-2">
                                             <i class="fa-solid fa-rotate-left text-xs"></i>
                                             Return Order
                                         </button>
                                     <% } else if (status === 'RETURNED' || status === 'RETURN REQUESTED') { %>
-                                        <button onclick="window.location.href='/user/orders/<%= order._id %>/invoice'" class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
+                                        <button onclick="window.location.href='/orders/<%= order._id %>/invoice'" class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
                                             <i class="fa-solid fa-download text-xs"></i>
                                             Download Invoice
                                         </button>
@@ -382,7 +382,7 @@
                 color: '#e2e4eb'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = `/user/orders/${orderId}/cancellation`;
+                    window.location.href = `/orders/${orderId}/cancellation`;
                 }
             });
         }

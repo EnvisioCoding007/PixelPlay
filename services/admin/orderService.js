@@ -111,7 +111,7 @@ export const updateOrderStatus = async (id, status) => {
         type: 'order_status',
         title: 'Order Status Updated',
         message: `Your order #${order.orderId} status is now "${status}".`,
-        link: `/user/orders/${order._id}`,
+        link: `/orders/${order._id}`,
         metadata: { orderId: order.orderId, orderDbId: order._id, status }
     }).catch(err => console.error('[updateOrderStatus Notification Error]', err));
 
@@ -192,7 +192,7 @@ export const approveItemReturn = async (orderId, productId, adminComment, platfo
         type: 'order_status',
         title: 'Return Request Approved',
         message: `Return request for item in Order #${order.orderId} has been approved.`,
-        link: `/user/orders/${order._id}`,
+        link: `/orders/${order._id}`,
         metadata: { orderId: order.orderId, productId }
     }).catch(err => console.error('[approveItemReturn Notification Error]', err));
 
@@ -227,7 +227,7 @@ export const rejectItemReturn = async (orderId, productId, adminComment, platfor
         type: 'order_status',
         title: 'Return Request Rejected',
         message: `Return request for item in Order #${order.orderId} was updated: ${adminComment || 'Rejected'}.`,
-        link: `/user/orders/${order._id}`,
+        link: `/orders/${order._id}`,
         metadata: { orderId: order.orderId, productId }
     }).catch(err => console.error('[rejectItemReturn Notification Error]', err));
 

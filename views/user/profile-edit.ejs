@@ -102,7 +102,7 @@
                     </div>
                 </section>
                 <form id="profile-edit-form"
-                    method="post" action="/user/profile?_method=PATCH" enctype="multipart/form-data"
+                    method="post" action="/profile?_method=PATCH" enctype="multipart/form-data"
                     class="flex flex-col items-start gap-14 p-12 relative self-stretch w-full flex-[0_0_auto] bg-[#121215bf] rounded-xl border border-solid border-zinc-700 shadow-[inset_0px_1px_0px_1px_#ffffff0d,0px_8px_32px_#00000066] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
                     <% if (typeof error !== 'undefined' && error) { %>
                     <div class="w-full p-4 text-sm text-red-400 bg-red-950/60 border border-red-800 rounded-lg flex items-center gap-2">
@@ -229,7 +229,7 @@
                             <div class="relative flex-1 grow h-px bg-zinc-800"></div>
                         </div>
                         <div class="flex items-start gap-6 relative self-stretch w-full flex-[0_0_auto]">
-                            <a href="/user/profile/password"
+                            <a href="/profile/password"
                                 class="all-[unset] box-border inline-flex items-center justify-center gap-2.5 px-8 py-3.5 relative flex-[0_0_auto] bg-[#121215] rounded-lg border border-solid border-zinc-700 cursor-pointer hover:bg-zinc-800 transition-colors">
                                 <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
                                     <div class="relative w-[18px] h-[18px]">
@@ -250,7 +250,7 @@
                     <% } %>
                     <div
                         class="flex items-center justify-between pt-8 pb-0 px-0 relative self-stretch w-full flex-[0_0_auto] border-t [border-top-style:solid] border-zinc-800">
-                        <a href="/user/profile"
+                        <a href="/profile"
                             class="all-[unset] box-border border border-solid border-zinc-400 inline-flex items-center justify-center px-8 py-3.5 relative flex-[0_0_auto] rounded-lg shadow-[0px_0px_15px_#0ea5e940] cursor-pointer">
                             <div
                                 class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-zinc-400 text-[15px] text-center tracking-[0] leading-[normal] whitespace-nowrap">

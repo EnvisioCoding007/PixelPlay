@@ -19,12 +19,12 @@
                              class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'offers' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Offers</span></a>
                 </li>
                 <% if (typeof user !== 'undefined' && user) { %>
-                <li><a href="/user/wallet"
+                <li><a href="/wallet"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'wallet' ? 'bg-[#ffffff10]' : '' %>"><span
                              class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'wallet' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] leading-[normal]">Wallet</span></a>
                 </li>
                 <% } %>
-                <li><a href="/user/support"
+                <li><a href="/support"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'support' ? 'bg-[#ffffff10]' : '' %>"><span
                              class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'support' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Support</span></a>
                 </li>
@@ -49,11 +49,11 @@
             </form>
             <% if (typeof user !== 'undefined' && user) { %>
             <%# Authenticated: show wishlist, cart, bell, and profile avatar %>
-            <a href="/user/wishlist" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors <%= activeTab === 'wishlist' ? 'bg-[#ffffff10]' : '' %>"
+            <a href="/wishlist" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors <%= activeTab === 'wishlist' ? 'bg-[#ffffff10]' : '' %>"
                 aria-label="Wishlist" title="Wishlist">
                 <i class="fa-solid fa-heart text-[#9aa6b3] hover:text-red-500 transition-colors text-lg <%= activeTab === 'wishlist' ? 'text-red-500' : '' %>"></i>
             </a>
-            <a href="/user/cart" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors <%= activeTab === 'cart' ? 'bg-[#ffffff10]' : '' %>"
+            <a href="/cart" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors <%= activeTab === 'cart' ? 'bg-[#ffffff10]' : '' %>"
                 aria-label="Cart" title="Cart">
                 <i class="fa-solid fa-cart-shopping text-[#9aa6b3] hover:text-white transition-colors text-lg"></i>
                 <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
@@ -109,7 +109,7 @@
                 </div>
             </div>
 
-            <a href="/user/profile"
+            <a href="/profile"
                 class="relative w-9 h-9 rounded-[18px] border-2 border-solid border-[#00000014] flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer overflow-hidden bg-[#1a2a3a] text-sky-400 font-bold"
                 aria-label="Profile">
                 <% if (user.profile_image) { %>
@@ -121,11 +121,11 @@
             <% } else { %>
             <%# Unauthenticated: show Log In and Sign Up CTAs %>
             <div class="inline-flex items-center gap-3 relative flex-[0_0_auto]">
-                <a href="/auth/login"
+                <a href="/login"
                     class="inline-flex h-9 items-center justify-center px-5 py-0 relative rounded-md border border-solid border-[#ffffff22] text-[#9aa6b3] hover:text-white hover:border-[#ffffff44] transition-colors [font-family:'Inter-Medium',Helvetica] font-medium text-sm tracking-[0] leading-[normal]">
                     Log In
                 </a>
-                <a href="/auth/signup"
+                <a href="/signup"
                     class="inline-flex h-9 items-center justify-center px-5 py-0 relative rounded-md bg-sky-500 hover:bg-sky-400 shadow-[0px_0px_16px_#0ea5e94c] transition-colors [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#061323] text-sm tracking-[0] leading-[normal]">
                     Sign Up
                 </a>
@@ -285,7 +285,7 @@
         linkEl.addEventListener('click', async (e) => {
           if (isUnread) {
             try {
-              await fetch(`/user/notifications/${n._id}/read`, { method: 'PATCH' });
+              await fetch(`/notifications/${n._id}/read`, { method: 'PATCH' });
             } catch (err) { console.error(err); }
           }
         });
@@ -297,7 +297,7 @@
         delBtn.addEventListener('click', async (e) => {
           e.stopPropagation();
           try {
-            const res = await fetch(`/user/notifications/${n._id}`, { method: 'DELETE' });
+            const res = await fetch(`/notifications/${n._id}`, { method: 'DELETE' });
             const data = await res.json();
             if (data.success) {
               itemEl.remove();
@@ -325,7 +325,7 @@
     const fetchNotifications = async () => {
       if (!notifList) return;
       try {
-        const res = await fetch('/user/notifications');
+        const res = await fetch('/notifications');
         const data = await res.json();
         if (data.success) {
           updateBadgeCount(data.unreadCount);
@@ -367,7 +367,7 @@
     if (markAllReadBtn) {
       markAllReadBtn.addEventListener('click', async () => {
         try {
-          const res = await fetch('/user/notifications/read-all', { method: 'PATCH' });
+          const res = await fetch('/notifications/read-all', { method: 'PATCH' });
           const data = await res.json();
           if (data.success) {
             updateBadgeCount(0);
@@ -381,7 +381,7 @@
     if (deleteReadBtn) {
       deleteReadBtn.addEventListener('click', async () => {
         try {
-          const res = await fetch('/user/notifications/read', { method: 'DELETE' });
+          const res = await fetch('/notifications/read', { method: 'DELETE' });
           const data = await res.json();
           if (data.success) {
             updateBadgeCount(data.unreadCount);

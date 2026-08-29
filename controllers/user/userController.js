@@ -5,7 +5,7 @@ export const getProfile = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
         const user = await userService.getUserProfile(userId);
-        if (!user) return res.redirect('/auth/login');
+        if (!user) return res.redirect('/login');
 
         res.render('user/profile', { user });
     } catch (error) {
@@ -17,7 +17,7 @@ export const getProfileEdit = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
         const user = await userService.getUserProfile(userId);
-        if (!user) return res.redirect('/auth/login');
+        if (!user) return res.redirect('/login');
 
         res.render('user/profile-edit', { user });
     } catch (error) {
@@ -36,10 +36,10 @@ export const updateProfile = async (req, res) => {
 
         const result = await userService.updateUserProfile(userId, { username, phone, email }, req.file);
         if (result.emailChanged) {
-            return res.redirect('/user/verify-email-update');
+            return res.redirect('/verify-email-update');
         }
 
-        res.redirect('/user/profile');
+        res.redirect('/profile');
     } catch (error) {
         console.error('[updateProfile] Error:', error);
         try {
@@ -56,7 +56,7 @@ export const getVerifyEmailUpdate = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
         const pendingEmail = await userService.getPendingEmail(userId);
-        if (!pendingEmail) return res.redirect('/user/profile/edit');
+        if (!pendingEmail) return res.redirect('/profile/edit');
 
         res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
         res.render('user/verify-email', { email: pendingEmail, purpose: 'email_update' });
@@ -76,7 +76,7 @@ export const verifyEmailUpdate = async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'Email updated successfully! Redirecting to your profile…',
-            redirectUrl: '/user/profile',
+            redirectUrl: '/profile',
         });
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
@@ -87,7 +87,7 @@ export const getProfilePassword = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(userId);
-        if (!user) return res.redirect('/auth/login');
+        if (!user) return res.redirect('/login');
         res.render('user/password-update', { user });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -119,7 +119,7 @@ export const updatePassword = async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'Password updated successfully.',
-            redirectUrl: '/user/profile'
+            redirectUrl: '/profile'
         });
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
@@ -130,7 +130,7 @@ export const getAddresses = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(userId);
-        if (!user) return res.redirect('/auth/login');
+        if (!user) return res.redirect('/login');
         res.render('user/saved-addresses', { user });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

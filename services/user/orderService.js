@@ -150,7 +150,7 @@ export const verifyAndCompleteRazorpayOrder = async (userId, addressId, couponCo
         type: 'order_status',
         title: 'Order Placed Successfully',
         message: `Your order #${order.orderId} has been placed successfully!`,
-        link: `/user/orders/${order._id}`,
+        link: `/orders/${order._id}`,
         metadata: { orderId: order.orderId, orderDbId: order._id }
     }).catch(err => console.error('[Order Created Notification Error]', err));
 
@@ -378,7 +378,7 @@ export const placeOrder = async (userId, paymentMethod, addressId, couponCode = 
         type: 'order_status',
         title: 'Order Placed Successfully',
         message: `Your order #${order.orderId} has been placed successfully!`,
-        link: `/user/orders/${order._id}`,
+        link: `/orders/${order._id}`,
         metadata: { orderId: order.orderId, orderDbId: order._id }
     }).catch(err => console.error('[Order Created Notification Error]', err));
 
@@ -513,7 +513,7 @@ export const cancelOrder = async (orderId, userId, reason, comments) => {
         type: 'order_status',
         title: 'Order Cancelled',
         message: `Your order #${order.orderId} has been cancelled.`,
-        link: `/user/orders/${order._id}`,
+        link: `/orders/${order._id}`,
         metadata: { orderId: order.orderId, orderDbId: order._id }
     }).catch(err => console.error('[cancelOrder Notification Error]', err));
 
@@ -626,7 +626,7 @@ export const cancelItem = async (orderId, userId, productId, reason, comments, c
         type: 'order_status',
         title: 'Item Cancelled',
         message: `An item in your order #${order.orderId} was cancelled.`,
-        link: `/user/orders/${order._id}`,
+        link: `/orders/${order._id}`,
         metadata: { orderId: order.orderId, orderDbId: order._id }
     }).catch(err => console.error('[cancelItem Notification Error]', err));
 

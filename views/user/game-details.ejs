@@ -580,7 +580,7 @@
           <% } else { %>
             <div class="bg-[#0f1115] border border-gray-800/80 rounded-lg p-4 text-xs text-gray-400 text-center">
               <p class="mb-3 text-gray-300">Sign in to your PixelPlay account to leave a review if you have ordered this game.</p>
-              <a href="/auth/login" class="inline-block bg-pixel-cyan hover:bg-pixel-cyan-hover text-black text-xs font-bold px-4 py-2 rounded transition-colors">Sign In</a>
+              <a href="/login" class="inline-block bg-pixel-cyan hover:bg-pixel-cyan-hover text-black text-xs font-bold px-4 py-2 rounded transition-colors">Sign In</a>
             </div>
           <% } %>
         </div>
@@ -1085,7 +1085,7 @@
         const productTitle = '<%= product.title.replace(/'/g, "\\'") %>';
 
         try {
-          const response = await fetch('/user/cart', {
+          const response = await fetch('/cart', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -1097,7 +1097,7 @@
           if (data.success) {
             showToast(`${productTitle} (${selectedPlatform}) added to cart!`, "success");
             setTimeout(() => {
-              window.location.href = '/user/cart';
+              window.location.href = '/cart';
             }, 800);
           } else {
             showToast(data.message || "Failed to add item to cart.", "error");
@@ -1123,7 +1123,7 @@
         const productTitle = '<%= product.title.replace(/'/g, "\\'") %>';
 
         try {
-          const response = await fetch('/user/cart', {
+          const response = await fetch('/cart', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -1166,7 +1166,7 @@
     const selectedPlatform = activeBtn ? activeBtn.dataset.platform : 'PC';
 
     try {
-      const response = await fetch('/user/wishlist', {
+      const response = await fetch('/wishlist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1175,7 +1175,7 @@
       });
       
       if (response.status === 401) {
-        window.location.href = '/auth/login';
+        window.location.href = '/login';
         return;
       }
 

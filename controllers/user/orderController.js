@@ -95,7 +95,7 @@ export const getOrderFailure = async (req, res) => {
         }
 
         if (order.paymentStatus === 'Paid') {
-            return res.redirect(`/user/orders/success/${order._id}`);
+            return res.redirect(`/orders/success/${order._id}`);
         }
 
         const walletBalance = await (await import('../../services/shared/walletHelper.js')).getWalletBalance(loggedInUserId);
@@ -228,7 +228,7 @@ export const getOrderHistory = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(userId);
-        if (!user) return res.redirect('/auth/login');
+        if (!user) return res.redirect('/login');
 
         const limit = 5;
         const page = parseInt(req.query.page) || 1;
@@ -289,11 +289,11 @@ export const getCancelOrder = async (req, res) => {
         const loggedInUserId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(loggedInUserId);
         if (!dbOrder || dbOrder.userId.toString() !== loggedInUserId.toString()) {
-            return res.redirect('/user/orders');
+            return res.redirect('/orders');
         }
 
         if (dbOrder.orderStatus !== 'Processing' && dbOrder.orderStatus !== 'Pending') {
-            return res.redirect(`/user/orders/${orderId}`);
+            return res.redirect(`/orders/${orderId}`);
         }
 
         const cartCount = await cartService.getCartItemCount(loggedInUserId);
@@ -321,7 +321,7 @@ export const getCancelOrder = async (req, res) => {
         res.render('user/order-cancel', { order: mappedOrder, user, cartCount, product: null, item: null, error: req.query.error || null });
     } catch (error) {
         console.error('[getCancelOrder] Error:', error);
-        res.redirect('/user/orders');
+        res.redirect('/orders');
     }
 };
 
@@ -331,23 +331,23 @@ export const postCancelOrder = async (req, res) => {
         const { cancel_reason, additional_comments } = req.body;
 
         if (!cancel_reason) {
-            return res.redirect(`/user/orders/${orderId}/cancellation?error=Cancellation reason is required`);
+            return res.redirect(`/orders/${orderId}/cancellation?error=Cancellation reason is required`);
         }
         if (cancel_reason === 'Other reason' && (!additional_comments || additional_comments.trim().length < 10)) {
-            return res.redirect(`/user/orders/${orderId}/cancellation?error=Additional comments must be at least 10 characters long for "Other reason"`);
+            return res.redirect(`/orders/${orderId}/cancellation?error=Additional comments must be at least 10 characters long for "Other reason"`);
         }
         if (additional_comments && additional_comments.trim().length > 100) {
-            return res.redirect(`/user/orders/${orderId}/cancellation?error=Additional comments cannot exceed 100 characters`);
+            return res.redirect(`/orders/${orderId}/cancellation?error=Additional comments cannot exceed 100 characters`);
         }
 
         const loggedInUserId = req.session.user.id || req.session.user;
 
         await orderService.cancelOrder(orderId, loggedInUserId, cancel_reason, additional_comments);
 
-        res.redirect(`/user/orders/${orderId}?notification=Order cancelled successfully`);
+        res.redirect(`/orders/${orderId}?notification=Order cancelled successfully`);
     } catch (error) {
         console.error('[postCancelOrder] Error:', error);
-        res.redirect('/user/orders');
+        res.redirect('/orders');
     }
 };
 
@@ -360,16 +360,16 @@ export const getCancelItem = async (req, res) => {
         const loggedInUserId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(loggedInUserId);
         if (!dbOrder || dbOrder.userId.toString() !== loggedInUserId.toString()) {
-            return res.redirect('/user/orders');
+            return res.redirect('/orders');
         }
 
         const item = dbOrder.items.find(i => i.product._id.toString() === productId.toString() && (!platform || i.platform === platform));
         if (!item) {
-            return res.redirect(`/user/orders/${orderId}`);
+            return res.redirect(`/orders/${orderId}`);
         }
 
         if (item.status === 'Cancelled' || (dbOrder.orderStatus !== 'Processing' && dbOrder.orderStatus !== 'Pending')) {
-            return res.redirect(`/user/orders/${orderId}`);
+            return res.redirect(`/orders/${orderId}`);
         }
 
         const cartCount = await cartService.getCartItemCount(loggedInUserId);
@@ -404,7 +404,7 @@ export const getCancelItem = async (req, res) => {
         });
     } catch (error) {
         console.error('[getCancelItem] Error:', error);
-        res.redirect('/user/orders');
+        res.redirect('/orders');
     }
 };
 
@@ -416,23 +416,23 @@ export const postCancelItem = async (req, res) => {
         const cancelQty = parseInt(quantity, 10) || 1;
 
         if (!cancel_reason) {
-            return res.redirect(`/user/orders/${orderId}/items/${productId}/cancellation?error=Cancellation reason is required`);
+            return res.redirect(`/orders/${orderId}/items/${productId}/cancellation?error=Cancellation reason is required`);
         }
         if (cancel_reason === 'Other reason' && (!additional_comments || additional_comments.trim().length < 10)) {
-            return res.redirect(`/user/orders/${orderId}/items/${productId}/cancellation?error=Additional comments must be at least 10 characters long for "Other reason"`);
+            return res.redirect(`/orders/${orderId}/items/${productId}/cancellation?error=Additional comments must be at least 10 characters long for "Other reason"`);
         }
         if (additional_comments && additional_comments.trim().length > 100) {
-            return res.redirect(`/user/orders/${orderId}/items/${productId}/cancellation?error=Additional comments cannot exceed 100 characters`);
+            return res.redirect(`/orders/${orderId}/items/${productId}/cancellation?error=Additional comments cannot exceed 100 characters`);
         }
 
         const loggedInUserId = req.session.user.id || req.session.user;
 
         await orderService.cancelItem(orderId, loggedInUserId, productId, cancel_reason, additional_comments, cancelQty, platform);
 
-        res.redirect(`/user/orders/${orderId}?notification=Item cancelled successfully`);
+        res.redirect(`/orders/${orderId}?notification=Item cancelled successfully`);
     } catch (error) {
         console.error('[postCancelItem] Error:', error);
-        res.redirect('/user/orders');
+        res.redirect('/orders');
     }
 };
 
@@ -445,18 +445,18 @@ export const getReturnOrder = async (req, res) => {
         const loggedInUserId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(loggedInUserId);
         if (!dbOrder || dbOrder.userId.toString() !== loggedInUserId.toString()) {
-            return res.redirect('/user/orders');
+            return res.redirect('/orders');
         }
 
         if (dbOrder.orderStatus !== 'Delivered' && dbOrder.orderStatus !== 'Return Requested' && dbOrder.orderStatus !== 'Returned') {
-            return res.redirect(`/user/orders/${orderId}`);
+            return res.redirect(`/orders/${orderId}`);
         }
 
         const cartCount = await cartService.getCartItemCount(loggedInUserId);
 
         const item = dbOrder.items.find(i => i.product._id.toString() === productId.toString() && (!platform || i.platform === platform) && (i.status === 'Ordered' || !i.status));
         if (!item) {
-            return res.redirect(`/user/orders/${orderId}`);
+            return res.redirect(`/orders/${orderId}`);
         }
 
         const mappedOrder = {
@@ -483,7 +483,7 @@ export const getReturnOrder = async (req, res) => {
         });
     } catch (error) {
         console.error('[getReturnOrder] Error:', error);
-        res.redirect('/user/orders');
+        res.redirect('/orders');
     }
 };
 
@@ -495,23 +495,23 @@ export const postReturnOrder = async (req, res) => {
         const returnQty = parseInt(quantity, 10) || 1;
 
         if (!return_reason) {
-            return res.redirect(`/user/orders/${orderId}/items/${productId}/returns?error=Return reason is required`);
+            return res.redirect(`/orders/${orderId}/items/${productId}/returns?error=Return reason is required`);
         }
         if (return_reason === 'other' && (!additional_details || additional_details.trim().length < 10)) {
-            return res.redirect(`/user/orders/${orderId}/items/${productId}/returns?error=Additional comments must be at least 10 characters long for "Other reason"`);
+            return res.redirect(`/orders/${orderId}/items/${productId}/returns?error=Additional comments must be at least 10 characters long for "Other reason"`);
         }
         if (additional_details && additional_details.trim().length > 100) {
-            return res.redirect(`/user/orders/${orderId}/items/${productId}/returns?error=Additional comments cannot exceed 100 characters`);
+            return res.redirect(`/orders/${orderId}/items/${productId}/returns?error=Additional comments cannot exceed 100 characters`);
         }
 
         const loggedInUserId = req.session.user.id || req.session.user;
 
         await orderService.requestItemReturn(orderId, loggedInUserId, productId, return_reason, additional_details, returnQty, platform);
 
-        res.redirect(`/user/orders/${orderId}?notification=Return requested successfully`);
+        res.redirect(`/orders/${orderId}?notification=Return requested successfully`);
     } catch (error) {
         console.error('[postReturnOrder] Error:', error);
-        res.redirect('/user/orders');
+        res.redirect('/orders');
     }
 };
 
@@ -527,9 +527,9 @@ export const downloadInvoice = async (req, res) => {
     } catch (error) {
         console.error('[downloadInvoice] Error:', error);
         if (error.message === 'Order not found' || error.message === 'Unauthorized access') {
-            res.redirect('/user/orders');
+            res.redirect('/orders');
         } else {
-            res.redirect(`/user/orders/${orderId}?error=${encodeURIComponent(error.message)}`);
+            res.redirect(`/orders/${orderId}?error=${encodeURIComponent(error.message)}`);
         }
     }
 };
@@ -542,11 +542,11 @@ export const getEntireOrderReturn = async (req, res) => {
         const loggedInUserId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(loggedInUserId);
         if (!dbOrder || dbOrder.userId.toString() !== loggedInUserId.toString()) {
-            return res.redirect('/user/orders');
+            return res.redirect('/orders');
         }
 
         if (dbOrder.orderStatus !== 'Delivered' && dbOrder.orderStatus !== 'Return Requested' && dbOrder.orderStatus !== 'Returned') {
-            return res.redirect(`/user/orders/${orderId}`);
+            return res.redirect(`/orders/${orderId}`);
         }
 
         const cartCount = await cartService.getCartItemCount(loggedInUserId);
@@ -585,7 +585,7 @@ export const getEntireOrderReturn = async (req, res) => {
         });
     } catch (error) {
         console.error('[getEntireOrderReturn] Error:', error);
-        res.redirect('/user/orders');
+        res.redirect('/orders');
     }
 };
 
@@ -595,22 +595,22 @@ export const postEntireOrderReturn = async (req, res) => {
         const { return_reason, additional_details } = req.body;
 
         if (!return_reason) {
-            return res.redirect(`/user/orders/${orderId}/returns?error=Return reason is required`);
+            return res.redirect(`/orders/${orderId}/returns?error=Return reason is required`);
         }
         if (return_reason === 'other' && (!additional_details || additional_details.trim().length < 10)) {
-            return res.redirect(`/user/orders/${orderId}/returns?error=Additional comments must be at least 10 characters long for "Other reason"`);
+            return res.redirect(`/orders/${orderId}/returns?error=Additional comments must be at least 10 characters long for "Other reason"`);
         }
         if (additional_details && additional_details.trim().length > 100) {
-            return res.redirect(`/user/orders/${orderId}/returns?error=Additional comments cannot exceed 100 characters`);
+            return res.redirect(`/orders/${orderId}/returns?error=Additional comments cannot exceed 100 characters`);
         }
 
         const loggedInUserId = req.session.user.id || req.session.user;
 
         await orderService.requestOrderReturn(orderId, loggedInUserId, return_reason, additional_details);
 
-        res.redirect(`/user/orders/${orderId}?notification=Return requested successfully for the order`);
+        res.redirect(`/orders/${orderId}?notification=Return requested successfully for the order`);
     } catch (error) {
         console.error('[postEntireOrderReturn] Error:', error);
-        res.redirect('/user/orders');
+        res.redirect('/orders');
     }
 };

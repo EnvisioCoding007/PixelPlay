@@ -79,7 +79,7 @@
         <!-- BEGIN: Header Section -->
         <header class="flex flex-col gap-6">
             <a class="text-pixel-muted hover:text-white flex items-center gap-2 text-sm font-medium w-fit transition-colors"
-                href="/user/orders/<%= order._id %>">
+                href="/orders/<%= order._id %>">
                 <svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                     stroke-width="2" viewbox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
                     <path d="m15 18-6-6 6-6"></path>
@@ -123,7 +123,7 @@
                     <%= error %>
                 </div>
             <% } %>
-            <form action="<%= typeof product !== 'undefined' && product && typeof item !== 'undefined' && item ? '/user/orders/' + order._id + '/items/' + product._id + '/returns?platform=' + encodeURIComponent(item.platform) : '/user/orders/' + order._id + '/returns' %>" class="flex flex-col gap-6" method="POST">
+            <form action="<%= typeof product !== 'undefined' && product && typeof item !== 'undefined' && item ? '/orders/' + order._id + '/items/' + product._id + '/returns?platform=' + encodeURIComponent(item.platform) : '/orders/' + order._id + '/returns' %>" class="flex flex-col gap-6" method="POST">
                 <% if (typeof product !== 'undefined' && product && typeof item !== 'undefined' && item && item.quantity > 1) { %>
                 <!-- Quantity selection Section -->
                 <div class="bg-pixel-card rounded-xl p-6 shadow-sm border border-pixel-border flex flex-col gap-3">

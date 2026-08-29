@@ -189,7 +189,7 @@
 <script>
   async function moveToCart(productId, platform, productTitle, btn) {
     try {
-      const response = await fetch('/user/cart', {
+      const response = await fetch('/cart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -198,7 +198,7 @@
       });
       
       if (response.status === 401) {
-        window.location.href = '/auth/login';
+        window.location.href = '/login';
         return;
       }
       
@@ -262,7 +262,7 @@
       if (!result.isConfirmed) return;
       
       try {
-        const response = await fetch('/user/wishlist', {
+        const response = await fetch('/wishlist', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -271,7 +271,7 @@
         });
         
         if (response.status === 401) {
-          window.location.href = '/auth/login';
+          window.location.href = '/login';
           return;
         }
 

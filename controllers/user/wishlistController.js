@@ -5,7 +5,7 @@ export const getWishlist = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(userId);
-        if (!user) return res.redirect('/auth/login');
+        if (!user) return res.redirect('/login');
 
         const wishlist = await wishlistService.getWishlistByUserId(userId);
 

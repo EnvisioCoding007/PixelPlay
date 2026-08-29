@@ -54,7 +54,7 @@
     <!-- BEGIN: Checkout Container -->
     <div class="w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-8 lg:gap-10 xl:gap-12 relative">
         <!-- Close Button -->
-        <a href="/user/cart"
+        <a href="/cart"
             class="absolute top-0 right-0 text-text-secondary hover:text-white p-2 z-50 text-xl transition-colors"
             title="Return to Cart">
             <i class="fa-solid fa-xmark"></i>
@@ -63,7 +63,7 @@
         <div class="flex-1 w-full flex flex-col gap-8 min-w-0">
             <!-- Header -->
             <div>
-                <a href="/user/cart" class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-secondary hover:text-cyber-blue transition-colors mb-2">
+                <a href="/cart" class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-text-secondary hover:text-cyber-blue transition-colors mb-2">
                     <i class="fa-solid fa-arrow-left"></i> Return to Cart
                 </a>
                 <h1 class="text-2xl sm:text-3xl font-bold mb-1">Payment Details</h1>
@@ -122,7 +122,7 @@
                             <i class="fa-solid fa-triangle-exclamation text-rose-400 text-base shrink-0"></i>
                             <span>Your PixelWallet balance (₹<%= (userWalletBal / 100).toFixed(2) %>) is lower than order total (₹<%= (cart.grandTotal / 100).toFixed(2) %>).</span>
                         </div>
-                        <a href="/user/wallet" class="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-black font-bold text-xs rounded-lg transition-all shadow-md shadow-sky-500/20 whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer">
+                        <a href="/wallet" class="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-black font-bold text-xs rounded-lg transition-all shadow-md shadow-sky-500/20 whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer">
                             <i class="fa-solid fa-plus-circle"></i> Recharge PixelWallet
                         </a>
                     </div>
@@ -823,7 +823,7 @@
                 if (!payload) return;
 
                 try {
-                    const response = await fetch('/user/profile/addresses', {
+                    const response = await fetch('/profile/addresses', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -857,7 +857,7 @@
                 const addressId = document.getElementById('edit-id').value;
 
                 try {
-                    const response = await fetch(`/user/profile/addresses/${addressId}`, {
+                    const response = await fetch(`/profile/addresses/${addressId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -1050,7 +1050,7 @@
                 }
 
                 try {
-                    const response = await fetch('/user/cart/apply-coupon', {
+                    const response = await fetch('/cart/apply-coupon', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ couponCode: code.trim() })
@@ -1069,7 +1069,7 @@
 
             async function removeCouponCode() {
                 try {
-                    const response = await fetch('/user/cart/remove-coupon', {
+                    const response = await fetch('/cart/remove-coupon', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' }
                     });
@@ -1215,7 +1215,7 @@
                         submitPayBtn.innerText = 'Initiating Secure Payment...';
 
                         try {
-                            const createRes = await fetch('/user/orders/razorpay-create', {
+                            const createRes = await fetch('/orders/razorpay-create', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -1245,7 +1245,7 @@
                                     submitPayBtn.disabled = true;
                                     submitPayBtn.innerText = 'Verifying Payment...';
                                     try {
-                                        const verifyRes = await fetch('/user/orders/razorpay-verify', {
+                                        const verifyRes = await fetch('/orders/razorpay-verify', {
                                             method: 'POST',
                                             headers: { 'Content-Type': 'application/json' },
                                             body: JSON.stringify({
@@ -1261,13 +1261,13 @@
                                         if (verifyRes.ok && verifyData.success) {
                                             showToast(verifyData.message || 'Payment successful!', 'success');
                                             setTimeout(() => {
-                                                window.location.href = `/user/orders/success/${verifyData.orderId}`;
+                                                window.location.href = `/orders/success/${verifyData.orderId}`;
                                             }, 800);
                                         } else {
-                                            window.location.href = `/user/checkout/failure?reason=${encodeURIComponent(verifyData.message || 'Payment verification failed')}`;
+                                            window.location.href = `/checkout/failure?reason=${encodeURIComponent(verifyData.message || 'Payment verification failed')}`;
                                         }
                                     } catch (err) {
-                                        window.location.href = `/user/checkout/failure?reason=${encodeURIComponent('Network error during verification')}`;
+                                        window.location.href = `/checkout/failure?reason=${encodeURIComponent('Network error during verification')}`;
                                     }
                                 },
                                 prefill: {
@@ -1278,7 +1278,7 @@
                                 theme: { color: '#00b0ff' },
                                 modal: {
                                     ondismiss: function () {
-                                        window.location.href = `/user/checkout/failure?reason=${encodeURIComponent('Payment window closed by user before completing transaction')}`;
+                                        window.location.href = `/checkout/failure?reason=${encodeURIComponent('Payment window closed by user before completing transaction')}`;
                                     }
                                 }
                             };
@@ -1308,7 +1308,7 @@
                                 cancelButtonText: 'Cancel'
                             }).then((res) => {
                                 if (res.isConfirmed) {
-                                    window.location.href = '/user/wallet';
+                                    window.location.href = '/wallet';
                                 }
                             });
                             return;
@@ -1318,7 +1318,7 @@
                         submitPayBtn.innerText = 'Processing Order...';
 
                         try {
-                            const response = await fetch('/user/orders', {
+                            const response = await fetch('/orders', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ 
@@ -1332,7 +1332,7 @@
                             if (response.ok && data.success) {
                                 showToast(data.message || 'Order placed successfully.');
                                 setTimeout(() => {
-                                    window.location.href = `/user/orders/success/${data.orderId}`;
+                                    window.location.href = `/orders/success/${data.orderId}`;
                                 }, 800);
                             } else {
                                 showToast(data.message || 'Failed to place order using PixelWallet.', 'error');
@@ -1352,7 +1352,7 @@
                         submitPayBtn.innerText = 'Processing Order...';
 
                         try {
-                            const response = await fetch('/user/orders', {
+                            const response = await fetch('/orders', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ 
@@ -1366,7 +1366,7 @@
                             if (response.ok && data.success) {
                                 showToast(data.message || 'Order placed successfully.');
                                 setTimeout(() => {
-                                    window.location.href = `/user/orders/success/${data.orderId}`;
+                                    window.location.href = `/orders/success/${data.orderId}`;
                                 }, 800);
                             } else {
                                 showToast(data.message || 'Failed to place order.', 'error');

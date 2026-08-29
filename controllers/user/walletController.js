@@ -76,12 +76,12 @@ export const getWalletPage = async (req, res) => {
     try {
         const userId = getAuthUserId(req);
         if (!userId) {
-            return res.redirect('/auth/login');
+            return res.redirect('/login');
         }
 
         const user = await userService.getUserById(userId);
         if (!user) {
-            return res.redirect('/auth/login');
+            return res.redirect('/login');
         }
 
         const page = parseInt(req.query.page, 10) || 1;
@@ -167,7 +167,7 @@ export const addFunds = async (req, res) => {
             });
         }
 
-        res.redirect(`/user/wallet?success=${encodeURIComponent(`Successfully added ₹${parseFloat(amount).toFixed(2)} to your PixelWallet!`)}`);
+        res.redirect(`/wallet?success=${encodeURIComponent(`Successfully added ₹${parseFloat(amount).toFixed(2)} to your PixelWallet!`)}`);
     } catch (error) {
         console.error('Error adding funds to wallet:', error);
         if (req.xhr || req.headers.accept?.includes('application/json')) {
@@ -176,6 +176,6 @@ export const addFunds = async (req, res) => {
                 message: error.message || 'Failed to add funds to wallet'
             });
         }
-        res.redirect(`/user/wallet?error=${encodeURIComponent(error.message || 'Failed to add funds')}`);
+        res.redirect(`/wallet?error=${encodeURIComponent(error.message || 'Failed to add funds')}`);
     }
 };

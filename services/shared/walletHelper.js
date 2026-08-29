@@ -126,7 +126,7 @@ export const addTransaction = async (userId, { amount, type, orderId = null, des
                 type: 'wallet_credit',
                 title: 'PixelWallet Credited',
                 message: `₹${(roundedAmount / 100).toFixed(2)} was credited to your PixelWallet (${description}).`,
-                link: '/user/wallet',
+                link: '/wallet',
                 metadata: { amount: roundedAmount, orderId, description }
             }).catch(err => console.error('[addTransaction Notification Error]', err));
         }

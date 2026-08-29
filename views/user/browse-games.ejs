@@ -370,7 +370,7 @@
       return;
     }
     try {
-      const response = await fetch('/user/cart', {
+      const response = await fetch('/cart', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -435,7 +435,7 @@
         return;
       }
       try {
-        const response = await fetch('/user/cart', {
+        const response = await fetch('/cart', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId, platform, action: 'increase' })
@@ -473,7 +473,7 @@
       if (currentQty === 1) {
         // Remove from cart
         try {
-          const response = await fetch('/user/cart', {
+          const response = await fetch('/cart', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ productId, platform })
@@ -510,7 +510,7 @@
         }
       } else {
         try {
-          const response = await fetch('/user/cart', {
+          const response = await fetch('/cart', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ productId, platform, action: 'decrease' })
@@ -553,7 +553,7 @@
     let badge = document.getElementById(badgeId);
     if (count > 0) {
       if (!badge) {
-        const cartLink = document.querySelector('a[href="/user/cart"]');
+        const cartLink = document.querySelector('a[href="/cart"]');
         if (cartLink) {
           badge = document.createElement('span');
           badge.id = badgeId;
@@ -579,7 +579,7 @@
 
     try {
       const targetPlatform = platform || '<%= typeof primaryPlatform !== "undefined" ? primaryPlatform : "PC" %>';
-      const response = await fetch('/user/wishlist', {
+      const response = await fetch('/wishlist', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -588,7 +588,7 @@
       });
       
       if (response.status === 401) {
-        window.location.href = '/auth/login';
+        window.location.href = '/login';
         return;
       }
 
