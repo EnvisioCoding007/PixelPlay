@@ -1,4 +1,4 @@
-import * as userService from '../../services/userService.js';
+import * as userService from '../../services/user/userService.js';
 
 export const getSignupPage = (req, res) => {
     res.render('user/signup');
@@ -117,7 +117,7 @@ export const forgotPasswordOtp = async (req, res) => {
         const { email } = req.body;
         if (!email) throw new Error('Email is required.');
 
-        const existingUser = await userService.getAdminByEmail(email);
+        const existingUser = await userService.getUserByEmail(email);
         if (!existingUser) {
             return res.status(404).json({ success: false, message: 'No account found with that email address.' });
         }
