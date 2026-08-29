@@ -304,7 +304,16 @@
                                             <i class="fa-solid fa-location-arrow text-xs"></i>
                                             Track Order
                                         </button>
-                                    <% } else if (status === 'DELIVERED' || status === 'RETURNED' || status === 'RETURN REQUESTED') { %>
+                                    <% } else if (status === 'DELIVERED') { %>
+                                        <button onclick="window.location.href='/user/orders/<%= order._id %>/invoice'" class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
+                                            <i class="fa-solid fa-download text-xs"></i>
+                                            Download Invoice
+                                        </button>
+                                        <button onclick="window.location.href='/user/orders/<%= order._id %>/returns'" class="text-sm text-muted hover:text-gold-main transition-colors flex items-center gap-2">
+                                            <i class="fa-solid fa-rotate-left text-xs"></i>
+                                            Return Order
+                                        </button>
+                                    <% } else if (status === 'RETURNED' || status === 'RETURN REQUESTED') { %>
                                         <button onclick="window.location.href='/user/orders/<%= order._id %>/invoice'" class="text-sm text-muted hover:text-white transition-colors flex items-center gap-2">
                                             <i class="fa-solid fa-download text-xs"></i>
                                             Download Invoice

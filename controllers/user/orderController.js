@@ -1,19 +1,23 @@
-import * as orderService from '../../services/orderService.js';
-import * as userService from '../../services/userService.js';
-import * as cartService from '../../services/cartService.js';
-import * as invoiceService from '../../services/invoiceService.js';
+import * as orderService from '../../services/user/orderService.js';
+import * as userService from '../../services/user/userService.js';
+import * as cartService from '../../services/user/cartService.js';
+import * as invoiceService from '../../services/user/invoiceService.js';
 
 export const postPlaceOrder = async (req, res) => {
     try {
-        const { paymentMethod, addressId } = req.body;
+        const { paymentMethod, addressId, couponCode } = req.body;
         const userId = req.session.user.id || req.session.user;
 
         if (!paymentMethod || !addressId) {
             return res.status(400).json({ success: false, message: 'Payment method and address are required.' });
         }
 
-        const order = await orderService.placeOrder(userId, paymentMethod, addressId);
+        const order = await orderService.placeOrder(userId, paymentMethod, addressId, couponCode);
         
+        // Clear coupon session state after order is completed
+        delete req.session.appliedCouponCode;
+        delete req.session.couponRemoved;
+
         res.status(201).json({
             success: true,
             message: 'Order placed successfully.',
@@ -21,6 +25,140 @@ export const postPlaceOrder = async (req, res) => {
         });
     } catch (error) {
         console.error('[postPlaceOrder] Error:', error);
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const createRazorpayOrder = async (req, res) => {
+    try {
+        const { addressId, couponCode } = req.body;
+        const userId = req.session.user.id || req.session.user;
+
+        if (!addressId) {
+            return res.status(400).json({ success: false, message: 'Delivery address is required.' });
+        }
+
+        const data = await orderService.createRazorpayPaymentOrder(userId, addressId, couponCode);
+
+        res.status(200).json({
+            success: true,
+            ...data
+        });
+    } catch (error) {
+        console.error('[createRazorpayOrder] Error:', error);
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const verifyRazorpayPayment = async (req, res) => {
+    try {
+        const { addressId, couponCode, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+        const userId = req.session.user.id || req.session.user;
+
+        if (!addressId || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.status(400).json({ success: false, message: 'Invalid payment parameters.' });
+        }
+
+        const order = await orderService.verifyAndCompleteRazorpayOrder(
+            userId,
+            addressId,
+            couponCode,
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature
+        );
+
+        // Clear coupon session state after order is completed
+        delete req.session.appliedCouponCode;
+        delete req.session.couponRemoved;
+
+        res.status(201).json({
+            success: true,
+            message: 'Payment verified and order placed successfully.',
+            orderId: order._id
+        });
+    } catch (error) {
+        console.error('[verifyRazorpayPayment] Error:', error);
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const getOrderFailure = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const loggedInUserId = req.session.user.id || req.session.user;
+        const user = await userService.getUserById(loggedInUserId);
+
+        const order = await orderService.getOrderById(orderId);
+        if (!order || order.userId.toString() !== loggedInUserId.toString()) {
+            return res.redirect('/home');
+        }
+
+        if (order.paymentStatus === 'Paid') {
+            return res.redirect(`/user/orders/success/${order._id}`);
+        }
+
+        const walletBalance = await (await import('../../services/shared/walletHelper.js')).getWalletBalance(loggedInUserId);
+        const cartCount = await cartService.getCartItemCount(loggedInUserId);
+
+        const reason = req.query.reason || 'Payment transaction failed or authorization was cancelled.';
+
+        res.render('user/order-failure', {
+            order,
+            user,
+            walletBalance,
+            cartCount,
+            reason
+        });
+    } catch (error) {
+        console.error('[getOrderFailure] Error:', error);
+        res.redirect('/home');
+    }
+};
+
+export const retryRazorpayOrder = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+        const userId = req.session.user.id || req.session.user;
+
+        if (!orderId) {
+            return res.status(400).json({ success: false, message: 'Order ID is required.' });
+        }
+
+        const data = await orderService.retryRazorpayOrder(orderId, userId);
+
+        res.status(200).json({
+            success: true,
+            ...data
+        });
+    } catch (error) {
+        console.error('[retryRazorpayOrder] Error:', error);
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const changePaymentMethod = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const { paymentMethod } = req.body;
+        const userId = req.session.user.id || req.session.user;
+
+        if (!paymentMethod) {
+            return res.status(400).json({ success: false, message: 'Payment method is required.' });
+        }
+
+        const order = await orderService.changeOrderPaymentMethod(orderId, userId, paymentMethod);
+
+        delete req.session.appliedCouponCode;
+        delete req.session.couponRemoved;
+
+        res.status(200).json({
+            success: true,
+            message: `Payment method changed to ${paymentMethod}. Order completed successfully!`,
+            orderId: order._id
+        });
+    } catch (error) {
+        console.error('[changePaymentMethod] Error:', error);
         res.status(400).json({ success: false, message: error.message });
     }
 };
@@ -70,6 +208,7 @@ export const getOrderDetails = async (req, res) => {
             subtotal: dbOrder.subtotal,
             couponDiscount: dbOrder.discount,
             tax: dbOrder.tax,
+            tax_rate: dbOrder.gst_rate,
             shipping: dbOrder.shipping,
             grandTotal: dbOrder.finalAmount,
             items: dbOrder.items,
@@ -392,5 +531,86 @@ export const downloadInvoice = async (req, res) => {
         } else {
             res.redirect(`/user/orders/${orderId}?error=${encodeURIComponent(error.message)}`);
         }
+    }
+};
+
+export const getEntireOrderReturn = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const dbOrder = await orderService.getOrderById(orderId);
+
+        const loggedInUserId = req.session.user.id || req.session.user;
+        const user = await userService.getUserById(loggedInUserId);
+        if (!dbOrder || dbOrder.userId.toString() !== loggedInUserId.toString()) {
+            return res.redirect('/user/orders');
+        }
+
+        if (dbOrder.orderStatus !== 'Delivered' && dbOrder.orderStatus !== 'Return Requested' && dbOrder.orderStatus !== 'Returned') {
+            return res.redirect(`/user/orders/${orderId}`);
+        }
+
+        const cartCount = await cartService.getCartItemCount(loggedInUserId);
+
+        const mappedOrder = {
+            _id: dbOrder._id,
+            orderId: dbOrder.orderId,
+            createdAt: dbOrder.createdAt,
+            status: dbOrder.orderStatus,
+            address: dbOrder.deliveryAddress,
+            paymentMethod: dbOrder.paymentMethod,
+            subtotal: dbOrder.subtotal,
+            couponDiscount: dbOrder.discount,
+            tax: dbOrder.tax,
+            shipping: dbOrder.shipping,
+            grandTotal: dbOrder.finalAmount,
+            items: dbOrder.items
+        };
+
+        const returnableItems = (dbOrder.items || []).filter(i => i.status === 'Ordered' || !i.status);
+        let selectedProduct = null;
+        let selectedItem = null;
+
+        if (returnableItems.length === 1) {
+            selectedItem = returnableItems[0];
+            selectedProduct = selectedItem.product;
+        }
+
+        res.render('user/order-return', {
+            order: mappedOrder,
+            product: selectedProduct,
+            item: selectedItem,
+            user,
+            cartCount,
+            error: req.query.error || null
+        });
+    } catch (error) {
+        console.error('[getEntireOrderReturn] Error:', error);
+        res.redirect('/user/orders');
+    }
+};
+
+export const postEntireOrderReturn = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const { return_reason, additional_details } = req.body;
+
+        if (!return_reason) {
+            return res.redirect(`/user/orders/${orderId}/returns?error=Return reason is required`);
+        }
+        if (return_reason === 'other' && (!additional_details || additional_details.trim().length < 10)) {
+            return res.redirect(`/user/orders/${orderId}/returns?error=Additional comments must be at least 10 characters long for "Other reason"`);
+        }
+        if (additional_details && additional_details.trim().length > 100) {
+            return res.redirect(`/user/orders/${orderId}/returns?error=Additional comments cannot exceed 100 characters`);
+        }
+
+        const loggedInUserId = req.session.user.id || req.session.user;
+
+        await orderService.requestOrderReturn(orderId, loggedInUserId, return_reason, additional_details);
+
+        res.redirect(`/user/orders/${orderId}?notification=Return requested successfully for the order`);
+    } catch (error) {
+        console.error('[postEntireOrderReturn] Error:', error);
+        res.redirect('/user/orders');
     }
 };

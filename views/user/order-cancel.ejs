@@ -83,7 +83,12 @@
                 <% } %>
 
                 <% 
-                   const refundVal = (typeof product !== 'undefined' && product) ? Math.round(item.price * item.quantity / 0.82) : order.grandTotal;
+                   let refundVal = order.grandTotal;
+                   if (typeof product !== 'undefined' && product && typeof item !== 'undefined' && item) {
+                       const itemGst = item.gst_rate || (product && product.gst_rate) || 18;
+                       const unitTaxInclusive = Math.round((item.price * 100) / (100 - itemGst));
+                       refundVal = unitTaxInclusive * item.quantity;
+                   }
                 %>
                 <div class="flex items-center text-green-500 bg-green-500/10 px-2.5 py-1 rounded-md font-medium text-xs mt-1">
                     <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"
@@ -277,10 +282,12 @@
             const policyRefundDisplay = document.getElementById('policy-refund-display');
 
             const itemPrice = parseFloat('<%= typeof item !== "undefined" && item ? item.price : 0 %>');
+            const itemGstRate = parseFloat('<%= typeof item !== "undefined" && item ? (item.gst_rate || (typeof product !== "undefined" && product && product.gst_rate) || 18) : 18 %>');
 
             function updateRefund(qty) {
                 if (itemPrice > 0) {
-                    const totalRefund = Math.round(itemPrice * qty / 0.82) / 100;
+                    const unitTaxInclusive = Math.round((itemPrice * 100) / (100 - itemGstRate));
+                    const totalRefund = (unitTaxInclusive * qty) / 100;
                     const text = '₹' + totalRefund.toFixed(2);
                     if (refundDisplay) refundDisplay.textContent = text;
                     if (policyRefundDisplay) policyRefundDisplay.textContent = text;
