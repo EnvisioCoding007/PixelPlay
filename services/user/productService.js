@@ -236,8 +236,8 @@ export const getProductsForHome = async (primaryPlatform = 'PC') => {
             return 0;
         });
 
-        const rawLatest = sortedLive.length > 0 ? sortedLive[0] : null;
-        const latestRelease = mapProduct(rawLatest);
+        const latestReleases = sortedLive.slice(0, 4).map(mapProduct);
+        const latestRelease = latestReleases.length > 0 ? latestReleases[0] : null;
 
         const standardGames = sortedLive
             .filter(g => g.edition_type === 'STANDARD')
@@ -251,6 +251,7 @@ export const getProductsForHome = async (primaryPlatform = 'PC') => {
 
         return {
             latestRelease,
+            latestReleases,
             standardGames,
             legendaryGames
         };

@@ -66,17 +66,18 @@
             </div>
 
             <!-- Segment 1: Latest Release, Categories, and Latest & Popular Games -->
+            <% 
+                const slidesData = (typeof latestReleases !== 'undefined' && latestReleases && latestReleases.length > 0) 
+                    ? latestReleases.slice(0, 4) 
+                    : (typeof latestRelease !== 'undefined' && latestRelease ? [latestRelease] : []);
+                const initialGame = slidesData.length > 0 ? slidesData[0] : null;
+            %>
             <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8 w-full">
                 <section class="flex h-[480px] items-end relative self-stretch w-full rounded-xl overflow-hidden"
                     aria-labelledby="featured-release-title">
-                    <% if (typeof latestRelease !== 'undefined' && latestRelease) { %>
-                        <div class="absolute w-full h-full top-0 left-0 bg-cover bg-[50%_50%]"
-                            style="background-image: url('<%= latestRelease.coverImageUrl || latestRelease.cover_image %>');"
-                            aria-hidden="true"></div>
-                    <% } else { %>
-                        <div class="absolute w-full h-full top-0 left-0 bg-[url('/img/games/neon_override_hero.png')] bg-cover bg-[50%_50%]"
-                            aria-hidden="true"></div>
-                    <% } %>
+                    <div id="hero-bg" class="absolute w-full h-full top-0 left-0 bg-cover bg-[50%_50%] transition-all duration-700 ease-in-out"
+                        style="background-image: url('<%= initialGame ? (initialGame.coverImageUrl || initialGame.cover_image) : '/img/games/neon_override_hero.png' %>');"
+                        aria-hidden="true"></div>
                     <div class="absolute w-full h-full top-0 left-0 [background:linear-gradient(90deg,rgba(9,9,11,0.95)_0%,rgba(9,9,11,0.4)_50%,rgba(9,9,11,0)_100%),linear-gradient(0deg,rgba(9,9,11,0.95)_0%,rgba(9,9,11,0)_40%)]"
                         aria-hidden="true"></div>
                     <div
@@ -84,12 +85,6 @@
                         <div
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 relative flex-[0_0_auto] bg-sky-500 rounded-full">
                             <div class="flex w-3.5 h-3.5 items-center justify-center relative" aria-hidden="true">
-                                <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                                    <!-- <div class="relative w-3.5 h-3.5">
-                                        <img class="absolute w-[91.68%] h-[95.85%] top-[4.15%] left-[8.32%]"
-                                            src="img/vector-4.svg" alt="" />
-                                    </div> -->
-                                </div>
                             </div>
                             <p
                                 class="flex items-center mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-[#061323] text-xs tracking-[0.50px] leading-[normal] relative w-fit">
@@ -98,14 +93,14 @@
                         <div
                             class="pt-[3.9px] pb-[0.8px] px-0 self-stretch w-full flex-[0_0_auto] flex flex-col items-start relative">
                             <h1 id="featured-release-title"
-                                class="flex items-center mt-[-1.00px] [text-shadow:0px_2px_12px_#00000080] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-white text-5xl tracking-[0] leading-[52.8px] whitespace-nowrap relative w-fit">
-                                <%= typeof latestRelease !== 'undefined' && latestRelease ? latestRelease.title : 'Neon Override 2077' %></h1>
+                                class="flex items-center mt-[-1.00px] [text-shadow:0px_2px_12px_#00000080] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-white text-5xl tracking-[0] leading-[52.8px] whitespace-nowrap relative w-fit transition-all duration-300">
+                                <%= initialGame ? initialGame.title : 'Neon Override 2077' %></h1>
                         </div>
                         <div
                             class="flex flex-col items-start pt-0 pb-[0.69px] px-0 relative self-stretch w-full flex-[0_0_auto]">
-                            <p
-                                class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-base tracking-[0] leading-[25.6px] relative w-fit">
-                                <%= typeof latestRelease !== 'undefined' && latestRelease ? latestRelease.description : 'Dive into a relentless, neon-drenched metropolis where corporate syndicates rule and rogue AI dictate the streets. Reclaim the override key before the system purges.' %></p>
+                            <p id="featured-release-desc"
+                                class="mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-base tracking-[0] leading-[25.6px] relative w-fit transition-all duration-300">
+                                <%= initialGame ? initialGame.description : 'Dive into a relentless, neon-drenched metropolis where corporate syndicates rule and rogue AI dictate the streets. Reclaim the override key before the system purges.' %></p>
                         </div>
                         <div
                             class="flex items-center gap-4 pt-[16.9px] pb-0 px-0 relative self-stretch w-full flex-[0_0_auto]">
@@ -213,20 +208,42 @@
                                         class="relative flex items-center justify-center w-fit [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-white text-base text-center tracking-[0] leading-[normal] whitespace-nowrap">View
                                         Details</span>
                                 </button>
+                            <% if (typeof user !== 'undefined' && user) { %>
+                                <button type="button" id="hero-buy-btn"
+                                    onclick="window.location.href='/products/<%= initialGame ? initialGame._id : '' %>'"
+                                    class="all-[unset] box-border px-8 py-0 bg-sky-500 shadow-[0px_0px_24px_#0ea5e94c] inline-flex h-12 items-center justify-center gap-2 relative flex-[0_0_auto] rounded-md cursor-pointer"
+                                    aria-label="Buy <%= initialGame ? initialGame.title : 'Neon Override 2077' %> now">
+                                    <span class="hero-buy-btn-text relative flex items-center justify-center w-fit [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-[#061323] text-base text-center tracking-[0] leading-[normal] whitespace-nowrap">Buy Now</span>
+                                </button>
+                            <% } else { %>
+                                <a id="hero-buy-btn" href="/login"
+                                    class="all-[unset] box-border px-8 py-0 bg-sky-500 shadow-[0px_0px_24px_#0ea5e94c] inline-flex h-12 items-center justify-center gap-2 relative flex-[0_0_auto] rounded-md cursor-pointer"
+                                    aria-label="Sign in to purchase <%= initialGame ? initialGame.title : 'Neon Override 2077' %>">
+                                    <span class="hero-buy-btn-text relative flex items-center justify-center w-fit [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-[#061323] text-base text-center tracking-[0] leading-[normal] whitespace-nowrap">Sign In to Purchase</span>
+                                </a>
                             <% } %>
+                            <button type="button" id="hero-details-btn"
+                                onclick="window.location.href='/products/<%= initialGame ? initialGame._id : '' %>'"
+                                class="all-[unset] box-border px-6 py-0 bg-[#ffffff1a] border border-solid border-[#ffffff33] backdrop-blur-sm backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(4px)_brightness(100%)] inline-flex h-12 items-center justify-center gap-2 relative flex-[0_0_auto] rounded-md cursor-pointer"
+                                aria-label="View details for <%= initialGame ? initialGame.title : 'Neon Override 2077' %>">
+                                <span class="relative flex items-center justify-center w-fit [font-family:'Alegreya_Sans-Bold',Helvetica] font-bold text-white text-base text-center tracking-[0] leading-[normal] whitespace-nowrap">View Details</span>
+                            </button>
                         </div>
                     </div>
                     <div class="inline-flex items-start gap-2 absolute right-12 bottom-6 z-[1]" role="tablist"
                         aria-label="Featured release slides">
-                        <button type="button"
-                            class="relative w-8 h-1 bg-sky-500 rounded-sm shadow-[0px_0px_8px_#0ea5e980] cursor-pointer"
-                            role="tab" aria-selected="true" aria-label="Go to slide 1"></button>
-                        <button type="button" class="relative w-8 h-1 bg-[#ffffff33] rounded-sm cursor-pointer"
-                            role="tab" aria-selected="false" aria-label="Go to slide 2"></button>
-                        <button type="button" class="relative w-8 h-1 bg-[#ffffff33] rounded-sm cursor-pointer"
-                            role="tab" aria-selected="false" aria-label="Go to slide 3"></button>
-                        <button type="button" class="relative w-8 h-1 bg-[#ffffff33] rounded-sm cursor-pointer"
-                            role="tab" aria-selected="false" aria-label="Go to slide 4"></button>
+                        <% 
+                            const btnCount = Math.min(slidesData.length, 4);
+                            const totalBtns = btnCount > 0 ? btnCount : 1;
+                        %>
+                        <% for (let i = 0; i < totalBtns; i++) { %>
+                            <button type="button"
+                                onclick="goToHeroSlide(<%= i %>)"
+                                class="hero-indicator-btn relative w-8 h-1 <%= i === 0 ? 'bg-sky-500 shadow-[0px_0px_8px_#0ea5e980]' : 'bg-[#ffffff33]' %> rounded-sm cursor-pointer transition-all duration-300"
+                                role="tab"
+                                aria-selected="<%= i === 0 ? 'true' : 'false' %>"
+                                aria-label="Go to slide <%= i + 1 %>"></button>
+                        <% } %>
                     </div>
                 </section>
                 <section
@@ -965,6 +982,84 @@
                     updateLegendaryPagination();
                 }
             })();
+
+            // Latest Releases Hero Carousel Controller
+            const heroSlides = <%- JSON.stringify(slidesData) %>;
+            let currentHeroIndex = 0;
+            let heroTimer = null;
+
+            function updateHeroSlide(index) {
+                if (!heroSlides || heroSlides.length === 0) return;
+                currentHeroIndex = (index + heroSlides.length) % heroSlides.length;
+                const slide = heroSlides[currentHeroIndex];
+
+                const bgEl = document.getElementById('hero-bg');
+                const titleEl = document.getElementById('featured-release-title');
+                const descEl = document.getElementById('featured-release-desc');
+                const buyBtn = document.getElementById('hero-buy-btn');
+                const detailsBtn = document.getElementById('hero-details-btn');
+
+                if (bgEl) {
+                    bgEl.style.backgroundImage = `url('${slide.coverImageUrl || slide.cover_image || '/img/games/neon_override_hero.png'}')`;
+                }
+                if (titleEl) {
+                    titleEl.textContent = slide.title || 'Neon Override 2077';
+                }
+                if (descEl) {
+                    descEl.textContent = slide.description || 'Dive into a relentless, neon-drenched metropolis where corporate syndicates rule and rogue AI dictate the streets.';
+                }
+                if (buyBtn && slide._id) {
+                    if (isLoggedIn) {
+                        buyBtn.setAttribute('onclick', `window.location.href='/products/${slide._id}'`);
+                        buyBtn.setAttribute('aria-label', `Buy ${slide.title} now`);
+                    } else {
+                        buyBtn.setAttribute('href', '/login');
+                        buyBtn.setAttribute('aria-label', `Sign in to purchase ${slide.title}`);
+                    }
+                }
+                if (detailsBtn && slide._id) {
+                    detailsBtn.setAttribute('onclick', `window.location.href='/products/${slide._id}'`);
+                    detailsBtn.setAttribute('aria-label', `View details for ${slide.title}`);
+                }
+
+                // Update active button indicators
+                const indicators = document.querySelectorAll('.hero-indicator-btn');
+                indicators.forEach((btn, idx) => {
+                    if (idx === currentHeroIndex) {
+                        btn.className = 'hero-indicator-btn relative w-8 h-1 bg-sky-500 rounded-sm shadow-[0px_0px_8px_#0ea5e980] cursor-pointer transition-all duration-300';
+                        btn.setAttribute('aria-selected', 'true');
+                    } else {
+                        btn.className = 'hero-indicator-btn relative w-8 h-1 bg-[#ffffff33] hover:bg-[#ffffff66] rounded-sm cursor-pointer transition-all duration-300';
+                        btn.setAttribute('aria-selected', 'false');
+                    }
+                });
+            }
+
+            function startHeroAutoSlide() {
+                stopHeroAutoSlide();
+                if (heroSlides && heroSlides.length > 1) {
+                    heroTimer = setInterval(() => {
+                        updateHeroSlide(currentHeroIndex + 1);
+                    }, 5000);
+                }
+            }
+
+            function stopHeroAutoSlide() {
+                if (heroTimer) {
+                    clearInterval(heroTimer);
+                    heroTimer = null;
+                }
+            }
+
+            function goToHeroSlide(index) {
+                updateHeroSlide(index);
+                startHeroAutoSlide();
+            }
+
+            // Initialize 5-second auto-sliding
+            if (heroSlides && heroSlides.length > 1) {
+                startHeroAutoSlide();
+            }
         </script>
 </body>
 
