@@ -31,6 +31,7 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
+    "@types/morgan": "^1.9.10",
     "nodemon": "^3.1.14"
   }
 }

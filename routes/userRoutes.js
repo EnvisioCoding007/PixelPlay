@@ -26,6 +26,10 @@ router.get('/offers', productController.getOffersPage);
 router.get('/products/status/:id', productController.checkProductStatus);
 router.get('/products/:id', productController.getProductDetails);
 
+// Support Routes
+router.get('/support', supportController.getSupportPage);
+router.post('/support', supportController.submitSupportRequest);
+
 // ==========================================
 // 2. GUEST BLOCK (Unauthenticated User Routes)
 // ==========================================
@@ -129,10 +133,6 @@ router.post('/orders/:orderId/items/:productId/returns', orderController.postRet
 router.get('/orders/:orderId/returns', orderController.getEntireOrderReturn);
 router.post('/orders/:orderId/returns', orderController.postEntireOrderReturn);
 router.get('/orders', orderController.getOrderHistory);
-
-// Support
-router.get('/support', supportController.getSupportPage);
-router.post('/support', supportController.submitSupportRequest);
 
 // Notifications
 router.get('/notifications', notificationController.getNotifications);

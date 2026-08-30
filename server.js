@@ -1,4 +1,5 @@
 import express from 'express';
+import morgan from 'morgan';
 import { createServer } from 'http';
 import 'dotenv/config';
 import connectDB from './db.js';
@@ -16,6 +17,7 @@ const app = express();
 const server = createServer(app);
 const port = process.env.PORT || 4090;
 
+app.use(morgan('dev'));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.use(methodOverride('_method'));
@@ -55,8 +57,8 @@ app.use(injectNotificationCount);
 import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
-app.use('/', userRoutes);
 app.use('/', adminRoutes);
+app.use('/', userRoutes);
 
 server.listen(port, () => {
     console.log(`PixelPlay is running on\nhttp://localhost:${port}`);
