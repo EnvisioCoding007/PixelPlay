@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/icons/brand_logo/pixelplay-logo.png?v=1.1">
+    <title><%= typeof title !== 'undefined' ? title : '404 - Page Not Found | PixelPlay' %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#00A3FF',
+                            dark: '#0082CC',
+                            light: '#33B5FF',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen flex flex-col justify-between items-center selection:bg-sky-500 selection:text-white relative overflow-hidden">
+    <!-- Ambient Backdrop Gradients -->
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-sky-500/10 rounded-full blur-[140px] pointer-events-none"></div>
+    <div class="absolute bottom-10 right-10 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+    <!-- Header Navigation Bar -->
+    <header class="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between z-10">
+        <a href="<%= isAdminContext ? '/admin/dashboard' : '/home' %>" class="flex items-center gap-3 group">
+            <img src="/icons/brand_logo/pixelplay-logo.png" alt="PixelPlay Logo" class="h-9 w-auto group-hover:scale-105 transition-transform" />
+            <span class="text-xl font-extrabold tracking-wider bg-gradient-to-r from-white via-zinc-200 to-sky-400 bg-clip-text text-transparent">
+                PixelPlay
+            </span>
+        </a>
+        <div class="text-xs font-semibold px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400">
+            <%= isAdminContext ? 'Admin Oversight Zone' : 'Storefront System' %>
+        </div>
+    </header>
+
+    <!-- Main 404 Hero Container -->
+    <main class="flex flex-col items-center justify-center text-center px-4 py-12 z-10 max-w-2xl mx-auto">
+        <!-- 404 Badge with Icon -->
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-400 text-xs font-bold uppercase tracking-widest mb-8 animate-pulse shadow-[0_0_15px_rgba(0,163,255,0.2)]">
+            <i class="<%= isAdminContext ? 'fa-solid fa-shield-cat' : 'fa-solid fa-gamepad' %>"></i>
+            <span>Error 404 &bull; Signal Lost</span>
+        </div>
+
+        <!-- Big 404 Number -->
+        <h1 class="text-8xl sm:text-9xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-sky-200 to-sky-500 drop-shadow-[0_10px_20px_rgba(0,163,255,0.25)] select-none">
+            404
+        </h1>
+
+        <!-- Error Description -->
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-4 mb-3 tracking-wide">
+            <%= isAdminContext ? 'Admin Route Not Found' : 'Page Lost in Cyberspace' %>
+        </h2>
+        <p class="text-zinc-400 text-sm sm:text-base leading-relaxed max-w-md mb-10">
+            <% if (isAdminContext) { %>
+                The admin resource or panel specified at <code class="text-sky-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 text-xs font-mono"><%= typeof url !== 'undefined' ? url : '' %></code> does not exist or has been relocated.
+            <% } else { %>
+                The game, quest, or page specified at <code class="text-sky-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 text-xs font-mono"><%= typeof url !== 'undefined' ? url : '' %></code> was not found in our store database.
+            <% } %>
+        </p>
+
+        <!-- Dynamic Action Buttons -->
+        <div class="flex flex-wrap items-center justify-center gap-4 w-full sm:w-auto">
+            <% if (isAdminContext) { %>
+                <a href="/admin/dashboard" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-sky-500 hover:bg-sky-400 text-[#061323] font-bold text-sm rounded-lg shadow-[0_0_24px_rgba(14,165,233,0.3)] transition-all cursor-pointer">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span>Admin Dashboard</span>
+                </a>
+                <a href="/admin/login" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-semibold text-sm rounded-lg transition-all cursor-pointer">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>Admin Login</span>
+                </a>
+            <% } else { %>
+                <a href="/home" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-sky-500 hover:bg-sky-400 text-[#061323] font-bold text-sm rounded-lg shadow-[0_0_24px_rgba(14,165,233,0.3)] transition-all cursor-pointer">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Back to Storefront</span>
+                </a>
+                <a href="/browse" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white font-semibold text-sm rounded-lg transition-all cursor-pointer">
+                    <i class="fa-solid fa-border-all"></i>
+                    <span>Browse Catalog</span>
+                </a>
+            <% } %>
+            <button type="button" onclick="history.back()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-transparent hover:bg-zinc-900 text-zinc-400 hover:text-white font-semibold text-sm rounded-lg border border-zinc-800/80 transition-all cursor-pointer">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Go Back</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-6 text-zinc-600 text-xs border-t border-zinc-900 z-10">
+        &copy; <%= new Date().getFullYear() %> PixelPlay. All rights reserved.
+    </footer>
+</body>
+</html>

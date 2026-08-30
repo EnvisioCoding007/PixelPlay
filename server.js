@@ -51,5 +51,16 @@ app.use('/', userRoutes);
 app.use('/', adminRoutes);
 
 app.listen(port, () => {
+// Catch-all 404 Handler
+app.use((req, res) => {
+    const isAdminContext = req.originalUrl.startsWith('/admin');
+    res.status(404).render('404', {
+        title: '404 - Page Not Found | PixelPlay',
+        isAdminContext,
+        url: req.originalUrl
+    });
+});
+
+server.listen(port, () => {
     console.log(`PixelPlay is running on\nhttp://localhost:${port}`);
 });
