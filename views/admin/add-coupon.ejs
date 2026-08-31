@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Generate New Discount Code - PixelPlay</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    
+    <!-- Flatpickr CSS for calendar picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#0EA5E9",
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#0B0D11",
+                        "surface-dark": "#13161C",
+                        "surface-hover": "#1E232B",
+                        "border-dark": "#2A303C",
+                        "text-muted": "#8B949E",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                        mono: ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.375rem",
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+        }
+        .flatpickr-calendar {
+            background: #13161C !important;
+            border-color: #2A303C !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-sans antialiased h-screen flex overflow-hidden">
+    <!-- BEGIN: Sidebar Navigation -->
+    <%- include('../partials/admin/sidebar', { activeTab: 'coupons' }) %>
+    <!-- END: Sidebar Navigation -->
+
+    <main class="flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0B0D11]">
+        <div class="max-w-6xl mx-auto p-8">
+            <div class="mb-8 flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-mono font-bold text-slate-900 dark:text-white tracking-wide">
+                        Generate New Discount Code
+                    </h1>
+                    <p class="mt-2 text-sm text-slate-600 dark:text-text-muted">
+                        Define coupon parameters, global &amp; per-user limits, and discount thresholds.
+                    </p>
+                </div>
+                <a href="/admin/coupons" class="text-sm font-semibold text-primary hover:text-sky-400 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                    Back to Coupons
+                </a>
+            </div>
+
+            <div class="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-border-dark shadow-sm relative overflow-hidden">
+                <div class="p-8">
+                    <form id="addCouponForm" action="/admin/coupons" method="POST">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                            <!-- Core Parameters -->
+                            <div class="space-y-8">
+                                <div class="flex items-center gap-4">
+                                    <h2 class="text-xs font-bold tracking-widest text-slate-500 dark:text-text-muted uppercase">
+                                        Core Parameters
+                                    </h2>
+                                    <div class="h-px bg-slate-200 dark:bg-border-dark flex-1"></div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-center">
+                                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            Coupon Code *
+                                        </label>
+                                        <button type="button" onclick="generateRandomCode()"
+                                            class="text-xs font-semibold text-primary hover:text-sky-400 transition-colors uppercase tracking-wider cursor-pointer">
+                                            Generate Random
+                                        </button>
+                                    </div>
+                                    <input type="text" id="code" name="code" required placeholder="e.g. PLAY2026"
+                                        class="w-full bg-slate-50 dark:bg-background-dark border-slate-300 dark:border-border-dark text-slate-900 dark:text-white font-mono text-base tracking-widest rounded-md focus:ring-primary focus:border-primary px-4 py-3 uppercase shadow-sm" />
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Description (Optional)
+                                    </label>
+                                    <input type="text" id="description" name="description" placeholder="e.g. Special Summer Sale discount"
+                                        class="w-full bg-slate-50 dark:bg-background-dark border-slate-300 dark:border-border-dark text-slate-900 dark:text-slate-200 rounded-md focus:ring-primary focus:border-primary px-4 py-3 shadow-sm" />
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Discount Type &amp; Value *
+                                    </label>
+                                    <div class="flex gap-4">
+                                        <select id="discountType" name="discountType" required onchange="handleTypeChange()"
+                                            class="w-2/5 bg-slate-50 dark:bg-background-dark border-slate-300 dark:border-border-dark text-slate-900 dark:text-slate-200 rounded-md focus:ring-primary focus:border-primary px-4 py-3 shadow-sm cursor-pointer">
+                                            <option value="percentage">Percentage (%)</option>
+                                            <option value="flat">Fixed Amount (₹)</option>
+                                        </select>
+                                        <input type="number" id="discountValue" name="discountValue" required min="1" step="any" placeholder="e.g. 20"
+                                            class="w-3/5 bg-slate-50 dark:bg-background-dark border-slate-300 dark:border-border-dark text-slate-900 dark:text-slate-200 rounded-md focus:ring-primary focus:border-primary px-4 py-3 shadow-sm" />
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2" id="maxDiscountWrapper">
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Max Discount Amount (₹ Cap - Optional)
+                                    </label>
+                                    <div class="relative rounded-md shadow-sm">
+                                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                            <span class="text-slate-500 dark:text-text-muted sm:text-sm">₹</span>
+                                        </div>
+                                        <input type="number" id="maxDiscountAmount" name="maxDiscountAmount" min="0" step="any" placeholder="e.g. 500 (leave empty for no cap)"
+                                            class="w-full bg-slate-50 dark:bg-background-dark border-slate-300 dark:border-border-dark text-slate-900 dark:text-slate-200 rounded-md focus:ring-primary focus:border-primary pl-8 pr-4 py-3" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Rules & Restrictions -->
+                            <div class="space-y-8">
+                                <div class="flex items-center gap-4">
+                                    <h2 class="text-xs font-bold tracking-widest text-slate-500 dark:text-text-muted uppercase">
+                                        Rules &amp; Restrictions
+                                    </h2>
+                                    <div class="h-px bg-slate-200 dark:bg-border-dark flex-1"></div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Minimum Order Amount (₹)
+                                    </label>
+                                    <div class="relative rounded-md shadow-sm">
+                                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                            <span class="text-slate-500 dark:text-text-muted sm:text-sm">₹</span>
+                                        </div>
+                                        <input type="number" id="minOrderAmount" name="minOrderAmount" min="0" step="any" placeholder="e.g. 1000 (0 for no minimum)"
+                                            class="w-full bg-slate-50 dark:bg-background-dark border-slate-300 dark:border-border-dark text-slate-900 dark:text-slate-200 rounded-md focus:ring-primary focus:border-primary pl-8 pr-4 py-3" />
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            Global Usage Limit (Total)
+                                        </label>
+                                        <input type="number" id="totalUsageLimit" name="totalUsageLimit" min="1" placeholder="e.g. 500 (Empty for unlimited)"
+                                            class="w-full bg-slate-50 dark:bg-background-dark border-slate-300 dark:border-border-dark text-slate-900 dark:text-slate-200 rounded-md focus:ring-primary focus:border-primary px-4 py-3 shadow-sm" />
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            Usage Limit Per User
+                                        </label>
+                                        <input type="number" id="userUsageLimit" name="userUsageLimit" min="1" value="1" placeholder="e.g. 1 per user"
+                                            class="w-full bg-slate-50 dark:bg-background-dark border-slate-300 dark:border-border-dark text-slate-900 dark:text-slate-200 rounded-md focus:ring-primary focus:border-primary px-4 py-3 shadow-sm" />
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-center">
+                                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            Expiry Date (DD/MM/YYYY) *
+                                        </label>
+                                        <span class="text-xs text-text-muted">Type DD/MM/YYYY or click calendar</span>
+                                    </div>
+                                    <div class="relative rounded-md shadow-sm">
+                                        <input type="text" id="expiryDate" name="expiryDate" required placeholder="DD/MM/YYYY (e.g. 31/12/2026)"
+                                            class="w-full bg-slate-50 dark:bg-background-dark border-slate-300 dark:border-border-dark text-slate-900 dark:text-slate-200 rounded-md focus:ring-primary focus:border-primary pl-4 pr-10 py-3 font-mono shadow-sm" />
+                                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                                            <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="mt-12 pt-6 border-t border-slate-200 dark:border-border-dark flex justify-end gap-4">
+                            <button type="button" onclick="window.location.href='/admin/coupons'"
+                                class="px-6 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-transparent border border-slate-300 dark:border-border-dark rounded-md shadow-sm hover:bg-slate-50 dark:hover:bg-surface-hover transition-colors cursor-pointer">
+                                Cancel &amp; Return to List
+                            </button>
+                            <button type="submit"
+                                class="px-6 py-2.5 text-sm font-semibold text-white bg-primary rounded-md shadow-sm hover:bg-sky-400 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary flex items-center gap-2 cursor-pointer">
+                                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                Activate Coupon
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Flatpickr for calendar selection with DD/MM/YYYY format
+        const datePicker = flatpickr("#expiryDate", {
+            dateFormat: "d/m/Y",
+            minDate: "today",
+            allowInput: true,
+            disableMobile: "true"
+        });
+
+        // Auto-format DD/MM/YYYY when typing manually
+        const expiryInput = document.getElementById('expiryDate');
+        expiryInput.addEventListener('input', function(e) {
+            let val = e.target.value.replace(/\D/g, '');
+            if (val.length >= 2 && val.length < 4) {
+                e.target.value = val.slice(0, 2) + '/' + val.slice(2);
+            } else if (val.length >= 4) {
+                e.target.value = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
+            }
+        });
+
+        function generateRandomCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let randomStr = 'PLAY';
+            for (let i = 0; i < 6; i++) {
+                randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('code').value = randomStr;
+        }
+
+        function handleTypeChange() {
+            const type = document.getElementById('discountType').value;
+            const maxWrapper = document.getElementById('maxDiscountWrapper');
+            if (type === 'flat') {
+                maxWrapper.style.display = 'none';
+            } else {
+                maxWrapper.style.display = 'block';
+            }
+        }
+
+        document.getElementById('addCouponForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const expiryVal = expiryInput.value.trim();
+            const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+            if (!dateRegex.test(expiryVal)) {
+                Swal.fire({
+                    title: 'Invalid Expiry Date',
+                    text: 'Please enter a valid expiry date in DD/MM/YYYY format (e.g. 31/12/2026) or select from the calendar.',
+                    icon: 'error',
+                    background: '#13161C',
+                    color: '#F8FAFC'
+                });
+                return;
+            }
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch('/admin/coupons', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+
+                if (!res.ok || !result.success) {
+                    Swal.fire({
+                        title: 'Validation Error',
+                        text: result.message || 'Failed to create coupon.',
+                        icon: 'error',
+                        background: '#13161C',
+                        color: '#F8FAFC'
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Coupon Activated!',
+                    text: result.message,
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    background: '#13161C',
+                    color: '#F8FAFC'
+                });
+
+                setTimeout(() => {
+                    window.location.href = '/admin/coupons';
+                }, 1200);
+            } catch (error) {
+                Swal.fire({
+                    title: 'Network Error',
+                    text: 'Unable to connect to the server.',
+                    icon: 'error',
+                    background: '#13161C',
+                    color: '#F8FAFC'
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -16,7 +16,7 @@ export const getHome = async (req, res) => {
             allPlatforms.unshift('PC');
         }
 
-        const { latestRelease, standardGames, legendaryGames } = await productService.getProductsForHome(primaryPlatform);
+        const { latestRelease, latestReleases, standardGames, legendaryGames } = await productService.getProductsForHome(primaryPlatform);
         const activePublishers = await productService.getActivePublishersWithGameCount();
 
         const publishers = activePublishers;
@@ -35,6 +35,7 @@ export const getHome = async (req, res) => {
                     categories, 
                     publishers,
                     latestRelease,
+                    latestReleases,
                     standardGames,
                     legendaryGames,
                     activePublishers,
@@ -53,6 +54,7 @@ export const getHome = async (req, res) => {
                 categories, 
                 publishers,
                 latestRelease,
+                latestReleases,
                 standardGames,
                 legendaryGames,
                 activePublishers,
@@ -68,6 +70,7 @@ export const getHome = async (req, res) => {
             categories, 
             publishers,
             latestRelease,
+            latestReleases,
             standardGames,
             legendaryGames,
             activePublishers,
@@ -83,6 +86,7 @@ export const getHome = async (req, res) => {
             categories: [], 
             publishers: [],
             latestRelease: null,
+            latestReleases: [],
             standardGames: [],
             legendaryGames: [],
             activePublishers: [],
