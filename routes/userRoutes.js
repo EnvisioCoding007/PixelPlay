@@ -71,11 +71,17 @@ router.get('/auth/google/callback', handleGoogleAuth);
 // ==========================================
 // 3. PROTECTED BLOCK (Authenticated User Routes)
 // ==========================================
-router.use((req, res, next) => {
-    if (req.path.startsWith('/admin')) return next('router');
-    next();
-});
-router.use(isUserAuth);
+router.use([
+    '/profile',
+    '/verify-email-update',
+    '/wishlist',
+    '/cart',
+    '/checkout',
+    '/wallet',
+    '/orders',
+    '/notifications',
+    '/logout'
+], isUserAuth);
 
 // Profile & Settings
 router.patch('/profile/primary-platform', productController.setPrimaryPlatform);
@@ -92,9 +98,9 @@ router.patch('/profile/addresses/:addressId', userController.editAddress);
 router.delete('/profile/addresses/:addressId', userController.deleteAddress);
 
 // Product Reviews & Ratings
-router.post('/products/:id/reviews', reviewController.postReview);
-router.delete('/products/:id/reviews/:reviewId', reviewController.deleteReview);
-router.get('/products/:id/reviews/eligibility', reviewController.checkEligibility);
+router.post('/products/:id/reviews', isUserAuth, reviewController.postReview);
+router.delete('/products/:id/reviews/:reviewId', isUserAuth, reviewController.deleteReview);
+router.get('/products/:id/reviews/eligibility', isUserAuth, reviewController.checkEligibility);
 
 // Wishlist
 router.get('/wishlist', wishlistController.getWishlist);
