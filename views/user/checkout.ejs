@@ -1293,10 +1293,10 @@
                                                 window.location.href = `/orders/success/${verifyData.orderId}`;
                                             }, 800);
                                         } else {
-                                            window.location.href = `/checkout/failure?reason=${encodeURIComponent(verifyData.message || 'Payment verification failed')}`;
+                                            window.location.href = `/checkout/failure?reason=${encodeURIComponent(verifyData.message || 'Payment verification failed')}&addressId=${encodeURIComponent(addressId)}`;
                                         }
                                     } catch (err) {
-                                        window.location.href = `/checkout/failure?reason=${encodeURIComponent('Network error during verification')}`;
+                                        window.location.href = `/checkout/failure?reason=${encodeURIComponent('Network error during verification')}&addressId=${encodeURIComponent(addressId)}`;
                                     }
                                 },
                                 prefill: {
@@ -1307,12 +1307,20 @@
                                 theme: { color: '#00b0ff' },
                                 modal: {
                                     ondismiss: function () {
-                                        window.location.href = `/checkout/failure?reason=${encodeURIComponent('Payment window closed by user before completing transaction')}`;
+                                        window.location.href = `/checkout/failure?reason=${encodeURIComponent('Payment window closed by user before completing transaction')}&addressId=${encodeURIComponent(addressId)}`;
                                     }
                                 }
                             };
 
                             const rzp = new Razorpay(options);
+
+                            // Triggered when user clicks Failure button in Razorpay gateway modal or transaction fails
+                            rzp.on('payment.failed', function (response) {
+                                console.error('[Razorpay payment.failed]', response.error);
+                                const errorReason = response.error?.description || response.error?.reason || 'Payment failed on Razorpay gateway';
+                                window.location.href = `/checkout/failure?reason=${encodeURIComponent(errorReason)}&addressId=${encodeURIComponent(addressId)}`;
+                            });
+
                             rzp.open();
                         } catch (err) {
                             showToast('Network error while initiating payment.', 'error');

@@ -165,12 +165,18 @@ export const getCheckoutFailure = async (req, res) => {
         const cartCount = await cartService.getCartItemCount(userId);
         const reason = req.query.reason || 'Payment could not be completed or authorization was cancelled.';
 
-        let defaultAddressIndex = -1;
+        const addressId = req.query.addressId;
+        let selectedAddress = null;
         if (user && user.addresses && user.addresses.length > 0) {
-            defaultAddressIndex = user.addresses.findIndex(addr => addr.isDefault);
-            if (defaultAddressIndex === -1) defaultAddressIndex = 0;
+            if (addressId) {
+                selectedAddress = user.addresses.find(a => (a._id ? a._id.toString() : '') === addressId.toString());
+            }
+            if (!selectedAddress) {
+                let defaultAddressIndex = user.addresses.findIndex(addr => addr.isDefault);
+                if (defaultAddressIndex === -1) defaultAddressIndex = 0;
+                selectedAddress = user.addresses[defaultAddressIndex];
+            }
         }
-        const selectedAddress = (user && user.addresses && user.addresses.length > 0 && defaultAddressIndex !== -1) ? user.addresses[defaultAddressIndex] : null;
 
         res.render('user/order-failure', {
             user,
@@ -184,6 +190,7 @@ export const getCheckoutFailure = async (req, res) => {
                 grandTotal: cartDetails.grandTotal
             },
             selectedAddress,
+            addresses: user ? (user.addresses || []) : [],
             walletBalance,
             cartCount,
             reason

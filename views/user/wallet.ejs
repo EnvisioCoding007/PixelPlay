@@ -580,6 +580,15 @@
                         };
 
                         const rzp = new Razorpay(options);
+
+                        rzp.on('payment.failed', function (response) {
+                            console.error('[Wallet Razorpay payment.failed]', response.error);
+                            const errorMsg = response.error?.description || response.error?.reason || 'Payment failed on Razorpay gateway.';
+                            Swal.fire({ icon: 'error', title: 'Payment Failed', text: errorMsg });
+                            submitBtn.disabled = false;
+                            submitBtn.innerText = 'Confirm Top Up';
+                        });
+
                         rzp.open();
                     } catch (err) {
                         Swal.fire({ icon: 'error', title: 'Network Error', text: 'Failed to connect to payment server.' });
