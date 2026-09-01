@@ -42,7 +42,11 @@ export const renderAdminOrderDetails = async (req, res) => {
         const { id } = req.params;
         const details = await orderService.getOrderDetailsAdmin(id);
         if (!details) {
-            return res.status(404).send('Order not found');
+            return res.status(404).render('404', {
+                title: '404 - Order Not Found | PixelPlay',
+                isAdminContext: true,
+                url: req.originalUrl
+            });
         }
 
         res.render('admin/order-details', {
@@ -52,7 +56,11 @@ export const renderAdminOrderDetails = async (req, res) => {
         });
     } catch (err) {
         console.error('[renderAdminOrderDetails]', err);
-        res.status(500).send('Internal Server Error');
+        return res.status(404).render('404', {
+            title: '404 - Page Not Found | PixelPlay',
+            isAdminContext: true,
+            url: req.originalUrl
+        });
     }
 };
 

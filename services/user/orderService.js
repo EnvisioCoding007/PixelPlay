@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Order from '../../models/Order.js';
 import Cart from '../../models/Cart.js';
 import User from '../../models/User.js';
@@ -386,6 +387,9 @@ export const placeOrder = async (userId, paymentMethod, addressId, couponCode = 
 };
 
 export const getOrderById = async (orderId) => {
+    if (!orderId || !mongoose.Types.ObjectId.isValid(orderId)) {
+        return null;
+    }
     return await Order.findById(orderId).populate('items.product').lean();
 };
 

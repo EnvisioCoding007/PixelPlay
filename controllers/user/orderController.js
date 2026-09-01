@@ -188,7 +188,11 @@ export const getOrderDetails = async (req, res) => {
         const loggedInUserId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(loggedInUserId);
         if (!dbOrder || dbOrder.userId.toString() !== loggedInUserId.toString()) {
-            return res.redirect('/home');
+            return res.status(404).render('404', {
+                title: '404 - Order Not Found | PixelPlay',
+                isAdminContext: false,
+                url: req.originalUrl
+            });
         }
 
         const cartCount = await cartService.getCartItemCount(loggedInUserId);
@@ -220,7 +224,11 @@ export const getOrderDetails = async (req, res) => {
         res.render('user/order-details', { order: mappedOrder, user, cartCount });
     } catch (error) {
         console.error('[getOrderDetails] Error:', error);
-        res.redirect('/home');
+        return res.status(404).render('404', {
+            title: '404 - Page Not Found | PixelPlay',
+            isAdminContext: false,
+            url: req.originalUrl
+        });
     }
 };
 

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Category from '../../models/Category.js';
 import Product from '../../models/Product.js';
 
@@ -131,6 +132,9 @@ export const toggleCategoryStatus = async (id) => {
 
 export const getCategoryDetailsAdmin = async (id) => {
     try {
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return null;
+        }
         const category = await Category.findById(id).lean();
         if (!category) {
             return null;

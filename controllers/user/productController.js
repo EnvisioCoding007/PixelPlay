@@ -178,7 +178,11 @@ export const getProductDetails = async (req, res) => {
 
         const details = await productService.getProductDetailsForUser(id, userId, primaryPlatform);
         if (!details) {
-            return res.redirect('/browse?notification=The game was unlisted by the admin.');
+            return res.status(404).render('404', {
+                title: '404 - Game Not Found | PixelPlay',
+                isAdminContext: false,
+                url: req.originalUrl
+            });
         }
 
         const reviews = await reviewService.getReviewsForProduct(id);
@@ -197,11 +201,10 @@ export const getProductDetails = async (req, res) => {
         });
     } catch (error) {
         console.error('[getProductDetails] Error:', error);
-        res.status(500).render('user/home', {
-            user: null,
-            categories: [],
-            publishers: [],
-            error: 'An error occurred while loading game details.'
+        return res.status(404).render('404', {
+            title: '404 - Page Not Found | PixelPlay',
+            isAdminContext: false,
+            url: req.originalUrl
         });
     }
 };

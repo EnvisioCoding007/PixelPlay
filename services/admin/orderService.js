@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Order from '../../models/Order.js';
 import User from '../../models/User.js';
 import Product from '../../models/Product.js';
@@ -119,6 +120,7 @@ export const updateOrderStatus = async (id, status) => {
 };
 
 export const getOrderDetailsAdmin = async (id) => {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) return null;
     const order = await Order.findById(id).populate('items.product').populate('userId').lean();
     if (!order) return null;
     const lifetimeOrdersCount = await Order.countDocuments({ userId: order.userId ? order.userId._id : null });

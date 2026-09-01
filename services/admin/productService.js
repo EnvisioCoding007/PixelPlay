@@ -166,6 +166,9 @@ export const createProduct = async (productData) => {
 
 export const getProductById = async (id) => {
     try {
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return null;
+        }
         return await Product.findById(id).lean();
     } catch (error) {
         console.error('[productService.getProductById] Error:', error);

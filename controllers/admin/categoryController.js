@@ -84,7 +84,11 @@ export const renderEditCategory = async (req, res) => {
         const { id } = req.params;
         const details = await categoryService.getCategoryDetailsAdmin(id);
         if (!details) {
-            return res.status(404).send('Category not found');
+            return res.status(404).render('404', {
+                title: '404 - Category Not Found | PixelPlay',
+                isAdminContext: true,
+                url: req.originalUrl
+            });
         }
 
         res.render('admin/edit-category', {
@@ -94,7 +98,11 @@ export const renderEditCategory = async (req, res) => {
         });
     } catch (err) {
         console.error('[renderEditCategory]', err);
-        res.status(500).send('Internal Server Error');
+        return res.status(404).render('404', {
+            title: '404 - Page Not Found | PixelPlay',
+            isAdminContext: true,
+            url: req.originalUrl
+        });
     }
 };
 

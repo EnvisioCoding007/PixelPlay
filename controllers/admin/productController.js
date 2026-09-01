@@ -49,7 +49,11 @@ export const renderEditGamePage = async (req, res) => {
         const { id } = req.params;
         const product = await productService.getProductById(id);
         if (!product) {
-            return res.status(404).send('Product not found');
+            return res.status(404).render('404', {
+                title: '404 - Product Not Found | PixelPlay',
+                isAdminContext: true,
+                url: req.originalUrl
+            });
         }
         const categories = await categoryService.getAllCategories();
         const publishers = await publisherService.getAllPublishersSorted();
@@ -63,7 +67,11 @@ export const renderEditGamePage = async (req, res) => {
         });
     } catch (err) {
         console.error('[renderEditGamePage]', err);
-        res.status(500).send('Internal Server Error');
+        return res.status(404).render('404', {
+            title: '404 - Page Not Found | PixelPlay',
+            isAdminContext: true,
+            url: req.originalUrl
+        });
     }
 };
 

@@ -380,6 +380,9 @@ export const getDistinctPlatforms = async () => {
 
 export const getProductDetailsForUser = async (productId, userId = null, primaryPlatform = 'PC') => {
     try {
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+            return null;
+        }
         const product = await Product.findById(productId).lean();
         if (!product || product.status === 'Hidden') {
             return null;
@@ -432,6 +435,9 @@ export const getProductDetailsForUser = async (productId, userId = null, primary
 
 export const getProductStatus = async (productId) => {
     try {
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+            return null;
+        }
         const product = await Product.findById(productId).lean();
         return product ? product.status : null;
     } catch (error) {
