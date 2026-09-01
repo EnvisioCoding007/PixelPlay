@@ -1,13 +1,21 @@
 import * as userService from '../../services/user/userService.js';
+import * as orderService from '../../services/user/orderService.js';
 import { uploadToCloudinary } from '../../config/cloudinary.js';
 
 export const getProfile = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
-        const user = await userService.getUserProfile(userId);
+        const [user, gameStats] = await Promise.all([
+            userService.getUserProfile(userId),
+            orderService.getUserGameStats(userId)
+        ]);
         if (!user) return res.redirect('/login');
 
-        res.render('user/profile', { user });
+        res.render('user/profile', {
+            user,
+            gamesOwnedCount: gameStats ? gameStats.gamesOwnedCount : 0,
+            completedOrderItemsCount: gameStats ? gameStats.completedOrderItemsCount : 0
+        });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

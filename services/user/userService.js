@@ -406,6 +406,16 @@ export const getUserProfile = async (userId) => {
         const rawUser = await User.findById(userId).select('password_hash').lean();
         user.password_hash = rawUser?.password_hash ? true : null;
 
+        // Determine user location from primary default address, or first saved address, or fallback
+        let location = 'Not Specified';
+        if (user.addresses && user.addresses.length > 0) {
+            const primaryAddress = user.addresses.find(a => a.isDefault) || user.addresses[0];
+            if (primaryAddress && primaryAddress.city && primaryAddress.city.trim()) {
+                location = primaryAddress.city.trim();
+            }
+        }
+        user.location = location;
+
         return user;
     } catch (error) {
         console.error('[userService.getUserProfile] Error:', error);

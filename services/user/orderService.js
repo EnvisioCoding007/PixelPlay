@@ -748,3 +748,52 @@ export const requestOrderReturn = async (orderId, userId, reason, comments) => {
     await order.save();
     return order;
 };
+
+/**
+ * Computes user game ownership and completed order items statistics.
+ * - gamesOwnedCount: Count of distinct games (productIds) owned across delivered orders (no cancellations or returns).
+ * - completedOrderItemsCount: Total number of items (including platform variants) ordered and delivered (no cancellations or returns).
+ * 
+ * @param {string|ObjectId} userId 
+ * @returns {Promise<{ gamesOwnedCount: number, completedOrderItemsCount: number }>}
+ */
+export const getUserGameStats = async (userId) => {
+    try {
+        if (!userId) {
+            return { gamesOwnedCount: 0, completedOrderItemsCount: 0 };
+        }
+
+        const deliveredOrders = await Order.find({
+            userId,
+            orderStatus: 'Delivered'
+        }).lean();
+
+        const distinctProductIds = new Set();
+        let completedOrderItemsCount = 0;
+
+        for (const order of deliveredOrders) {
+            if (order.items && Array.isArray(order.items)) {
+                for (const item of order.items) {
+                    const isCancelledOrReturned = item.status === 'Cancelled' || item.status === 'Returned' || item.status === 'Return Requested';
+                    if (!isCancelledOrReturned) {
+                        if (item.product) {
+                            distinctProductIds.add(item.product.toString());
+                        }
+                        completedOrderItemsCount += (Number(item.quantity) || 1);
+                    }
+                }
+            }
+        }
+
+        return {
+            gamesOwnedCount: distinctProductIds.size,
+            completedOrderItemsCount
+        };
+    } catch (error) {
+        console.error('[orderService.getUserGameStats] Error:', error);
+        return {
+            gamesOwnedCount: 0,
+            completedOrderItemsCount: 0
+        };
+    }
+};

@@ -144,11 +144,11 @@
                         <div class="grid grid-cols-2 gap-4 w-full">
                             <div class="flex flex-col items-start gap-2 p-5 bg-[#071827] rounded-md border border-solid border-[#00000014]">
                                 <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#98bfc9] text-[13px] tracking-[0.50px]">GAMES OWNED</span>
-                                <span class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#e6f7fb] text-[32px] leading-[normal]"><%= user.gamesCount || 0 %></span>
+                                <span class="[font-family:'Inter-Bold',Helvetica] font-bold text-[#e6f7fb] text-[32px] leading-[normal]"><%= (typeof gamesOwnedCount !== 'undefined') ? gamesOwnedCount : (user.gamesCount || 0) %></span>
                             </div>
                             <div class="flex flex-col items-start gap-2 p-5 bg-[#071827] rounded-md border border-solid border-[#00000014]">
-                                <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#98bfc9] text-[13px] tracking-[0.50px]">LEGENDS UNLOCKED</span>
-                                <span class="[text-shadow:0px_0px_10px_#0ea5e966] [font-family:'Inter-Bold',Helvetica] font-bold text-sky-500 text-[32px] leading-[normal]">12</span>
+                                <span class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#98bfc9] text-[13px] tracking-[0.50px]">COMPLETED ORDER ITEMS</span>
+                                <span class="[text-shadow:0px_0px_10px_#0ea5e966] [font-family:'Inter-Bold',Helvetica] font-bold text-sky-500 text-[32px] leading-[normal]"><%= (typeof completedOrderItemsCount !== 'undefined') ? completedOrderItemsCount : 0 %></span>
                             </div>
                         </div>
                     </section>
