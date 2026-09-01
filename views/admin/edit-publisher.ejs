@@ -373,4 +373,27 @@
     });
   }
 </script>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <script>
+    Swal.fire({
+      title: 'Error',
+      text: '<%= error %>',
+      icon: 'error',
+      confirmButtonColor: '#2cb5e8'
+    });
+  </script>
+<% } %>
+
+<% if (typeof success !== 'undefined' && success) { %>
+  <script>
+    Swal.fire({
+      title: 'Success',
+      text: '<%= success %>',
+      icon: 'success',
+      confirmButtonColor: '#2cb5e8'
+    });
+  </script>
+<% } %>
+
 <%- include('../partials/admin/footer') %>

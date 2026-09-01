@@ -63,12 +63,15 @@ export const createPublisher = async (req, res) => {
 
 export const renderEditPublisherPage = async (req, res) => {
     try {
+        const { error, success } = req.query;
         const publisher = await publisherService.getPublisherById(req.params.id);
         if (!publisher) {
             return res.status(404).send('Publisher not found');
         }
         res.render('admin/edit-publisher', {
             publisher,
+            error: error || null,
+            success: success || null,
             user: req.session.admin || null
         });
     } catch (err) {
@@ -95,9 +98,25 @@ export const editPublisher = async (req, res) => {
             is_listed: is_listed
         });
 
+        const isAjax = req.xhr || req.headers['accept']?.includes('application/json') || req.headers['x-requested-with'] === 'XMLHttpRequest';
+        if (isAjax) {
+            return res.status(200).json({
+                success: true,
+                message: 'Publisher updated successfully.',
+                redirectUrl: '/admin/publishers?success=Publisher updated successfully.'
+            });
+        }
+
         res.redirect('/admin/publishers?success=Publisher updated successfully.');
     } catch (err) {
         console.error('[editPublisher]', err);
-        res.status(400).send(err.message || 'Internal Server Error');
+        const isAjax = req.xhr || req.headers['accept']?.includes('application/json') || req.headers['x-requested-with'] === 'XMLHttpRequest';
+        if (isAjax) {
+            return res.status(400).json({
+                success: false,
+                message: err.message || 'Failed to update publisher.'
+            });
+        }
+        res.redirect(`/admin/publishers/${req.params.id}/edit?error=${encodeURIComponent(err.message || 'Internal Server Error')}`);
     }
 };

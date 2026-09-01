@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <meta name="description" content="Get help with orders, payments, account management, and general queries on PixelPlay." />
+    <link rel="stylesheet" href="/globals.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#09090b',
+                        'dark-surface': '#11151c',
+                        'dark-surface-2': '#171b22',
+                        'dark-border': '#222730',
+                        'cyber-blue': '#00b0ff',
+                        'cyber-green': '#00e676',
+                        'text-primary': '#e2e8f0',
+                        'text-secondary': '#94a3b8',
+                        'text-tertiary': '#64748b'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: radial-gradient(circle at top center, #0f172a 0%, #05070a 100%);
+        }
+        .glass-panel {
+            background: rgba(17, 21, 28, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .category-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .category-card.active {
+            border-color: #00b0ff;
+            background: rgba(0, 176, 255, 0.08);
+            box-shadow: 0 0 20px rgba(0, 176, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-dark-bg text-text-primary min-h-screen font-sans antialiased flex flex-col">
+    <%- include('../partials/user/navbar', { activeTab: 'support', user: user }) %>
+
+    <div class="[background:radial-gradient(50%_50%_at_50%_30%,rgba(0,176,255,0.12)_0%,rgba(0,176,255,0)_60%)] fixed inset-0 pointer-events-none" aria-hidden="true"></div>
+
+    <main class="relative z-10 flex-1 max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 w-full py-10 space-y-10">
+        <!-- Hero Header -->
+        <div class="text-center max-w-3xl mx-auto space-y-4">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyber-blue/10 border border-cyber-blue/30 text-cyber-blue text-xs font-bold uppercase tracking-widest">
+                <i class="fa-solid fa-headset text-sm animate-bounce"></i> Customer Support Hub
+            </div>
+            <h1 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
+                How Can We Help You Today?
+            </h1>
+            <p class="text-text-secondary text-sm md:text-base leading-relaxed">
+                Have a query regarding an order, payment, PixelWallet, or your account? Submit a support request below and our team will get back to your email.
+            </p>
+        </div>
+
+        <!-- Quick Category Selection Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="category-cards-grid">
+            <!-- Option 1: Order & Payment Support -->
+            <div class="category-card p-6 rounded-2xl glass-panel cursor-pointer border border-dark-border space-y-3 flex flex-col justify-between hover:border-cyber-blue/50" data-cat="Order & Payment Support">
+                <div class="space-y-2">
+                    <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 text-cyber-blue flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-credit-card"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white">Order &amp; Payment Support</h3>
+                    <p class="text-xs text-text-secondary leading-relaxed">
+                        Track shipments, Razorpay online payments, PixelWallet refunds, or order status inquiries.
+                    </p>
+                </div>
+                <div class="pt-2 text-xs font-semibold text-cyber-blue flex items-center gap-1.5">
+                    Select Category <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </div>
+            </div>
+
+            <!-- Option 2: Account Management -->
+            <div class="category-card p-6 rounded-2xl glass-panel cursor-pointer border border-dark-border space-y-3 flex flex-col justify-between hover:border-cyber-blue/50" data-cat="Account Management">
+                <div class="space-y-2">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white">Account Management</h3>
+                    <p class="text-xs text-text-secondary leading-relaxed">
+                        Help with user profile, login issues, saved addresses, password reset, or email verification.
+                    </p>
+                </div>
+                <div class="pt-2 text-xs font-semibold text-purple-400 flex items-center gap-1.5">
+                    Select Category <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </div>
+            </div>
+
+            <!-- Option 3: General Queries -->
+            <div class="category-card p-6 rounded-2xl glass-panel cursor-pointer border border-dark-border space-y-3 flex flex-col justify-between hover:border-cyber-blue/50" data-cat="General Queries">
+                <div class="space-y-2">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-cyber-green flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-white">Other General Queries</h3>
+                    <p class="text-xs text-text-secondary leading-relaxed">
+                        Platform feedback, game availability suggestions, referral rewards, or general questions.
+                    </p>
+                </div>
+                <div class="pt-2 text-xs font-semibold text-cyber-green flex items-center gap-1.5">
+                    Select Category <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Form & Contact Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Form Column -->
+            <div class="lg:col-span-8 space-y-6">
+                <div class="glass-panel p-6 md:p-8 rounded-2xl border border-dark-border shadow-2xl space-y-6">
+                    <div class="border-b border-dark-border pb-4 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-paper-plane text-cyber-blue"></i> Submit a Support Ticket
+                            </h2>
+                            <p class="text-xs text-text-secondary mt-1">Our support team will review your query and send a response directly to your email.</p>
+                        </div>
+                    </div>
+
+                    <form id="support-form" class="space-y-5" novalidate>
+                        <!-- User Info Bar -->
+                        <% if (user) { %>
+                            <div class="p-4 rounded-xl bg-dark-surface-2 border border-dark-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-full bg-cyber-blue/10 border border-cyber-blue/30 text-cyber-blue flex items-center justify-center font-bold">
+                                        <%= user.username ? user.username.charAt(0).toUpperCase() : 'U' %>
+                                    </div>
+                                    <div>
+                                        <span class="font-semibold text-white block"><%= user.username %></span>
+                                        <span class="text-text-tertiary"><%= user.email %></span>
+                                    </div>
+                                </div>
+                                <span class="text-[10px] bg-emerald-500/10 text-emerald-400 font-bold px-2.5 py-1 rounded-full border border-emerald-500/20">
+                                    Logged In User
+                                </span>
+                            </div>
+                        <% } else { %>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="guest-name" class="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
+                                        Your Full Name <span class="text-rose-400">*</span>
+                                    </label>
+                                    <input type="text" id="guest-name" name="username" placeholder="e.g. Alex Mercer" required
+                                        class="w-full bg-dark-bg border border-dark-border focus:border-cyber-blue rounded-xl px-4 py-3 text-sm text-white outline-none transition-all" />
+                                </div>
+                                <div>
+                                    <label for="guest-email" class="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
+                                        Email Address <span class="text-rose-400">*</span>
+                                    </label>
+                                    <input type="email" id="guest-email" name="email" placeholder="e.g. alex@domain.com" required
+                                        class="w-full bg-dark-bg border border-dark-border focus:border-cyber-blue rounded-xl px-4 py-3 text-sm text-white outline-none transition-all" />
+                                </div>
+                            </div>
+                        <% } %>
+
+                        <!-- Category Selector -->
+                        <div>
+                            <label for="support-category" class="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1.5">
+                                Support Category <span class="text-rose-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <select id="support-category" name="category" required
+                                    class="w-full bg-dark-bg border border-dark-border focus:border-cyber-blue rounded-xl px-4 py-3 text-sm text-white outline-none cursor-pointer appearance-none">
+                                    <option value="">-- Select Query Category --</option>
+                                    <option value="Order & Payment Support" <%= category === 'Order & Payment Support' ? 'selected' : '' %>>Order &amp; Payment Support</option>
+                                    <option value="Account Management" <%= category === 'Account Management' ? 'selected' : '' %>>Account Management</option>
+                                    <option value="General Queries" <%= category === 'General Queries' ? 'selected' : '' %>>Other General Queries</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none text-xs"></i>
+                            </div>
+                        </div>
+
+                        <!-- Subject Input -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label for="support-subject" class="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                                    Subject <span class="text-rose-400">*</span>
+                                </label>
+                                <span class="text-[11px] text-text-tertiary font-mono" id="subject-counter">0 / 150</span>
+                            </div>
+                            <input type="text" id="support-subject" name="subject" maxlength="150" value="<%= typeof subject !== 'undefined' && subject ? subject : '' %>" placeholder="Brief summary of your query (e.g., Payment completed but order status pending)" required
+                                class="w-full bg-dark-bg border border-dark-border focus:border-cyber-blue rounded-xl px-4 py-3 text-sm text-white outline-none transition-all" />
+                        </div>
+
+                        <!-- Description Input -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <label for="support-description" class="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                                    Query Description <span class="text-rose-400">*</span>
+                                </label>
+                                <span class="text-[11px] text-text-tertiary font-mono" id="description-counter">0 / 2000</span>
+                            </div>
+                            <textarea id="support-description" name="description" rows="5" maxlength="2000" placeholder="Please describe your issue or query in detail so our support team can assist you effectively..." required
+                                class="w-full bg-dark-bg border border-dark-border focus:border-cyber-blue rounded-xl px-4 py-3 text-sm text-white outline-none transition-all resize-y min-h-[120px]"></textarea>
+                        </div>
+
+                        <!-- Error Alert -->
+                        <div id="form-error" class="hidden p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                            <i class="fa-solid fa-circle-exclamation text-rose-400 text-sm shrink-0"></i>
+                            <span id="form-error-text">Please fill out all required fields properly.</span>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" id="submit-ticket-btn" class="w-full bg-cyber-blue hover:bg-blue-400 text-black font-bold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(0,176,255,0.3)] cursor-pointer flex items-center justify-center gap-2 text-sm">
+                            <i class="fa-solid fa-paper-plane"></i> Submit Support Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- FAQs & Info Column -->
+            <div class="lg:col-span-4 space-y-6">
+                <!-- Direct Support Info Card -->
+                <div class="glass-panel p-6 rounded-2xl border border-dark-border shadow-xl space-y-4">
+                    <h3 class="font-bold text-sm text-white uppercase tracking-wider flex items-center gap-2 border-b border-dark-border pb-3">
+                        <i class="fa-solid fa-clock text-cyber-blue"></i> Support Operating Hours
+                    </h3>
+                    <div class="space-y-3 text-xs text-text-secondary">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-headset text-cyber-blue text-sm mt-0.5"></i>
+                            <div>
+                                <span class="font-semibold text-white block">Email Dispatch</span>
+                                <span>24/7 Automated Query Routing</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-envelope text-cyber-blue text-sm mt-0.5"></i>
+                            <div>
+                                <span class="font-semibold text-white block">Direct Admin Email</span>
+                                <span class="font-mono text-cyber-blue">envisiocoding@gmail.com</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-shield-halved text-cyber-blue text-sm mt-0.5"></i>
+                            <div>
+                                <span class="font-semibold text-white block">Average Response Time</span>
+                                <span>Within 12 to 24 Operational Hours</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQs -->
+                <div class="glass-panel p-6 rounded-2xl border border-dark-border shadow-xl space-y-4">
+                    <h3 class="font-bold text-sm text-white uppercase tracking-wider flex items-center gap-2 border-b border-dark-border pb-3">
+                        <i class="fa-solid fa-circle-question text-amber-400"></i> Frequently Asked Questions
+                    </h3>
+                    <div class="space-y-3 text-xs">
+                        <details class="group bg-dark-surface-2 p-3.5 rounded-xl border border-dark-border cursor-pointer">
+                            <summary class="font-semibold text-white flex items-center justify-between group-open:text-cyber-blue transition-colors">
+                                How do I track my order shipment?
+                                <i class="fa-solid fa-chevron-down group-open:rotate-180 transition-transform text-text-tertiary text-[10px]"></i>
+                            </summary>
+                            <p class="mt-2 text-text-secondary leading-relaxed pt-2 border-t border-dark-border/50">
+                                Navigate to <strong>Order History</strong> in your account dashboard to view real-time shipping status and tracking updates for your physical game packages.
+                            </p>
+                        </details>
+
+                        <details class="group bg-dark-surface-2 p-3.5 rounded-xl border border-dark-border cursor-pointer">
+                            <summary class="font-semibold text-white flex items-center justify-between group-open:text-cyber-blue transition-colors">
+                                How does PixelWallet refund work?
+                                <i class="fa-solid fa-chevron-down group-open:rotate-180 transition-transform text-text-tertiary text-[10px]"></i>
+                            </summary>
+                            <p class="mt-2 text-text-secondary leading-relaxed pt-2 border-t border-dark-border/50">
+                                Upon order or item cancellation/return approval, eligible refunds are credited instantly to your PixelWallet and can be used on future checkouts with 1-click payment.
+                            </p>
+                        </details>
+
+                        <details class="group bg-dark-surface-2 p-3.5 rounded-xl border border-dark-border cursor-pointer">
+                            <summary class="font-semibold text-white flex items-center justify-between group-open:text-cyber-blue transition-colors">
+                                What if my online payment fails?
+                                <i class="fa-solid fa-chevron-down group-open:rotate-180 transition-transform text-text-tertiary text-[10px]"></i>
+                            </summary>
+                            <p class="mt-2 text-text-secondary leading-relaxed pt-2 border-t border-dark-border/50">
+                                No money is deducted and no order is placed on failed online transactions. You can safely retry payment or switch to Cash On Delivery / PixelWallet.
+                            </p>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const categoryCards = document.querySelectorAll('.category-card');
+            const categorySelect = document.getElementById('support-category');
+            const subjectInput = document.getElementById('support-subject');
+            const descriptionInput = document.getElementById('support-description');
+            const subjectCounter = document.getElementById('subject-counter');
+            const descriptionCounter = document.getElementById('description-counter');
+            const supportForm = document.getElementById('support-form');
+            const submitBtn = document.getElementById('submit-ticket-btn');
+            const formError = document.getElementById('form-error');
+            const formErrorText = document.getElementById('form-error-text');
+
+            // Category card click handler
+            categoryCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const selectedCat = card.getAttribute('data-cat');
+                    categoryCards.forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    if (categorySelect) {
+                        categorySelect.value = selectedCat;
+                    }
+                });
+            });
+
+            // Initial highlight based on URL query or select value
+            if (categorySelect && categorySelect.value) {
+                const initialCard = document.querySelector(`.category-card[data-cat="${categorySelect.value}"]`);
+                if (initialCard) initialCard.classList.add('active');
+            }
+
+            if (categorySelect) {
+                categorySelect.addEventListener('change', (e) => {
+                    categoryCards.forEach(c => c.classList.remove('active'));
+                    const activeCard = document.querySelector(`.category-card[data-cat="${e.target.value}"]`);
+                    if (activeCard) activeCard.classList.add('active');
+                });
+            }
+
+            // Character counters
+            if (subjectInput && subjectCounter) {
+                if (subjectInput.value) {
+                    subjectCounter.innerText = `${subjectInput.value.length} / 150`;
+                }
+                subjectInput.addEventListener('input', (e) => {
+                    subjectCounter.innerText = `${e.target.value.length} / 150`;
+                });
+            }
+
+            if (descriptionInput && descriptionCounter) {
+                descriptionInput.addEventListener('input', (e) => {
+                    descriptionCounter.innerText = `${e.target.value.length} / 2000`;
+                });
+            }
+
+            // Form Submission
+            if (supportForm) {
+                supportForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    formError.classList.add('hidden');
+
+                    const category = categorySelect ? categorySelect.value : '';
+                    const subject = subjectInput ? subjectInput.value.trim() : '';
+                    const description = descriptionInput ? descriptionInput.value.trim() : '';
+
+                    const guestNameInput = document.getElementById('guest-name');
+                    const guestEmailInput = document.getElementById('guest-email');
+                    const username = guestNameInput ? guestNameInput.value.trim() : undefined;
+                    const email = guestEmailInput ? guestEmailInput.value.trim() : undefined;
+
+                    if (guestNameInput && !username) {
+                        formErrorText.innerText = 'Please enter your name.';
+                        formError.classList.remove('hidden');
+                        return;
+                    }
+
+                    if (guestEmailInput && !email) {
+                        formErrorText.innerText = 'Please enter your email address.';
+                        formError.classList.remove('hidden');
+                        return;
+                    }
+
+                    if (!category) {
+                        formErrorText.innerText = 'Please select a support query category.';
+                        formError.classList.remove('hidden');
+                        return;
+                    }
+
+                    if (!subject || subject.length < 5) {
+                        formErrorText.innerText = 'Subject must be at least 5 characters long.';
+                        formError.classList.remove('hidden');
+                        return;
+                    }
+
+                    if (!description || description.length < 15) {
+                        formErrorText.innerText = 'Description must be at least 15 characters long.';
+                        formError.classList.remove('hidden');
+                        return;
+                    }
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending Support Request...';
+
+                    try {
+                        const res = await fetch('/support', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                category,
+                                subject,
+                                description,
+                                username,
+                                email
+                            })
+                        });
+
+                        const data = await res.json();
+                        if (res.ok && data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Support Request Sent!',
+                                text: data.message || 'Your support request has been submitted successfully!',
+                                confirmButtonColor: '#00b0ff'
+                            }).then(() => {
+                                supportForm.reset();
+                                if (subjectCounter) subjectCounter.innerText = '0 / 150';
+                                if (descriptionCounter) descriptionCounter.innerText = '0 / 2000';
+                                categoryCards.forEach(c => c.classList.remove('active'));
+                            });
+                        } else {
+                            formErrorText.innerText = data.message || 'Failed to send support request.';
+                            formError.classList.remove('hidden');
+                        }
+                    } catch (err) {
+                        formErrorText.innerText = 'Network error while contacting support server.';
+                        formError.classList.remove('hidden');
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Support Request';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

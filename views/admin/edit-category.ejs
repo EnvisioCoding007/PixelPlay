@@ -14,7 +14,7 @@
 <div class="bg-card-bg border border-border-dark rounded-2xl p-8 shadow-2xl relative overflow-hidden">
 <!-- Subtle gradient overlay to match image vibe -->
 <div class="absolute inset-0 bg-gradient-to-br from-pixel-blue/5 to-transparent pointer-events-none"></div>
-<form class="relative z-10" action="/admin/categories/<%= category._id %>?_method=PUT" method="POST" enctype="multipart/form-data">
+<form id="editCategoryForm" class="relative z-10" action="/admin/categories/<%= category._id %>?_method=PUT" method="POST" enctype="multipart/form-data">
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
 <!-- Left Column: Core Details -->
 <div class="space-y-8">
@@ -274,7 +274,95 @@
       }
     });
   }
+
+  // Intercept category edit form submit
+  const editCategoryForm = document.getElementById('editCategoryForm');
+  if (editCategoryForm) {
+    editCategoryForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const nameInput = document.getElementById('categoryName');
+      if (nameInput && !nameInput.value.trim()) {
+        Swal.fire({
+          title: 'Validation Error',
+          text: 'Category name is required.',
+          icon: 'error',
+          confirmButtonColor: '#2cb5e8'
+        });
+        return;
+      }
+
+      const formData = new FormData(this);
+      const submitBtn = this.querySelector('button[type="submit"]');
+
+      try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Committing...';
+        }
+
+        const response = await fetch(this.action, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json'
+          },
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          window.location.href = result.redirectUrl || '/admin/categories?success=' + encodeURIComponent(result.message || 'Category updated successfully.');
+        } else {
+          Swal.fire({
+            title: 'Error',
+            text: result.message || 'Failed to update category.',
+            icon: 'error',
+            confirmButtonColor: '#2cb5e8'
+          });
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg> Commit Updates';
+          }
+        }
+      } catch (err) {
+        console.error('Error updating category:', err);
+        Swal.fire({
+          title: 'Error',
+          text: 'An error occurred while updating the category.',
+          icon: 'error',
+          confirmButtonColor: '#2cb5e8'
+        });
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg> Commit Updates';
+        }
+      }
+    });
+  }
 </script>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <script>
+    Swal.fire({
+      title: 'Error',
+      text: '<%= error %>',
+      icon: 'error',
+      confirmButtonColor: '#2cb5e8'
+    });
+  </script>
+<% } %>
+
+<% if (typeof success !== 'undefined' && success) { %>
+  <script>
+    Swal.fire({
+      title: 'Success',
+      text: '<%= success %>',
+      icon: 'success',
+      confirmButtonColor: '#2cb5e8'
+    });
+  </script>
+<% } %>
 
 <%- include('../partials/admin/footer') %>
 </body>

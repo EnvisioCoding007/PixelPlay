@@ -83,6 +83,7 @@ export const toggleCategoryStatus = async (req, res) => {
 export const renderEditCategory = async (req, res) => {
     try {
         const { id } = req.params;
+        const { error, success } = req.query;
         const details = await categoryService.getCategoryDetailsAdmin(id);
         if (!details) {
             return res.status(404).send('Category not found');
@@ -91,6 +92,8 @@ export const renderEditCategory = async (req, res) => {
         res.render('admin/edit-category', {
             category: details.category,
             linkedGamesCount: details.linkedGamesCount,
+            error: error || null,
+            success: success || null,
             user: req.session.admin || null
         });
     } catch (err) {
@@ -117,10 +120,27 @@ export const editCategory = async (req, res) => {
             status,
             icon: iconUrl
         });
+
+        const isAjax = req.xhr || req.headers['accept']?.includes('application/json') || req.headers['x-requested-with'] === 'XMLHttpRequest';
+        if (isAjax) {
+            return res.status(200).json({
+                success: true,
+                message: 'Category updated successfully.',
+                redirectUrl: '/admin/categories?success=Category updated successfully.'
+            });
+        }
+
         res.redirect('/admin/categories?success=Category updated successfully.');
     } catch (err) {
         console.error('[editCategory]', err);
-        res.status(500).send(err.message || 'Internal Server Error');
+        const isAjax = req.xhr || req.headers['accept']?.includes('application/json') || req.headers['x-requested-with'] === 'XMLHttpRequest';
+        if (isAjax) {
+            return res.status(400).json({
+                success: false,
+                message: err.message || 'Failed to update category.'
+            });
+        }
+        res.redirect(`/admin/categories/${req.params.id}/edit?error=${encodeURIComponent(err.message || 'Internal Server Error')}`);
     }
 };
 
