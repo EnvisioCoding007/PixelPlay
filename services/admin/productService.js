@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Product from '../../models/Product.js';
 import Category from '../../models/Category.js';
 import Publisher from '../../models/Publisher.js';
+import Platform from '../../models/Platform.js';
 import { getActiveOffers, calculateBestOfferForProduct } from '../shared/offerHelper.js';
 
 export const getAllAdminProducts = async (search = '', filters = {}, sort = 'latest', page = 1, limit = 10) => {
@@ -45,13 +46,20 @@ export const getAllAdminProducts = async (search = '', filters = {}, sort = 'lat
         }
 
         // Fetch products, categories, active offers and distinct metadata
-        const [rawProducts, categories, dbPlatforms, dbPublishers, activeOffers] = await Promise.all([
+        const [rawProducts, categories, productPlatforms, dbPublishers, activeOffers, savedPlatforms] = await Promise.all([
             Product.find(query).sort(sortConfig).lean(),
             Category.find({}).lean(),
             Product.distinct('platforms'),
             Product.distinct('publisher'),
-            getActiveOffers()
+            getActiveOffers(),
+            Platform.find({ is_listed: { $ne: false } }).lean()
         ]);
+
+        const allPlatformsSet = new Set(productPlatforms || []);
+        if (savedPlatforms && savedPlatforms.length > 0) {
+            savedPlatforms.forEach(p => allPlatformsSet.add(p.name));
+        }
+        const dbPlatforms = Array.from(allPlatformsSet).sort();
 
         const categoryMap = new Map(categories.map(c => [c._id.toString(), c]));
 

@@ -9,6 +9,7 @@ import * as userController from '../controllers/admin/userController.js';
 import * as productController from '../controllers/admin/productController.js';
 import * as categoryController from '../controllers/admin/categoryController.js';
 import * as publisherController from '../controllers/admin/publisherController.js';
+import * as platformController from '../controllers/admin/platformController.js';
 import * as orderController from '../controllers/admin/orderController.js';
 import * as couponController from '../controllers/admin/couponController.js';
 import * as offerController from '../controllers/admin/offerController.js';
@@ -44,6 +45,10 @@ router.delete('/admin/reviews/:id', reviewController.deleteReview);
 router.get('/admin/users', userController.getCustomers);
 router.get('/admin/customers', userController.getCustomers);
 router.patch('/admin/users/:id/block-status', userController.toggleBlock);
+
+// Platform Management Routes
+router.get('/admin/platforms', platformController.getPlatformsJson);
+router.post('/admin/platforms', platformController.createPlatform);
 
 // Product Management Routes
 router.get('/admin/products', productController.renderProductManagement);

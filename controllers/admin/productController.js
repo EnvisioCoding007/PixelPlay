@@ -1,6 +1,7 @@
 import * as productService from '../../services/admin/productService.js';
 import * as categoryService from '../../services/admin/categoryService.js';
 import * as publisherService from '../../services/admin/publisherService.js';
+import * as platformService from '../../services/admin/platformService.js';
 import { uploadToCloudinary } from '../../config/cloudinary.js';
 
 export const renderProductManagement = async (req, res) => {
@@ -52,10 +53,12 @@ export const renderEditGamePage = async (req, res) => {
         }
         const categories = await categoryService.getAllCategories();
         const publishers = await publisherService.getAllPublishersSorted();
+        const platforms = await platformService.getAllPlatformsSorted();
         res.render('admin/edit-game', {
             product,
             categories,
             publishers,
+            platforms,
             user: req.session.admin || null
         });
     } catch (err) {
@@ -202,9 +205,11 @@ export const renderAddGamePage = async (req, res) => {
     try {
         const categories = await categoryService.getAllCategories();
         const publishers = await publisherService.getAllPublishersSorted();
+        const platforms = await platformService.getAllPlatformsSorted();
         res.render('admin/add-game', {
             categories,
             publishers,
+            platforms,
             user: req.session.admin || null
         });
     } catch (err) {

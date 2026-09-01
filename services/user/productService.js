@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import Product from '../../models/Product.js';
 import Category from '../../models/Category.js';
 import Publisher from '../../models/Publisher.js';
+import Platform from '../../models/Platform.js';
 import User from '../../models/User.js';
 import Wishlist from '../../models/Wishlist.js';
 import { getActiveOffers, calculateBestOfferForProduct } from '../shared/offerHelper.js';
@@ -21,9 +22,10 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
         const categories = await Category.find({ status: 'Live' }).lean();
         const categoryMap = new Map(categories.map(c => [c._id.toString(), c]));
 
-        const [rawProducts, activeOffers] = await Promise.all([
+        const [rawProducts, activeOffers, savedPlatforms] = await Promise.all([
             Product.find({ status: 'Live' }).lean(),
-            getActiveOffers()
+            getActiveOffers(),
+            Platform.find({ is_listed: { $ne: false } }).lean()
         ]);
 
         const allPlatforms = new Set();
@@ -33,6 +35,12 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
         savedPubs.forEach(sp => {
             if (sp.name) allPublishers.add(sp.name);
         });
+
+        if (savedPlatforms && savedPlatforms.length > 0) {
+            savedPlatforms.forEach(sp => {
+                if (sp.name) allPlatforms.add(sp.name);
+            });
+        }
 
         rawProducts.forEach(p => {
             if (p.platforms) p.platforms.forEach(plat => allPlatforms.add(plat));

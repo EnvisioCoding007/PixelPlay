@@ -225,6 +225,9 @@ export const setPrimaryPlatform = async (req, res) => {
         const { platform } = req.body;
         if (platform) {
             req.session.primaryPlatform = platform;
+            if (typeof req.session.save === 'function') {
+                await new Promise((resolve) => req.session.save(resolve));
+            }
         }
         return res.redirect(req.headers.referer || '/home');
     } catch (error) {

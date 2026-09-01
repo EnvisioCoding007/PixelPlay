@@ -26,6 +26,10 @@ router.get('/offers', productController.getOffersPage);
 router.get('/products/status/:id', productController.checkProductStatus);
 router.get('/products/:id', productController.getProductDetails);
 
+// Primary Platform Selection (Available for all users / guests)
+router.patch('/primary-platform', productController.setPrimaryPlatform);
+router.patch('/profile/primary-platform', productController.setPrimaryPlatform);
+
 // Support Routes
 router.get('/support', supportController.getSupportPage);
 router.post('/support', supportController.submitSupportRequest);
@@ -84,7 +88,6 @@ router.use([
 ], isUserAuth);
 
 // Profile & Settings
-router.patch('/profile/primary-platform', productController.setPrimaryPlatform);
 router.get('/profile', userController.getProfile);
 router.get('/profile/edit', userController.getProfileEdit);
 router.patch('/profile', upload.single('profile_image'), userController.updateProfile);
