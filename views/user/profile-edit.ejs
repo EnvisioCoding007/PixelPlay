@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
     <title><%= user.username %> — Edit Profile · PixelPlay</title>
-    <link rel="stylesheet" href="globals.css">
+    <link rel="stylesheet" href="/globals.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         /** @type {import('tailwindcss').Config} */
         tailwind.config = {
@@ -21,72 +24,7 @@
 
 <body>
     <div class="flex flex-col min-h-screen items-start relative bg-zinc-950">
-        <header
-            class="flex h-[72px] items-center justify-between px-10 py-0 relative self-stretch w-full z-[1] bg-[#09090be6] border-b [border-bottom-style:solid] border-[#00000014] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
-            <nav class="flex items-center justify-between w-full gap-6" aria-label="Primary">
-                <div class="inline-flex items-center gap-10 relative flex-[0_0_auto]">
-                    <a href="#"
-                        class="relative w-[129px] h-12 aspect-[2.68] bg-[url(legacy:image:md5:I144:2444;273:1230-no-children)] bg-cover bg-[50%_50%] block"
-                        aria-label="PixelPlay home"></a>
-                    <ul class="inline-flex items-center gap-[7.6px] relative flex-[0_0_auto]">
-                        <li><a href="#"
-                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
-                                    class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] leading-[normal]">Home</span></a>
-                        </li>
-                        <li><a href="#"
-                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
-                                    class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Browse</span></a>
-                        </li>
-                        <li><a href="#"
-                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
-                                    class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Wishlist</span></a>
-                        </li>
-                        <li><a href="#"
-                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
-                                    class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Offers</span></a>
-                        </li>
-
-                        <li><a href="#"
-                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
-                                    class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] leading-[normal]">Wallet</span></a>
-                        </li>
-                        <li><a href="#"
-                                class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md"><span
-                                    class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium text-[#9aa6b3] text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Support</span></a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="inline-flex items-center gap-5 relative flex-[0_0_auto]">
-                    <form
-                        class="flex w-60 items-center gap-3 px-4 py-2 relative bg-[#0f1113] rounded-full border border-solid border-[#00000014]"
-                        role="search">
-                        <label for="store-search" class="sr-only">Search store</label>
-                        <img class="relative w-4 h-4" src="img/container.svg" alt="" />
-                        <div class="flex flex-col items-start relative flex-1 grow">
-                            <input id="store-search"
-                                class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-sm tracking-[0] leading-[normal] bg-transparent border-0 p-0 outline-none placeholder:text-[#9aa6b3]"
-                                placeholder="Search store..." type="search" />
-                        </div>
-                    </form>
-                    <button type="button" class="flex w-10 h-10 items-center justify-center relative rounded-[20px]"
-                        aria-label="Cart">
-                        <img class="relative flex-[0_0_auto]" src="img/iconify-icon.svg" alt="" />
-                    </button>
-                    <button type="button" class="flex w-10 h-10 items-center justify-center relative rounded-[20px]"
-                        aria-label="Notifications">
-                        <div class="inline-flex flex-col items-start relative flex-[0_0_auto]">
-                            <div class="relative w-5 h-5">
-                                <img class="absolute w-[91.66%] h-[95.83%] top-[4.17%] left-[8.34%]"
-                                    src="img/vector-2.svg" alt="" />
-                            </div>
-                        </div>
-                    </button>
-                    <a href="#"
-                        class="relative w-9 h-9 rounded-[18px] border-2 border-solid border-[#00000014] bg-[url(legacy:image:md5:I144:2444;10:45-no-children)] bg-cover bg-[50%_50%] block"
-                        aria-label="Profile"></a>
-                </div>
-            </nav>
-        </header>
+        <%- include('../partials/user/navbar', { activeTab: 'profile' }) %>
         <main class="flex items-start justify-center px-8 py-16 relative self-stretch w-full flex-[0_0_auto] z-0">
             <div class="flex flex-col max-w-[860px] w-full items-start gap-10 relative self-stretch">
                 <section class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
