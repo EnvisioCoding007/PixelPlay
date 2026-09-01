@@ -20,7 +20,8 @@ export const getSupportPage = async (req, res) => {
             user,
             activeTab: 'support',
             title: 'Support Center · PixelPlay',
-            category: req.query.category || ''
+            category: req.query.category || '',
+            subject: req.query.subject || ''
         });
     } catch (err) {
         console.error('[getSupportPage] Error:', err);
@@ -28,7 +29,8 @@ export const getSupportPage = async (req, res) => {
             user: null,
             activeTab: 'support',
             title: 'Support Center · PixelPlay',
-            category: ''
+            category: '',
+            subject: ''
         });
     }
 };
