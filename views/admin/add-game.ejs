@@ -73,6 +73,11 @@
                 <label class="block text-sm font-medium text-text-muted mb-2">Release Year</label>
                 <input name="release_year" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" placeholder="YYYY" type="number" min="1950" max="2100"/>
               </div>
+
+               <div>
+                <label class="block text-sm font-medium text-text-muted mb-2">GST Rate</label>
+                <input name="gst_rate" required class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors" placeholder="GST Rate" type="number" min="0" max="100"/>
+              </div>
               
               <!-- Category -->
               <div>
@@ -122,12 +127,22 @@
                 
                 <!-- Dynamic Other Platforms Searchable Dropdown -->
                 <div id="otherPlatformsContainer" class="hidden mt-3 p-4 bg-background-dark/50 border border-border-dark rounded-lg space-y-3 relative">
-                  <label class="block text-xs font-medium text-text-muted">Search & Add Legacy/Extended Platforms</label>
+                  <div class="flex items-center justify-between">
+                    <label class="block text-xs font-medium text-text-muted">Search & Add Extended Platforms</label>
+                  </div>
                   <div class="relative">
-                    <input type="text" id="otherPlatformsSearch" placeholder="Type platform name (e.g. Switch, PS3, Wii)..." class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent">
+                    <input type="text" id="otherPlatformsSearch" placeholder="Type platform name (e.g. Switch, PS3, Wii)..." class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent" autocomplete="off">
                     <div id="otherPlatformsDropdown" class="hidden absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-surface-dark border border-border-dark rounded-lg shadow-xl z-20">
                       <!-- Dropdown options rendered dynamically -->
                     </div>
+                  </div>
+                  <!-- Button to add new platform dynamically displayed below the search bar -->
+                  <div class="flex items-center justify-between pt-1 border-t border-border-dark/60">
+                    <span class="text-xs text-text-muted">Can't find your platform?</span>
+                    <button type="button" id="openAddPlatformModalBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-accent/15 hover:bg-accent text-accent hover:text-background-dark border border-accent/30 hover:border-accent transition-all duration-200 cursor-pointer shadow-sm">
+                      <span class="material-icons-outlined text-sm">add_circle_outline</span>
+                      <span>Add New Platform</span>
+                    </button>
                   </div>
                 </div>
 
@@ -287,6 +302,57 @@
         Apply Crop
       </button>
     </div>
+  </div>
+</div>
+
+<!-- Add New Platform Modal overlay -->
+<div id="addPlatformModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-background-dark/95 backdrop-blur-sm p-4">
+  <div class="bg-surface-dark border border-border-dark rounded-xl max-w-md w-full p-6 flex flex-col gap-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+    <div class="flex items-center justify-between border-b border-border-dark pb-3">
+      <div class="flex items-center gap-2">
+        <span class="material-icons-outlined text-accent text-xl">sports_esports</span>
+        <h3 class="text-lg font-semibold text-white">Add New Platform</h3>
+      </div>
+      <button type="button" id="closeAddPlatformModalBtn" class="text-text-muted hover:text-white transition-colors cursor-pointer">
+        <span class="material-icons-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Error Alert Container -->
+    <div id="platformModalError" class="hidden bg-pixel-red/10 border border-pixel-red/30 rounded-lg p-3 text-xs text-pixel-red flex items-center gap-2">
+      <span class="material-icons-outlined text-sm flex-shrink-0">error_outline</span>
+      <span id="platformModalErrorText"></span>
+    </div>
+
+    <form id="addPlatformForm" class="space-y-4" onsubmit="return false;">
+      <div>
+        <label for="newPlatformName" class="block text-xs font-medium text-text-muted mb-1.5">Platform Full Name <span class="text-pixel-red">*</span></label>
+        <input type="text" id="newPlatformName" placeholder="e.g. Steam Deck, Nintendo Switch OLED" class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent" required maxlength="50" autocomplete="off">
+        <p id="newPlatformNameFeedback" class="hidden text-[11px] text-pixel-red mt-1"></p>
+      </div>
+
+      <div>
+        <label for="newPlatformAbbr" class="block text-xs font-medium text-text-muted mb-1.5">Platform Abbreviation / Code <span class="text-pixel-red">*</span></label>
+        <input type="text" id="newPlatformAbbr" placeholder="e.g. DECK, NSW, APPLE" class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2.5 text-sm text-white placeholder-text-muted uppercase focus:outline-none focus:border-accent" required maxlength="15" autocomplete="off">
+        <p class="text-[11px] text-text-muted mt-1">Short identifier code (e.g. PS5, XBSX, PC)</p>
+        <p id="newPlatformAbbrFeedback" class="hidden text-[11px] text-pixel-red mt-1"></p>
+      </div>
+
+      <div>
+        <label for="newPlatformDesc" class="block text-xs font-medium text-text-muted mb-1.5">Description (Optional)</label>
+        <textarea id="newPlatformDesc" rows="2" placeholder="Brief info about platform hardware or architecture..." class="w-full bg-background-dark border border-border-dark rounded-lg px-4 py-2 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent resize-none" maxlength="500"></textarea>
+      </div>
+
+      <div class="flex gap-3 justify-end border-t border-border-dark pt-3 mt-2">
+        <button type="button" id="cancelAddPlatformBtn" class="px-4 py-2 text-sm text-white hover:bg-surface-hover border border-border-dark rounded-lg transition-colors cursor-pointer">
+          Cancel
+        </button>
+        <button type="button" id="saveNewPlatformBtn" class="px-5 py-2 text-sm text-background-dark bg-accent hover:bg-accent/90 font-medium rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer">
+          <span id="savePlatformSpinner" class="hidden animate-spin material-icons-outlined text-xs">autorenew</span>
+          <span id="savePlatformBtnText">Save Platform</span>
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -585,12 +651,21 @@
 
   let activePlatformTab = '';
 
-  const otherPlatformsList = [
-    "Nintendo Switch", "PlayStation 3", "PlayStation 2", "PlayStation 1",
-    "Xbox 360", "Nintendo Wii U", "Nintendo Wii", "Nintendo 3DS",
-    "Nintendo DS", "PlayStation Portable", "PlayStation Vita",
-    "Sega Genesis", "NES", "SNES"
-  ];
+  const standardPlatforms = ['PC', 'PlayStation 5', 'Xbox Series X|S', 'PlayStation 4', 'Xbox One'];
+  const dbPlatformsRaw = <%- JSON.stringify(typeof platforms !== 'undefined' && platforms ? platforms : []) %>;
+  let otherPlatformsList = [];
+  if (Array.isArray(dbPlatformsRaw) && dbPlatformsRaw.length > 0) {
+    otherPlatformsList = dbPlatformsRaw
+      .map(p => typeof p === 'string' ? p : p.name)
+      .filter(name => !standardPlatforms.includes(name));
+  } else {
+    otherPlatformsList = [
+      "Nintendo Switch", "PlayStation 3", "PlayStation 2", "PlayStation 1",
+      "Xbox 360", "Nintendo Wii U", "Nintendo Wii", "Nintendo 3DS",
+      "Nintendo DS", "PlayStation Portable", "PlayStation Vita",
+      "Sega Genesis", "NES", "SNES"
+    ];
+  }
 
   const consoleDefaults = {
     "PlayStation 5": { os: "PS5 System Software", storage: "100 GB SSD", graphics: "4K 60FPS Support", architecture: "AMD Zen 2 Custom", processor: "AMD Zen 2 (8-core)", memory: "16 GB GDDR6" },
@@ -612,6 +687,34 @@
     "NES": { os: "NES Hardware", storage: "ROM Cartridge", graphics: "240p Support", architecture: "Ricoh 2A03", processor: "Ricoh 2A03 (1.79 MHz)", memory: "2 KB" },
     "SNES": { os: "SNES Hardware", storage: "ROM Cartridge", graphics: "224p/240p Support", architecture: "Ricoh 5A22", processor: "Ricoh 5A22 (3.58 MHz)", memory: "128 KB" }
   };
+
+  function addPlatformCheckbox(platform) {
+    const existingCb = Array.from(document.querySelectorAll('input[name="platforms[]"]')).find(cb => cb.value.toLowerCase() === platform.toLowerCase());
+    if (existingCb) {
+      existingCb.checked = true;
+      updateHardwareRequirementsUI();
+      return;
+    }
+
+    const otherLabel = document.getElementById('otherPlatformsToggle').closest('label');
+    const newLabel = document.createElement('label');
+    newLabel.className = 'flex items-center gap-2 cursor-pointer text-sm text-white dynamic-platform-checkbox';
+    newLabel.innerHTML = `
+      <input type="checkbox" name="platforms[]" value="${platform}" checked class="platform-checkbox rounded bg-background-dark border border-border-dark text-white text-accent focus:ring-accent">
+      <span>${platform}</span>
+    `;
+    otherLabel.parentNode.insertBefore(newLabel, otherLabel);
+    
+    // Add event listener to remove when unchecked
+    newLabel.querySelector('input').addEventListener('change', function() {
+      if (!this.checked) {
+        newLabel.remove();
+        updateHardwareRequirementsUI();
+      }
+    });
+
+    updateHardwareRequirementsUI();
+  }
 
   // Toggle dropdown visibility
   otherToggle.addEventListener('change', function() {
@@ -635,13 +738,12 @@
     if (filtered.length === 0) {
       const noResult = document.createElement('div');
       noResult.className = 'px-4 py-2 text-xs text-text-muted';
-      noResult.textContent = 'No matching platforms';
+      noResult.textContent = 'No matching platforms found';
       otherDropdown.appendChild(noResult);
       return;
     }
     
     filtered.forEach(platform => {
-      // Don't show in dropdown if it's already selected
       const isAlreadySelected = Array.from(document.querySelectorAll('input[name="platforms[]"]'))
         .some(cb => cb.value === platform);
       
@@ -651,35 +753,142 @@
       item.className = 'px-4 py-2 text-sm text-white hover:bg-accent hover:text-background-dark cursor-pointer transition-colors';
       item.textContent = platform;
       item.addEventListener('mousedown', function(e) {
-        // Use mousedown to trigger before input blur fires
         e.preventDefault();
-        
-        // Add checkbox to platformsContainer (before the "Other" label)
-        const otherLabel = document.getElementById('otherPlatformsToggle').closest('label');
-        const newLabel = document.createElement('label');
-        newLabel.className = 'flex items-center gap-2 cursor-pointer text-sm text-white dynamic-platform-checkbox';
-        newLabel.innerHTML = `
-          <input type="checkbox" name="platforms[]" value="${platform}" checked class="platform-checkbox rounded bg-background-dark border border-border-dark text-white text-accent focus:ring-accent">
-          <span>${platform}</span>
-        `;
-        otherLabel.parentNode.insertBefore(newLabel, otherLabel);
-        
-        // Add event listener to remove when unchecked
-        newLabel.querySelector('input').addEventListener('change', function() {
-          if (!this.checked) {
-            newLabel.remove();
-            updateHardwareRequirementsUI();
-          }
-        });
-
-        // Hide dropdown and clear search
+        addPlatformCheckbox(platform);
         otherDropdown.classList.add('hidden');
         otherSearchInput.value = '';
-        
-        // Update hardware requirements UI
-        updateHardwareRequirementsUI();
       });
       otherDropdown.appendChild(item);
+    });
+  }
+
+  // ─── Add New Platform Modal Logic ─────────────────────────────
+  const addPlatformModal = document.getElementById('addPlatformModal');
+  const openAddPlatformModalBtn = document.getElementById('openAddPlatformModalBtn');
+  const closeAddPlatformModalBtn = document.getElementById('closeAddPlatformModalBtn');
+  const cancelAddPlatformBtn = document.getElementById('cancelAddPlatformBtn');
+  const saveNewPlatformBtn = document.getElementById('saveNewPlatformBtn');
+  const newPlatformName = document.getElementById('newPlatformName');
+  const newPlatformAbbr = document.getElementById('newPlatformAbbr');
+  const newPlatformDesc = document.getElementById('newPlatformDesc');
+  const platformModalError = document.getElementById('platformModalError');
+  const platformModalErrorText = document.getElementById('platformModalErrorText');
+  const savePlatformSpinner = document.getElementById('savePlatformSpinner');
+  const savePlatformBtnText = document.getElementById('savePlatformBtnText');
+
+  function openAddPlatformModal() {
+    if (!addPlatformModal) return;
+    if (platformModalError) platformModalError.classList.add('hidden');
+    if (platformModalErrorText) platformModalErrorText.textContent = '';
+    if (newPlatformName) newPlatformName.value = otherSearchInput ? otherSearchInput.value.trim() : '';
+    if (newPlatformAbbr) newPlatformAbbr.value = '';
+    if (newPlatformDesc) newPlatformDesc.value = '';
+    addPlatformModal.classList.remove('hidden');
+    if (newPlatformName) newPlatformName.focus();
+  }
+
+  function closeAddPlatformModal() {
+    if (!addPlatformModal) return;
+    addPlatformModal.classList.add('hidden');
+    if (platformModalError) platformModalError.classList.add('hidden');
+  }
+
+  if (openAddPlatformModalBtn) {
+    openAddPlatformModalBtn.addEventListener('click', openAddPlatformModal);
+  }
+  if (closeAddPlatformModalBtn) {
+    closeAddPlatformModalBtn.addEventListener('click', closeAddPlatformModal);
+  }
+  if (cancelAddPlatformBtn) {
+    cancelAddPlatformBtn.addEventListener('click', closeAddPlatformModal);
+  }
+  if (addPlatformModal) {
+    addPlatformModal.addEventListener('click', function(e) {
+      if (e.target === addPlatformModal) closeAddPlatformModal();
+    });
+  }
+
+  if (saveNewPlatformBtn) {
+    saveNewPlatformBtn.addEventListener('click', async function() {
+      const name = newPlatformName.value.trim();
+      const abbreviation = newPlatformAbbr.value.trim().toUpperCase();
+      const description = newPlatformDesc.value.trim();
+
+      platformModalError.classList.add('hidden');
+      platformModalErrorText.textContent = '';
+
+      if (!name || name.length < 2) {
+        platformModalErrorText.textContent = 'Platform name must be at least 2 characters.';
+        platformModalError.classList.remove('hidden');
+        newPlatformName.focus();
+        return;
+      }
+      if (name.length > 50) {
+        platformModalErrorText.textContent = 'Platform name cannot exceed 50 characters.';
+        platformModalError.classList.remove('hidden');
+        newPlatformName.focus();
+        return;
+      }
+      if (!abbreviation || abbreviation.length < 2) {
+        platformModalErrorText.textContent = 'Platform abbreviation must be at least 2 characters.';
+        platformModalError.classList.remove('hidden');
+        newPlatformAbbr.focus();
+        return;
+      }
+      if (abbreviation.length > 15) {
+        platformModalErrorText.textContent = 'Platform abbreviation cannot exceed 15 characters.';
+        platformModalError.classList.remove('hidden');
+        newPlatformAbbr.focus();
+        return;
+      }
+
+      saveNewPlatformBtn.disabled = true;
+      savePlatformSpinner.classList.remove('hidden');
+      savePlatformBtnText.textContent = 'Saving...';
+
+      try {
+        const response = await fetch('/admin/platforms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, abbreviation, description })
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || 'Failed to create platform.');
+        }
+
+        if (!otherPlatformsList.includes(data.platform.name)) {
+          otherPlatformsList.push(data.platform.name);
+          otherPlatformsList.sort();
+        }
+
+        addPlatformCheckbox(data.platform.name);
+        closeAddPlatformModal();
+
+        if (otherSearchInput) otherSearchInput.value = '';
+        if (otherDropdown) otherDropdown.classList.add('hidden');
+
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'success',
+            title: 'Platform Added',
+            text: `Platform "${data.platform.name}" has been added and selected!`,
+            background: '#16181D',
+            color: '#ffffff',
+            confirmButtonColor: 'var(--theme-accent, #0EA5E9)',
+            timer: 2000,
+            timerProgressBar: true
+          });
+        }
+      } catch (err) {
+        platformModalErrorText.textContent = err.message || 'An error occurred while creating the platform.';
+        platformModalError.classList.remove('hidden');
+      } finally {
+        saveNewPlatformBtn.disabled = false;
+        savePlatformSpinner.classList.add('hidden');
+        savePlatformBtnText.textContent = 'Save Platform';
+      }
     });
   }
 
@@ -1062,6 +1271,7 @@
     formData.append('title', form.title.value);
     formData.append('publisher', form.publisher.value);
     formData.append('release_year', form.release_year.value);
+    formData.append('gst_rate', form.gst_rate.value);
     formData.append('category', form.category.value);
     formData.append('edition_type', form.edition_type.value);
     formData.append('description', form.description.value);

@@ -1,16 +1,19 @@
-import * as cartService from '../../services/cartService.js';
-import * as userService from '../../services/userService.js';
+import * as cartService from '../../services/user/cartService.js';
+import * as userService from '../../services/user/userService.js';
+import * as couponService from '../../services/user/couponService.js';
+import { getWalletBalance } from '../../services/shared/walletHelper.js';
 
 export const getCart = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(userId);
-        if (!user) return res.redirect('/auth/login');
+        if (!user) return res.redirect('/login');
 
         const {
             cart,
             subtotal,
             tax,
+            gst_rate,
             shipping,
             grandTotal,
             hasUnavailableProduct,
@@ -22,6 +25,7 @@ export const getCart = async (req, res) => {
             cart,
             subtotal,
             tax,
+            gst_rate,
             shipping,
             grandTotal,
             hasUnavailableProduct,
@@ -42,32 +46,80 @@ export const getCheckout = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(userId);
-        if (!user) return res.redirect('/auth/login');
+        if (!user) return res.redirect('/login');
 
-        const cartDetails = await cartService.getCartDetails(userId);
+        const initialCartDetails = await cartService.getCartDetails(userId);
 
-        if (!cartDetails.cart || !cartDetails.cart.items || cartDetails.cart.items.length === 0) {
-            return res.redirect('/user/cart');
+        if (!initialCartDetails.cart || !initialCartDetails.cart.items || initialCartDetails.cart.items.length === 0) {
+            return res.redirect('/cart');
         }
 
-        if (cartDetails.hasUnavailableProduct) {
-            return res.redirect('/user/cart?error=unavailable');
+        if (initialCartDetails.hasUnavailableProduct) {
+            return res.redirect('/cart?error=unavailable');
         }
 
-        if (cartDetails.hasInsufficientStockProduct) {
-            return res.redirect('/user/cart?error=insufficient_stock');
+        if (initialCartDetails.hasInsufficientStockProduct) {
+            return res.redirect('/cart?error=insufficient_stock');
+        }
+
+        // Fetch available coupons, wallet balance, and evaluate highest savings coupon (bestCoupon)
+        const subtotalWithTax = initialCartDetails.subtotal + initialCartDetails.tax;
+        const [couponData, walletBalance] = await Promise.all([
+            couponService.getAvailableCouponsForCheckout(userId, subtotalWithTax),
+            getWalletBalance(userId)
+        ]);
+        
+        let activeCouponCode = null;
+        let isAutoApplied = false;
+
+        // Priority logic for coupon selection across refreshes:
+        // 1. Explicit query parameter override: ?coupon=CODE
+        if (req.query.coupon && req.query.coupon.trim()) {
+            activeCouponCode = req.query.coupon.trim().toUpperCase();
+            req.session.appliedCouponCode = activeCouponCode;
+            delete req.session.couponRemoved;
+        } 
+        // 2. Persistent manual selection saved in user session
+        else if (req.session.appliedCouponCode) {
+            activeCouponCode = req.session.appliedCouponCode;
+        } 
+        // 3. User explicitly removed coupon in session
+        else if (req.session.couponRemoved === true) {
+            activeCouponCode = null;
+        } 
+        // 4. Default auto-apply best coupon if available
+        else if (couponData.bestCoupon) {
+            activeCouponCode = couponData.bestCoupon.code;
+            isAutoApplied = true;
+            req.session.appliedCouponCode = activeCouponCode;
+        }
+
+        let cartDetails = await cartService.getCartDetails(userId, activeCouponCode);
+
+        // Fallback: If saved session coupon is no longer valid or eligible, clear session coupon
+        if (activeCouponCode && (!cartDetails.appliedCoupon || cartDetails.discount <= 0)) {
+            activeCouponCode = null;
+            delete req.session.appliedCouponCode;
+            cartDetails = await cartService.getCartDetails(userId, null);
         }
 
         res.render('user/checkout', {
             user,
+            walletBalance,
             cart: {
                 items: cartDetails.cart.items,
                 subtotal: cartDetails.subtotal,
                 tax: cartDetails.tax,
                 shipping: cartDetails.shipping,
                 discount: cartDetails.discount,
+                appliedCoupon: cartDetails.appliedCoupon,
                 grandTotal: cartDetails.grandTotal
-            }
+            },
+            availableCoupons: couponData.allCoupons,
+            eligibleCoupons: couponData.eligibleCoupons,
+            ineligibleCoupons: couponData.ineligibleCoupons,
+            bestCoupon: couponData.bestCoupon,
+            autoAppliedCouponCode: isAutoApplied && cartDetails.appliedCoupon ? cartDetails.appliedCoupon.code : null
         });
     } catch (error) {
         console.error('[getCheckout] Error:', error);
@@ -77,6 +129,133 @@ export const getCheckout = async (req, res) => {
             publishers: [],
             error: 'An error occurred while loading checkout.'
         });
+    }
+};
+
+export const getCheckoutFailure = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const user = await userService.getUserById(userId);
+
+        const activeCouponCode = req.session.appliedCouponCode || null;
+        const [cartDetails, walletBalance] = await Promise.all([
+            cartService.getCartDetails(userId, activeCouponCode),
+            getWalletBalance(userId)
+        ]);
+
+        if (!cartDetails.cart || cartDetails.cart.items.length === 0) {
+            return res.redirect('/cart');
+        }
+
+        const cartCount = await cartService.getCartItemCount(userId);
+        const reason = req.query.reason || 'Payment could not be completed or authorization was cancelled.';
+
+        let defaultAddressIndex = -1;
+        if (user && user.addresses && user.addresses.length > 0) {
+            defaultAddressIndex = user.addresses.findIndex(addr => addr.isDefault);
+            if (defaultAddressIndex === -1) defaultAddressIndex = 0;
+        }
+        const selectedAddress = (user && user.addresses && user.addresses.length > 0 && defaultAddressIndex !== -1) ? user.addresses[defaultAddressIndex] : null;
+
+        res.render('user/order-failure', {
+            user,
+            cart: {
+                items: cartDetails.cart.items,
+                subtotal: cartDetails.subtotal,
+                tax: cartDetails.tax,
+                shipping: cartDetails.shipping,
+                discount: cartDetails.discount,
+                appliedCoupon: cartDetails.appliedCoupon,
+                grandTotal: cartDetails.grandTotal
+            },
+            selectedAddress,
+            walletBalance,
+            cartCount,
+            reason
+        });
+    } catch (error) {
+        console.error('[getCheckoutFailure] Error:', error);
+        res.redirect('/cart');
+    }
+};
+
+export const applyCoupon = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const { couponCode } = req.body;
+
+        if (!couponCode || !couponCode.trim()) {
+            return res.status(400).json({ success: false, message: 'Please enter a coupon code.' });
+        }
+
+        const cleanCode = couponCode.trim().toUpperCase();
+        const initialCartDetails = await cartService.getCartDetails(userId);
+        const subtotalWithTax = initialCartDetails.subtotal + initialCartDetails.tax;
+        const result = await couponService.verifyAndApplyCoupon(cleanCode, userId, subtotalWithTax);
+
+        if (!result.success) {
+            return res.status(400).json({ success: false, message: result.message });
+        }
+
+        // Save applied coupon to session (replacing any previous coupon to enforce max 1 coupon limit)
+        req.session.appliedCouponCode = cleanCode;
+        delete req.session.couponRemoved;
+
+        const updatedCart = await cartService.getCartDetails(userId, cleanCode);
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+            cartDetails: {
+                subtotal: updatedCart.subtotal,
+                subtotalRupees: (updatedCart.subtotal / 100).toFixed(2),
+                discount: updatedCart.discount,
+                discountRupees: (updatedCart.discount / 100).toFixed(2),
+                tax: updatedCart.tax,
+                taxRupees: (updatedCart.tax / 100).toFixed(2),
+                shipping: updatedCart.shipping,
+                shippingRupees: (updatedCart.shipping / 100).toFixed(2),
+                grandTotal: updatedCart.grandTotal,
+                grandTotalRupees: (updatedCart.grandTotal / 100).toFixed(2),
+                appliedCoupon: updatedCart.appliedCoupon
+            }
+        });
+    } catch (error) {
+        console.error('[applyCoupon] Error:', error);
+        res.status(500).json({ success: false, message: error.message || 'Failed to apply coupon' });
+    }
+};
+
+export const removeCoupon = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+
+        // Clear session coupon state and mark explicitly removed
+        req.session.appliedCouponCode = null;
+        req.session.couponRemoved = true;
+
+        const updatedCart = await cartService.getCartDetails(userId, null);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Coupon removed.',
+            cartDetails: {
+                subtotal: updatedCart.subtotal,
+                subtotalRupees: (updatedCart.subtotal / 100).toFixed(2),
+                discount: 0,
+                discountRupees: '0.00',
+                tax: updatedCart.tax,
+                taxRupees: (updatedCart.tax / 100).toFixed(2),
+                shipping: updatedCart.shipping,
+                shippingRupees: (updatedCart.shipping / 100).toFixed(2),
+                grandTotal: updatedCart.grandTotal,
+                grandTotalRupees: (updatedCart.grandTotal / 100).toFixed(2),
+                appliedCoupon: null
+            }
+        });
+    } catch (error) {
+        console.error('[removeCoupon] Error:', error);
+        res.status(500).json({ success: false, message: error.message || 'Failed to remove coupon' });
     }
 };
 

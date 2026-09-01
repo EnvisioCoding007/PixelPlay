@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title><%= title %></title>
+    <meta name="description" content="Manage your PixelWallet balance, add funds, filter transactions, and view timeframe analytics." />
+    <link rel="stylesheet" href="/globals.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css" />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pixel: {
+                            cyan: '#0ea5e9',
+                            dark: '#071827',
+                            bg: '#09090b'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        .flatpickr-calendar {
+            background: #071827 !important;
+            border: 1px solid rgba(14, 165, 233, 0.4) !important;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.7) !important;
+            border-radius: 12px !important;
+        }
+        .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected:focus, .flatpickr-day.selected:hover {
+            background: #0ea5e9 !important;
+            border-color: #0ea5e9 !important;
+            color: #09090b !important;
+            font-weight: bold !important;
+        }
+        .flatpickr-day:hover {
+            background: rgba(14, 165, 233, 0.2) !important;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months, .flatpickr-current-month input.cur-year {
+            color: #e6f7fb !important;
+            font-weight: bold !important;
+        }
+        .flatpickr-day {
+            color: #d1d5db !important;
+        }
+        .flatpickr-weekday {
+            color: #0ea5e9 !important;
+            font-weight: 600 !important;
+        }
+        .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
+            fill: #0ea5e9 !important;
+        }
+    </style>
+</head>
+
+<body class="bg-zinc-950 text-white min-h-screen flex flex-col font-sans">
+    <%- include('../partials/user/navbar', { activeTab: 'wallet' }) %>
+
+    <div class="[background:radial-gradient(50%_50%_at_50%_75%,rgba(14,165,233,0.15)_0%,rgba(14,165,233,0)_60%)] fixed inset-0 pointer-events-none" aria-hidden="true"></div>
+
+    <main class="relative z-10 flex-1 flex flex-col">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-10">
+
+            <!-- Flash alerts -->
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-circle-exclamation text-lg"></i>
+                        <span><%= error %></span>
+                    </div>
+                </div>
+            <% } %>
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-circle-check text-lg"></i>
+                        <span><%= success %></span>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                        <i class="fa-solid fa-wallet text-sky-400"></i> My PixelWallet
+                    </h1>
+                    <p class="text-gray-400 text-sm mt-1">Manage your store credits, instant refund balance, and transaction history.</p>
+                </div>
+                <button type="button" id="open-topup-btn"
+                    class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-sky-500 hover:bg-sky-400 text-zinc-950 font-semibold rounded-lg shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all cursor-pointer">
+                    <i class="fa-solid fa-plus"></i> Add Funds to Wallet
+                </button>
+            </div>
+
+            <!-- Balance & Features Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Main Balance Card -->
+                <div class="md:col-span-2 relative bg-[#071827] rounded-2xl p-6 border border-sky-500/20 shadow-lg overflow-hidden flex flex-col justify-between">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-semibold tracking-wider text-sky-400 uppercase">Available PixelWallet Balance</span>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Active Ledger
+                        </span>
+                    </div>
+                    <div>
+                        <div class="text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-[0_0_15px_rgba(14,165,233,0.3)]">
+                            ₹<%= wallet.balanceRupees %>
+                        </div>
+                        <p class="text-gray-400 text-xs mt-2 flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-sky-400"></i> Equivalent to <%= wallet.balancePaisa %> Paisa (Stored securely)
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Features Card -->
+                <div class="bg-[#071827] rounded-2xl p-6 border border-zinc-800 flex flex-col justify-between">
+                    <h2 class="text-sm font-bold text-gray-200 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-amber-400"></i> PixelWallet Benefits
+                    </h2>
+                    <ul class="space-y-3 text-xs text-gray-300">
+                        <li class="flex items-center gap-2.5">
+                            <i class="fa-solid fa-check text-emerald-400"></i> Instant 1-Click Order Checkout
+                        </li>
+                        <li class="flex items-center gap-2.5">
+                            <i class="fa-solid fa-check text-emerald-400"></i> Zero Transaction &amp; Payment Processing Fees
+                        </li>
+                        <li class="flex items-center gap-2.5">
+                            <i class="fa-solid fa-check text-emerald-400"></i> Instant Refunds on Order Cancellation &amp; Returns
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Transaction Overview Analytics Cards -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-sky-400"></i> Period Overview Analytics
+                    </h2>
+                    <span class="text-xs text-gray-400">
+                        Active Timeframe: 
+                        <span class="font-semibold text-sky-400 uppercase">
+                            <%= filters.period === 'week' ? 'Last 7 Days (Week)' : (filters.period === 'month' ? 'Last 30 Days (Month)' : (filters.period === 'year' ? 'Last 365 Days (Year)' : (filters.period === 'custom' ? 'Custom Range' : 'All Time'))) %>
+                        </span>
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Total Credits Card -->
+                    <div class="bg-[#071827] rounded-xl p-5 border border-emerald-500/20 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Credits</span>
+                            <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-arrow-down-left"></i>
+                            </div>
+                        </div>
+                        <div class="text-2xl font-bold font-mono text-emerald-400">
+                            +₹<%= periodOverview.totalCreditsRupees %>
+                        </div>
+                        <span class="text-[11px] text-gray-500 mt-1 block">Inflows in selected window</span>
+                    </div>
+
+                    <!-- Total Debits Card -->
+                    <div class="bg-[#071827] rounded-xl p-5 border border-red-500/20 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Debits</span>
+                            <div class="w-7 h-7 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-arrow-up-right"></i>
+                            </div>
+                        </div>
+                        <div class="text-2xl font-bold font-mono text-red-400">
+                            -₹<%= periodOverview.totalDebitsRupees %>
+                        </div>
+                        <span class="text-[11px] text-gray-500 mt-1 block">Outflows in selected window</span>
+                    </div>
+
+                    <!-- Net Flow Card -->
+                    <div class="bg-[#071827] rounded-xl p-5 border border-zinc-800 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Net Cash Flow</span>
+                            <div class="w-7 h-7 rounded-lg <%= periodOverview.isNetFlowPositive ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400' %> flex items-center justify-center text-xs">
+                                <i class="fa-solid <%= periodOverview.isNetFlowPositive ? 'fa-chart-simple' : 'fa-chart-simple fa-rotate-180' %>"></i>
+                            </div>
+                        </div>
+                        <div class="text-2xl font-bold font-mono <%= periodOverview.isNetFlowPositive ? 'text-emerald-400' : 'text-red-400' %>">
+                            <%= periodOverview.isNetFlowPositive ? '+' : '-' %>₹<%= periodOverview.netFlowRupees %>
+                        </div>
+                        <span class="text-[11px] text-gray-500 mt-1 block">Net movement in period</span>
+                    </div>
+
+                    <!-- Activity Count Card -->
+                    <div class="bg-[#071827] rounded-xl p-5 border border-zinc-800 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Activity Count</span>
+                            <div class="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-receipt"></i>
+                            </div>
+                        </div>
+                        <div class="text-2xl font-bold font-mono text-white">
+                            <%= periodOverview.transactionCount %> <span class="text-xs text-gray-400 font-sans font-normal">Entries</span>
+                        </div>
+                        <span class="text-[11px] text-gray-500 mt-1 block">Matching current filters</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction Ledger Section -->
+            <div class="bg-[#071827] rounded-2xl border border-zinc-800 overflow-hidden shadow-xl">
+                <!-- Toolbar & Filters -->
+                <div class="p-6 border-b border-zinc-800">
+                    <form action="/wallet" method="GET" id="wallet-filter-form" class="flex flex-col gap-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-list-check text-sky-400"></i> Transaction Ledger
+                                </h2>
+                                <p class="text-xs text-gray-400 mt-0.5">Real-time audit history of credits and debits.</p>
+                            </div>
+                            <div class="text-xs text-gray-400 flex items-center gap-2">
+                                Displaying: <span class="font-bold text-white"><%= wallet.transactions.length %></span> of <span class="font-bold text-white"><%= wallet.totalTransactions %></span> entries
+                            </div>
+                        </div>
+
+                        <!-- Filter Controls Bar -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+                            <!-- Type Filter -->
+                            <div>
+                                <label for="filter-type" class="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                                    Transaction Type
+                                </label>
+                                <select name="type" id="filter-type" onchange="this.form.submit()"
+                                    class="w-full bg-zinc-950 border border-zinc-800 focus:border-sky-500 rounded-lg px-3 py-2 text-xs text-gray-200 outline-none cursor-pointer">
+                                    <option value="all" <%= filters.type === 'all' ? 'selected' : '' %>>All Types (Credits &amp; Debits)</option>
+                                    <option value="credit" <%= filters.type === 'credit' ? 'selected' : '' %>>Credits Only (+)</option>
+                                    <option value="debit" <%= filters.type === 'debit' ? 'selected' : '' %>>Debits Only (-)</option>
+                                </select>
+                            </div>
+
+                            <!-- Period Filter -->
+                            <div>
+                                <label for="filter-period" class="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                                    Timeframe Overview
+                                </label>
+                                <select name="period" id="filter-period" onchange="toggleCustomDates(this.value); if(this.value !== 'custom') this.form.submit();"
+                                    class="w-full bg-zinc-950 border border-zinc-800 focus:border-sky-500 rounded-lg px-3 py-2 text-xs text-gray-200 outline-none cursor-pointer">
+                                    <option value="all" <%= filters.period === 'all' ? 'selected' : '' %>>All Time</option>
+                                    <option value="week" <%= filters.period === 'week' ? 'selected' : '' %>>Last 7 Days (Week)</option>
+                                    <option value="month" <%= filters.period === 'month' ? 'selected' : '' %>>Last 30 Days (Month)</option>
+                                    <option value="year" <%= filters.period === 'year' ? 'selected' : '' %>>Last 365 Days (Year)</option>
+                                    <option value="custom" <%= filters.period === 'custom' ? 'selected' : '' %>>Custom Date Range...</option>
+                                </select>
+                            </div>
+
+                            <!-- Sort Filter -->
+                            <div>
+                                <label for="filter-sort" class="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                                    Sort By
+                                </label>
+                                <select name="sort" id="filter-sort" onchange="this.form.submit()"
+                                    class="w-full bg-zinc-950 border border-zinc-800 focus:border-sky-500 rounded-lg px-3 py-2 text-xs text-gray-200 outline-none cursor-pointer">
+                                    <option value="newest" <%= filters.sort === 'newest' ? 'selected' : '' %>>Sort: Newest First</option>
+                                    <option value="oldest" <%= filters.sort === 'oldest' ? 'selected' : '' %>>Sort: Oldest First</option>
+                                    <option value="amount_desc" <%= filters.sort === 'amount_desc' ? 'selected' : '' %>>Amount: High to Low</option>
+                                    <option value="amount_asc" <%= filters.sort === 'amount_asc' ? 'selected' : '' %>>Amount: Low to High</option>
+                                </select>
+                            </div>
+
+                            <!-- Action / Clear Filters -->
+                            <div class="flex items-end gap-2">
+                                <button type="submit" class="flex-1 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-medium transition-colors">
+                                    Apply Filter
+                                </button>
+                                <% if (filters.type !== 'all' || filters.period !== 'all' || filters.sort !== 'newest' || filters.startDate || filters.endDate) { %>
+                                    <a href="/wallet" class="px-3 py-2 bg-zinc-900 border border-zinc-800 hover:border-red-500/40 text-red-400 hover:text-red-300 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5" title="Clear Filters">
+                                        <i class="fa-solid fa-rotate-left"></i> Reset
+                                    </a>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <!-- Custom Date Range inputs (collapsible with interactive calendar UI) -->
+                        <div id="custom-date-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 <%= filters.period === 'custom' || filters.startDate || filters.endDate ? '' : 'hidden' %>">
+                            <div>
+                                <label for="filter-startDate" class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                                    <i class="fa-regular fa-calendar-days text-sky-400 mr-1"></i> Start Date
+                                </label>
+                                <div class="relative">
+                                    <input type="text" name="startDate" id="filter-startDate" value="<%= filters.startDate %>" placeholder="Select Start Date..." readonly
+                                        class="w-full bg-zinc-950 border border-zinc-800 focus:border-sky-500 rounded-lg px-3 py-2 text-xs text-gray-200 outline-none cursor-pointer" />
+                                    <i class="fa-solid fa-calendar absolute right-3 top-1/2 -translate-y-1/2 text-sky-400 pointer-events-none text-xs"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="filter-endDate" class="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                                    <i class="fa-regular fa-calendar-days text-sky-400 mr-1"></i> End Date
+                                </label>
+                                <div class="relative">
+                                    <input type="text" name="endDate" id="filter-endDate" value="<%= filters.endDate %>" placeholder="Select End Date..." readonly
+                                        class="w-full bg-zinc-950 border border-zinc-800 focus:border-sky-500 rounded-lg px-3 py-2 text-xs text-gray-200 outline-none cursor-pointer" />
+                                    <i class="fa-solid fa-calendar absolute right-3 top-1/2 -translate-y-1/2 text-sky-400 pointer-events-none text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-300">
+                        <thead class="bg-[#0b2238] text-xs uppercase text-gray-400 tracking-wider">
+                            <tr>
+                                <th scope="col" class="px-6 py-3.5">Transaction ID</th>
+                                <th scope="col" class="px-6 py-3.5">Date &amp; Time</th>
+                                <th scope="col" class="px-6 py-3.5">Type</th>
+                                <th scope="col" class="px-6 py-3.5">Description</th>
+                                <th scope="col" class="px-6 py-3.5">Related Order</th>
+                                <th scope="col" class="px-6 py-3.5 text-right">Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800/60">
+                            <% if (wallet.transactions && wallet.transactions.length > 0) { %>
+                                <% wallet.transactions.forEach(txn => { %>
+                                    <tr class="hover:bg-sky-500/5 transition-colors">
+                                        <td class="px-6 py-4 font-mono text-xs text-gray-300 font-semibold">
+                                            <%= txn.transactionId %>
+                                        </td>
+                                        <td class="px-6 py-4 text-xs text-gray-400">
+                                            <%= new Date(txn.date).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) %>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <% if (txn.type === 'credit') { %>
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                                    <i class="fa-solid fa-arrow-down-left text-[10px]"></i> Credit
+                                                </span>
+                                            <% } else { %>
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+                                                    <i class="fa-solid fa-arrow-up-right text-[10px]"></i> Debit
+                                                </span>
+                                            <% } %>
+                                        </td>
+                                        <td class="px-6 py-4 text-xs text-gray-200">
+                                            <%= txn.description %>
+                                        </td>
+                                        <td class="px-6 py-4 text-xs">
+                                            <% if (txn.orderId) { %>
+                                                <a href="/orders/<%= txn.orderId %>" class="text-sky-400 hover:text-sky-300 hover:underline font-mono">
+                                                    #<%= txn.orderId %>
+                                                </a>
+                                            <% } else { %>
+                                                <span class="text-gray-500">—</span>
+                                            <% } %>
+                                        </td>
+                                        <td class="px-6 py-4 text-right font-mono font-bold text-sm <%= txn.type === 'credit' ? 'text-emerald-400' : 'text-red-400' %>">
+                                            <%= txn.type === 'credit' ? '+' : '-' %>₹<%= txn.amountRupees %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                        <i class="fa-solid fa-receipt text-3xl mb-2 block text-gray-600"></i>
+                                        No transactions match the selected filter criteria.
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <% if (totalPages > 1) { %>
+                    <div class="px-6 py-4 border-t border-zinc-800 flex items-center justify-between">
+                        <span class="text-xs text-gray-400">Page <%= page %> of <%= totalPages %></span>
+                        <div class="flex items-center gap-2">
+                            <% 
+                                const queryParams = `type=${filters.type}&period=${filters.period}&startDate=${encodeURIComponent(filters.startDate)}&endDate=${encodeURIComponent(filters.endDate)}&sort=${filters.sort}`;
+                            %>
+                            <% if (page > 1) { %>
+                                <a href="/wallet?page=<%= page - 1 %>&<%= queryParams %>" class="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-gray-300 transition-colors">
+                                    &laquo; Prev
+                                </a>
+                            <% } %>
+                            <% if (page < totalPages) { %>
+                                <a href="/wallet?page=<%= page + 1 %>&<%= queryParams %>" class="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-gray-300 transition-colors">
+                                    Next
+                                </a>
+                            <% } %>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Top Up Modal -->
+    <div id="topup-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-[#071827] border border-sky-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button type="button" id="close-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-xl font-bold text-white mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-circle-plus text-sky-400"></i> Top Up PixelWallet
+            </h3>
+            <p class="text-gray-400 text-xs mb-6">Enter an amount in Rupees (₹) to add instantly to your wallet balance.</p>
+
+            <form action="/wallet/add-funds" method="POST" id="topup-form">
+                <div class="mb-4">
+                    <label for="topup-amount" class="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                        Amount (₹)
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-400 font-bold">₹</span>
+                        <input type="number" id="topup-amount" name="amount" min="1" max="50000" step="1" placeholder="e.g. 500" required
+                            class="w-full bg-zinc-950 border border-zinc-800 focus:border-sky-500 rounded-lg pl-8 pr-4 py-2.5 text-white font-mono outline-none transition-colors" />
+                    </div>
+                </div>
+
+                <!-- Quick amount chips -->
+                <div class="flex items-center gap-2 mb-6">
+                    <button type="button" class="quick-chip px-3 py-1.5 bg-zinc-900 hover:bg-sky-500/20 border border-zinc-800 hover:border-sky-500/40 rounded-md text-xs font-semibold text-sky-400 transition-colors" data-val="100">+₹100</button>
+                    <button type="button" class="quick-chip px-3 py-1.5 bg-zinc-900 hover:bg-sky-500/20 border border-zinc-800 hover:border-sky-500/40 rounded-md text-xs font-semibold text-sky-400 transition-colors" data-val="500">+₹500</button>
+                    <button type="button" class="quick-chip px-3 py-1.5 bg-zinc-900 hover:bg-sky-500/20 border border-zinc-800 hover:border-sky-500/40 rounded-md text-xs font-semibold text-sky-400 transition-colors" data-val="1000">+₹1,000</button>
+                    <button type="button" class="quick-chip px-3 py-1.5 bg-zinc-900 hover:bg-sky-500/20 border border-zinc-800 hover:border-sky-500/40 rounded-md text-xs font-semibold text-sky-400 transition-colors" data-val="2000">+₹2,000</button>
+                </div>
+
+                <div class="flex items-center justify-end gap-3">
+                    <button type="button" id="cancel-modal-btn" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 rounded-lg text-sm transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-sky-500 hover:bg-sky-400 text-zinc-950 font-bold rounded-lg text-sm shadow-lg shadow-sky-500/20 transition-all">
+                        Confirm Top Up
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function toggleCustomDates(val) {
+            const container = document.getElementById('custom-date-container');
+            if (container) {
+                if (val === 'custom') {
+                    container.classList.remove('hidden');
+                } else {
+                    container.classList.add('hidden');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('topup-modal');
+            const openBtn = document.getElementById('open-topup-btn');
+            const closeBtn = document.getElementById('close-modal-btn');
+            const cancelBtn = document.getElementById('cancel-modal-btn');
+            const amountInput = document.getElementById('topup-amount');
+            const chips = document.querySelectorAll('.quick-chip');
+
+            const openModal = () => {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                amountInput.focus();
+            };
+
+            const closeModal = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+
+            if (openBtn) openBtn.addEventListener('click', openModal);
+            if (closeBtn) closeBtn.addEventListener('click', closeModal);
+            if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+            chips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const val = chip.getAttribute('data-val');
+                    amountInput.value = val;
+                });
+            });
+
+            // Handle Top-Up Form submission via Razorpay Checkout Demo
+            const topupForm = document.getElementById('topup-form');
+            if (topupForm) {
+                topupForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const amountVal = parseFloat(amountInput.value);
+                    if (isNaN(amountVal) || amountVal <= 0) {
+                        Swal.fire({ icon: 'warning', title: 'Invalid Amount', text: 'Please enter a valid top-up amount greater than ₹0.' });
+                        return;
+                    }
+                    if (amountVal > 50000) {
+                        Swal.fire({ icon: 'warning', title: 'Limit Exceeded', text: 'Maximum top-up amount allowed at one time is ₹50,000.' });
+                        return;
+                    }
+
+                    const submitBtn = topupForm.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.innerText = 'Initiating Razorpay...';
+
+                    try {
+                        const res = await fetch('/wallet/razorpay-create', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ amount: amountVal })
+                        });
+
+                        const data = await res.json();
+                        if (!res.ok || !data.success) {
+                            Swal.fire({ icon: 'error', title: 'Initiation Failed', text: data.message || 'Could not initiate top-up payment.' });
+                            submitBtn.disabled = false;
+                            submitBtn.innerText = 'Confirm Top Up';
+                            return;
+                        }
+
+                        const options = {
+                            key: data.razorpayKeyId,
+                            amount: data.amount,
+                            currency: data.currency || 'INR',
+                            name: 'PixelPlay',
+                            description: 'PixelWallet Top-Up',
+                            order_id: data.razorpayOrderId,
+                            handler: async function (response) {
+                                submitBtn.innerText = 'Verifying Top-Up...';
+                                try {
+                                    const verifyRes = await fetch('/wallet/razorpay-verify', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            amount: amountVal,
+                                            razorpay_order_id: response.razorpay_order_id,
+                                            razorpay_payment_id: response.razorpay_payment_id,
+                                            razorpay_signature: response.razorpay_signature
+                                        })
+                                    });
+
+                                    const verifyData = await verifyRes.json();
+                                    if (verifyRes.ok && verifyData.success) {
+                                        closeModal();
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Top-Up Successful!',
+                                            text: verifyData.message || `₹${amountVal.toFixed(2)} credited to your PixelWallet!`,
+                                            timer: 1800,
+                                            showConfirmButton: false
+                                        }).then(() => {
+                                            window.location.href = '/wallet?success=' + encodeURIComponent(verifyData.message);
+                                        });
+                                    } else {
+                                        Swal.fire({ icon: 'error', title: 'Top-Up Failed', text: verifyData.message || 'Signature verification failed.' });
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerText = 'Confirm Top Up';
+                                    }
+                                } catch (err) {
+                                    Swal.fire({ icon: 'error', title: 'Verification Error', text: 'Network error during payment verification.' });
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerText = 'Confirm Top Up';
+                                }
+                            },
+                            prefill: {
+                                name: '<%= user ? (user.username || "") : "" %>',
+                                email: '<%= user ? (user.email || "") : "" %>'
+                            },
+                            theme: { color: '#0ea5e9' },
+                            modal: {
+                                ondismiss: function () {
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerText = 'Confirm Top Up';
+                                    Swal.fire({ icon: 'info', title: 'Top-Up Cancelled', text: 'Payment window was closed. No funds were added.' });
+                                }
+                            }
+                        };
+
+                        const rzp = new Razorpay(options);
+                        rzp.open();
+                    } catch (err) {
+                        Swal.fire({ icon: 'error', title: 'Network Error', text: 'Failed to connect to payment server.' });
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = 'Confirm Top Up';
+                    }
+                });
+            }
+
+            // Initialize Flatpickr Interactive Calendar UI for Custom Date Range
+            const fpStart = flatpickr("#filter-startDate", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "M j, Y",
+                altInputClass: "w-full bg-zinc-950 border border-zinc-800 focus:border-sky-500 rounded-lg px-3 py-2 text-xs text-gray-200 outline-none cursor-pointer",
+                allowInput: false,
+                theme: "dark",
+                onChange: function(selectedDates, dateStr) {
+                    if (fpEnd) {
+                        fpEnd.set('minDate', dateStr);
+                    }
+                }
+            });
+
+            const fpEnd = flatpickr("#filter-endDate", {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "M j, Y",
+                altInputClass: "w-full bg-zinc-950 border border-zinc-800 focus:border-sky-500 rounded-lg px-3 py-2 text-xs text-gray-200 outline-none cursor-pointer",
+                allowInput: false,
+                theme: "dark",
+                onChange: function(selectedDates, dateStr) {
+                    if (fpStart) {
+                        fpStart.set('maxDate', dateStr);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

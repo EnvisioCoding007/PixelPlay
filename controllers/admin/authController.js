@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import * as userService from '../../services/userService.js';
+import * as userService from '../../services/admin/userService.js';
 
 export const getAdminLogin = (req, res) => {
     res.render('admin/login', { error: null });
@@ -13,7 +13,7 @@ export const adminLogin = async (req, res) => {
             return res.render('admin/login', { error: 'Email and password are required.' });
         }
 
-        const user = await userService.getAdminByEmail(email);
+        const user = await userService.getUserByEmail(email);
 
         if (!user) {
             return res.render('admin/login', { error: 'Invalid credentials.' });
@@ -41,7 +41,7 @@ export const adminLogin = async (req, res) => {
                     console.error('[adminLogin] session.save error:', saveErr);
                     return res.render('admin/login', { error: 'Session error. Please try again.' });
                 }
-                return res.redirect('/admin/users');
+                return res.redirect('/admin/dashboard');
             });
         });
     } catch (err) {

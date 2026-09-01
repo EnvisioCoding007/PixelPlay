@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
-import Wishlist from '../models/Wishlist.js';
-import Product from '../models/Product.js';
-import Category from '../models/Category.js';
+import Wishlist from '../../models/Wishlist.js';
+import Product from '../../models/Product.js';
+import Category from '../../models/Category.js';
+import { getActiveOffers, calculateBestOfferForProduct } from '../shared/offerHelper.js';
 
 export const getWishlistByUserId = async (userId) => {
     try {
@@ -10,6 +11,8 @@ export const getWishlistByUserId = async (userId) => {
             return { items: [] };
         }
         wishlist.items = wishlist.items.filter(item => item.product);
+
+        const activeOffers = await getActiveOffers();
 
         for (let item of wishlist.items) {
             if (item.product) {
@@ -22,8 +25,6 @@ export const getWishlistByUserId = async (userId) => {
                         catObj = await Category.findOne({ name: item.product.category }).lean();
                     }
                 }
-                const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
-                item.product.categoryDiscount = discount;
                 
                 let basePrice = item.product.price || 0;
                 if (item.product.platform_stock && item.product.platform_stock.length > 0) {
@@ -37,9 +38,14 @@ export const getWishlistByUserId = async (userId) => {
                         }
                     }
                 }
+
+                const offerResult = calculateBestOfferForProduct(item.product, activeOffers, basePrice);
+                item.product.categoryDiscount = offerResult.discountPercentage;
+                item.product.offerDiscount = offerResult.discountPercentage;
+                item.product.appliedOffer = offerResult.appliedOffer;
                 
                 item.product.price = basePrice;
-                item.product.discountedPrice = discount > 0 ? Math.max(0, basePrice - (basePrice * (discount / 100))) : basePrice;
+                item.product.discountedPrice = offerResult.discountedPrice;
                 item.product.categoryName = catObj ? catObj.name : 'N/A';
             }
         }

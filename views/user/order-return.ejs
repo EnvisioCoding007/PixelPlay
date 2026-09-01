@@ -79,7 +79,7 @@
         <!-- BEGIN: Header Section -->
         <header class="flex flex-col gap-6">
             <a class="text-pixel-muted hover:text-white flex items-center gap-2 text-sm font-medium w-fit transition-colors"
-                href="/user/orders/<%= order._id %>">
+                href="/orders/<%= order._id %>">
                 <svg fill="none" height="16" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                     stroke-width="2" viewbox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
                     <path d="m15 18-6-6 6-6"></path>
@@ -87,11 +87,30 @@
                 Back to Order Details
             </a>
             <div>
-                <h1 class="text-3xl font-bold text-white mb-3 tracking-tight">Request a Return</h1>
-                <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-pixel-muted font-mono">
+                <h1 class="text-3xl font-bold text-white mb-3 tracking-tight">
+                    <%= typeof product !== 'undefined' && product ? 'Request a Return' : 'Return Your Order' %>
+                </h1>
+                <div class="flex flex-col gap-3 text-sm text-pixel-muted font-mono">
                     <p>Order ID: <span class="text-gray-300">#<%= order.orderId %></span></p>
-                    <p>Item: <span class="text-pixel-cyan font-semibold"><%= product.title %></span> <span
-                            class="text-gray-400">(<%= item.platform %> Disk)</span></p>
+                    <% if (typeof product !== 'undefined' && product && typeof item !== 'undefined' && item) { %>
+                        <p>Item: <span class="text-pixel-cyan font-semibold"><%= product.title %></span> <span
+                                class="text-gray-400">(<%= item.platform %> Disk)</span></p>
+                    <% } else if (typeof order !== 'undefined' && order.items && order.items.length > 0) { %>
+                        <div class="w-full mt-2 space-y-2">
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider font-sans">Items included in return request:</p>
+                            <% order.items.forEach(i => { %>
+                                <% if (i.status === 'Ordered' || !i.status) { %>
+                                    <div class="flex items-center gap-3 bg-pixel-card p-3 rounded-lg border border-pixel-border font-sans">
+                                        <img src="<%= i.product && i.product.cover_image ? i.product.cover_image : '/placeholder.jpg' %>" class="w-10 h-14 object-cover rounded border border-gray-700" />
+                                        <div>
+                                            <p class="text-white font-bold text-sm"><%= i.product ? i.product.title : 'Game Item' %></p>
+                                            <p class="text-xs text-pixel-muted"><%= i.platform %> Disk • Qty: <%= i.quantity %></p>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            <% }); %>
+                        </div>
+                    <% } %>
                 </div>
             </div>
         </header>
@@ -104,8 +123,8 @@
                     <%= error %>
                 </div>
             <% } %>
-            <form action="/user/orders/<%= order._id %>/items/<%= product._id %>/returns?platform=<%= encodeURIComponent(item.platform) %>" class="flex flex-col gap-6" method="POST">
-                <% if (item && item.quantity > 1) { %>
+            <form action="<%= typeof product !== 'undefined' && product && typeof item !== 'undefined' && item ? '/orders/' + order._id + '/items/' + product._id + '/returns?platform=' + encodeURIComponent(item.platform) : '/orders/' + order._id + '/returns' %>" class="flex flex-col gap-6" method="POST">
+                <% if (typeof product !== 'undefined' && product && typeof item !== 'undefined' && item && item.quantity > 1) { %>
                 <!-- Quantity selection Section -->
                 <div class="bg-pixel-card rounded-xl p-6 shadow-sm border border-pixel-border flex flex-col gap-3">
                     <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Quantity to Return</label>
@@ -121,7 +140,9 @@
                 <% } %>
                 <!-- Return Reason Card -->
                 <div class="bg-pixel-card rounded-xl p-6 shadow-sm border border-pixel-border flex flex-col gap-5">
-                    <h2 class="text-base font-semibold text-white">Why are you returning this item?</h2>
+                    <h2 class="text-base font-semibold text-white">
+                        <%= typeof product !== 'undefined' && product ? 'Why are you returning this item?' : 'Why are you returning this order?' %>
+                    </h2>
                     <div class="flex flex-col gap-3">
                         <!-- Option 1 -->
                         <label class="custom-radio cursor-pointer group">

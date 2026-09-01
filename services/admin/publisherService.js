@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Publisher from '../../models/Publisher.js';
 import Product from '../../models/Product.js';
 
@@ -72,6 +73,9 @@ export const getAllPublishersSorted = async () => {
 
 export const getPublisherById = async (id) => {
     try {
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return null;
+        }
         return await Publisher.findById(id).lean();
     } catch (error) {
         console.error('[publisherService.getPublisherById] Error:', error);

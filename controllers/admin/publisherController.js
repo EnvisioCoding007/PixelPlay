@@ -66,7 +66,11 @@ export const renderEditPublisherPage = async (req, res) => {
         const { error, success } = req.query;
         const publisher = await publisherService.getPublisherById(req.params.id);
         if (!publisher) {
-            return res.status(404).send('Publisher not found');
+            return res.status(404).render('404', {
+                title: '404 - Publisher Not Found | PixelPlay',
+                isAdminContext: true,
+                url: req.originalUrl
+            });
         }
         res.render('admin/edit-publisher', {
             publisher,
@@ -76,7 +80,11 @@ export const renderEditPublisherPage = async (req, res) => {
         });
     } catch (err) {
         console.error('[renderEditPublisherPage]', err);
-        res.status(500).send('Internal Server Error');
+        return res.status(404).render('404', {
+            title: '404 - Page Not Found | PixelPlay',
+            isAdminContext: true,
+            url: req.originalUrl
+        });
     }
 };
 

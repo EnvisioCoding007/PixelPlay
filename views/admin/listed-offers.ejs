@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= typeof title !== 'undefined' ? title : 'Offer Management · Admin Panel' %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'main-bg': '#0B0E14',
+            'sidebar-bg': '#10141D',
+            'card-bg': '#151A24',
+            'content-bg': '#181F2C',
+            'input-dark-border': '#222B3D',
+            'border-dark': '#1E2638',
+            'pixel-blue': '#00F0FF',
+            'pixel-cyan': '#00F0FF',
+            'pixel-yellow': '#FACC15',
+            'pixel-red': '#FF4655',
+            'accent': '#0ea5e9'
+          }
+        }
+      }
+    };
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass-card {
+      background: rgba(21, 26, 36, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+  </style>
+</head>
+<body class="bg-main-bg text-gray-100 min-h-screen flex">
+  <%- include('../partials/admin/sidebar', { activeTab: 'offers' }) %>
+
+  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+    <!-- Header -->
+    <header class="h-20 bg-sidebar-bg/60 backdrop-blur-md border-b border-border-dark flex items-center justify-between px-8 sticky top-0 z-20">
+      <div>
+        <h1 class="text-xl font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-tags text-accent"></i>
+          Offer Management
+        </h1>
+        <p class="text-xs text-gray-400 mt-0.5">Configure publisher-wise, game-wise, and category-wise discount offers</p>
+      </div>
+
+      <button id="open-create-modal-btn" class="bg-accent hover:bg-sky-600 text-white text-sm font-semibold px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-lg shadow-sky-500/20 transition-all duration-200 cursor-pointer">
+        <i class="fa-solid fa-plus text-xs"></i>
+        <span>Create Offer</span>
+      </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="p-8 space-y-6 flex-1">
+      <!-- Flash Alert Notifications -->
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-lg flex items-center justify-between text-sm shadow-sm" id="flash-success">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span><%= success %></span>
+          </div>
+          <button onclick="document.getElementById('flash-success').remove()" class="text-emerald-400 hover:text-emerald-300">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      <% } %>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="bg-pixel-red/10 border border-pixel-red/20 text-pixel-red px-4 py-3 rounded-lg flex items-center justify-between text-sm shadow-sm" id="flash-error">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-pixel-red"></i>
+            <span><%= error %></span>
+          </div>
+          <button onclick="document.getElementById('flash-error').remove()" class="text-pixel-red hover:text-pixel-red/80">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      <% } %>
+
+      <!-- Metric Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="glass-card p-5 rounded-xl flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Offers</p>
+            <h3 class="text-2xl font-bold text-white mt-1"><%= typeof totalOffersCount !== 'undefined' ? totalOffersCount : 0 %></h3>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+            <i class="fa-solid fa-tags text-xl"></i>
+          </div>
+        </div>
+
+        <div class="glass-card p-5 rounded-xl flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Active Offers</p>
+            <h3 class="text-2xl font-bold text-emerald-400 mt-1"><%= typeof activeOffersCount !== 'undefined' ? activeOffersCount : 0 %></h3>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <i class="fa-solid fa-bolt text-xl"></i>
+          </div>
+        </div>
+
+        <div class="glass-card p-5 rounded-xl flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Expired Offers</p>
+            <h3 class="text-2xl font-bold text-rose-400 mt-1"><%= typeof expiredOffersCount !== 'undefined' ? expiredOffersCount : 0 %></h3>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+            <i class="fa-solid fa-clock-rotate-left text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Search Bar -->
+      <div class="glass-card p-4 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <form method="GET" action="/admin/offers" class="flex-1 w-full flex flex-col md:flex-row items-center gap-3">
+          <div class="relative flex-1 w-full">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+            <input type="text" name="search" value="<%= typeof search !== 'undefined' ? search : '' %>" placeholder="Search by offer title, target or description..." class="w-full bg-content-bg border border-input-dark-border text-sm text-gray-200 rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent" />
+          </div>
+
+          <div class="flex items-center gap-3 w-full md:w-auto">
+            <select name="targetType" onchange="this.form.submit()" class="bg-content-bg border border-input-dark-border text-sm text-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-accent">
+              <option value="all" <%= (typeof targetTypeFilter !== 'undefined' && targetTypeFilter === 'all') ? 'selected' : '' %>>All Target Types</option>
+              <option value="Category" <%= (typeof targetTypeFilter !== 'undefined' && targetTypeFilter === 'Category') ? 'selected' : '' %>>Category Offers</option>
+              <option value="Product" <%= (typeof targetTypeFilter !== 'undefined' && targetTypeFilter === 'Product') ? 'selected' : '' %>>Game/Product Offers</option>
+              <option value="Publisher" <%= (typeof targetTypeFilter !== 'undefined' && targetTypeFilter === 'Publisher') ? 'selected' : '' %>>Publisher Offers</option>
+            </select>
+
+            <select name="status" onchange="this.form.submit()" class="bg-content-bg border border-input-dark-border text-sm text-gray-300 rounded-lg px-3 py-2.5 focus:outline-none focus:border-accent">
+              <option value="all" <%= (typeof statusFilter !== 'undefined' && statusFilter === 'all') ? 'selected' : '' %>>All Statuses</option>
+              <option value="active" <%= (typeof statusFilter !== 'undefined' && statusFilter === 'active') ? 'selected' : '' %>>Active</option>
+              <option value="inactive" <%= (typeof statusFilter !== 'undefined' && statusFilter === 'inactive') ? 'selected' : '' %>>Inactive</option>
+              <option value="expired" <%= (typeof statusFilter !== 'undefined' && statusFilter === 'expired') ? 'selected' : '' %>>Expired</option>
+            </select>
+
+            <button type="submit" class="bg-content-bg border border-input-dark-border hover:bg-gray-800 text-gray-300 px-4 py-2.5 rounded-lg text-sm transition-colors">
+              Filter
+            </button>
+
+            <% if ((typeof search !== 'undefined' && search) || (typeof targetTypeFilter !== 'undefined' && targetTypeFilter !== 'all') || (typeof statusFilter !== 'undefined' && statusFilter !== 'all')) { %>
+              <a href="/admin/offers" class="text-xs text-gray-400 hover:text-white underline whitespace-nowrap">Reset</a>
+            <% } %>
+          </div>
+        </form>
+      </div>
+
+      <!-- Offers Table -->
+      <div class="glass-card rounded-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-gray-300">
+            <thead class="bg-sidebar-bg/80 text-gray-400 uppercase text-xs font-semibold tracking-wider border-b border-border-dark">
+              <tr>
+                <th class="py-4 px-6">Offer Title</th>
+                <th class="py-4 px-6">Target</th>
+                <th class="py-4 px-6 text-center">Discount</th>
+                <th class="py-4 px-6">Validity Period</th>
+                <th class="py-4 px-6 text-center">Status</th>
+                <th class="py-4 px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border-dark/50">
+              <% if (typeof offers !== 'undefined' && offers && offers.length > 0) { %>
+                <% offers.forEach(offer => { %>
+                  <tr class="hover:bg-content-bg/50 transition-colors">
+                    <td class="py-4 px-6">
+                      <div class="font-medium text-white text-base"><%= offer.title %></div>
+                      <% if (offer.description) { %>
+                        <p class="text-xs text-gray-400 mt-0.5 max-w-xs truncate"><%= offer.description %></p>
+                      <% } %>
+                    </td>
+
+                    <td class="py-4 px-6">
+                      <div class="flex items-center gap-2">
+                        <% if (offer.targetType === 'Category') { %>
+                          <span class="bg-purple-500/10 text-purple-400 border border-purple-500/20 text-xs px-2 py-0.5 rounded font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-layer-group text-[10px]"></i> Category
+                          </span>
+                        <% } else if (offer.targetType === 'Product') { %>
+                          <span class="bg-sky-500/10 text-sky-400 border border-sky-500/20 text-xs px-2 py-0.5 rounded font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-gamepad text-[10px]"></i> Game
+                          </span>
+                        <% } else { %>
+                          <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs px-2 py-0.5 rounded font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-building text-[10px]"></i> Publisher
+                          </span>
+                        <% } %>
+                        <span class="font-semibold text-gray-200 text-sm"><%= offer.targetName %></span>
+                      </div>
+                    </td>
+
+                    <td class="py-4 px-6 text-center">
+                      <span class="font-bold text-accent text-sm bg-accent/10 border border-accent/20 px-2.5 py-1 rounded-md">
+                        <%= offer.discountDisplay %>
+                      </span>
+                    </td>
+
+                    <td class="py-4 px-6 text-xs text-gray-400 space-y-1">
+                      <div><span class="text-gray-500">Start:</span> <%= offer.startDateDisplay %></div>
+                      <div><span class="text-gray-500">End:</span> <%= offer.expiryDateDisplay %></div>
+                    </td>
+
+                    <td class="py-4 px-6 text-center">
+                      <% if (!offer.isActive) { %>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-500/10 text-gray-400 border border-gray-500/20">
+                          <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Inactive
+                        </span>
+                      <% } else if (offer.isExpired) { %>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                          <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span> Expired
+                        </span>
+                      <% } else { %>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Active
+                        </span>
+                      <% } %>
+                    </td>
+
+                    <td class="py-4 px-6 text-right space-x-2">
+                      <button onclick="toggleOfferStatus('<%= offer._id %>', <%= offer.isActive %>)" class="p-2 rounded-lg bg-content-bg hover:bg-gray-800 text-gray-300 hover:text-white transition-colors" title="<%= offer.isActive ? 'Deactivate' : 'Activate' %>">
+                        <i class="fa-solid <%= offer.isActive ? 'fa-ban text-amber-400' : 'fa-check text-emerald-400' %>"></i>
+                      </button>
+
+                      <button onclick="openEditModal('<%= offer._id %>')" class="p-2 rounded-lg bg-content-bg hover:bg-gray-800 text-gray-300 hover:text-accent transition-colors" title="Edit Offer">
+                        <i class="fa-solid fa-pen"></i>
+                      </button>
+
+                      <button onclick="confirmDeleteOffer('<%= offer._id %>', '<%= offer.title.replace(/'/g, "\\'") %>')" class="p-2 rounded-lg bg-content-bg hover:bg-gray-800 text-gray-300 hover:text-pixel-red transition-colors" title="Delete Offer">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </button>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="6" class="py-12 text-center text-gray-500">
+                    <div class="w-16 h-16 rounded-full bg-sidebar-bg border border-border-dark flex items-center justify-center mx-auto mb-3 text-gray-600">
+                      <i class="fa-solid fa-tags text-2xl"></i>
+                    </div>
+                    <p class="font-medium text-gray-300">No offers found</p>
+                    <p class="text-xs text-gray-500 mt-1">Click "Create Offer" to issue new publisher, game, or category promotional offers.</p>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+          <div class="px-6 py-4 border-t border-border-dark/60 flex items-center justify-between text-xs text-gray-400">
+            <div>
+              Showing page <span class="font-semibold text-white"><%= currentPage %></span> of <span class="font-semibold text-white"><%= totalPages %></span> (<%= totalCount %> offers)
+            </div>
+            <div class="flex items-center gap-2">
+              <% if (currentPage > 1) { %>
+                <a href="/admin/offers?page=<%= currentPage - 1 %>&search=<%= search %>&targetType=<%= targetTypeFilter %>&status=<%= statusFilter %>" class="px-3 py-1.5 rounded bg-content-bg border border-input-dark-border hover:text-white transition-colors">Previous</a>
+              <% } %>
+              <% for (let i = 1; i <= totalPages; i++) { %>
+                <a href="/admin/offers?page=<%= i %>&search=<%= search %>&targetType=<%= targetTypeFilter %>&status=<%= statusFilter %>" class="px-3 py-1.5 rounded <%= i === currentPage ? 'bg-accent text-white font-bold' : 'bg-content-bg border border-input-dark-border hover:text-white' %> transition-colors"><%= i %></a>
+              <% } %>
+              <% if (currentPage < totalPages) { %>
+                <a href="/admin/offers?page=<%= currentPage + 1 %>&search=<%= search %>&targetType=<%= targetTypeFilter %>&status=<%= statusFilter %>" class="px-3 py-1.5 rounded bg-content-bg border border-input-dark-border hover:text-white transition-colors">Next</a>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </main>
+  </div>
+
+  <!-- CREATE / EDIT OFFER MODAL -->
+  <div id="offer-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-card-bg border border-border-dark rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transform transition-all">
+      <div class="p-6 border-b border-border-dark flex items-center justify-between">
+        <h3 id="modal-title" class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-tags text-accent"></i>
+          <span>Create New Offer</span>
+        </h3>
+        <button id="close-modal-btn" class="text-gray-400 hover:text-white transition-colors">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="offer-form" class="p-6 space-y-4">
+        <input type="hidden" id="offer-id" name="offerId" value="" />
+
+        <!-- Title -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Offer Title <span class="text-pixel-red">*</span></label>
+          <input type="text" id="form-title" name="title" required placeholder="e.g. Summer Sale 20% Off" class="w-full bg-content-bg border border-input-dark-border text-sm text-gray-100 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-accent" />
+        </div>
+
+        <!-- Target Type -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Target Type <span class="text-pixel-red">*</span></label>
+          <select id="form-targetType" name="targetType" required onchange="handleTargetTypeChange(this.value)" class="w-full bg-content-bg border border-input-dark-border text-sm text-gray-100 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-accent">
+            <option value="Category">Category (All games in Category)</option>
+            <option value="Product">Game / Product (Specific Game)</option>
+            <option value="Publisher">Publisher (All games by Publisher)</option>
+          </select>
+        </div>
+
+        <!-- Target Specific Selectors -->
+        <div id="target-category-group">
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Select Category <span class="text-pixel-red">*</span></label>
+          <select id="form-targetCategory" name="targetCategory" class="w-full bg-content-bg border border-input-dark-border text-sm text-gray-100 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-accent">
+            <option value="">-- Choose Category --</option>
+            <% if (typeof categories !== 'undefined' && categories) { %>
+              <% categories.forEach(cat => { %>
+                <option value="<%= cat._id %>"><%= cat.name %></option>
+              <% }); %>
+            <% } %>
+          </select>
+        </div>
+
+        <div id="target-product-group" class="hidden">
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Select Game / Product <span class="text-pixel-red">*</span></label>
+          <select id="form-targetProduct" name="targetProduct" class="w-full bg-content-bg border border-input-dark-border text-sm text-gray-100 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-accent">
+            <option value="">-- Choose Game --</option>
+            <% if (typeof products !== 'undefined' && products) { %>
+              <% products.forEach(prod => { %>
+                <option value="<%= prod._id %>"><%= prod.title %></option>
+              <% }); %>
+            <% } %>
+          </select>
+        </div>
+
+        <div id="target-publisher-group" class="hidden">
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Select Publisher <span class="text-pixel-red">*</span></label>
+          <select id="form-targetPublisher" name="targetPublisher" class="w-full bg-content-bg border border-input-dark-border text-sm text-gray-100 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-accent">
+            <option value="">-- Choose Publisher --</option>
+            <% if (typeof publishers !== 'undefined' && publishers) { %>
+              <% publishers.forEach(pub => { %>
+                <option value="<%= pub.name %>"><%= pub.name %></option>
+              <% }); %>
+            <% } %>
+          </select>
+        </div>
+
+        <!-- Discount Type & Value -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Discount Type <span class="text-pixel-red">*</span></label>
+            <select id="form-discountType" name="discountType" required class="w-full bg-content-bg border border-input-dark-border text-sm text-gray-100 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-accent">
+              <option value="percentage">Percentage (%)</option>
+              <option value="flat">Flat Amount (₹)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Discount Value <span class="text-pixel-red">*</span></label>
+            <input type="number" step="any" min="0.01" id="form-discountValue" name="discountValue" required placeholder="e.g. 20" class="w-full bg-content-bg border border-input-dark-border text-sm text-gray-100 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-accent" />
+          </div>
+        </div>
+
+        <!-- Validity Period -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Start Date</label>
+            <input type="datetime-local" id="form-startDate" name="startDate" class="w-full bg-content-bg border border-input-dark-border text-xs text-gray-100 rounded-lg px-3 py-2.5 focus:outline-none focus:border-accent" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Expiry Date <span class="text-pixel-red">*</span></label>
+            <input type="datetime-local" id="form-expiryDate" name="expiryDate" required class="w-full bg-content-bg border border-input-dark-border text-xs text-gray-100 rounded-lg px-3 py-2.5 focus:outline-none focus:border-accent" />
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Description</label>
+          <textarea id="form-description" name="description" rows="2" placeholder="Optional description or promo details..." class="w-full bg-content-bg border border-input-dark-border text-sm text-gray-100 rounded-lg px-3.5 py-2 focus:outline-none focus:border-accent"></textarea>
+        </div>
+
+        <!-- Submit Actions -->
+        <div class="pt-3 flex items-center justify-end gap-3 border-t border-border-dark">
+          <button type="button" id="cancel-modal-btn" class="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-content-bg transition-colors">Cancel</button>
+          <button type="submit" id="save-offer-btn" class="bg-accent hover:bg-sky-600 text-white font-semibold text-sm px-5 py-2.5 rounded-lg shadow-lg shadow-sky-500/20 transition-all">Save Offer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('offer-modal');
+    const openModalBtn = document.getElementById('open-create-modal-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const cancelModalBtn = document.getElementById('cancel-modal-btn');
+    const offerForm = document.getElementById('offer-form');
+
+    function handleTargetTypeChange(type) {
+      document.getElementById('target-category-group').classList.add('hidden');
+      document.getElementById('target-product-group').classList.add('hidden');
+      document.getElementById('target-publisher-group').classList.add('hidden');
+
+      if (type === 'Category') {
+        document.getElementById('target-category-group').classList.remove('hidden');
+      } else if (type === 'Product') {
+        document.getElementById('target-product-group').classList.remove('hidden');
+      } else if (type === 'Publisher') {
+        document.getElementById('target-publisher-group').classList.remove('hidden');
+      }
+    }
+
+    openModalBtn.addEventListener('click', () => {
+      document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-tags text-accent"></i><span>Create New Offer</span>';
+      document.getElementById('offer-id').value = '';
+      offerForm.reset();
+      handleTargetTypeChange('Category');
+      modal.classList.remove('hidden');
+    });
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      offerForm.reset();
+    }
+
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelModalBtn.addEventListener('click', closeModal);
+
+    async function openEditModal(offerId) {
+      try {
+        const res = await fetch(`/admin/offers/${offerId}`);
+        const data = await res.json();
+        if (!data.success || !data.offer) {
+          Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to fetch offer details', background: '#151A24', color: '#fff' });
+          return;
+        }
+
+        const o = data.offer;
+        document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-pen text-accent"></i><span>Edit Offer</span>';
+        document.getElementById('offer-id').value = o._id;
+        document.getElementById('form-title').value = o.title || '';
+        document.getElementById('form-targetType').value = o.targetType || 'Category';
+        handleTargetTypeChange(o.targetType || 'Category');
+
+        if (o.targetType === 'Category' && o.targetCategory) {
+          document.getElementById('form-targetCategory').value = o.targetCategory._id || o.targetCategory;
+        } else if (o.targetType === 'Product' && o.targetProduct) {
+          document.getElementById('form-targetProduct').value = o.targetProduct._id || o.targetProduct;
+        } else if (o.targetType === 'Publisher' && o.targetPublisher) {
+          document.getElementById('form-targetPublisher').value = o.targetPublisher;
+        }
+
+        document.getElementById('form-discountType').value = o.discountType || 'percentage';
+        document.getElementById('form-discountValue').value = o.discountValueRupees || o.discountValue;
+        document.getElementById('form-startDate').value = o.startDateFormatted || '';
+        document.getElementById('form-expiryDate').value = o.expiryDateFormatted || '';
+        document.getElementById('form-description').value = o.description || '';
+
+        modal.classList.remove('hidden');
+      } catch (err) {
+        console.error('Error fetching offer:', err);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Server error while fetching offer', background: '#151A24', color: '#fff' });
+      }
+    }
+
+    offerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const offerId = document.getElementById('offer-id').value;
+      const title = document.getElementById('form-title').value.trim();
+      const targetType = document.getElementById('form-targetType').value;
+      const targetCategory = document.getElementById('form-targetCategory').value;
+      const targetProduct = document.getElementById('form-targetProduct').value;
+      const targetPublisher = document.getElementById('form-targetPublisher').value;
+      const discountType = document.getElementById('form-discountType').value;
+      const discountValue = document.getElementById('form-discountValue').value;
+      const startDate = document.getElementById('form-startDate').value;
+      const expiryDate = document.getElementById('form-expiryDate').value;
+      const description = document.getElementById('form-description').value;
+
+      if (targetType === 'Category' && !targetCategory) {
+        Swal.fire({ icon: 'warning', title: 'Validation', text: 'Please select a Category target', background: '#151A24', color: '#fff' });
+        return;
+      }
+      if (targetType === 'Product' && !targetProduct) {
+        Swal.fire({ icon: 'warning', title: 'Validation', text: 'Please select a Game target', background: '#151A24', color: '#fff' });
+        return;
+      }
+      if (targetType === 'Publisher' && !targetPublisher) {
+        Swal.fire({ icon: 'warning', title: 'Validation', text: 'Please select a Publisher target', background: '#151A24', color: '#fff' });
+        return;
+      }
+
+      const payload = {
+        title,
+        targetType,
+        targetCategory: targetType === 'Category' ? targetCategory : null,
+        targetProduct: targetType === 'Product' ? targetProduct : null,
+        targetPublisher: targetType === 'Publisher' ? targetPublisher : null,
+        discountType,
+        discountValue: Number(discountValue),
+        startDate,
+        expiryDate,
+        description
+      };
+
+      const url = offerId ? `/admin/offers/${offerId}` : '/admin/offers';
+      const method = offerId ? 'PUT' : 'POST';
+
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+          closeModal();
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: data.message,
+            background: '#151A24',
+            color: '#fff',
+            confirmButtonColor: '#0ea5e9'
+          }).then(() => {
+            window.location.reload();
+          });
+        } else {
+          Swal.fire({ icon: 'error', title: 'Failed', text: data.message || 'Operation failed', background: '#151A24', color: '#fff' });
+        }
+      } catch (err) {
+        console.error('Error saving offer:', err);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to connect to server', background: '#151A24', color: '#fff' });
+      }
+    });
+
+    async function toggleOfferStatus(offerId, currentIsActive) {
+      const actionText = currentIsActive ? 'deactivate' : 'activate';
+      const confirm = await Swal.fire({
+        title: `${actionText.charAt(0).toUpperCase() + actionText.slice(1)} Offer?`,
+        text: `Are you sure you want to ${actionText} this offer?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0ea5e9',
+        cancelButtonColor: '#334155',
+        confirmButtonText: `Yes, ${actionText}`,
+        background: '#151A24',
+        color: '#fff'
+      });
+
+      if (!confirm.isConfirmed) return;
+
+      try {
+        const res = await fetch(`/admin/offers/${offerId}/status`, {
+          method: 'PATCH',
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          Swal.fire({ icon: 'success', title: 'Updated', text: data.message, background: '#151A24', color: '#fff', timer: 1500, showConfirmButton: false })
+            .then(() => window.location.reload());
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to update status', background: '#151A24', color: '#fff' });
+        }
+      } catch (err) {
+        console.error('Error toggling status:', err);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Server error', background: '#151A24', color: '#fff' });
+      }
+    }
+
+    async function confirmDeleteOffer(offerId, title) {
+      const confirm = await Swal.fire({
+        title: 'Delete Offer?',
+        text: `Are you sure you want to delete offer '${title}'? This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#FF4655',
+        cancelButtonColor: '#334155',
+        confirmButtonText: 'Yes, Delete',
+        background: '#151A24',
+        color: '#fff'
+      });
+
+      if (!confirm.isConfirmed) return;
+
+      try {
+        const res = await fetch(`/admin/offers/${offerId}`, {
+          method: 'DELETE',
+          headers: { 'Accept': 'application/json' }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          Swal.fire({ icon: 'success', title: 'Deleted', text: data.message, background: '#151A24', color: '#fff', timer: 1500, showConfirmButton: false })
+            .then(() => window.location.reload());
+        } else {
+          Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to delete offer', background: '#151A24', color: '#fff' });
+        }
+      } catch (err) {
+        console.error('Error deleting offer:', err);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Server error', background: '#151A24', color: '#fff' });
+      }
+    }
+  </script>
+</body>
+</html>

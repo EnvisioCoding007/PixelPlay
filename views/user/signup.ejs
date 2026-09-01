@@ -63,7 +63,7 @@
                 class="flex flex-col max-w-md w-full items-start gap-8 p-8 relative bg-[#18181bcc] rounded border border-solid border-[#3b494b80] backdrop-blur-[6px] backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(6px)_brightness(100%)]">
                 <div class="flex items-start justify-center relative self-stretch w-full flex-[0_0_auto] border-b [border-bottom-style:solid] border-[#3b494b]"
                     role="tablist" aria-label="Authentication options">
-                    <a href="/auth/login"
+                    <a href="/login"
                         class="flex flex-col items-center pt-0 pb-4 px-0 relative flex-1 self-stretch grow" role="tab"
                         aria-selected="false">
                         <span
@@ -207,7 +207,7 @@
                             <span
                                 class="justify-center w-[199.86px] h-6 mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb] text-base text-center tracking-[0] leading-6 whitespace-nowrap relative flex items-center">Already
                                 have an account?</span>
-                            <a href="/auth/login"
+                            <a href="/login"
                                 class="relative flex items-center justify-center w-[46.7px] h-6 mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#00f0ff] text-base text-center tracking-[0] leading-6 whitespace-nowrap">Log
                                 In</a>
                         </p>
@@ -317,7 +317,7 @@
             }
 
             try {
-                const response = await fetch('/auth/signup', {
+                const response = await fetch('/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email, password, confirmPassword, referralCode })
@@ -326,7 +326,7 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    window.location.href = data.redirectUrl || '/auth/verify-email';
+                    window.location.href = data.redirectUrl || '/verify-email';
                 } else {
                     showAlert(data.message || 'An error occurred during sign up.');
                 }

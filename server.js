@@ -1,9 +1,12 @@
 import express from 'express';
+import morgan from 'morgan';
+import { createServer } from 'http';
 import 'dotenv/config';
 import connectDB from './db.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import methodOverride from 'method-override';
+import { initSocket } from './config/socket.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,8 +14,10 @@ const __dirname = path.dirname(__filename);
 await connectDB();
 
 const app = express();
+const server = createServer(app);
 const port = process.env.PORT || 4090;
 
+app.use(morgan('dev'));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.use(methodOverride('_method'));
@@ -24,16 +29,20 @@ app.set('views', path.join(__dirname, 'views'));
 import passport from './config/passport.js';
 import session from 'express-session';
 import { injectCartCount } from './middleware/cartMiddleware.js';
+import { injectNotificationCount } from './middleware/notificationMiddleware.js';
 
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'the_forebidden_key',
+const sessionMiddleware = session({
+    secret: process.env.SESSION_SECRET || 'pixelplay_secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
         secure: false,
         httpOnly: true
     }
-}));
+});
+
+app.use(sessionMiddleware);
+initSocket(server, sessionMiddleware);
 
 app.use(passport.initialize());
 
@@ -43,13 +52,24 @@ app.use((req, res, next) => {
 });
 
 app.use(injectCartCount);
+app.use(injectNotificationCount);
 
 import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
-app.use('/', userRoutes);
 app.use('/', adminRoutes);
+app.use('/', userRoutes);
 
-app.listen(port, () => {
+// Catch-all 404 Handler
+app.use((req, res) => {
+    const isAdminContext = req.originalUrl.startsWith('/admin');
+    res.status(404).render('404', {
+        title: '404 - Page Not Found | PixelPlay',
+        isAdminContext,
+        url: req.originalUrl
+    });
+});
+
+server.listen(port, () => {
     console.log(`PixelPlay is running on\nhttp://localhost:${port}`);
 });

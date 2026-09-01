@@ -1,203 +1,20 @@
 import mongoose from 'mongoose';
-import Product from '../models/Product.js';
-import Category from '../models/Category.js';
-import Publisher from '../models/Publisher.js';
-import User from '../models/User.js';
-import Wishlist from '../models/Wishlist.js';
-
-export const getAllAdminProducts = async (search = '', filters = {}, sort = 'latest', page = 1, limit = 10) => {
-    try {
-        const query = {};
-
-        if (search) {
-            query.title = { $regex: search, $options: 'i' };
-        }
-
-        if (filters.type && filters.type !== 'All') {
-            query.edition_type = filters.type;
-        }
-
-        if (filters.platform && filters.platform !== 'All') {
-            query.platforms = filters.platform;
-        }
-
-        if (filters.developer && filters.developer !== 'All') {
-            query.publisher = filters.developer;
-        }
-
-        if (filters.status && filters.status !== 'All') {
-            query.status = filters.status;
-        }
-
-        // Sort configuration
-        let sortConfig = { createdAt: -1 };
-        if (sort === 'latest') {
-            sortConfig = { createdAt: -1 };
-        } else if (sort === 'oldest') {
-            sortConfig = { createdAt: 1 };
-        } else if (sort === 'A-Z') {
-            sortConfig = { title: 1 };
-        } else if (sort === 'Z-A') {
-            sortConfig = { title: -1 };
-        } else if (sort === 'Price-Low') {
-            sortConfig = { price: 1 };
-        } else if (sort === 'Price-High') {
-            sortConfig = { price: -1 };
-        }
-
-        // Fetch products from database safely
-        const rawProducts = await Product.find(query)
-            .sort(sortConfig)
-            .lean();
-
-        // Fetch categories to build the mapping
-        const categories = await Category.find({}).lean();
-        const categoryMap = new Map(categories.map(c => [c._id.toString(), c]));
-
-        // Fetch distinct platforms and publishers (developers) in the entire database
-        const dbPlatforms = await Product.distinct('platforms');
-        const dbPublishers = await Product.distinct('publisher');
-
-        // Map categories and cover images
-        const productsMapped = rawProducts.map(game => {
-            const catObj = game.category ? categoryMap.get(game.category.toString()) : null;
-            const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
-            let discountedPrice = game.price || 0;
-            if (discount > 0) {
-                discountedPrice = Math.round(Math.max(0, game.price - (game.price * (discount / 100))));
-            }
-            return {
-                ...game,
-                coverImageUrl: game.cover_image || game.coverImage || null,
-                categoryName: catObj ? catObj.name : 'N/A',
-                discountedPrice: discountedPrice,
-                categoryDiscount: discount
-            };
-        });
-
-        // Filter by category in memory
-        let filteredProducts = productsMapped;
-        if (filters.category && filters.category !== 'All') {
-            filteredProducts = productsMapped.filter(game => game.categoryName === filters.category);
-        }
-
-        // Paginate in memory
-        const totalCount = filteredProducts.length;
-        const pageNum = Math.max(1, parseInt(page, 10));
-        const limitNum = Math.max(1, parseInt(limit, 10));
-        const startIndex = (pageNum - 1) * limitNum;
-        const paginatedProducts = filteredProducts.slice(startIndex, startIndex + limitNum);
-
-        const totalPages = Math.ceil(totalCount / limitNum);
-
-        return {
-            products: paginatedProducts,
-            currentPage: pageNum,
-            totalPages,
-            totalCount,
-            limit: limitNum,
-            dbPlatforms,
-            dbPublishers
-        };
-    } catch (error) {
-        console.error('[getAllAdminProducts] Error:', error);
-        throw error;
-    }
-};
-
-const validateProductData = (productData) => {
-    if (productData.title && productData.title.length > 100) {
-        throw new Error('Game title cannot exceed 100 characters.');
-    }
-    if (productData.publisher && productData.publisher.length > 100) {
-        throw new Error('Publisher name cannot exceed 100 characters.');
-    }
-    if (productData.description && productData.description.length > 2000) {
-        throw new Error('Description cannot exceed 2000 characters.');
-    }
-
-    // Validate Stock Limit (max 300)
-    if (typeof productData.stock === 'number' && productData.stock > 300) {
-        throw new Error('Maximum product stock cannot exceed 300.');
-    }
-    if (productData.platform_stock) {
-        for (const ps of productData.platform_stock) {
-            if (typeof ps.stock === 'number' && ps.stock > 300) {
-                throw new Error(`Maximum variant stock for platform ${ps.platform} cannot exceed 300.`);
-            }
-        }
-    }
-
-    // Validate System Requirements
-    if (productData.system_requirements) {
-        const reqs = productData.system_requirements;
-        const checkReqGroup = (groupName) => {
-            const group = reqs[groupName];
-            if (group) {
-                const fields = ['architecture', 'os', 'processor', 'memory', 'graphics', 'storage', 'sound_card'];
-                for (const f of fields) {
-                    if (group[f] && group[f].length > 200) {
-                        throw new Error(`System requirements ${groupName} ${f} cannot exceed 200 characters.`);
-                    }
-                }
-                if (group.additional_notes && group.additional_notes.length > 500) {
-                    throw new Error(`System requirements ${groupName} additional notes cannot exceed 500 characters.`);
-                }
-            }
-        };
-        checkReqGroup('minimum');
-        checkReqGroup('recommended');
-    }
-};
-
-export const createProduct = async (productData) => {
-    try {
-        validateProductData(productData);
-        const product = new Product(productData);
-        return await product.save();
-    } catch (error) {
-        console.error('[productService.createProduct] Error:', error);
-        throw error;
-    }
-};
-
-export const getProductById = async (id) => {
-    try {
-        return await Product.findById(id).lean();
-    } catch (error) {
-        console.error('[productService.getProductById] Error:', error);
-        throw error;
-    }
-};
-
-export const updateProduct = async (id, productData) => {
-    try {
-        validateProductData(productData);
-        return await Product.findByIdAndUpdate(id, productData, { new: true, runValidators: true });
-    } catch (error) {
-        console.error('[productService.updateProduct] Error:', error);
-        throw error;
-    }
-};
+import Product from '../../models/Product.js';
+import Category from '../../models/Category.js';
+import Publisher from '../../models/Publisher.js';
+import Platform from '../../models/Platform.js';
+import User from '../../models/User.js';
+import Wishlist from '../../models/Wishlist.js';
+import { getActiveOffers, calculateBestOfferForProduct } from '../shared/offerHelper.js';
 
 const getProductRating = (product) => {
-    let hash = 0;
-    const str = product.title || '';
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const rating = 3.5 + Math.abs(hash % 16) * 0.1; // 3.5 to 5.0
-    return parseFloat(rating.toFixed(1));
+    if (!product || typeof product.avgRating === 'undefined') return 0;
+    return parseFloat((product.avgRating || 0).toFixed(1));
 };
 
 const getProductReviewsCount = (product) => {
-    let hash = 0;
-    const str = product.title || '';
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const reviews = Math.abs(hash % 950) + 50; // 50 to 1000
-    return `(${reviews})`;
+    if (!product || typeof product.reviewCount === 'undefined') return '(0)';
+    return `(${product.reviewCount || 0})`;
 };
 
 export const getBrowseProductsAndFilters = async (search = '', filters = {}, sort = 'Trending', page = 1, limit = 12, primaryPlatform = 'PC') => {
@@ -205,7 +22,11 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
         const categories = await Category.find({ status: 'Live' }).lean();
         const categoryMap = new Map(categories.map(c => [c._id.toString(), c]));
 
-        const rawProducts = await Product.find({ status: 'Live' }).lean();
+        const [rawProducts, activeOffers, savedPlatforms] = await Promise.all([
+            Product.find({ status: 'Live' }).lean(),
+            getActiveOffers(),
+            Platform.find({ is_listed: { $ne: false } }).lean()
+        ]);
 
         const allPlatforms = new Set();
         const allPublishers = new Set();
@@ -214,6 +35,12 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
         savedPubs.forEach(sp => {
             if (sp.name) allPublishers.add(sp.name);
         });
+
+        if (savedPlatforms && savedPlatforms.length > 0) {
+            savedPlatforms.forEach(sp => {
+                if (sp.name) allPlatforms.add(sp.name);
+            });
+        }
 
         rawProducts.forEach(p => {
             if (p.platforms) p.platforms.forEach(plat => allPlatforms.add(plat));
@@ -224,14 +51,16 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
 
         let products = rawProducts.map(game => {
             const catObj = game.category ? categoryMap.get(game.category.toString()) : null;
-            const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
             
             let basePrice = game.price || 0;
+            let currentPlatformStock = game.stock || 0;
             if (game.platform_stock && game.platform_stock.length > 0) {
-                const platStock = game.platform_stock.find(ps => ps.platform === primaryPlatform);
+                const platStock = game.platform_stock.find(ps => ps.platform.toLowerCase() === primaryPlatform.toLowerCase());
                 if (platStock && typeof platStock.price === 'number') {
                     basePrice = platStock.price;
+                    currentPlatformStock = platStock.stock;
                 } else {
+                    currentPlatformStock = 0;
                     const firstPlat = game.platform_stock[0];
                     if (firstPlat && typeof firstPlat.price === 'number') {
                         basePrice = firstPlat.price;
@@ -239,17 +68,20 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
                 }
             }
 
-            let discountedPrice = basePrice;
-            if (discount > 0) {
-                discountedPrice = Math.round(Math.max(0, basePrice - (basePrice * (discount / 100))));
-            }
+            const offerResult = calculateBestOfferForProduct(game, activeOffers, basePrice);
+            const isEffectiveOutOfStock = (game.stock === 0 || currentPlatformStock === 0);
+
             return {
                 ...game,
                 price: basePrice,
+                currentPlatformStock,
+                isEffectiveOutOfStock,
                 coverImageUrl: game.cover_image || game.coverImage || null,
                 categoryName: catObj ? catObj.name : 'N/A',
-                discountedPrice: discountedPrice,
-                categoryDiscount: discount,
+                discountedPrice: offerResult.discountedPrice,
+                offerDiscount: offerResult.discountPercentage,
+                categoryDiscount: offerResult.discountPercentage,
+                appliedOffer: offerResult.appliedOffer,
                 rating: getProductRating(game),
                 reviewsCount: getProductReviewsCount(game)
             };
@@ -279,15 +111,15 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
             products = products.filter(p => selectedPublishers.includes(p.publisher));
         }
 
-        // Price Filter
+        // Price Filter (Comparison in Paisa: e.g. 20 rupees = 2000 paisa)
         const selectedPrices = Array.isArray(filters.price) ? filters.price : (filters.price ? [filters.price] : []);
         if (selectedPrices.length > 0) {
             products = products.filter(p => {
                 return selectedPrices.some(range => {
-                    if (range === 'under-20') return p.price < 20;
-                    if (range === '20-40') return p.price >= 20 && p.price <= 40;
-                    if (range === '40-70') return p.price >= 40 && p.price <= 70;
-                    if (range === '70+') return p.price > 70;
+                    if (range === 'under-20') return p.price < 2000;
+                    if (range === '20-40') return p.price >= 2000 && p.price <= 4000;
+                    if (range === '40-70') return p.price >= 4000 && p.price <= 7000;
+                    if (range === '70+') return p.price > 7000;
                     return false;
                 });
             });
@@ -311,8 +143,8 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
         }
 
         products.sort((a, b) => {
-            if (a.stock === 0 && b.stock > 0) return 1;
-            if (a.stock > 0 && b.stock === 0) return -1;
+            if (a.isEffectiveOutOfStock && !b.isEffectiveOutOfStock) return 1;
+            if (!a.isEffectiveOutOfStock && b.isEffectiveOutOfStock) return -1;
 
             // Sort option checks
             if (sort === 'Price: Low to High') {
@@ -357,17 +189,19 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
 
 export const getProductsForHome = async (primaryPlatform = 'PC') => {
     try {
-        const categories = await Category.find({}).lean();
+        const [categories, activeOffers] = await Promise.all([
+            Category.find({}).lean(),
+            getActiveOffers()
+        ]);
         const categoryMap = new Map(categories.map(c => [c._id.toString(), c]));
 
         const mapProduct = (game) => {
             if (!game) return null;
             const catObj = game.category ? categoryMap.get(game.category.toString()) : null;
-            const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
             
             let basePrice = game.price || 0;
             if (game.platform_stock && game.platform_stock.length > 0) {
-                const platStock = game.platform_stock.find(ps => ps.platform === primaryPlatform);
+                const platStock = game.platform_stock.find(ps => ps.platform.toLowerCase() === primaryPlatform.toLowerCase());
                 if (platStock && typeof platStock.price === 'number') {
                     basePrice = platStock.price;
                 } else {
@@ -378,42 +212,54 @@ export const getProductsForHome = async (primaryPlatform = 'PC') => {
                 }
             }
 
-            let discountedPrice = basePrice;
-            if (discount > 0) {
-                discountedPrice = Math.round(Math.max(0, basePrice - (basePrice * (discount / 100))));
-            }
-            const rating = 4.0 + (Math.abs(game.title.charCodeAt(0) || 0) % 11) / 10;
-            const reviewsCount = 50 + (Math.abs(game.title.charCodeAt(1) || 0) % 250);
+            const offerResult = calculateBestOfferForProduct(game, activeOffers, basePrice);
+            const rating = game.avgRating || 0;
+            const reviewsCount = game.reviewCount || 0;
 
             return {
                 ...game,
                 price: basePrice,
                 coverImageUrl: game.cover_image || null,
                 categoryName: catObj ? catObj.name : 'N/A',
-                discountedPrice: discountedPrice,
-                categoryDiscount: discount,
+                discountedPrice: offerResult.discountedPrice,
+                offerDiscount: offerResult.discountPercentage,
+                categoryDiscount: offerResult.discountPercentage,
+                appliedOffer: offerResult.appliedOffer,
                 rating: rating.toFixed(1),
                 reviewsCount: `(${reviewsCount})`
             };
         };
 
-        const rawLatest = await Product.findOne({ status: 'Live' }).sort({ createdAt: -1 }).lean();
-        const latestRelease = mapProduct(rawLatest);
+        const rawLive = await Product.find({ status: 'Live', stock: { $gt: 0 } }).sort({ createdAt: -1 }).lean();
+        
+        const sortedLive = [...rawLive].sort((a, b) => {
+            const isAvailA = (a.platforms && a.platforms.some(p => p.toLowerCase() === primaryPlatform.toLowerCase())) &&
+                (!a.platform_stock || a.platform_stock.length === 0 || ((a.platform_stock.find(p => p.platform.toLowerCase() === primaryPlatform.toLowerCase()) || {}).stock > 0));
 
-        const rawStandard = await Product.find({ status: 'Live', edition_type: 'STANDARD' })
-            .sort({ createdAt: -1 })
-            .limit(6)
-            .lean();
-        const standardGames = rawStandard.map(mapProduct);
+            const isAvailB = (b.platforms && b.platforms.some(p => p.toLowerCase() === primaryPlatform.toLowerCase())) &&
+                (!b.platform_stock || b.platform_stock.length === 0 || ((b.platform_stock.find(p => p.platform.toLowerCase() === primaryPlatform.toLowerCase()) || {}).stock > 0));
 
-        const rawLegendary = await Product.find({ status: 'Live', edition_type: 'LEGENDARY' })
-            .sort({ createdAt: -1 })
-            .limit(6)
-            .lean();
-        const legendaryGames = rawLegendary.map(mapProduct);
+            if (isAvailA && !isAvailB) return -1;
+            if (!isAvailA && isAvailB) return 1;
+            return 0;
+        });
+
+        const latestReleases = sortedLive.slice(0, 4).map(mapProduct);
+        const latestRelease = latestReleases.length > 0 ? latestReleases[0] : null;
+
+        const standardGames = sortedLive
+            .filter(g => g.edition_type === 'STANDARD')
+            .slice(0, 6)
+            .map(mapProduct);
+
+        const legendaryGames = sortedLive
+            .filter(g => g.edition_type === 'LEGENDARY')
+            .slice(0, 6)
+            .map(mapProduct);
 
         return {
             latestRelease,
+            latestReleases,
             standardGames,
             legendaryGames
         };
@@ -465,10 +311,13 @@ export const getRecommendationsForProduct = async (categoryId, currentProductId,
         
         const currentCategoryName = catObj ? catObj.name.toLowerCase() : '';
 
-        const rawProducts = await Product.find({
-            status: 'Live',
-            _id: { $ne: currentProductId }
-        }).lean();
+        const [rawProducts, activeOffers] = await Promise.all([
+            Product.find({
+                status: 'Live',
+                _id: { $ne: currentProductId }
+            }).lean(),
+            getActiveOffers()
+        ]);
 
         const enrichedProducts = rawProducts.map(game => {
             let gameCatObj = null;
@@ -494,18 +343,16 @@ export const getRecommendationsForProduct = async (categoryId, currentProductId,
                 }
             }
 
-            const discount = (gameCatObj && gameCatObj.defaultOffer) ? parseFloat(gameCatObj.defaultOffer) : 0;
-            let discountedPrice = basePrice;
-            if (discount > 0) {
-                discountedPrice = Math.round(Math.max(0, basePrice - (basePrice * (discount / 100))));
-            }
+            const offerResult = calculateBestOfferForProduct(game, activeOffers, basePrice);
 
             return {
                 ...game,
                 price: basePrice,
                 categoryName: gameCatObj ? gameCatObj.name : 'N/A',
-                discountedPrice,
-                categoryDiscount: discount
+                discountedPrice: offerResult.discountedPrice,
+                offerDiscount: offerResult.discountPercentage,
+                categoryDiscount: offerResult.discountPercentage,
+                appliedOffer: offerResult.appliedOffer
             };
         });
 
@@ -533,6 +380,9 @@ export const getDistinctPlatforms = async () => {
 
 export const getProductDetailsForUser = async (productId, userId = null, primaryPlatform = 'PC') => {
     try {
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+            return null;
+        }
         const product = await Product.findById(productId).lean();
         if (!product || product.status === 'Hidden') {
             return null;
@@ -547,9 +397,12 @@ export const getProductDetailsForUser = async (productId, userId = null, primary
             }
         }
         product.categoryName = catObj ? catObj.name : 'N/A';
-        const discount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
-        product.categoryDiscount = discount;
-        product.discountedPrice = discount > 0 ? Math.max(0, product.price - (product.price * (discount / 100))) : product.price;
+        const activeOffers = await getActiveOffers();
+        const offerResult = calculateBestOfferForProduct(product, activeOffers, product.price);
+        product.offerDiscount = offerResult.discountPercentage;
+        product.categoryDiscount = offerResult.discountPercentage;
+        product.discountedPrice = offerResult.discountedPrice;
+        product.appliedOffer = offerResult.appliedOffer;
 
         let user = null;
         let inWishlist = false;
@@ -582,6 +435,9 @@ export const getProductDetailsForUser = async (productId, userId = null, primary
 
 export const getProductStatus = async (productId) => {
     try {
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
+            return null;
+        }
         const product = await Product.findById(productId).lean();
         return product ? product.status : null;
     } catch (error) {
@@ -590,4 +446,107 @@ export const getProductStatus = async (productId) => {
     }
 };
 
+export const getStorefrontActiveOffers = async (primaryPlatform = 'PC') => {
+    try {
+        const activeOffers = await getActiveOffers();
+        if (!activeOffers || activeOffers.length === 0) return [];
 
+        const categories = await Category.find({ status: 'Live' }).lean();
+        const categoryMap = new Map(categories.map(c => [c._id.toString(), c]));
+
+        const now = new Date();
+
+        const formatExpiryText = (expiryDate) => {
+            const exp = new Date(expiryDate);
+            const diffMs = exp - now;
+            if (diffMs <= 0) return 'Expired';
+
+            const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+            if (days > 0) return `Expires in ${days}d ${hours}h`;
+            if (hours > 0) return `Expires in ${hours}h ${minutes}m`;
+            return `Expires in ${minutes}m`;
+        };
+
+        const formatDateDisplay = (date) => {
+            if (!date) return '';
+            const d = new Date(date);
+            const options = { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return d.toLocaleDateString('en-GB', options);
+        };
+
+        const enrichedOffers = await Promise.all(activeOffers.map(async (offer) => {
+            let discountDisplay = '';
+            if (offer.discountType === 'percentage') {
+                discountDisplay = `${offer.discountValue}% OFF`;
+            } else {
+                discountDisplay = `₹${(offer.discountValue / 100).toFixed(2)} OFF`;
+            }
+
+            let targetName = 'Special Deal';
+            let targetIcon = 'fa-tags';
+            let browseUrl = '/browse';
+
+            let rawMatchingProducts = [];
+
+            if (offer.targetType === 'Category' && offer.targetCategory) {
+                const catObj = categoryMap.get(offer.targetCategory.toString());
+                targetName = catObj ? catObj.name : 'Category';
+                targetIcon = 'fa-layer-group';
+                browseUrl = `/browse?genre=${encodeURIComponent(targetName)}`;
+                rawMatchingProducts = await Product.find({ category: offer.targetCategory, status: 'Live' }).limit(4).lean();
+            } else if (offer.targetType === 'Product' && offer.targetProduct) {
+                const prodObj = await Product.findById(offer.targetProduct).lean();
+                if (prodObj && prodObj.status === 'Live') {
+                    targetName = prodObj.title;
+                    targetIcon = 'fa-gamepad';
+                    browseUrl = `/products/${prodObj._id}`;
+                    rawMatchingProducts = [prodObj];
+                }
+            } else if (offer.targetType === 'Publisher' && offer.targetPublisher) {
+                targetName = offer.targetPublisher;
+                targetIcon = 'fa-building';
+                browseUrl = `/browse?publisher=${encodeURIComponent(offer.targetPublisher)}`;
+                rawMatchingProducts = await Product.find({ publisher: offer.targetPublisher, status: 'Live' }).limit(4).lean();
+            }
+
+            const matchingProducts = rawMatchingProducts.map(game => {
+                let basePrice = game.price || 0;
+                if (game.platform_stock && game.platform_stock.length > 0) {
+                    const platStock = game.platform_stock.find(ps => ps.platform.toLowerCase() === primaryPlatform.toLowerCase());
+                    if (platStock && typeof platStock.price === 'number') {
+                        basePrice = platStock.price;
+                    }
+                }
+
+                const offerResult = calculateBestOfferForProduct(game, [offer], basePrice);
+
+                return {
+                    ...game,
+                    price: basePrice,
+                    discountedPrice: offerResult.discountedPrice,
+                    offerDiscount: offerResult.discountPercentage,
+                    coverImageUrl: game.cover_image || game.coverImage || null
+                };
+            });
+
+            return {
+                ...offer,
+                targetName,
+                targetIcon,
+                discountDisplay,
+                browseUrl,
+                expiresInText: formatExpiryText(offer.expiryDate),
+                formattedExpiry: formatDateDisplay(offer.expiryDate),
+                matchingProducts
+            };
+        }));
+
+        return enrichedOffers;
+    } catch (error) {
+        console.error('[productService.getStorefrontActiveOffers] Error:', error);
+        return [];
+    }
+};

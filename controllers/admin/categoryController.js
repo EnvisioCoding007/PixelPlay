@@ -1,4 +1,4 @@
-import * as categoryService from '../../services/categoryService.js';
+import * as categoryService from '../../services/admin/categoryService.js';
 import { uploadToCloudinary } from '../../config/cloudinary.js';
 
 export const renderCategoryManagement = async (req, res) => {
@@ -43,7 +43,7 @@ export const renderAddCategory = (req, res) => {
 
 export const createCategory = async (req, res) => {
     try {
-        const { name, defaultOffer, description } = req.body;
+        const { name, description } = req.body;
 
         let iconUrl = '';
         if (req.file) {
@@ -53,7 +53,6 @@ export const createCategory = async (req, res) => {
 
         await categoryService.createCategory({ 
             name,
-            defaultOffer,
             description,
             icon: iconUrl
         });
@@ -86,7 +85,11 @@ export const renderEditCategory = async (req, res) => {
         const { error, success } = req.query;
         const details = await categoryService.getCategoryDetailsAdmin(id);
         if (!details) {
-            return res.status(404).send('Category not found');
+            return res.status(404).render('404', {
+                title: '404 - Category Not Found | PixelPlay',
+                isAdminContext: true,
+                url: req.originalUrl
+            });
         }
 
         res.render('admin/edit-category', {
@@ -98,14 +101,18 @@ export const renderEditCategory = async (req, res) => {
         });
     } catch (err) {
         console.error('[renderEditCategory]', err);
-        res.status(500).send('Internal Server Error');
+        return res.status(404).render('404', {
+            title: '404 - Page Not Found | PixelPlay',
+            isAdminContext: true,
+            url: req.originalUrl
+        });
     }
 };
 
 export const editCategory = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, defaultOffer, description, status } = req.body;
+        const { name, description, status } = req.body;
 
         let iconUrl = undefined;
         if (req.file) {
@@ -115,7 +122,6 @@ export const editCategory = async (req, res) => {
 
         await categoryService.updateCategory(id, {
             name,
-            defaultOffer,
             description,
             status,
             icon: iconUrl

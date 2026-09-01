@@ -1,5 +1,5 @@
-import Order from '../models/Order.js';
-import Product from '../models/Product.js';
+import Order from '../../models/Order.js';
+import Product from '../../models/Product.js';
 import PDFDocument from 'pdfkit';
 import path from 'path';
 
@@ -87,6 +87,12 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
     let y = 265;
     doc.rect(50, y, 495, 20).fill('#f3f4f6');
     
+    let effectiveGstRate = 18;
+    if (dbOrder.items && dbOrder.items.length > 0) {
+        const firstItem = dbOrder.items[0];
+        effectiveGstRate = firstItem.gst_rate || (firstItem.product && firstItem.product.gst_rate) || 18;
+    }
+
     doc.fillColor('#111827')
        .font('Helvetica-Bold')
        .fontSize(8.5)
@@ -95,7 +101,7 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
        .text('Qty', 305, y + 6, { width: 20, align: 'center' })
        .text('Base Price', 330, y + 6, { width: 50, align: 'right' })
        .text('Discount', 385, y + 6, { width: 40, align: 'right' })
-       .text('GST (18%)', 430, y + 6, { width: 50, align: 'right' })
+       .text(`GST (${effectiveGstRate}%)`, 430, y + 6, { width: 50, align: 'right' })
        .text('Total', 485, y + 6, { width: 55, align: 'right' });
 
     y += 20;
@@ -107,6 +113,18 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
     let cancelledRefundRupees = 0;
     let returnedRefundRupees = 0;
     
+    const totalOrderUnits = (dbOrder.items && dbOrder.items.length > 0)
+        ? dbOrder.items.reduce((sum, i) => sum + (i.quantity || 0), 0)
+        : 0;
+
+    const couponPerUnitPaisa = (dbOrder.discount && totalOrderUnits > 0)
+        ? Math.floor(dbOrder.discount / totalOrderUnits)
+        : 0;
+
+    const shippingPerUnitPaisa = (dbOrder.shipping && totalOrderUnits > 0)
+        ? Math.floor(dbOrder.shipping / totalOrderUnits)
+        : 0;
+
     for (let item of dbOrder.items) {
         // Find base/original price of the platform version from the product
         let originalBasePrice = item.price; // fallback
@@ -122,21 +140,26 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
             }
         }
 
+        const itemGstRate = item.gst_rate || (item.product && item.product.gst_rate) || 18;
         const origBaseRupees = originalBasePrice / 100;
-        const categoryDiscountPercent = Math.max(0, Math.round((originalBasePrice - Math.round(item.price / 0.82)) / originalBasePrice * 100)) || 0;
+        const itemUnitInclusivePaisa = Math.round((item.price * 100) / (100 - itemGstRate));
+        const categoryDiscountPercent = Math.max(0, Math.round((originalBasePrice - itemUnitInclusivePaisa) / originalBasePrice * 100)) || 0;
         
         const taxExclusivePriceRupees = item.price / 100;
         const itemTotalTaxExclusive = taxExclusivePriceRupees * item.quantity;
-        const itemTotalInclusive = Math.round(item.price * item.quantity / 0.82) / 100;
+        const itemTotalInclusive = (itemUnitInclusivePaisa * item.quantity) / 100;
         const gstAmountRupees = Number((itemTotalInclusive - itemTotalTaxExclusive).toFixed(2));
         
         computedSubtotal += itemTotalTaxExclusive;
         computedTotalTax += gstAmountRupees;
 
+        const itemNetUnitPaisa = Math.max(0, itemUnitInclusivePaisa - couponPerUnitPaisa + shippingPerUnitPaisa);
+        const itemNetRefundRupees = (itemNetUnitPaisa * item.quantity) / 100;
+
         if (item.status === 'Cancelled') {
-            cancelledRefundRupees += itemTotalInclusive;
+            cancelledRefundRupees += itemNetRefundRupees;
         } else if (item.status === 'Returned') {
-            returnedRefundRupees += itemTotalInclusive;
+            returnedRefundRupees += itemNetRefundRupees;
         }
 
         // Draw line
@@ -207,8 +230,8 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
     doc.fillColor('#111827').text(`₹${(dbOrder.subtotal / 100).toFixed(2)}`, 485, y, { align: 'right' });
     y += 15;
 
-    // CGST + SGST (9% + 9%)
-    doc.fillColor('#4b5563').text('GST (18%):', summaryX, y);
+    // CGST + SGST
+    doc.fillColor('#4b5563').text(`GST (${effectiveGstRate}%):`, summaryX, y);
     doc.fillColor('#111827').text(`₹${(dbOrder.tax / 100).toFixed(2)}`, 485, y, { align: 'right' });
     y += 15;
 
@@ -230,11 +253,17 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
 
     const originalGrandTotalRupees = dbOrder.finalAmount / 100;
     const allCancelled = dbOrder.items.length > 0 && dbOrder.items.every(item => item.status === 'Cancelled');
+    const allReturned = dbOrder.items.length > 0 && dbOrder.items.every(item => item.status === 'Returned');
+
     if (allCancelled) {
-        cancelledRefundRupees += dbOrder.shipping / 100;
+        cancelledRefundRupees = originalGrandTotalRupees;
     }
-    const finalAmountPaidRupees = originalGrandTotalRupees - cancelledRefundRupees;
-    const netAmountPaidRupees = finalAmountPaidRupees - returnedRefundRupees;
+    if (allReturned) {
+        returnedRefundRupees = originalGrandTotalRupees;
+    }
+
+    const finalAmountPaidRupees = Math.max(0, originalGrandTotalRupees - cancelledRefundRupees);
+    const netAmountPaidRupees = Math.max(0, finalAmountPaidRupees - returnedRefundRupees);
 
     if (cancelledRefundRupees > 0 || returnedRefundRupees > 0) {
         // Show detailed breakdown

@@ -1,8 +1,10 @@
-import Cart from '../models/Cart.js';
-import Category from '../models/Category.js';
-import Product from '../models/Product.js';
-import Wishlist from '../models/Wishlist.js';
+import Cart from '../../models/Cart.js';
+import Category from '../../models/Category.js';
+import Product from '../../models/Product.js';
+import Wishlist from '../../models/Wishlist.js';
 import mongoose from 'mongoose';
+import { validateCouponEligibility } from '../shared/couponHelper.js';
+import { getActiveOffers, calculateBestOfferForProduct } from '../shared/offerHelper.js';
 
 export const getCartItemCount = async (userId) => {
     if (!userId) return 0;
@@ -13,7 +15,7 @@ export const getCartItemCount = async (userId) => {
     return 0;
 };
 
-export const getCartDetails = async (userId) => {
+export const getCartDetails = async (userId, appliedCouponCode = null) => {
     let cart = await Cart.findOne({ userId }).populate('items.product').lean();
     if (!cart) {
         cart = { items: [] };
@@ -21,14 +23,20 @@ export const getCartDetails = async (userId) => {
 
     let subtotal = 0;
     let discount = 0;
+    let appliedCoupon = null;
     let hasUnavailableProduct = false;
     let hasInsufficientStockProduct = false;
+
+    let gst_rate = 0;
+    const activeOffers = await getActiveOffers();
+
     for (let item of cart.items) {
         if (item.product) {
             item.product = { ...item.product };
             if (item.product.status === 'Hidden') {
                 hasUnavailableProduct = true;
             }
+
             let catObj = null;
             if (item.product.category) {
                 if (mongoose.Types.ObjectId.isValid(item.product.category)) {
@@ -37,8 +45,8 @@ export const getCartDetails = async (userId) => {
                     catObj = await Category.findOne({ name: item.product.category }).lean();
                 }
             }
-            const catDiscount = (catObj && catObj.defaultOffer) ? parseFloat(catObj.defaultOffer) : 0;
-            item.product.categoryDiscount = catDiscount;
+
+            gst_rate = item.product.gst_rate || 18;
             
             let basePrice = item.product.price || 0;
             let platformStock = item.product.stock || 0;
@@ -60,25 +68,52 @@ export const getCartDetails = async (userId) => {
             if (item.quantity > platformStock) {
                 hasInsufficientStockProduct = true;
             }
+
+            const offerResult = calculateBestOfferForProduct(item.product, activeOffers, basePrice);
+            item.product.categoryDiscount = offerResult.discountPercentage;
+            item.product.offerDiscount = offerResult.discountPercentage;
+            item.product.appliedOffer = offerResult.appliedOffer;
             
-            const activePrice = catDiscount > 0 ? Math.round(Math.max(0, basePrice - (basePrice * (catDiscount / 100)))) : basePrice;
-            const cartPrice = Math.round(activePrice * 0.82);
+            const activePrice = offerResult.discountedPrice;
+            const cartPrice = Math.round(activePrice * (100 - gst_rate)/100);
             item.product.price = cartPrice;
             item.product.displayPrice = activePrice;
             subtotal += cartPrice * item.quantity;
         }
     }
 
-    const tax = Math.round(subtotal * (18 / 82));
+    const roundedSubtotal = Math.round(subtotal);
+    const tax = Math.round(subtotal * (gst_rate / (100 - gst_rate)));
+    const subtotalWithTax = roundedSubtotal + tax;
+
+    // Apply Coupon Discount if coupon code is passed and order total including tax > 0
+    if (appliedCouponCode && subtotalWithTax > 0) {
+        const validation = await validateCouponEligibility(appliedCouponCode, userId, subtotalWithTax);
+        if (validation.valid) {
+            discount = validation.discountPaisa;
+            appliedCoupon = {
+                id: validation.coupon._id.toString(),
+                code: validation.coupon.code,
+                discountType: validation.coupon.discountType,
+                discountValue: validation.coupon.discountValue,
+                discountPaisa: validation.discountPaisa,
+                discountRupees: (validation.discountPaisa / 100).toFixed(2),
+                description: validation.coupon.description
+            };
+        }
+    }
+
     const shipping = cart.items.length > 0 ? 10000 : 0;
-    const grandTotal = subtotal - discount + tax + shipping;
+    const grandTotal = Math.max(0, roundedSubtotal - Math.round(discount) + tax + shipping);
 
     return {
         cart,
-        subtotal: Math.round(subtotal),
+        subtotal: roundedSubtotal,
         tax: Math.round(tax),
+        gst_rate: gst_rate,
         shipping: Math.round(shipping),
         discount: Math.round(discount),
+        appliedCoupon,
         grandTotal: Math.round(grandTotal),
         hasUnavailableProduct,
         hasInsufficientStockProduct
@@ -285,4 +320,3 @@ export const removeFromCart = async (userId, productId, platform) => {
         throw error;
     }
 };
-

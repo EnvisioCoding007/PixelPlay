@@ -1,5 +1,6 @@
-import Category from '../models/Category.js';
-import Product from '../models/Product.js';
+import mongoose from 'mongoose';
+import Category from '../../models/Category.js';
+import Product from '../../models/Product.js';
 
 export const getAllActiveCategories = async () => {
     try {
@@ -27,7 +28,6 @@ export const getAllCategoriesAdmin = async (search = '', sort = 'latest', page =
             return {
                 ...cat,
                 gameCount,
-                defaultOffer: cat.defaultOffer || 0,
                 status: cat.status || 'Live'
             };
         }));
@@ -73,7 +73,7 @@ export const getAllCategories = async () => {
     }
 };
 
-export const createCategory = async ({ name, defaultOffer, description, icon }) => {
+export const createCategory = async ({ name, description, icon }) => {
     try {
         if (!name || !name.trim()) {
             throw new Error('Category name is required.');
@@ -92,19 +92,8 @@ export const createCategory = async ({ name, defaultOffer, description, icon }) 
             throw new Error('Category already exists.');
         }
 
-        let parsedOffer = 0;
-        if (defaultOffer) {
-            const cleaned = String(defaultOffer).replace(/[^\d.]/g, '');
-            parsedOffer = parseFloat(cleaned) || 0;
-        }
-
-        if (parsedOffer < 0 || parsedOffer > 100) {
-            throw new Error('Category offer/discount must be between 0 and 100 percent.');
-        }
-
         return await Category.create({ 
             name: name.trim(),
-            defaultOffer: parsedOffer,
             description: description?.trim() || '',
             icon: icon || ''
         });
@@ -143,6 +132,9 @@ export const toggleCategoryStatus = async (id) => {
 
 export const getCategoryDetailsAdmin = async (id) => {
     try {
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            return null;
+        }
         const category = await Category.findById(id).lean();
         if (!category) {
             return null;
@@ -159,7 +151,7 @@ export const getCategoryDetailsAdmin = async (id) => {
     }
 };
 
-export const updateCategory = async (id, { name, defaultOffer, description, status, icon }) => {
+export const updateCategory = async (id, { name, description, status, icon }) => {
     try {
         if (!name || !name.trim()) {
             throw new Error('Category name is required.');
@@ -190,18 +182,7 @@ export const updateCategory = async (id, { name, defaultOffer, description, stat
             throw new Error('Category name already exists.');
         }
 
-        let parsedOffer = 0;
-        if (defaultOffer) {
-            const cleaned = String(defaultOffer).replace(/[^\d.]/g, '');
-            parsedOffer = parseFloat(cleaned) || 0;
-        }
-
-        if (parsedOffer < 0 || parsedOffer > 100) {
-            throw new Error('Category offer/discount must be between 0 and 100 percent.');
-        }
-
         category.name = name.trim();
-        category.defaultOffer = parsedOffer;
         category.description = description?.trim() || '';
         if (status !== undefined) {
             category.status = status || category.status || 'Live';
@@ -235,4 +216,3 @@ export const deleteCategory = async (id) => {
         throw error;
     }
 };
-

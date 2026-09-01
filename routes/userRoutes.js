@@ -9,26 +9,62 @@ import * as productController from '../controllers/user/productController.js';
 import * as wishlistController from '../controllers/user/wishlistController.js';
 import * as cartController from '../controllers/user/cartController.js';
 import * as orderController from '../controllers/user/orderController.js';
+import * as walletController from '../controllers/user/walletController.js';
+import * as supportController from '../controllers/user/supportController.js';
+import * as notificationController from '../controllers/user/notificationController.js';
+import * as reviewController from '../controllers/user/reviewController.js';
 
 const router = express.Router();
 
-router.get('/auth/signup', isUserUnAuth, authController.getSignupPage);
-router.post('/auth/signup', authController.signup);
-router.post('/auth/send-otp', authController.sendVerificationOtp);
-router.get('/auth/verify-email', isUserUnAuth, authController.getVerifyEmailPage);
-router.post('/auth/verify-email', authController.verifyOtp);
+// ==========================================
+// 1. PUBLIC BLOCK (Unprotected Routes)
+// ==========================================
+router.get('/', productController.getHome);
+router.get('/home', productController.getHome);
+router.get('/browse', productController.getBrowsePage);
+router.get('/offers', productController.getOffersPage);
+router.get('/products/status/:id', productController.checkProductStatus);
+router.get('/products/:id', productController.getProductDetails);
 
-router.get('/auth/login', isUserUnAuth, authController.getLogin);
-router.post('/auth/login', authController.login);
+// Primary Platform Selection (Available for all users / guests)
+router.patch('/primary-platform', productController.setPrimaryPlatform);
+router.patch('/profile/primary-platform', productController.setPrimaryPlatform);
 
-router.get('/auth/reset-password-otp', isUserUnAuth, authController.resetPasswordOtpPage);
-router.post('/auth/reset-password-otp', isUserUnAuth, authController.verifyForgotPasswordOtp);
+// Support Routes
+router.get('/support', supportController.getSupportPage);
+router.post('/support', supportController.submitSupportRequest);
 
-router.get('/auth/forgot-password', isUserUnAuth, authController.getForgetPasswordPage);
-router.post('/auth/forgot-password', isUserUnAuth, authController.forgotPasswordOtp);
+// ==========================================
+// 2. GUEST BLOCK (Unauthenticated User Routes)
+// ==========================================
+router.use([
+    '/signup',
+    '/login',
+    '/send-otp',
+    '/verify-email',
+    '/forgot-password',
+    '/reset-password-otp',
+    '/reset-password',
+    '/auth/google'
+], isUserUnAuth);
 
-router.get('/auth/reset-password', authController.getResetPasswordPage);
-router.post('/auth/reset-password', authController.resetPassword);
+router.get('/signup', authController.getSignupPage);
+router.post('/signup', authController.signup);
+router.post('/send-otp', authController.sendVerificationOtp);
+router.get('/verify-email', authController.getVerifyEmailPage);
+router.post('/verify-email', authController.verifyOtp);
+
+router.get('/login', authController.getLogin);
+router.post('/login', authController.login);
+
+router.get('/reset-password-otp', authController.resetPasswordOtpPage);
+router.post('/reset-password-otp', authController.verifyForgotPasswordOtp);
+
+router.get('/forgot-password', authController.getForgetPasswordPage);
+router.post('/forgot-password', authController.forgotPasswordOtp);
+
+router.get('/reset-password', authController.getResetPasswordPage);
+router.post('/reset-password', authController.resetPassword);
 
 router.get('/auth/google', passport.authenticate('google', {
     scope: ['profile', 'email'],
@@ -36,52 +72,85 @@ router.get('/auth/google', passport.authenticate('google', {
 }));
 router.get('/auth/google/callback', handleGoogleAuth);
 
-router.get('/', productController.getHome);
-router.patch('/profile/primary-platform', productController.setPrimaryPlatform);
-router.get('/home', productController.getHome);
+// ==========================================
+// 3. PROTECTED BLOCK (Authenticated User Routes)
+// ==========================================
+router.use([
+    '/profile',
+    '/verify-email-update',
+    '/wishlist',
+    '/cart',
+    '/checkout',
+    '/wallet',
+    '/orders',
+    '/notifications',
+    '/logout'
+], isUserAuth);
 
-router.get('/browse', productController.getBrowsePage);
-router.get('/products/:id', productController.getProductDetails);
-router.get('/products/status/:id', productController.checkProductStatus);
+// Profile & Settings
+router.get('/profile', userController.getProfile);
+router.get('/profile/edit', userController.getProfileEdit);
+router.patch('/profile', upload.single('profile_image'), userController.updateProfile);
+router.get('/verify-email-update', userController.getVerifyEmailUpdate);
+router.post('/verify-email-update', userController.verifyEmailUpdate);
+router.get('/profile/password', userController.getProfilePassword);
+router.patch('/profile/password', userController.updatePassword);
+router.get('/profile/addresses', userController.getAddresses);
+router.post('/profile/addresses', userController.addAddress);
+router.patch('/profile/addresses/:addressId', userController.editAddress);
+router.delete('/profile/addresses/:addressId', userController.deleteAddress);
 
-router.get('/user/profile', isUserAuth, userController.getProfile);
-router.get('/user/wishlist', isUserAuth, wishlistController.getWishlist);
-router.post('/user/wishlist', isUserAuth, wishlistController.toggleWishlist);
+// Product Reviews & Ratings
+router.post('/products/:id/reviews', isUserAuth, reviewController.postReview);
+router.delete('/products/:id/reviews/:reviewId', isUserAuth, reviewController.deleteReview);
+router.get('/products/:id/reviews/eligibility', isUserAuth, reviewController.checkEligibility);
 
-router.get('/user/cart', isUserAuth, cartController.getCart);
-router.post('/user/cart', isUserAuth, cartController.addToCart);
-router.patch('/user/cart', isUserAuth, cartController.updateCartQuantity);
-router.delete('/user/cart', isUserAuth, cartController.removeFromCart);
-router.get('/user/checkout', isUserAuth, cartController.getCheckout);
+// Wishlist
+router.get('/wishlist', wishlistController.getWishlist);
+router.post('/wishlist', wishlistController.toggleWishlist);
+router.post('/wishlist/toggle', wishlistController.toggleWishlist);
 
-router.post('/user/orders', isUserAuth, orderController.postPlaceOrder);
-router.get('/user/orders/success/:orderId', isUserAuth, orderController.getOrderSuccess);
-router.get('/user/orders/:orderId', isUserAuth, orderController.getOrderDetails);
-router.get('/user/orders/:orderId/invoice', isUserAuth, orderController.downloadInvoice);
-router.get('/user/orders/:orderId/cancellation', isUserAuth, orderController.getCancelOrder);
-router.delete('/user/orders/:orderId', isUserAuth, orderController.postCancelOrder);
-router.get('/user/orders/:orderId/items/:productId/cancellation', isUserAuth, orderController.getCancelItem);
-router.delete('/user/orders/:orderId/items/:productId', isUserAuth, orderController.postCancelItem);
-router.get('/user/orders/:orderId/items/:productId/returns', isUserAuth, orderController.getReturnOrder);
-router.post('/user/orders/:orderId/items/:productId/returns', isUserAuth, orderController.postReturnOrder);
-router.get('/user/orders', isUserAuth, orderController.getOrderHistory);
+// Cart & Checkout
+router.get('/cart', cartController.getCart);
+router.post('/cart', cartController.addToCart);
+router.patch('/cart', cartController.updateCartQuantity);
+router.delete('/cart', cartController.removeFromCart);
+router.get('/checkout', cartController.getCheckout);
+router.get('/checkout/failure', cartController.getCheckoutFailure);
+router.post('/cart/apply-coupon', cartController.applyCoupon);
+router.post('/cart/remove-coupon', cartController.removeCoupon);
 
-router.get('/user/profile/edit', isUserAuth, userController.getProfileEdit);
-router.patch('/user/profile', isUserAuth, upload.single('profile_image'), userController.updateProfile);
+// Wallet
+router.get('/wallet', walletController.getWalletPage);
+router.post('/wallet/add-funds', walletController.addFunds);
+router.post('/wallet/razorpay-create', walletController.createWalletRazorpayOrder);
+router.post('/wallet/razorpay-verify', walletController.verifyWalletRazorpayPayment);
 
-router.get('/user/verify-email-update', isUserAuth, userController.getVerifyEmailUpdate);
-router.post('/user/verify-email-update', isUserAuth, userController.verifyEmailUpdate);
+// Orders
+router.post('/orders', orderController.postPlaceOrder);
+router.post('/orders/razorpay-create', orderController.createRazorpayOrder);
+router.post('/orders/razorpay-verify', orderController.verifyRazorpayPayment);
+router.get('/orders/success/:orderId', orderController.getOrderSuccess);
+router.get('/orders/:orderId', orderController.getOrderDetails);
+router.get('/orders/:orderId/invoice', orderController.downloadInvoice);
+router.get('/orders/:orderId/cancellation', orderController.getCancelOrder);
+router.delete('/orders/:orderId', orderController.postCancelOrder);
+router.get('/orders/:orderId/items/:productId/cancellation', orderController.getCancelItem);
+router.delete('/orders/:orderId/items/:productId', orderController.postCancelItem);
+router.get('/orders/:orderId/items/:productId/returns', orderController.getReturnOrder);
+router.post('/orders/:orderId/items/:productId/returns', orderController.postReturnOrder);
+router.get('/orders/:orderId/returns', orderController.getEntireOrderReturn);
+router.post('/orders/:orderId/returns', orderController.postEntireOrderReturn);
+router.get('/orders', orderController.getOrderHistory);
 
-router.get('/user/profile/password', isUserAuth, userController.getProfilePassword);
-router.patch('/user/profile/password', isUserAuth, userController.updatePassword);
+// Notifications
+router.get('/notifications', notificationController.getNotifications);
+router.patch('/notifications/read-all', notificationController.markAllAsRead);
+router.patch('/notifications/:id/read', notificationController.markAsRead);
+router.delete('/notifications/read', notificationController.deleteReadNotifications);
+router.delete('/notifications/:id', notificationController.deleteNotification);
 
-router.get('/user/profile/addresses', isUserAuth, userController.getAddresses);
-router.post('/user/profile/addresses', isUserAuth, userController.addAddress);
-router.patch('/user/profile/addresses/:addressId', isUserAuth, userController.editAddress);
-router.delete('/user/profile/addresses/:addressId', isUserAuth, userController.deleteAddress);
-
-router.patch('/user/profile/avatar', upload.single('avatar'), userController.updateAvatar);
-
-router.post('/auth/logout', authController.logout);
+// Logout
+router.post('/logout', authController.logout);
 
 export default router;

@@ -119,7 +119,7 @@
       </header>
 
       <!-- BEGIN: Summary Cards -->
-      <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8" data-purpose="summary-cards">
+      <section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8" data-purpose="summary-cards">
         <!-- Total Revenue -->
         <div class="bg-cardDark border border-borderDark rounded-xl p-6 glow-yellow relative overflow-hidden">
           <div class="absolute right-0 top-0 w-32 h-32 bg-neonYellow/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
@@ -142,7 +142,17 @@
             <p class="text-2xl font-mono font-semibold text-neonBlue"><%= stats.completedProvisioning %> Orders</p>
           </div>
         </div>
+
+        <div class="bg-cardDark border border-borderDark rounded-xl p-6 relative overflow-hidden">
+          <div class="absolute right-0 top-0 w-32 h-32 bg-yellow-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+          <h3 class="text-xs font-semibold text-textMuted tracking-wider uppercase mb-2">Pending Return Requests</h3>
+          <div class="inline-block border border-yellow-500/30 bg-yellow-500/10 rounded-lg px-4 py-2 mt-1">
+            <p class="text-2xl font-mono font-semibold text-yellow-500"><%= stats.pendingReturns %> Orders</p>
+          </div>
+        </div>
       </section>
+
+      
       <!-- END: Summary Cards -->
 
       <!-- BEGIN: Filters and Table Section -->

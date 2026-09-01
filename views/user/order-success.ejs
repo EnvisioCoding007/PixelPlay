@@ -117,7 +117,17 @@
                         </div>
                         <span class="text-pixel-text-gray">Payment Method</span>
                     </div>
-                    <span class="font-semibold"><%= order.paymentMethod === 'COD' ? 'Cash on Delivery' : order.paymentMethod %></span>
+                    <span class="font-semibold">
+                        <% if (order.paymentMethod === 'COD') { %>
+                            Cash on Delivery
+                        <% } else if (order.paymentMethod === 'PixelWallet') { %>
+                            PixelWallet
+                        <% } else if (order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Online') { %>
+                            Online Payment (Razorpay)
+                        <% } else { %>
+                            <%= order.paymentMethod %>
+                        <% } %>
+                    </span>
                 </div>
                 <!-- Transaction ID -->
                 <div class="flex items-center justify-between">
@@ -131,7 +141,17 @@
                         </div>
                         <span class="text-pixel-text-gray">Transaction ID</span>
                     </div>
-                    <span class="font-medium text-gray-300"><%= order.transactionId || 'N/A (Cash on Delivery)' %></span>
+                    <span class="font-medium text-gray-300 font-mono text-xs md:text-sm">
+                        <% if (order.transactionId) { %>
+                            <%= order.transactionId %>
+                        <% } else if (order.paymentMethod === 'COD') { %>
+                            N/A (Cash on Delivery)
+                        <% } else if (order.paymentMethod === 'PixelWallet') { %>
+                            N/A (PixelWallet Payment)
+                        <% } else { %>
+                            N/A (Online Payment)
+                        <% } %>
+                    </span>
                 </div>
                 <!-- Amount Paid -->
                 <div class="flex items-center justify-between">
@@ -171,7 +191,7 @@
         <div class="flex flex-col items-center gap-6" data-purpose="actions">
             <div class="flex items-center gap-4">
                 <!-- Track Shipment Button -->
-                <a href="/user/orders/<%= order._id %>"
+                <a href="/orders/<%= order._id %>"
                     class="bg-pixel-cyan hover:bg-pixel-cyan/90 text-white font-bold px-8 py-3.5 rounded-lg flex items-center gap-2 shadow-cyan-glow transition-all uppercase text-sm">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
                         <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"

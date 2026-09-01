@@ -1,9 +1,10 @@
-import * as productService from '../../services/productService.js';
-import * as categoryService from '../../services/categoryService.js';
-import * as publisherService from '../../services/publisherService.js';
-import * as userService from '../../services/userService.js';
-import * as wishlistService from '../../services/wishlistService.js';
-import * as cartService from '../../services/cartService.js';
+import * as productService from '../../services/user/productService.js';
+import * as categoryService from '../../services/admin/categoryService.js';
+import * as publisherService from '../../services/admin/publisherService.js';
+import * as userService from '../../services/user/userService.js';
+import * as wishlistService from '../../services/user/wishlistService.js';
+import * as cartService from '../../services/user/cartService.js';
+import * as reviewService from '../../services/user/reviewService.js';
 
 export const getHome = async (req, res) => {
     try {
@@ -15,12 +16,13 @@ export const getHome = async (req, res) => {
             allPlatforms.unshift('PC');
         }
 
-        const { latestRelease, standardGames, legendaryGames } = await productService.getProductsForHome(primaryPlatform);
+        const { latestRelease, latestReleases, standardGames, legendaryGames } = await productService.getProductsForHome(primaryPlatform);
         const activePublishers = await productService.getActivePublishersWithGameCount();
 
         const publishers = activePublishers;
 
         let userWishlist = [];
+        let userCartItems = [];
 
         if (req.session.user) {
             const userId = req.session.user.id || req.session.user;
@@ -33,26 +35,31 @@ export const getHome = async (req, res) => {
                     categories, 
                     publishers,
                     latestRelease,
+                    latestReleases,
                     standardGames,
                     legendaryGames,
                     activePublishers,
                     userWishlist: [],
+                    userCartItems: [],
                     primaryPlatform,
                     allPlatforms
                 });
             }
 
             userWishlist = await wishlistService.getWishlistItems(userId);
+            userCartItems = await cartService.getCartItems(userId);
 
             return res.render('user/home', { 
                 user, 
                 categories, 
                 publishers,
                 latestRelease,
+                latestReleases,
                 standardGames,
                 legendaryGames,
                 activePublishers,
                 userWishlist,
+                userCartItems,
                 primaryPlatform,
                 allPlatforms
             });
@@ -63,10 +70,12 @@ export const getHome = async (req, res) => {
             categories, 
             publishers,
             latestRelease,
+            latestReleases,
             standardGames,
             legendaryGames,
             activePublishers,
             userWishlist: [],
+            userCartItems: [],
             primaryPlatform,
             allPlatforms
         });
@@ -77,10 +86,12 @@ export const getHome = async (req, res) => {
             categories: [], 
             publishers: [],
             latestRelease: null,
+            latestReleases: [],
             standardGames: [],
             legendaryGames: [],
             activePublishers: [],
-            userWishlist: []
+            userWishlist: [],
+            userCartItems: []
         });
     }
 };
@@ -162,19 +173,26 @@ export const getBrowsePage = async (req, res) => {
 export const getProductDetails = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.session.user ? (req.session.user.id || req.session.user) : null;
+        const userId = req.session.user ? (req.session.user._id || req.session.user.id || req.session.user) : null;
         const primaryPlatform = req.session.primaryPlatform || 'PC';
 
         const details = await productService.getProductDetailsForUser(id, userId, primaryPlatform);
         if (!details) {
-            return res.redirect('/browse?notification=The game was unlisted by the admin.');
+            return res.status(404).render('404', {
+                title: '404 - Game Not Found | PixelPlay',
+                isAdminContext: false,
+                url: req.originalUrl
+            });
         }
 
-        const reviews = [];
+        const reviews = await reviewService.getReviewsForProduct(id);
+        const eligibility = userId ? await reviewService.checkReviewEligibility(userId, id) : { isEligible: false, existingReview: null };
 
         res.render('user/game-details', {
             product: details.product,
             reviews,
+            isEligible: eligibility.isEligible,
+            existingReview: eligibility.existingReview,
             user: details.user,
             inWishlist: details.inWishlist,
             wishlistPlatforms: details.wishlistPlatforms,
@@ -183,11 +201,10 @@ export const getProductDetails = async (req, res) => {
         });
     } catch (error) {
         console.error('[getProductDetails] Error:', error);
-        res.status(500).render('user/home', {
-            user: null,
-            categories: [],
-            publishers: [],
-            error: 'An error occurred while loading game details.'
+        return res.status(404).render('404', {
+            title: '404 - Page Not Found | PixelPlay',
+            isAdminContext: false,
+            url: req.originalUrl
         });
     }
 };
@@ -211,10 +228,52 @@ export const setPrimaryPlatform = async (req, res) => {
         const { platform } = req.body;
         if (platform) {
             req.session.primaryPlatform = platform;
+            if (typeof req.session.save === 'function') {
+                await new Promise((resolve) => req.session.save(resolve));
+            }
         }
         return res.redirect(req.headers.referer || '/home');
     } catch (error) {
         console.error('[setPrimaryPlatform] Error:', error);
         return res.redirect('/home');
+    }
+};
+
+export const getOffersPage = async (req, res) => {
+    try {
+        const primaryPlatform = req.session.primaryPlatform || 'PC';
+        let user = null;
+        let userWishlist = [];
+        let userCartItems = [];
+
+        if (req.session.user) {
+            const userId = req.session.user.id || req.session.user;
+            user = await userService.getUserById(userId);
+            if (user && !user.is_blocked) {
+                userWishlist = await wishlistService.getWishlistItems(userId);
+                userCartItems = await cartService.getCartItems(userId);
+            } else {
+                user = null;
+            }
+        }
+
+        const offers = await productService.getStorefrontActiveOffers(primaryPlatform);
+
+        res.render('user/offers', {
+            user,
+            userWishlist,
+            userCartItems,
+            offers,
+            primaryPlatform,
+            activeTab: 'offers'
+        });
+    } catch (error) {
+        console.error('[getOffersPage] Error:', error);
+        res.status(500).render('user/home', {
+            user: null,
+            categories: [],
+            publishers: [],
+            error: 'An error occurred while loading active offers.'
+        });
     }
 };

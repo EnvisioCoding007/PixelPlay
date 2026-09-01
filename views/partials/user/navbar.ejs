@@ -1,5 +1,5 @@
 <header
-    class="flex h-[72px] items-center justify-between px-10 py-0 relative self-stretch w-full z-[1] bg-[#09090be6] border-b [border-bottom-style:solid] border-[#00000014] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
+    class="flex h-[72px] items-center justify-between px-10 py-0 relative self-stretch w-full z-[100000] bg-[#09090be6] border-b [border-bottom-style:solid] border-[#00000014] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
     <nav class="flex items-center justify-between w-full gap-6" aria-label="Primary">
         <div class="inline-flex items-center gap-10 relative flex-[0_0_auto]">
             <a href="/" class="relative block w-[180px] h-17 flex items-center" aria-label="PixelPlay home">
@@ -14,17 +14,17 @@
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'browse' ? 'bg-[#ffffff10]' : '' %>"><span
                              class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'browse' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Browse</span></a>
                 </li>
-                <li><a href="#"
+                <li><a href="/offers"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'offers' ? 'bg-[#ffffff10]' : '' %>"><span
                              class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'offers' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Offers</span></a>
                 </li>
                 <% if (typeof user !== 'undefined' && user) { %>
-                <li><a href="#"
+                <li><a href="/wallet"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'wallet' ? 'bg-[#ffffff10]' : '' %>"><span
                              class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'wallet' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] leading-[normal]">Wallet</span></a>
                 </li>
                 <% } %>
-                <li><a href="#"
+                <li><a href="/support"
                         class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'support' ? 'bg-[#ffffff10]' : '' %>"><span
                              class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'support' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Support</span></a>
                 </li>
@@ -49,11 +49,11 @@
             </form>
             <% if (typeof user !== 'undefined' && user) { %>
             <%# Authenticated: show wishlist, cart, bell, and profile avatar %>
-            <a href="/user/wishlist" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors <%= activeTab === 'wishlist' ? 'bg-[#ffffff10]' : '' %>"
+            <a href="/wishlist" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors <%= activeTab === 'wishlist' ? 'bg-[#ffffff10]' : '' %>"
                 aria-label="Wishlist" title="Wishlist">
                 <i class="fa-solid fa-heart text-[#9aa6b3] hover:text-red-500 transition-colors text-lg <%= activeTab === 'wishlist' ? 'text-red-500' : '' %>"></i>
             </a>
-            <a href="/user/cart" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors <%= activeTab === 'cart' ? 'bg-[#ffffff10]' : '' %>"
+            <a href="/cart" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors <%= activeTab === 'cart' ? 'bg-[#ffffff10]' : '' %>"
                 aria-label="Cart" title="Cart">
                 <i class="fa-solid fa-cart-shopping text-[#9aa6b3] hover:text-white transition-colors text-lg"></i>
                 <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
@@ -62,11 +62,54 @@
                     </span>
                 <% } %>
             </a>
-            <button type="button" class="flex w-10 h-10 items-center justify-center relative rounded-[20px]"
-                aria-label="Notifications">
-                <img class="relative w-5 h-5" src="/icons/notification-bell.svg" alt="Notifications" />
-            </button>
-            <a href="/user/profile"
+            <!-- Notification Container -->
+            <div class="relative">
+                <button type="button" id="notification-btn" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors"
+                    aria-label="Notifications" title="Notifications">
+                    <i class="fa-solid fa-bell text-[#9aa6b3] hover:text-white transition-colors text-lg"></i>
+                    <span id="notification-badge" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-sky-500 text-[10px] font-bold text-white border border-[#0d0d0d] transition-all duration-300 <%= (typeof unreadNotificationCount !== 'undefined' && unreadNotificationCount > 0) ? '' : 'hidden' %>">
+                        <%= (typeof unreadNotificationCount !== 'undefined') ? unreadNotificationCount : 0 %>
+                    </span>
+                </button>
+
+                <!-- Notification Dropdown Menu -->
+                <div id="notification-dropdown" class="hidden absolute right-0 mt-3 w-80 sm:w-96 bg-[#12161f] border border-[#ffffff1a] rounded-xl shadow-2xl z-[100001] overflow-hidden backdrop-blur-md">
+                    <!-- Dropdown Header -->
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-[#ffffff15] bg-[#0c0f15]">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-bell text-sky-400 text-sm"></i>
+                            <h3 class="text-sm font-semibold text-white">Notifications</h3>
+                            <span id="dropdown-unread-count" class="text-xs px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 font-medium">
+                                <%= (typeof unreadNotificationCount !== 'undefined') ? unreadNotificationCount : 0 %> unread
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="mark-all-read-btn" class="text-[11px] text-sky-400 hover:text-sky-300 font-medium transition-colors cursor-pointer" title="Mark all as read">
+                                Mark read
+                            </button>
+                            <span class="text-[#ffffff20]">|</span>
+                            <button type="button" id="delete-read-btn" class="text-[11px] text-red-400 hover:text-red-300 font-medium transition-colors cursor-pointer" title="Delete all read notifications">
+                                Delete read
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notification List -->
+                    <div id="notification-list" class="max-h-80 overflow-y-auto divide-y divide-[#ffffff0a] scrollbar-thin">
+                        <div class="p-6 text-center text-[#9aa6b3] text-sm flex flex-col items-center gap-2" id="notification-loading">
+                            <i class="fa-solid fa-spinner fa-spin text-sky-400 text-lg"></i>
+                            <span>Loading notifications...</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="p-2 border-t border-[#ffffff10] bg-[#090b0e] text-center">
+                        <span class="text-[11px] text-[#6b7280]">Real-time live updates active</span>
+                    </div>
+                </div>
+            </div>
+
+            <a href="/profile"
                 class="relative w-9 h-9 rounded-[18px] border-2 border-solid border-[#00000014] flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer overflow-hidden bg-[#1a2a3a] text-sky-400 font-bold"
                 aria-label="Profile">
                 <% if (user.profile_image) { %>
@@ -78,11 +121,11 @@
             <% } else { %>
             <%# Unauthenticated: show Log In and Sign Up CTAs %>
             <div class="inline-flex items-center gap-3 relative flex-[0_0_auto]">
-                <a href="/auth/login"
+                <a href="/login"
                     class="inline-flex h-9 items-center justify-center px-5 py-0 relative rounded-md border border-solid border-[#ffffff22] text-[#9aa6b3] hover:text-white hover:border-[#ffffff44] transition-colors [font-family:'Inter-Medium',Helvetica] font-medium text-sm tracking-[0] leading-[normal]">
                     Log In
                 </a>
-                <a href="/auth/signup"
+                <a href="/signup"
                     class="inline-flex h-9 items-center justify-center px-5 py-0 relative rounded-md bg-sky-500 hover:bg-sky-400 shadow-[0px_0px_16px_#0ea5e94c] transition-colors [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#061323] text-sm tracking-[0] leading-[normal]">
                     Sign Up
                 </a>
@@ -117,7 +160,6 @@
         clearBtn.classList.add('hidden');
         searchInput.focus();
         
-        // If on browse page, clear search query and submit filterForm
         const hiddenSearch = document.getElementById('hiddenSearchInput');
         if (hiddenSearch) {
           hiddenSearch.value = '';
@@ -130,7 +172,6 @@
             }
           }
         } else {
-          // If on other pages, redirect to browse
           window.location.href = '/browse';
         }
       });
@@ -153,5 +194,229 @@
         }
       });
     }
+
+    // ===============================================
+    // NOTIFICATION DROPDOWN & WEBSOCKET SYSTEM
+    // ===============================================
+    const notifBtn = document.getElementById('notification-btn');
+    const notifDropdown = document.getElementById('notification-dropdown');
+    const notifBadge = document.getElementById('notification-badge');
+    const dropdownUnreadCount = document.getElementById('dropdown-unread-count');
+    const notifList = document.getElementById('notification-list');
+    const markAllReadBtn = document.getElementById('mark-all-read-btn');
+    const deleteReadBtn = document.getElementById('delete-read-btn');
+
+    let notificationsLoaded = false;
+
+    const updateBadgeCount = (count) => {
+      const cnt = parseInt(count, 10) || 0;
+      if (notifBadge) {
+        notifBadge.textContent = cnt;
+        if (cnt > 0) {
+          notifBadge.classList.remove('hidden');
+          notifBadge.classList.add('animate-bounce');
+          setTimeout(() => notifBadge.classList.remove('animate-bounce'), 1000);
+        } else {
+          notifBadge.classList.add('hidden');
+        }
+      }
+      if (dropdownUnreadCount) {
+        dropdownUnreadCount.textContent = `${cnt} unread`;
+      }
+    };
+
+    const getRelativeTime = (dateStr) => {
+      const now = new Date();
+      const past = new Date(dateStr);
+      const diffSec = Math.floor((now - past) / 1000);
+      if (diffSec < 60) return 'Just now';
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr}h ago`;
+      const diffDay = Math.floor(diffHr / 24);
+      return `${diffDay}d ago`;
+    };
+
+    const getIconForType = (type) => {
+      switch (type) {
+        case 'wallet_credit':
+          return '<div class="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0 text-emerald-400"><i class="fa-solid fa-wallet text-xs"></i></div>';
+        case 'order_status':
+          return '<div class="w-8 h-8 rounded-full bg-sky-500/20 border border-sky-500/30 flex items-center justify-center shrink-0 text-sky-400"><i class="fa-solid fa-box text-xs"></i></div>';
+        case 'restock':
+          return '<div class="w-8 h-8 rounded-full bg-pink-500/20 border border-pink-500/30 flex items-center justify-center shrink-0 text-pink-400"><i class="fa-solid fa-heart text-xs"></i></div>';
+        case 'offer':
+          return '<div class="w-8 h-8 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center shrink-0 text-purple-400"><i class="fa-solid fa-tag text-xs"></i></div>';
+        case 'low_stock':
+          return '<div class="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0 text-amber-400"><i class="fa-solid fa-triangle-exclamation text-xs"></i></div>';
+        default:
+          return '<div class="w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center shrink-0 text-blue-400"><i class="fa-solid fa-circle-info text-xs"></i></div>';
+      }
+    };
+
+    const renderNotificationItem = (n) => {
+      const isUnread = !n.isRead;
+      const itemEl = document.createElement('div');
+      itemEl.className = `group relative flex items-start gap-3 p-3 transition-colors hover:bg-[#ffffff08] ${isUnread ? 'bg-sky-500/5' : ''}`;
+      itemEl.dataset.id = n._id;
+
+      itemEl.innerHTML = `
+        ${getIconForType(n.type)}
+        <div class="flex-1 min-w-0 pr-6">
+          <div class="flex items-center gap-1.5 mb-0.5">
+            <h4 class="text-xs font-semibold ${isUnread ? 'text-white' : 'text-[#9aa6b3]'} truncate">${n.title}</h4>
+            ${isUnread ? '<span class="w-2 h-2 rounded-full bg-sky-500 shrink-0"></span>' : ''}
+          </div>
+          <p class="text-[12px] text-[#9aa6b3] line-clamp-2 leading-relaxed mb-1">${n.message}</p>
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] text-[#6b7280]">${getRelativeTime(n.createdAt)}</span>
+            ${n.link ? `<a href="${n.link}" class="notif-link text-[11px] font-medium text-sky-400 hover:underline">View details &rarr;</a>` : ''}
+          </div>
+        </div>
+        <button type="button" class="delete-notif-btn absolute top-3 right-3 text-[#6b7280] hover:text-red-400 transition-colors p-1 opacity-0 group-hover:opacity-100" title="Delete notification">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      `;
+
+      // Event: Mark read on link click
+      const linkEl = itemEl.querySelector('.notif-link');
+      if (linkEl) {
+        linkEl.addEventListener('click', async (e) => {
+          if (isUnread) {
+            try {
+              await fetch(`/notifications/${n._id}/read`, { method: 'PATCH' });
+            } catch (err) { console.error(err); }
+          }
+        });
+      }
+
+      // Event: Delete single notification
+      const delBtn = itemEl.querySelector('.delete-notif-btn');
+      if (delBtn) {
+        delBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          try {
+            const res = await fetch(`/notifications/${n._id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+              itemEl.remove();
+              updateBadgeCount(data.unreadCount);
+              checkEmptyState();
+            }
+          } catch (err) { console.error(err); }
+        });
+      }
+
+      return itemEl;
+    };
+
+    const checkEmptyState = () => {
+      if (notifList && notifList.children.length === 0) {
+        notifList.innerHTML = `
+          <div class="p-8 text-center text-[#6b7280] text-xs flex flex-col items-center gap-2">
+            <i class="fa-solid fa-bell-slash text-2xl mb-1 text-[#ffffff20]"></i>
+            <span>No notifications found</span>
+          </div>
+        `;
+      }
+    };
+
+    const fetchNotifications = async () => {
+      if (!notifList) return;
+      try {
+        const res = await fetch('/notifications');
+        const data = await res.json();
+        if (data.success) {
+          updateBadgeCount(data.unreadCount);
+          notifList.innerHTML = '';
+          if (data.notifications && data.notifications.length > 0) {
+            data.notifications.forEach(n => {
+              notifList.appendChild(renderNotificationItem(n));
+            });
+          } else {
+            checkEmptyState();
+          }
+          notificationsLoaded = true;
+        }
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+        notifList.innerHTML = '<div class="p-4 text-center text-red-400 text-xs">Failed to load notifications</div>';
+      }
+    };
+
+    if (notifBtn && notifDropdown) {
+      notifBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isHidden = notifDropdown.classList.contains('hidden');
+        if (isHidden) {
+          notifDropdown.classList.remove('hidden');
+          fetchNotifications();
+        } else {
+          notifDropdown.classList.add('hidden');
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+          notifDropdown.classList.add('hidden');
+        }
+      });
+    }
+
+    if (markAllReadBtn) {
+      markAllReadBtn.addEventListener('click', async () => {
+        try {
+          const res = await fetch('/notifications/read-all', { method: 'PATCH' });
+          const data = await res.json();
+          if (data.success) {
+            updateBadgeCount(0);
+            fetchNotifications();
+            if (typeof showToast === 'function') showToast('All notifications marked as read', 'success');
+          }
+        } catch (err) { console.error(err); }
+      });
+    }
+
+    if (deleteReadBtn) {
+      deleteReadBtn.addEventListener('click', async () => {
+        try {
+          const res = await fetch('/notifications/read', { method: 'DELETE' });
+          const data = await res.json();
+          if (data.success) {
+            updateBadgeCount(data.unreadCount);
+            fetchNotifications();
+            if (typeof showToast === 'function') showToast(data.message || 'Read notifications deleted', 'success');
+          }
+        } catch (err) { console.error(err); }
+      });
+    }
+
+    // ===============================================
+    // WEBSOCKET REAL-TIME LISTENER
+    // ===============================================
+    if (typeof io !== 'undefined') {
+      const socket = io();
+      socket.on('connect', () => {
+        <% if (typeof user !== 'undefined' && user) { %>
+          socket.emit('register_user', '<%= user._id || user.id %>');
+        <% } %>
+      });
+
+      socket.on('new_notification', (data) => {
+        if (data) {
+          if (typeof data.unreadCount !== 'undefined') {
+            updateBadgeCount(data.unreadCount);
+          }
+          if (data.notification && typeof showToast === 'function') {
+            showToast(`${data.notification.title}: ${data.notification.message}`, 'info');
+          }
+          if (notifDropdown && !notifDropdown.classList.contains('hidden')) {
+            fetchNotifications();
+          }
+        }
+      });
+    }
   });
 </script>
+

@@ -213,16 +213,16 @@
             }
 
             const endpoint = purpose === 'signup'
-                ? '/auth/verify-email'
+                ? '/verify-email'
                 : purpose === 'email_update'
-                    ? '/auth/verify-email-update'
-                    : '/auth/reset-password-otp';
+                    ? '/verify-email-update'
+                    : '/reset-password-otp';
 
             const fallbackRedirect = purpose === 'signup'
-                ? '/auth/login'
+                ? '/login'
                 : purpose === 'email_update'
-                    ? '/auth/profile'
-                    : '/auth/reset-password';
+                    ? '/profile'
+                    : '/reset-password';
 
             try {
                 const response = await fetch(endpoint, {
@@ -337,7 +337,7 @@
                 resendButton.textContent = 'Sending…';
                 resendButton.style.pointerEvents = 'none';
 
-                const response = await fetch('/auth/send-otp', {
+                const response = await fetch('/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: currentEmail, purpose })

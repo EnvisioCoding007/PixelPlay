@@ -112,6 +112,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: null,
     },
+    is_referral_rewarded: {
+        type: Boolean,
+        default: false,
+    },
 
     google_id: {
         type: String,

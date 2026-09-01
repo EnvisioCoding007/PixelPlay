@@ -37,7 +37,7 @@
         <!-- BEGIN: Header Section -->
         <header class="flex flex-col gap-4">
             <a class="text-gray-400 hover:text-white flex items-center text-sm font-medium transition-colors w-fit"
-                href="/user/orders/<%= order._id %>">
+                href="/orders/<%= order._id %>">
                 <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg">
                     <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -83,7 +83,12 @@
                 <% } %>
 
                 <% 
-                   const refundVal = (typeof product !== 'undefined' && product) ? Math.round(item.price * item.quantity / 0.82) : order.grandTotal;
+                   let refundVal = order.grandTotal;
+                   if (typeof product !== 'undefined' && product && typeof item !== 'undefined' && item) {
+                       const itemGst = item.gst_rate || (product && product.gst_rate) || 18;
+                       const unitTaxInclusive = Math.round((item.price * 100) / (100 - itemGst));
+                       refundVal = unitTaxInclusive * item.quantity;
+                   }
                 %>
                 <div class="flex items-center text-green-500 bg-green-500/10 px-2.5 py-1 rounded-md font-medium text-xs mt-1">
                     <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"
@@ -97,7 +102,7 @@
         </header>
         <!-- END: Header Section -->
 
-        <form action="<%= typeof product !== 'undefined' && product ? '/user/orders/' + order._id + '/items/' + product._id + '?_method=DELETE&platform=' + encodeURIComponent(item.platform) : '/user/orders/' + order._id + '?_method=DELETE' %>" method="POST" class="flex flex-col gap-6">
+        <form action="<%= typeof product !== 'undefined' && product ? '/orders/' + order._id + '/items/' + product._id + '?_method=DELETE&platform=' + encodeURIComponent(item.platform) : '/orders/' + order._id + '?_method=DELETE' %>" method="POST" class="flex flex-col gap-6">
             <% if (typeof product !== 'undefined' && product && item.quantity > 1) { %>
             <!-- Quantity adjustment Section -->
             <section class="bg-[#15161a] border border-[#23252a] rounded-xl overflow-hidden shadow-sm p-6 flex flex-col gap-3">
@@ -223,7 +228,7 @@
                     Confirm Cancellation
                 </button>
                 <a class="text-sm font-medium text-[#0ea5e9] hover:text-[#38bdf8] hover:underline transition-colors flex items-center mt-2"
-                    href="/user/orders/<%= order._id %>">
+                    href="/orders/<%= order._id %>">
                     <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg">
                         <path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -277,10 +282,12 @@
             const policyRefundDisplay = document.getElementById('policy-refund-display');
 
             const itemPrice = parseFloat('<%= typeof item !== "undefined" && item ? item.price : 0 %>');
+            const itemGstRate = parseFloat('<%= typeof item !== "undefined" && item ? (item.gst_rate || (typeof product !== "undefined" && product && product.gst_rate) || 18) : 18 %>');
 
             function updateRefund(qty) {
                 if (itemPrice > 0) {
-                    const totalRefund = Math.round(itemPrice * qty / 0.82) / 100;
+                    const unitTaxInclusive = Math.round((itemPrice * 100) / (100 - itemGstRate));
+                    const totalRefund = (unitTaxInclusive * qty) / 100;
                     const text = '₹' + totalRefund.toFixed(2);
                     if (refundDisplay) refundDisplay.textContent = text;
                     if (policyRefundDisplay) policyRefundDisplay.textContent = text;

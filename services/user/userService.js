@@ -1,8 +1,9 @@
-import User from '../models/User.js';
+import User from '../../models/User.js';
 import bcrypt from 'bcrypt';
-import OTP from '../models/Otpmodel.js';
-import { sendEmail } from '../utils/emailSender.js';
-import { uploadToCloudinary } from '../config/cloudinary.js';
+import OTP from '../../models/Otpmodel.js';
+import { sendEmail } from '../../utils/emailSender.js';
+import { uploadToCloudinary } from '../../config/cloudinary.js';
+import { generateUniqueReferralCode } from '../shared/userHelper.js';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9][a-zA-Z0-9.\-]*\.[a-zA-Z]{2,}$/;
 const USERNAME_REGEX = /^(?=.*[a-zA-Z])[a-zA-Z0-9][a-zA-Z0-9_ -]{2,49}$/;
@@ -57,13 +58,25 @@ export const registerLocalUser = async (username, email, password, referralCode)
         throw new Error('A user with this email already exists.');
     }
 
+    let referrerCodeToSave = null;
+    if (referralCode && referralCode.trim()) {
+        const cleanRefCode = referralCode.trim().toUpperCase();
+        const referrerUser = await User.findOne({ referral_code: cleanRefCode });
+        if (!referrerUser) {
+            throw new Error('Invalid referral code. Please check the code and try again.');
+        }
+        referrerCodeToSave = referrerUser.referral_code;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
+    const myReferralCode = await generateUniqueReferralCode(username);
 
     const newUser = new User({
         username,
         email,
         password_hash: hashedPassword,
-        referred_by: referralCode || null,
+        referral_code: myReferralCode,
+        referred_by: referrerCodeToSave,
         authProvider: 'local'
     });
 
@@ -179,10 +192,12 @@ export const handleGoogleAuth = async (profile) => {
         return user;
     }
 
+    const myReferralCode = await generateUniqueReferralCode(profile.displayName);
     user = new User({
         username: profile.displayName,
         email: profile.emails[0].value,
         google_id: profile.id,
+        referral_code: myReferralCode,
         is_verified: true,
         last_login_at: new Date()
     });
@@ -272,14 +287,16 @@ export const checkAndSendSignupOtp = async (email) => {
     return { sentNew: false };
 };
 
-export const getAdminByEmail = async (email) => {
+export const getUserByEmail = async (email) => {
     try {
         return await User.findOne({ email: email.toLowerCase().trim() });
     } catch (error) {
-        console.error('[userService.getAdminByEmail] Error:', error);
+        console.error('[userService.getUserByEmail] Error:', error);
         throw error;
     }
 };
+
+export const getAdminByEmail = getUserByEmail;
 
 export const getCustomers = async (search = '', status = '', verification = '', sort = '-createdAt', page = 1, limit = 10) => {
     try {
@@ -375,9 +392,15 @@ export const getUserById = async (userId) => {
 
 export const getUserProfile = async (userId) => {
     try {
-        const user = await User.findById(userId).select('-password_hash').lean();
+        let user = await User.findById(userId).select('-password_hash').lean();
         if (!user) {
             return null;
+        }
+
+        if (!user.referral_code) {
+            const generatedCode = await generateUniqueReferralCode(user.username);
+            await User.findByIdAndUpdate(userId, { referral_code: generatedCode });
+            user.referral_code = generatedCode;
         }
 
         const rawUser = await User.findById(userId).select('password_hash').lean();
@@ -483,8 +506,8 @@ export const addAddress = async (userId, { fullName, phone, addressLine1, addres
         if (!phone || !addressLine1 || !city || !state || !postal_code) {
             throw new Error('Please fill in all required fields.');
         }
-        if (phone && phone.length > 15) {
-            throw new Error('Phone number cannot exceed 15 characters.');
+        if (phone && phone.length > 13) {
+            throw new Error('Phone number cannot exceed 13 characters.');
         }
         if (addressLine1 && addressLine1.length > 200) {
             throw new Error('Address Line 1 cannot exceed 200 characters.');
