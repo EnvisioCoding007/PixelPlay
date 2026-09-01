@@ -20,6 +20,9 @@ export const getCart = async (req, res) => {
             hasInsufficientStockProduct
         } = await cartService.getCartDetails(userId);
 
+        // Reset coupon removal flag when viewing cart so proceeding to checkout auto-applies best coupon
+        delete req.session.couponRemoved;
+
         res.render('user/cart', {
             user,
             cart,
@@ -72,22 +75,34 @@ export const getCheckout = async (req, res) => {
         let activeCouponCode = null;
         let isAutoApplied = false;
 
-        // Priority logic for coupon selection across refreshes:
+        // Priority logic for coupon selection:
         // 1. Explicit query parameter override: ?coupon=CODE
         if (req.query.coupon && req.query.coupon.trim()) {
             activeCouponCode = req.query.coupon.trim().toUpperCase();
             req.session.appliedCouponCode = activeCouponCode;
             delete req.session.couponRemoved;
         } 
-        // 2. Persistent manual selection saved in user session
-        else if (req.session.appliedCouponCode) {
-            activeCouponCode = req.session.appliedCouponCode;
-        } 
-        // 3. User explicitly removed coupon in session
+        // 2. User clicked "Proceed to Checkout" from cart (?proceed=true or referer from /cart)
+        else if (req.query.proceed === 'true' || (req.headers.referer && req.headers.referer.includes('/cart'))) {
+            delete req.session.couponRemoved;
+            if (couponData.bestCoupon) {
+                activeCouponCode = couponData.bestCoupon.code;
+                isAutoApplied = true;
+                req.session.appliedCouponCode = activeCouponCode;
+            } else {
+                activeCouponCode = null;
+                delete req.session.appliedCouponCode;
+            }
+        }
+        // 3. User explicitly removed coupon in current session
         else if (req.session.couponRemoved === true) {
             activeCouponCode = null;
         } 
-        // 4. Default auto-apply best coupon if available
+        // 4. Persistent manual selection saved in user session
+        else if (req.session.appliedCouponCode) {
+            activeCouponCode = req.session.appliedCouponCode;
+        } 
+        // 5. Default auto-apply best coupon if available
         else if (couponData.bestCoupon) {
             activeCouponCode = couponData.bestCoupon.code;
             isAutoApplied = true;
