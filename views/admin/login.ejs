@@ -131,44 +131,39 @@
                         </div>
                     </footer>
                 </div>
-                <aside class="hidden md:flex relative flex-1 min-h-[480px] bg-[#0a0a0d] overflow-hidden items-center justify-center border-t md:border-t-0 md:border-l border-white/5"
+                <aside class="hidden md:flex relative flex-1 min-h-[480px] bg-[#0a0a0d] overflow-hidden items-center justify-center border-t md:border-t-0 md:border-l border-white/5 p-8"
                     aria-label="Brand showcase">
-                    <div class="absolute top-[calc(50.00%_-_293px)] left-[calc(50.00%_-_247px)] w-[494px] h-[355px]">
-                        <div class="inline-flex items-center justify-center absolute top-0 left-[calc(50.00%_-_108px)]">
-                            <img class="relative w-[217px] h-[145px] object-contain"
+                    <!-- Background subtle grid and radial glow -->
+                    <div class="absolute inset-0 [background:linear-gradient(180deg,rgba(14,165,233,0.04)_3%,rgba(14,165,233,0)_3%),linear-gradient(90deg,rgba(14,165,233,0.04)_3%,rgba(14,165,233,0)_3%)] pointer-events-none"
+                        aria-hidden="true"></div>
+                    <div class="absolute w-80 h-80 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 [background:radial-gradient(50%_50%_at_50%_50%,rgba(14,165,233,0.08)_0%,rgba(14,165,233,0)_70%)] pointer-events-none"
+                        aria-hidden="true"></div>
+                    <div class="absolute h-full top-0 right-0 w-px [background:linear-gradient(180deg,rgba(14,165,233,0)_0%,rgba(14,165,233,0.2)_50%,rgba(14,165,233,0)_100%)] pointer-events-none"
+                        aria-hidden="true"></div>
+
+                    <!-- Centered Branding Content -->
+                    <div class="relative z-10 flex flex-col items-center justify-center text-center">
+                        <div class="flex items-center justify-center mb-2">
+                            <img class="w-[200px] h-[130px] object-contain drop-shadow-[0_0_25px_rgba(14,165,233,0.3)]"
                                 src="/icons/brand_logo/pixelplay-logo.png" alt="PixelPlay Logo" />
                         </div>
-                        <div
-                            class="flex flex-col w-[213px] h-px items-center px-[86.41px] py-0 absolute top-[84px] left-[calc(50.00%_-_106px)]">
-                            <div
-                                class="relative w-10 h-px [background:linear-gradient(90deg,rgba(14,165,233,0)_0%,rgba(14,165,233,0.4)_50%,rgba(14,165,233,0)_100%)]">
-                            </div>
+
+                        <!-- Gradient Divider Line -->
+                        <div class="w-32 h-px bg-gradient-to-r from-transparent via-sky-500/50 to-transparent my-3"></div>
+
+                        <!-- Brand Title & Subtitle -->
+                        <div class="flex flex-col items-center gap-1">
+                            <h2 class="[font-family:'Inter',Helvetica] font-extrabold text-zinc-100 text-2xl lg:text-[26px] tracking-[1.68px] leading-tight">
+                                THE LEGENDS
+                            </h2>
+                            <p class="[font-family:'Inter',Helvetica] font-semibold text-[#d4af37] text-sm lg:text-base tracking-[3.24px] uppercase">
+                                LEGION
+                            </p>
                         </div>
-                        <div
-                            class="inline-flex flex-col items-start gap-[6.59px] absolute top-28 left-[calc(50.00%_-_106px)]">
-                            <div
-                                class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-ExtraBold',Helvetica] font-extrabold text-zinc-100 text-[28px] text-center tracking-[1.68px] leading-[33.6px] whitespace-nowrap">
-                                THE LEGENDS</div>
-                            <div
-                                class="inline-flex flex-col items-center pl-[63.16px] pr-[63.17px] py-0 relative flex-[0_0_auto]">
-                                <div
-                                    class="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#d4af37] text-lg text-center tracking-[3.24px] leading-[21.6px] whitespace-nowrap">
-                                    LEGION</div>
-                            </div>
-                        </div>
-                        <div
-                            class="flex flex-col w-[213px] h-px items-center px-[86.41px] py-0 absolute top-[202px] left-[calc(50.00%_-_106px)]">
-                            <div
-                                class="relative w-10 h-px [background:linear-gradient(90deg,rgba(14,165,233,0)_0%,rgba(14,165,233,0.4)_50%,rgba(14,165,233,0)_100%)]">
-                            </div>
-                        </div>
+
+                        <!-- Bottom Divider Line -->
+                        <div class="w-32 h-px bg-gradient-to-r from-transparent via-sky-500/50 to-transparent mt-3"></div>
                     </div>
-                    <div class="absolute w-full h-full top-0 left-0 [background:linear-gradient(180deg,rgba(14,165,233,0.04)_3%,rgba(14,165,233,0)_3%),linear-gradient(90deg,rgba(14,165,233,0.04)_3%,rgba(14,165,233,0)_3%)]"
-                        aria-hidden="true"></div>
-                    <div class="absolute top-[calc(50.00%_-_160px)] left-[calc(50.00%_-_160px)] w-80 h-80 [background:radial-gradient(50%_50%_at_50%_50%,rgba(14,165,233,0.07)_0%,rgba(14,165,233,0)_70%)]"
-                        aria-hidden="true"></div>
-                    <div class="absolute h-full top-0 right-0 w-px [background:linear-gradient(180deg,rgba(14,165,233,0)_0%,rgba(14,165,233,0.2)_50%,rgba(14,165,233,0)_100%)]"
-                        aria-hidden="true"></div>
                 </aside>
             </section>
         </div>
