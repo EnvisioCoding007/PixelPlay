@@ -1226,6 +1226,23 @@
 
                             const createData = await createRes.json();
                             if (!createRes.ok || !createData.success) {
+                                const isCouponError = createData.isCouponExpired || (createData.message && (createData.message.toLowerCase().includes('coupon') || createData.message.toLowerCase().includes('expired')));
+                                if (isCouponError) {
+                                    await Swal.fire({
+                                        icon: 'error',
+                                        title: 'Coupon Expired',
+                                        text: createData.message || 'The applied coupon has expired or is no longer valid.',
+                                        confirmButtonText: 'Update Order',
+                                        confirmButtonColor: '#00b0ff',
+                                        allowOutsideClick: false
+                                    });
+                                    try {
+                                        await removeCouponCode();
+                                    } catch (_) {}
+                                    window.location.href = '/checkout';
+                                    return;
+                                }
+
                                 showToast(createData.message || 'Failed to initiate online payment.', 'error');
                                 submitPayBtn.disabled = false;
                                 const grandTotalText = document.getElementById('summary-grand-total-display')?.innerText || '';
@@ -1335,6 +1352,23 @@
                                     window.location.href = `/orders/success/${data.orderId}`;
                                 }, 800);
                             } else {
+                                const isCouponError = data.isCouponExpired || (data.message && (data.message.toLowerCase().includes('coupon') || data.message.toLowerCase().includes('expired')));
+                                if (isCouponError) {
+                                    await Swal.fire({
+                                        icon: 'error',
+                                        title: 'Coupon Expired',
+                                        text: data.message || 'The applied coupon has expired or is no longer valid.',
+                                        confirmButtonText: 'Update Order',
+                                        confirmButtonColor: '#00b0ff',
+                                        allowOutsideClick: false
+                                    });
+                                    try {
+                                        await removeCouponCode();
+                                    } catch (_) {}
+                                    window.location.href = '/checkout';
+                                    return;
+                                }
+
                                 showToast(data.message || 'Failed to place order using PixelWallet.', 'error');
                                 submitPayBtn.disabled = false;
                                 const grandTotalText = document.getElementById('summary-grand-total-display')?.innerText || '';
@@ -1369,6 +1403,23 @@
                                     window.location.href = `/orders/success/${data.orderId}`;
                                 }, 800);
                             } else {
+                                const isCouponError = data.isCouponExpired || (data.message && (data.message.toLowerCase().includes('coupon') || data.message.toLowerCase().includes('expired')));
+                                if (isCouponError) {
+                                    await Swal.fire({
+                                        icon: 'error',
+                                        title: 'Coupon Expired',
+                                        text: data.message || 'The applied coupon has expired or is no longer valid.',
+                                        confirmButtonText: 'Update Order',
+                                        confirmButtonColor: '#00b0ff',
+                                        allowOutsideClick: false
+                                    });
+                                    try {
+                                        await removeCouponCode();
+                                    } catch (_) {}
+                                    window.location.href = '/checkout';
+                                    return;
+                                }
+
                                 showToast(data.message || 'Failed to place order.', 'error');
                                 submitPayBtn.disabled = false;
                                 submitPayBtn.innerText = 'Place Order';

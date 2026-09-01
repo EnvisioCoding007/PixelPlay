@@ -284,6 +284,20 @@
 
                         const createData = await createRes.json();
                         if (!createRes.ok || !createData.success) {
+                            const isCouponError = createData.isCouponExpired || (createData.message && (createData.message.toLowerCase().includes('coupon') || createData.message.toLowerCase().includes('expired')));
+                            if (isCouponError) {
+                                await Swal.fire({
+                                    icon: 'error',
+                                    title: 'Coupon Expired',
+                                    text: createData.message || 'The applied coupon has expired or is no longer valid.',
+                                    confirmButtonText: 'Update Order',
+                                    confirmButtonColor: '#00b0ff',
+                                    allowOutsideClick: false
+                                });
+                                window.location.href = '/checkout';
+                                return;
+                            }
+
                             Swal.fire({ icon: 'error', title: 'Payment Initiation Failed', text: createData.message || 'Could not initiate online payment.' });
                             retryBtn.disabled = false;
                             retryBtn.innerText = `Retry Online Payment (₹${(grandTotalPaisa / 100).toFixed(2)})`;

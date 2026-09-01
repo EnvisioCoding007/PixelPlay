@@ -12,7 +12,8 @@ export const postPlaceOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Payment method and address are required.' });
         }
 
-        const order = await orderService.placeOrder(userId, paymentMethod, addressId, couponCode);
+        const effectiveCouponCode = couponCode || req.session.appliedCouponCode || null;
+        const order = await orderService.placeOrder(userId, paymentMethod, addressId, effectiveCouponCode);
         
         // Clear coupon session state after order is completed
         delete req.session.appliedCouponCode;
@@ -25,7 +26,12 @@ export const postPlaceOrder = async (req, res) => {
         });
     } catch (error) {
         console.error('[postPlaceOrder] Error:', error);
-        res.status(400).json({ success: false, message: error.message });
+        const isCouponErr = (error.message || '').toLowerCase().includes('coupon') || (error.message || '').toLowerCase().includes('expired');
+        if (isCouponErr) {
+            delete req.session.appliedCouponCode;
+            req.session.couponRemoved = true;
+        }
+        res.status(400).json({ success: false, message: error.message, isCouponExpired: isCouponErr });
     }
 };
 
@@ -38,7 +44,8 @@ export const createRazorpayOrder = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Delivery address is required.' });
         }
 
-        const data = await orderService.createRazorpayPaymentOrder(userId, addressId, couponCode);
+        const effectiveCouponCode = couponCode || req.session.appliedCouponCode || null;
+        const data = await orderService.createRazorpayPaymentOrder(userId, addressId, effectiveCouponCode);
 
         res.status(200).json({
             success: true,
@@ -46,7 +53,12 @@ export const createRazorpayOrder = async (req, res) => {
         });
     } catch (error) {
         console.error('[createRazorpayOrder] Error:', error);
-        res.status(400).json({ success: false, message: error.message });
+        const isCouponErr = (error.message || '').toLowerCase().includes('coupon') || (error.message || '').toLowerCase().includes('expired');
+        if (isCouponErr) {
+            delete req.session.appliedCouponCode;
+            req.session.couponRemoved = true;
+        }
+        res.status(400).json({ success: false, message: error.message, isCouponExpired: isCouponErr });
     }
 };
 
@@ -59,10 +71,11 @@ export const verifyRazorpayPayment = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid payment parameters.' });
         }
 
+        const effectiveCouponCode = couponCode || req.session.appliedCouponCode || null;
         const order = await orderService.verifyAndCompleteRazorpayOrder(
             userId,
             addressId,
-            couponCode,
+            effectiveCouponCode,
             razorpay_order_id,
             razorpay_payment_id,
             razorpay_signature
@@ -79,7 +92,12 @@ export const verifyRazorpayPayment = async (req, res) => {
         });
     } catch (error) {
         console.error('[verifyRazorpayPayment] Error:', error);
-        res.status(400).json({ success: false, message: error.message });
+        const isCouponErr = (error.message || '').toLowerCase().includes('coupon') || (error.message || '').toLowerCase().includes('expired');
+        if (isCouponErr) {
+            delete req.session.appliedCouponCode;
+            req.session.couponRemoved = true;
+        }
+        res.status(400).json({ success: false, message: error.message, isCouponExpired: isCouponErr });
     }
 };
 

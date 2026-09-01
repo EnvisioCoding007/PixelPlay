@@ -86,6 +86,7 @@ export const getCartDetails = async (userId, appliedCouponCode = null) => {
     const tax = Math.round(subtotal * (gst_rate / (100 - gst_rate)));
     const subtotalWithTax = roundedSubtotal + tax;
 
+    let couponError = null;
     // Apply Coupon Discount if coupon code is passed and order total including tax > 0
     if (appliedCouponCode && subtotalWithTax > 0) {
         const validation = await validateCouponEligibility(appliedCouponCode, userId, subtotalWithTax);
@@ -100,6 +101,8 @@ export const getCartDetails = async (userId, appliedCouponCode = null) => {
                 discountRupees: (validation.discountPaisa / 100).toFixed(2),
                 description: validation.coupon.description
             };
+        } else {
+            couponError = validation.message || 'Coupon has expired or is invalid.';
         }
     }
 
@@ -114,6 +117,7 @@ export const getCartDetails = async (userId, appliedCouponCode = null) => {
         shipping: Math.round(shipping),
         discount: Math.round(discount),
         appliedCoupon,
+        couponError,
         grandTotal: Math.round(grandTotal),
         hasUnavailableProduct,
         hasInsufficientStockProduct

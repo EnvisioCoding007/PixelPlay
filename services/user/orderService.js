@@ -23,6 +23,9 @@ export const createRazorpayPaymentOrder = async (userId, addressId, couponCode =
     if (cartDetails.hasInsufficientStockProduct) {
         throw new Error('Your cart contains products with insufficient stock. Please adjust quantities before checking out.');
     }
+    if (couponCode && !cartDetails.appliedCoupon) {
+        throw new Error(cartDetails.couponError || 'The applied coupon has expired or is no longer valid.');
+    }
 
     // 2. Retrieve user and delivery address
     const user = await User.findById(userId);
@@ -58,6 +61,9 @@ export const verifyAndCompleteRazorpayOrder = async (userId, addressId, couponCo
     const cartDetails = await getCartDetails(userId, couponCode);
     if (!cartDetails.cart || cartDetails.cart.items.length === 0) {
         throw new Error('Your cart is empty.');
+    }
+    if (couponCode && !cartDetails.appliedCoupon) {
+        throw new Error(cartDetails.couponError || 'The applied coupon has expired or is no longer valid.');
     }
 
     const user = await User.findById(userId);
@@ -254,6 +260,9 @@ export const placeOrder = async (userId, paymentMethod, addressId, couponCode = 
     }
     if (cartDetails.hasInsufficientStockProduct) {
         throw new Error('Your cart contains products with insufficient stock. Please adjust quantities before checking out.');
+    }
+    if (couponCode && !cartDetails.appliedCoupon) {
+        throw new Error(cartDetails.couponError || 'The applied coupon has expired or is no longer valid.');
     }
 
     // 2. Retrieve user and delivery address
