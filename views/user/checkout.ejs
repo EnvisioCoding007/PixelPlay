@@ -262,9 +262,9 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="shrink-0 flex items-center justify-end">
+                                <div class="coupon-action-container shrink-0 flex items-center justify-end">
                                     <% if (isApplied) { %>
-                                        <span class="px-3.5 py-1.5 bg-cyber-green/20 text-cyber-green border border-cyber-green/40 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                                        <span class="applied-badge px-3.5 py-1.5 bg-cyber-green/20 text-cyber-green border border-cyber-green/40 rounded-lg text-xs font-bold flex items-center gap-1.5">
                                             <i class="fa-solid fa-check"></i> Applied
                                         </span>
                                     <% } else { %>
@@ -958,6 +958,8 @@
             const bestCouponCode = '<%= bestCoupon ? bestCoupon.code : "" %>';
 
             function updateOrderLedger(cartDetails) {
+                if (!cartDetails) return;
+
                 const subtotalDisplay = document.getElementById('summary-subtotal-display');
                 const taxDisplay = document.getElementById('summary-tax-display');
                 const shippingDisplay = document.getElementById('summary-shipping-display');
@@ -973,26 +975,28 @@
                 const autoCodeText = document.getElementById('auto-coupon-code-text');
                 const autoSavingsText = document.getElementById('auto-coupon-savings-text');
 
-                if (subtotalDisplay) subtotalDisplay.innerText = `₹${cartDetails.subtotalRupees}`;
-                if (taxDisplay) taxDisplay.innerText = `₹${cartDetails.taxRupees}`;
-                if (shippingDisplay) shippingDisplay.innerText = `₹${cartDetails.shippingRupees}`;
-                if (grandTotalDisplay) grandTotalDisplay.innerText = `₹${cartDetails.grandTotalRupees}`;
+                // 1. Update Order Summary breakdown numbers
+                if (subtotalDisplay) subtotalDisplay.innerText = `₹${cartDetails.subtotalRupees || '0.00'}`;
+                if (taxDisplay) taxDisplay.innerText = `₹${cartDetails.taxRupees || '0.00'}`;
+                if (shippingDisplay) shippingDisplay.innerText = `₹${cartDetails.shippingRupees || '0.00'}`;
+                if (grandTotalDisplay) grandTotalDisplay.innerText = `₹${cartDetails.grandTotalRupees || '0.00'}`;
 
-                if (cartDetails.appliedCoupon && cartDetails.discount > 0) {
-                    currentAppliedCouponCode = cartDetails.appliedCoupon.code.toUpperCase();
+                // 2. Update Applied Coupon pill and discount row in order summary
+                if (cartDetails.appliedCoupon && (cartDetails.discount > 0 || (cartDetails.appliedCoupon.discountValue && cartDetails.appliedCoupon.discountValue > 0))) {
+                    currentAppliedCouponCode = (cartDetails.appliedCoupon.code || '').trim().toUpperCase();
                     if (discountRow) discountRow.classList.remove('hidden');
-                    if (discountDisplay) discountDisplay.innerText = `-₹${cartDetails.discountRupees}`;
+                    if (discountDisplay) discountDisplay.innerText = `-₹${cartDetails.discountRupees || '0.00'}`;
                     if (couponCodeTag) couponCodeTag.innerText = currentAppliedCouponCode;
 
                     if (appliedPill) appliedPill.classList.remove('hidden');
                     if (appliedCodeText) appliedCodeText.innerText = currentAppliedCouponCode;
-                    if (appliedSavingsText) appliedSavingsText.innerText = cartDetails.discountRupees;
+                    if (appliedSavingsText) appliedSavingsText.innerText = cartDetails.discountRupees || '0.00';
                     if (manualInput) manualInput.value = currentAppliedCouponCode;
 
                     if (bestCouponCode && currentAppliedCouponCode === bestCouponCode.toUpperCase() && autoNoticeHeader) {
                         autoNoticeHeader.classList.remove('hidden');
                         if (autoCodeText) autoCodeText.innerText = currentAppliedCouponCode;
-                        if (autoSavingsText) autoSavingsText.innerText = cartDetails.discountRupees;
+                        if (autoSavingsText) autoSavingsText.innerText = cartDetails.discountRupees || '0.00';
                     } else if (autoNoticeHeader) {
                         autoNoticeHeader.classList.add('hidden');
                     }
@@ -1004,43 +1008,51 @@
                     if (autoNoticeHeader) autoNoticeHeader.classList.add('hidden');
                 }
 
-                // Update Submit Button text
+                // 3. Update Pay Button text
                 if (submitPayBtn) {
                     if (activePaymentMethod === 'COD') {
                         submitPayBtn.innerText = 'Place Order';
                     } else {
-                        submitPayBtn.innerText = `Pay ₹${cartDetails.grandTotalRupees}`;
+                        submitPayBtn.innerText = `Pay ₹${cartDetails.grandTotalRupees || '0.00'}`;
                     }
                 }
 
-                // Update coupon cards styling and buttons cleanly
+                // 4. Update Coupon Cards: Global Reset followed by targeted activation
                 const cards = document.querySelectorAll('.coupon-card');
                 const baseClasses = "coupon-card p-3.5 rounded-lg border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all";
-                
-                cards.forEach(card => {
-                    const cardCode = (card.getAttribute('data-code') || '').toUpperCase();
-                    const btnContainer = card.querySelector('.shrink-0');
 
-                    if (cardCode && cardCode === currentAppliedCouponCode) {
-                        card.className = `${baseClasses} border-cyber-green bg-cyber-green/5`;
-                        if (btnContainer) {
-                            btnContainer.innerHTML = `
-                                <span class="px-3.5 py-1.5 bg-cyber-green/20 text-cyber-green border border-cyber-green/40 rounded-lg text-xs font-bold flex items-center gap-1.5">
-                                    <i class="fa-solid fa-check"></i> Applied
-                                </span>
-                            `;
-                        }
-                    } else {
-                        card.className = `${baseClasses} border-dark-border bg-dark-surface hover:border-cyber-blue/40`;
-                        if (btnContainer) {
-                            btnContainer.innerHTML = `
-                                <button type="button" class="apply-coupon-card-btn px-4 py-1.5 bg-cyber-blue hover:bg-blue-400 text-black font-bold text-xs rounded-lg transition-colors cursor-pointer" data-code="${cardCode}">
-                                    Apply
-                                </button>
-                            `;
-                        }
+                // Step A: Global reset of ALL coupon cards to default inactive state
+                cards.forEach(card => {
+                    const cardCode = (card.getAttribute('data-code') || '').trim().toUpperCase();
+                    card.className = `${baseClasses} border-dark-border bg-dark-surface hover:border-cyber-blue/40`;
+                    
+                    const actionContainer = card.querySelector('.coupon-action-container') || card.querySelector('.shrink-0:last-child');
+                    if (actionContainer) {
+                        actionContainer.innerHTML = `
+                            <button type="button" class="apply-coupon-card-btn px-4 py-1.5 bg-cyber-blue hover:bg-blue-400 text-black font-bold text-xs rounded-lg transition-colors cursor-pointer" data-code="${cardCode}">
+                                Apply
+                            </button>
+                        `;
                     }
                 });
+
+                // Step B: Dynamically toggle active state ONLY on the newly applied coupon card
+                if (currentAppliedCouponCode) {
+                    cards.forEach(card => {
+                        const cardCode = (card.getAttribute('data-code') || '').trim().toUpperCase();
+                        if (cardCode === currentAppliedCouponCode) {
+                            card.className = `${baseClasses} border-cyber-green bg-cyber-green/5`;
+                            const actionContainer = card.querySelector('.coupon-action-container') || card.querySelector('.shrink-0:last-child');
+                            if (actionContainer) {
+                                actionContainer.innerHTML = `
+                                    <span class="applied-badge px-3.5 py-1.5 bg-cyber-green/20 text-cyber-green border border-cyber-green/40 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                                        <i class="fa-solid fa-check"></i> Applied
+                                    </span>
+                                `;
+                            }
+                        }
+                    });
+                }
             }
 
             async function applyCouponCode(code) {
