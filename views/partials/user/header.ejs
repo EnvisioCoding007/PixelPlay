@@ -3,13 +3,38 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<link rel="icon" type="image/png" href="/icons/brand_logo/pixelplay-logo.png?v=1.1"><title>PixelPlay - Browse Games</title>
+    <link rel="icon" type="image/png" href="/icons/brand_logo/pixelplay-logo.png">
+    <link rel="shortcut icon" type="image/png" href="/icons/brand_logo/pixelplay-logo.png"><title>PixelPlay - Browse Games</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
+        container: {
+          center: true,
+          padding: {
+            DEFAULT: '1rem',
+            sm: '1.5rem',
+            lg: '2rem',
+            xl: '2.5rem',
+            '2xl': '3rem',
+          },
+          screens: {
+            sm: '640px',
+            md: '768px',
+            lg: '1024px',
+            xl: '1280px',
+            '2xl': '1920px',
+          },
+        },
         extend: {
+          maxWidth: {
+            'wide': '1920px',
+            '1800': '1800px',
+            '8xl': '88rem',
+            '9xl': '96rem',
+            '10xl': '120rem',
+          },
           colors: {
             brand: {
               DEFAULT: '#00A3FF',

@@ -2,6 +2,8 @@
 <html lang="en">
 
 <head>
+    <link rel="icon" type="image/png" href="/icons/brand_logo/pixelplay-logo.png">
+    <link rel="shortcut icon" type="image/png" href="/icons/brand_logo/pixelplay-logo.png">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="utf-8" />
     <title><%= user.username %> — Edit Profile · PixelPlay</title>
@@ -25,23 +27,23 @@
 <body>
     <div class="flex flex-col min-h-screen items-start relative bg-zinc-950">
         <%- include('../partials/user/navbar', { activeTab: 'profile' }) %>
-        <main class="flex items-start justify-center px-8 py-16 relative self-stretch w-full flex-[0_0_auto] z-0">
-            <div class="flex flex-col max-w-[860px] w-full items-start gap-10 relative self-stretch">
+        <main class="flex items-start justify-center px-4 sm:px-8 2xl:px-12 py-8 sm:py-16 relative self-stretch w-full flex-[0_0_auto] z-0">
+            <div class="flex flex-col max-w-5xl 2xl:max-w-6xl w-full items-start gap-8 sm:gap-10 relative self-stretch">
                 <section class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
                     <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
                         <h1
-                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-100 text-[32px] tracking-[0] leading-[normal]">
+                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Bold',Helvetica] font-bold text-zinc-100 text-2xl sm:text-[32px] tracking-[0] leading-[normal]">
                             Profile Settings</h1>
                     </div>
                     <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto]">
                         <p
-                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-base tracking-[0] leading-[normal]">
+                            class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-zinc-400 text-sm sm:text-base tracking-[0] leading-[normal]">
                             Manage your identity, personal details, and account security.</p>
                     </div>
                 </section>
                 <form id="profile-edit-form"
                     method="post" action="/profile?_method=PATCH" enctype="multipart/form-data"
-                    class="flex flex-col items-start gap-14 p-12 relative self-stretch w-full flex-[0_0_auto] bg-[#121215bf] rounded-xl border border-solid border-zinc-700 shadow-[inset_0px_1px_0px_1px_#ffffff0d,0px_8px_32px_#00000066] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
+                    class="flex flex-col items-start gap-8 sm:gap-14 p-6 sm:p-12 relative self-stretch w-full flex-[0_0_auto] bg-[#121215bf] rounded-xl border border-solid border-zinc-700 shadow-[inset_0px_1px_0px_1px_#ffffff0d,0px_8px_32px_#00000066] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
                     <% if (typeof error !== 'undefined' && error) { %>
                     <div class="w-full p-4 text-sm text-red-400 bg-red-950/60 border border-red-800 rounded-lg flex items-center gap-2">
                         <svg class="w-5 h-5 shrink-0 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>

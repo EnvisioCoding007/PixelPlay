@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
+    <link rel="icon" type="image/png" href="/icons/brand_logo/pixelplay-logo.png">
+    <link rel="shortcut icon" type="image/png" href="/icons/brand_logo/pixelplay-logo.png">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= typeof title !== 'undefined' ? title : 'Offer Management · Admin Panel' %></title>
@@ -60,7 +62,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="p-8 space-y-6 flex-1">
+    <main class="p-6 lg:p-8 2xl:p-12 space-y-6 flex-1">
       <!-- Flash Alert Notifications -->
       <% if (typeof success !== 'undefined' && success) { %>
         <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-lg flex items-center justify-between text-sm shadow-sm" id="flash-success">

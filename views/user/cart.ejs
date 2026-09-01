@@ -39,21 +39,21 @@
 <%- include('../partials/user/navbar', { activeTab: 'cart', user: typeof user !== 'undefined' ? user : null }) %>
 
 <!-- BEGIN: Main Content -->
-<main class="flex-grow py-10 px-6">
-  <div class="max-w-[1400px] mx-auto">
+<main class="flex-grow py-6 sm:py-10 px-4 sm:px-6 lg:px-8 2xl:px-12">
+  <div class="max-w-[1720px] 2xl:max-w-[1840px] mx-auto">
     <% if (typeof cart === 'undefined' || !cart || !cart.items || cart.items.length === 0) { %>
       <!-- Page Header -->
       <div class="mb-8 flex items-baseline gap-4">
-        <h1 class="text-4xl font-bold text-white">Your Cart</h1>
-        <span class="text-pixel-muted text-lg">0 Items</span>
+        <h1 class="text-3xl sm:text-4xl font-bold text-white">Your Cart</h1>
+        <span class="text-pixel-muted text-base sm:text-lg">0 Items</span>
       </div>
       
-      <div class="bg-pixel-card border border-pixel-border rounded-lg p-12 text-center flex flex-col items-center justify-center max-w-2xl mx-auto my-10">
-        <div class="w-24 h-24 rounded-full bg-pixel-bg border border-pixel-border flex items-center justify-center mb-6">
-          <i class="fa-solid fa-cart-shopping text-4xl text-pixel-muted"></i>
+      <div class="bg-pixel-card border border-pixel-border rounded-lg p-8 sm:p-12 text-center flex flex-col items-center justify-center max-w-2xl mx-auto my-10">
+        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-pixel-bg border border-pixel-border flex items-center justify-center mb-6">
+          <i class="fa-solid fa-cart-shopping text-3xl sm:text-4xl text-pixel-muted"></i>
         </div>
-        <h2 class="text-2xl font-bold text-white mb-2">Your Cart is Empty</h2>
-        <p class="text-pixel-muted mb-8 max-w-md">You haven't added any premium physical edition games to your catalog yet. Explore the shop to build your collection.</p>
+        <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">Your Cart is Empty</h2>
+        <p class="text-pixel-muted mb-8 max-w-md text-sm sm:text-base">You haven't added any premium physical edition games to your catalog yet. Explore the shop to build your collection.</p>
         <a href="/browse" class="bg-pixel-accent hover:bg-pixel-accentHover text-[#0f0f11] font-bold py-3 px-8 rounded transition-colors tracking-wide flex items-center gap-2">
           <i class="fa-solid fa-gamepad"></i>
           BROWSE STORE
@@ -62,8 +62,8 @@
     <% } else { %>
       <!-- Page Header -->
       <div class="mb-8 flex items-baseline gap-4">
-        <h1 class="text-4xl font-bold text-white">Your Cart</h1>
-        <span class="text-pixel-muted text-lg"><%= cart.items.length %> <%= cart.items.length === 1 ? 'Physical Item' : 'Physical Items' %></span>
+        <h1 class="text-3xl sm:text-4xl font-bold text-white">Your Cart</h1>
+        <span class="text-pixel-muted text-base sm:text-lg"><%= cart.items.length %> <%= cart.items.length === 1 ? 'Physical Item' : 'Physical Items' %></span>
       </div>
       
       <div class="flex flex-col lg:flex-row gap-8 items-start">
@@ -88,9 +88,9 @@
                   : (isLegendary ? 'fa-solid fa-box-open text-pixel-gold' : 'fa-solid fa-compact-disc text-pixel-accent');
                 const itemCover = item.product.cover_image || item.product.coverImage || item.product.coverImageUrl || '/img/placeholder.png';
               %>
-              <div class="bg-pixel-card border-l-4 <%= borderClass %> border-pixel-border rounded-lg p-5 flex gap-6 relative group hover:border-pixel-muted transition-colors <%= isUnavailable ? 'opacity-75' : '' %>">
+              <div class="bg-pixel-card border-l-4 <%= borderClass %> border-pixel-border rounded-lg p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:gap-6 relative group hover:border-pixel-muted transition-colors <%= isUnavailable ? 'opacity-75' : '' %>">
               <!-- Product Image -->
-              <div class="w-32 h-44 flex-shrink-0 bg-pixel-bg rounded overflow-hidden border border-pixel-border relative">
+              <div class="w-28 h-36 sm:w-32 sm:h-44 flex-shrink-0 bg-pixel-bg rounded overflow-hidden border border-pixel-border relative mx-auto sm:mx-0">
                 <img alt="<%= item.product.title %> Cover" class="w-full h-full object-cover" src="<%= itemCover %>"/>
                 <% if (isUnavailable) { %>
                   <div class="absolute inset-0 bg-black/60 flex items-center justify-center text-center p-2">

@@ -57,8 +57,8 @@
   }) %>
 
   <!-- BEGIN: Main Content Area -->
-  <main class="flex-1 p-6 md:p-8 bg-[#0d0d0d] md:ml-64">
-    <div class="max-w-7xl mx-auto pb-12">
+  <main class="flex-1 p-6 md:p-8 2xl:p-10 bg-[#0d0d0d] md:ml-64">
+    <div class="max-w-[1720px] 2xl:max-w-[1920px] mx-auto pb-12">
       
       <!-- Dynamic Tabs -->
       <% const activeVault = (typeof query !== 'undefined' && query.vault) ? query.vault : 'all'; %>
@@ -102,7 +102,7 @@
       <!-- BEGIN: Game Grid Wrapper -->
       <div id="gameGridWrapper" class="relative overflow-hidden w-full">
         <!-- BEGIN: Game Grid -->
-        <div id="gameGridContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-all duration-300 transform translate-x-0 opacity-100">
+        <div id="gameGridContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 transition-all duration-300 transform translate-x-0 opacity-100">
         <% if (typeof products !== 'undefined' && products && products.length > 0) { %>
           <% products.forEach(product => { %>
             <% if (product.edition_type === 'LEGENDARY') { %>

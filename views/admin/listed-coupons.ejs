@@ -24,7 +24,7 @@
 <%- include('../partials/admin/sidebar', { activeTab: 'coupons' }) %>
 <main class="content-bg flex-1 flex flex-col overflow-hidden relative">
   <!-- Header -->
-  <header class="flex items-center justify-between px-8 py-6 border-b border-border-dark">
+  <header>
     <div>
       <h1 class="text-2xl font-bold text-white flex items-center gap-3">
         <i class="fa-solid fa-ticket text-pixel-blue"></i> Coupon Management
@@ -37,8 +37,8 @@
   </header>
 
   <!-- Content Area -->
-  <div class="flex-1 overflow-y-auto p-8">
-    <div class="max-w-7xl mx-auto space-y-6">
+  <div class="flex-1 overflow-y-auto p-6 lg:p-8 2xl:p-10">
+    <div class="max-w-[1720px] 2xl:max-w-[1920px] mx-auto space-y-6">
 
       <!-- Summary Stats Grid -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">

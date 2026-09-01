@@ -3,7 +3,7 @@
 <%- include('../partials/admin/sidebar', { activeTab: 'listed-games' }) %>
 <main class="content-bg flex-1 flex flex-col overflow-hidden relative">
   <!-- Header -->
-  <header class="flex items-center justify-between px-8 py-6">
+  <header>
     <h1 class="text-2xl font-semibold text-gray-100">Listed Games Management</h1>
     <a href="/admin/products/new" class="bg-pixel-blue hover:bg-pixel-blue-hover text-white px-5 py-2.5 rounded flex items-center gap-2 font-medium transition-colors">
       <i class="fa-solid fa-plus text-xs"></i> Add New Game
@@ -11,10 +11,10 @@
   </header>
 
   <!-- Content Area -->
-  <div class="flex-1 overflow-y-auto px-8 pb-8">
+  <div class="flex-1 overflow-y-auto px-6 lg:px-8 2xl:px-12 pb-8">
     <!-- Filter & Search Form -->
     <form action="/admin/products" method="get" class="bg-card-bg rounded-lg border border-border-dark p-4 mb-6 flex flex-col gap-4">
-      <div class="flex gap-4">
+      <div class="flex flex-col md:flex-row gap-4">
         <!-- Search Input -->
         <div class="relative flex-1">
           <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
@@ -25,7 +25,7 @@
         </div>
         
         <!-- Filter Dropdowns -->
-        <div class="flex gap-4 w-1/2">
+        <div class="flex flex-col sm:flex-row gap-4 w-full md:w-1/2">
           <!-- Category -->
           <div class="relative flex-1">
             <select name="category" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full appearance-none pl-4 pr-10 py-2.5 rounded text-sm cursor-pointer" onchange="this.form.submit()">
@@ -71,8 +71,8 @@
       </div>
 
       <!-- Second Row of Dropdowns -->
-      <div class="flex items-center justify-between gap-4">
-        <div class="flex gap-4 w-2/3">
+      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        <div class="flex flex-col sm:flex-row gap-4 w-full md:w-2/3">
           <!-- Type -->
           <div class="relative flex-1">
             <select name="type" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full appearance-none pl-4 pr-10 py-2.5 rounded text-sm cursor-pointer" onchange="this.form.submit()">
@@ -95,27 +95,27 @@
 
           <!-- Sort Option -->
           <div class="relative flex-1">
-            <select name="sort" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full appearance-none pl-4 pr-10 py-2.5 rounded text-sm cursor-pointer" onchange="this.form.submit()">
-              <option value="latest" <%= typeof sort !== 'undefined' && sort === 'latest' ? 'selected' : '' %>>Sort: Latest First</option>
-              <option value="oldest" <%= typeof sort !== 'undefined' && sort === 'oldest' ? 'selected' : '' %>>Sort: Oldest First</option>
-              <option value="A-Z" <%= typeof sort !== 'undefined' && sort === 'A-Z' ? 'selected' : '' %>>Sort: Alphabetical (A-Z)</option>
-              <option value="Z-A" <%= typeof sort !== 'undefined' && sort === 'Z-A' ? 'selected' : '' %>>Sort: Alphabetical (Z-A)</option>
-              <option value="Price-Low" <%= typeof sort !== 'undefined' && sort === 'Price-Low' ? 'selected' : '' %>>Sort: Price (Low to High)</option>
-              <option value="Price-High" <%= typeof sort !== 'undefined' && sort === 'Price-High' ? 'selected' : '' %>>Sort: Price (High to Low)</option>
+            <select name="sortBy" class="bg-content-bg border border-input-dark-border text-gray-200 focus:border-pixel-blue focus:outline-none focus:ring-1 focus:ring-pixel-blue w-full appearance-none pl-4 pr-10 py-2.5 rounded text-sm cursor-pointer" onchange="this.form.submit()">
+              <option value="newest" <%= typeof sortBy !== 'undefined' && sortBy === 'newest' ? 'selected' : '' %>>Sort: Newest First</option>
+              <option value="oldest" <%= typeof sortBy !== 'undefined' && sortBy === 'oldest' ? 'selected' : '' %>>Sort: Oldest First</option>
+              <option value="title_asc" <%= typeof sortBy !== 'undefined' && sortBy === 'title_asc' ? 'selected' : '' %>>Sort: Title A-Z</option>
+              <option value="title_desc" <%= typeof sortBy !== 'undefined' && sortBy === 'title_desc' ? 'selected' : '' %>>Sort: Title Z-A</option>
+              <option value="price_asc" <%= typeof sortBy !== 'undefined' && sortBy === 'price_asc' ? 'selected' : '' %>>Sort: Price Low-High</option>
+              <option value="price_desc" <%= typeof sortBy !== 'undefined' && sortBy === 'price_desc' ? 'selected' : '' %>>Sort: Price High-Low</option>
             </select>
             <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-xs pointer-events-none"></i>
           </div>
         </div>
 
         <!-- Clear Filters Button -->
-        <button type="button" class="bg-sidebar-bg border border-input-dark-border text-gray-300 hover:bg-border-dark hover:text-white px-5 py-2.5 rounded text-sm font-semibold flex items-center gap-2 transition-colors" onclick="clearAllFilters()">
+        <button type="button" class="bg-sidebar-bg border border-input-dark-border text-gray-300 hover:bg-border-dark hover:text-white px-5 py-2.5 rounded text-sm font-semibold flex items-center justify-center gap-2 transition-colors" onclick="clearAllFilters()">
           <i class="fa-solid fa-filter-circle-xmark text-xs"></i> Clear Filters
         </button>
       </div>
     </form>
 
     <!-- Data Table -->
-    <div class="bg-card-bg rounded-lg border border-border-dark overflow-hidden">
+    <div class="bg-card-bg rounded-lg border border-border-dark overflow-x-auto shadow-md">
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="text-xs text-gray-500 font-semibold tracking-wider uppercase border-b border-border-dark">

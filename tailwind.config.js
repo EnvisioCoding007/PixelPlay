@@ -6,7 +6,31 @@ export default {
     "./public/**/*.html"
   ],
   theme: {
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: '1rem',
+        sm: '1.5rem',
+        lg: '2rem',
+        xl: '2.5rem',
+        '2xl': '3rem',
+      },
+      screens: {
+        sm: '640px',
+        md: '768px',
+        lg: '1024px',
+        xl: '1280px',
+        '2xl': '1920px',
+      },
+    },
     extend: {
+      maxWidth: {
+        'wide': '1920px',
+        '1800': '1800px',
+        '8xl': '88rem',
+        '9xl': '96rem',
+        '10xl': '120rem',
+      },
       colors: {
         'pixel-bg': '#0b0c10',
         'sidebar-bg': '#121418',

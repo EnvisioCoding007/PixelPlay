@@ -4,7 +4,7 @@
     <%- include('../partials/admin/sidebar', { activeTab: 'publishers' }) %>
       <main class="content-bg flex-1 flex flex-col overflow-hidden relative">
         <!-- Top Header Bar -->
-        <header class="flex items-center justify-between px-8 py-6 border-b border-border-dark bg-[#121418]/50">
+        <header>
           <div>
             <h1 class="text-2xl font-semibold text-gray-100">Publisher Directory</h1>
             <p class="text-gray-400 text-sm">Manage all game publishers and their linked physical title catalogs.</p>
@@ -38,7 +38,7 @@
         </header>
 
         <!-- Scrollable Content Area -->
-        <div class="flex-1 overflow-y-auto p-8">
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8 2xl:p-12">
           <!-- BEGIN: Stats Cards -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <!-- Stat Card 1 -->

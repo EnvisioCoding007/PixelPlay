@@ -1,139 +1,202 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 <header
-    class="flex h-[72px] items-center justify-between px-10 py-0 relative self-stretch w-full z-[100000] bg-[#09090be6] border-b [border-bottom-style:solid] border-[#00000014] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
-    <nav class="flex items-center justify-between w-full gap-6" aria-label="Primary">
-        <div class="inline-flex items-center gap-10 relative flex-[0_0_auto]">
-            <a href="/" class="relative block w-[180px] h-17 flex items-center" aria-label="PixelPlay home">
-                <img src="/icons/brand_logo/pixelplay-logo.png" alt="PixelPlay Logo" class="w-full h-full object-contain" />
-            </a>
-            <ul class="inline-flex items-center gap-[7.6px] relative flex-[0_0_auto]">
-                <li><a href="/"
-                        class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'home' ? 'bg-[#ffffff10]' : '' %>"><span
-                            class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'home' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] leading-[normal]">Home</span></a>
-                </li>
-                <li><a href="/browse"
-                        class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'browse' ? 'bg-[#ffffff10]' : '' %>"><span
-                             class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'browse' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Browse</span></a>
-                </li>
-                <li><a href="/offers"
-                        class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'offers' ? 'bg-[#ffffff10]' : '' %>"><span
-                             class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'offers' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Offers</span></a>
-                </li>
-                <% if (typeof user !== 'undefined' && user) { %>
-                <li><a href="/wallet"
-                        class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'wallet' ? 'bg-[#ffffff10]' : '' %>"><span
-                             class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'wallet' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] leading-[normal]">Wallet</span></a>
-                </li>
-                <% } %>
-                <li><a href="/support"
-                        class="inline-flex flex-col items-start px-4 py-2 relative flex-[0_0_auto] rounded-md <%= activeTab === 'support' ? 'bg-[#ffffff10]' : '' %>"><span
-                             class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'support' ? 'text-white' : 'text-[#9aa6b3]' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Support</span></a>
-                </li>
-            </ul>
-        </div>
-        <div class="inline-flex items-center gap-5 relative flex-[0_0_auto]">
-            <form action="/browse" method="GET" id="navbarSearchForm"
-                class="flex w-60 items-center gap-3 px-4 py-2 relative bg-[#0f1113] rounded-full border border-solid border-[#00000014]"
-                role="search">
-                <label for="store-search" class="sr-only">Search store</label>
-                <button type="submit" class="p-0 border-0 bg-transparent flex items-center justify-center cursor-pointer focus:outline-none text-[#9aa6b3] hover:text-white" aria-label="Submit search">
-                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                </button>
-                <div class="flex items-center relative flex-1 grow w-full">
-                    <input id="store-search" name="search" value="<%= (typeof query !== 'undefined' && query.search) ? query.search : '' %>"
-                        class="relative flex items-center self-stretch [font-family:'Inter-Regular',Helvetica] font-normal text-[#9aa6b3] text-sm tracking-[0] bg-transparent border-0 p-0 outline-none placeholder:text-[#9aa6b3] w-full pr-6"
-                        placeholder="Search store..." type="text" autocomplete="off" />
-                    <button type="button" id="clear-search-btn" class="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white cursor-pointer bg-transparent border-0 p-0 hidden" aria-label="Clear search">
-                        <i class="fa-solid fa-circle-xmark"></i>
+    class="flex flex-col relative self-stretch w-full z-[100000] bg-[#09090be6] border-b [border-bottom-style:solid] border-[#00000014] backdrop-blur backdrop-brightness-[100%] [-webkit-backdrop-filter:blur(8px)_brightness(100%)]">
+    <div class="flex h-[72px] items-center justify-between px-4 sm:px-6 lg:px-8 2xl:px-12 w-full max-w-[1800px] 2xl:max-w-[1920px] mx-auto">
+        <nav class="flex items-center justify-between w-full gap-2 sm:gap-4 md:gap-6" aria-label="Primary">
+            <div class="inline-flex items-center gap-4 lg:gap-8 relative flex-shrink-0">
+                <a href="/" class="relative block w-[140px] sm:w-[160px] lg:w-[180px] h-14 flex items-center" aria-label="PixelPlay home">
+                    <img src="/icons/brand_logo/pixelplay-logo.png" alt="PixelPlay Logo" class="w-full h-full object-contain" />
+                </a>
+                <!-- Desktop Navigation Links -->
+                <ul class="hidden lg:inline-flex items-center gap-1.5 relative flex-[0_0_auto]">
+                    <li><a href="/"
+                            class="inline-flex flex-col items-start px-3.5 py-2 relative flex-[0_0_auto] rounded-md transition-colors <%= activeTab === 'home' ? 'bg-[#ffffff10]' : 'hover:bg-[#ffffff08]' %>"><span
+                                class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'home' ? 'text-white' : 'text-[#9aa6b3] hover:text-white' %> text-sm tracking-[0] leading-[normal]">Home</span></a>
+                    </li>
+                    <li><a href="/browse"
+                            class="inline-flex flex-col items-start px-3.5 py-2 relative flex-[0_0_auto] rounded-md transition-colors <%= activeTab === 'browse' ? 'bg-[#ffffff10]' : 'hover:bg-[#ffffff08]' %>"><span
+                                 class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'browse' ? 'text-white' : 'text-[#9aa6b3] hover:text-white' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Browse</span></a>
+                    </li>
+                    <li><a href="/offers"
+                            class="inline-flex flex-col items-start px-3.5 py-2 relative flex-[0_0_auto] rounded-md transition-colors <%= activeTab === 'offers' ? 'bg-[#ffffff10]' : 'hover:bg-[#ffffff08]' %>"><span
+                                 class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'offers' ? 'text-white' : 'text-[#9aa6b3] hover:text-white' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Offers</span></a>
+                    </li>
+                    <% if (typeof user !== 'undefined' && user) { %>
+                    <li><a href="/wallet"
+                            class="inline-flex flex-col items-start px-3.5 py-2 relative flex-[0_0_auto] rounded-md transition-colors <%= activeTab === 'wallet' ? 'bg-[#ffffff10]' : 'hover:bg-[#ffffff08]' %>"><span
+                                 class="relative flex items-center w-fit mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'wallet' ? 'text-white' : 'text-[#9aa6b3] hover:text-white' %> text-sm tracking-[0] leading-[normal]">Wallet</span></a>
+                    </li>
+                    <% } %>
+                    <li><a href="/support"
+                            class="inline-flex flex-col items-start px-3.5 py-2 relative flex-[0_0_auto] rounded-md transition-colors <%= activeTab === 'support' ? 'bg-[#ffffff10]' : 'hover:bg-[#ffffff08]' %>"><span
+                                 class="mt-[-1.00px] [font-family:'Inter-Medium',Helvetica] font-medium <%= activeTab === 'support' ? 'text-white' : 'text-[#9aa6b3] hover:text-white' %> text-sm tracking-[0] relative flex items-center w-fit leading-[normal]">Support</span></a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="inline-flex items-center gap-2 sm:gap-4 relative flex-shrink-0">
+                <!-- Desktop Search Form -->
+                <form action="/browse" method="GET" id="navbarSearchForm"
+                    class="hidden md:flex w-44 lg:w-60 items-center gap-2.5 px-3.5 py-1.5 relative bg-[#0f1113] rounded-full border border-solid border-[#ffffff14] focus-within:border-sky-500/50 transition-colors"
+                    role="search">
+                    <label for="store-search" class="sr-only">Search store</label>
+                    <button type="submit" class="p-0 border-0 bg-transparent flex items-center justify-center cursor-pointer focus:outline-none text-[#9aa6b3] hover:text-white" aria-label="Submit search">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
                     </button>
+                    <div class="flex items-center relative flex-1 grow w-full">
+                        <input id="store-search" name="search" value="<%= (typeof query !== 'undefined' && query.search) ? query.search : '' %>"
+                            class="relative flex items-center self-stretch [font-family:'Inter-Regular',Helvetica] font-normal text-[#e6f7fb] text-sm tracking-[0] bg-transparent border-0 p-0 outline-none placeholder:text-[#9aa6b3] w-full pr-5"
+                            placeholder="Search store..." type="text" autocomplete="off" />
+                        <button type="button" id="clear-search-btn" class="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white cursor-pointer bg-transparent border-0 p-0 hidden" aria-label="Clear search">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <% if (typeof user !== 'undefined' && user) { %>
+                <%# Authenticated: show wishlist, cart, bell, and profile avatar %>
+                <a href="/wishlist" class="flex w-9 h-9 sm:w-10 sm:h-10 items-center justify-center relative rounded-full hover:bg-[#ffffff10] transition-colors <%= activeTab === 'wishlist' ? 'bg-[#ffffff10]' : '' %>"
+                    aria-label="Wishlist" title="Wishlist">
+                    <i class="fa-solid fa-heart text-[#9aa6b3] hover:text-red-500 transition-colors text-base sm:text-lg <%= activeTab === 'wishlist' ? 'text-red-500' : '' %>"></i>
+                </a>
+                <a href="/cart" class="flex w-9 h-9 sm:w-10 sm:h-10 items-center justify-center relative rounded-full hover:bg-[#ffffff10] transition-colors <%= activeTab === 'cart' ? 'bg-[#ffffff10]' : '' %>"
+                    aria-label="Cart" title="Cart">
+                    <i class="fa-solid fa-cart-shopping text-[#9aa6b3] hover:text-white transition-colors text-base sm:text-lg"></i>
+                    <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
+                        <span id="cart-badge" class="absolute -top-1 -right-1 flex h-4.5 w-4.5 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white border border-[#0d0d0d] scale-100 transition-all duration-300 animate-pulse">
+                            <%= cartCount %>
+                        </span>
+                    <% } %>
+                </a>
+                <!-- Notification Container -->
+                <div class="relative">
+                    <button type="button" id="notification-btn" class="flex w-9 h-9 sm:w-10 sm:h-10 items-center justify-center relative rounded-full hover:bg-[#ffffff10] transition-colors"
+                        aria-label="Notifications" title="Notifications">
+                        <i class="fa-solid fa-bell text-[#9aa6b3] hover:text-white transition-colors text-base sm:text-lg"></i>
+                        <span id="notification-badge" class="absolute -top-1 -right-1 flex h-4.5 w-4.5 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-sky-500 text-[10px] font-bold text-white border border-[#0d0d0d] transition-all duration-300 <%= (typeof unreadNotificationCount !== 'undefined' && unreadNotificationCount > 0) ? '' : 'hidden' %>">
+                            <%= (typeof unreadNotificationCount !== 'undefined') ? unreadNotificationCount : 0 %>
+                        </span>
+                    </button>
+
+                    <!-- Notification Dropdown Menu -->
+                    <div id="notification-dropdown" class="hidden absolute right-0 mt-3 w-72 sm:w-96 bg-[#12161f] border border-[#ffffff1a] rounded-xl shadow-2xl z-[100001] overflow-hidden backdrop-blur-md">
+                        <!-- Dropdown Header -->
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-[#ffffff15] bg-[#0c0f15]">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-bell text-sky-400 text-sm"></i>
+                                <h3 class="text-sm font-semibold text-white">Notifications</h3>
+                                <span id="dropdown-unread-count" class="text-xs px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 font-medium">
+                                    <%= (typeof unreadNotificationCount !== 'undefined') ? unreadNotificationCount : 0 %> unread
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="mark-all-read-btn" class="text-[11px] text-sky-400 hover:text-sky-300 font-medium transition-colors cursor-pointer" title="Mark all as read">
+                                    Mark read
+                                </button>
+                                <span class="text-[#ffffff20]">|</span>
+                                <button type="button" id="delete-read-btn" class="text-[11px] text-red-400 hover:text-red-300 font-medium transition-colors cursor-pointer" title="Delete all read notifications">
+                                    Delete read
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Notification List -->
+                        <div id="notification-list" class="max-h-80 overflow-y-auto divide-y divide-[#ffffff0a] scrollbar-thin">
+                            <div class="p-6 text-center text-[#9aa6b3] text-sm flex flex-col items-center gap-2" id="notification-loading">
+                                <i class="fa-solid fa-spinner fa-spin text-sky-400 text-lg"></i>
+                                <span>Loading notifications...</span>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="p-2 border-t border-[#ffffff10] bg-[#090b0e] text-center">
+                            <span class="text-[11px] text-[#6b7280]">Real-time live updates active</span>
+                        </div>
+                    </div>
                 </div>
-            </form>
-            <% if (typeof user !== 'undefined' && user) { %>
-            <%# Authenticated: show wishlist, cart, bell, and profile avatar %>
-            <a href="/wishlist" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors <%= activeTab === 'wishlist' ? 'bg-[#ffffff10]' : '' %>"
-                aria-label="Wishlist" title="Wishlist">
-                <i class="fa-solid fa-heart text-[#9aa6b3] hover:text-red-500 transition-colors text-lg <%= activeTab === 'wishlist' ? 'text-red-500' : '' %>"></i>
-            </a>
-            <a href="/cart" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors <%= activeTab === 'cart' ? 'bg-[#ffffff10]' : '' %>"
-                aria-label="Cart" title="Cart">
-                <i class="fa-solid fa-cart-shopping text-[#9aa6b3] hover:text-white transition-colors text-lg"></i>
-                <% if (typeof cartCount !== 'undefined' && cartCount > 0) { %>
-                    <span id="cart-badge" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white border border-[#0d0d0d] scale-100 transition-all duration-300 animate-pulse">
-                        <%= cartCount %>
-                    </span>
-                <% } %>
-            </a>
-            <!-- Notification Container -->
-            <div class="relative">
-                <button type="button" id="notification-btn" class="flex w-10 h-10 items-center justify-center relative rounded-[20px] hover:bg-[#ffffff10] transition-colors"
-                    aria-label="Notifications" title="Notifications">
-                    <i class="fa-solid fa-bell text-[#9aa6b3] hover:text-white transition-colors text-lg"></i>
-                    <span id="notification-badge" class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-sky-500 text-[10px] font-bold text-white border border-[#0d0d0d] transition-all duration-300 <%= (typeof unreadNotificationCount !== 'undefined' && unreadNotificationCount > 0) ? '' : 'hidden' %>">
-                        <%= (typeof unreadNotificationCount !== 'undefined') ? unreadNotificationCount : 0 %>
-                    </span>
-                </button>
 
-                <!-- Notification Dropdown Menu -->
-                <div id="notification-dropdown" class="hidden absolute right-0 mt-3 w-80 sm:w-96 bg-[#12161f] border border-[#ffffff1a] rounded-xl shadow-2xl z-[100001] overflow-hidden backdrop-blur-md">
-                    <!-- Dropdown Header -->
-                    <div class="flex items-center justify-between px-4 py-3 border-b border-[#ffffff15] bg-[#0c0f15]">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-bell text-sky-400 text-sm"></i>
-                            <h3 class="text-sm font-semibold text-white">Notifications</h3>
-                            <span id="dropdown-unread-count" class="text-xs px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 font-medium">
-                                <%= (typeof unreadNotificationCount !== 'undefined') ? unreadNotificationCount : 0 %> unread
-                            </span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button type="button" id="mark-all-read-btn" class="text-[11px] text-sky-400 hover:text-sky-300 font-medium transition-colors cursor-pointer" title="Mark all as read">
-                                Mark read
-                            </button>
-                            <span class="text-[#ffffff20]">|</span>
-                            <button type="button" id="delete-read-btn" class="text-[11px] text-red-400 hover:text-red-300 font-medium transition-colors cursor-pointer" title="Delete all read notifications">
-                                Delete read
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Notification List -->
-                    <div id="notification-list" class="max-h-80 overflow-y-auto divide-y divide-[#ffffff0a] scrollbar-thin">
-                        <div class="p-6 text-center text-[#9aa6b3] text-sm flex flex-col items-center gap-2" id="notification-loading">
-                            <i class="fa-solid fa-spinner fa-spin text-sky-400 text-lg"></i>
-                            <span>Loading notifications...</span>
-                        </div>
-                    </div>
-
-                    <!-- Footer -->
-                    <div class="p-2 border-t border-[#ffffff10] bg-[#090b0e] text-center">
-                        <span class="text-[11px] text-[#6b7280]">Real-time live updates active</span>
-                    </div>
-                </div>
-            </div>
-
-            <a href="/profile"
-                class="relative w-9 h-9 rounded-[18px] border-2 border-solid border-[#00000014] flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer overflow-hidden bg-[#1a2a3a] text-sky-400 font-bold"
-                aria-label="Profile">
-                <% if (user.profile_image) { %>
-                    <img src="<%= user.profile_image %>" alt="Profile" class="w-full h-full object-cover" />
+                <a href="/profile"
+                    class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-solid border-[#ffffff22] flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95 cursor-pointer overflow-hidden bg-[#1a2a3a] text-sky-400 font-bold"
+                    aria-label="Profile">
+                    <% if (user.profile_image) { %>
+                        <img src="<%= user.profile_image %>" alt="Profile" class="w-full h-full object-cover" />
+                    <% } else { %>
+                        <span class="text-xs sm:text-sm select-none [font-family:'Inter-Bold',Helvetica]"><%= user.username.charAt(0).toUpperCase() %></span>
+                    <% } %>
+                </a>
                 <% } else { %>
-                    <span class="text-sm select-none [font-family:'Inter-Bold',Helvetica]"><%= user.username.charAt(0).toUpperCase() %></span>
+                <%# Unauthenticated: show Log In and Sign Up CTAs %>
+                <div class="hidden sm:inline-flex items-center gap-2 sm:gap-3 relative flex-[0_0_auto]">
+                    <a href="/login"
+                        class="inline-flex h-8 sm:h-9 items-center justify-center px-3.5 sm:px-5 py-0 relative rounded-md border border-solid border-[#ffffff22] text-[#9aa6b3] hover:text-white hover:border-[#ffffff44] transition-colors [font-family:'Inter-Medium',Helvetica] font-medium text-xs sm:text-sm tracking-[0] leading-[normal]">
+                        Log In
+                    </a>
+                    <a href="/signup"
+                        class="inline-flex h-8 sm:h-9 items-center justify-center px-3.5 sm:px-5 py-0 relative rounded-md bg-sky-500 hover:bg-sky-400 shadow-[0px_0px_16px_#0ea5e94c] transition-colors [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#061323] text-xs sm:text-sm tracking-[0] leading-[normal]">
+                        Sign Up
+                    </a>
+                </div>
                 <% } %>
-            </a>
-            <% } else { %>
-            <%# Unauthenticated: show Log In and Sign Up CTAs %>
-            <div class="inline-flex items-center gap-3 relative flex-[0_0_auto]">
-                <a href="/login"
-                    class="inline-flex h-9 items-center justify-center px-5 py-0 relative rounded-md border border-solid border-[#ffffff22] text-[#9aa6b3] hover:text-white hover:border-[#ffffff44] transition-colors [font-family:'Inter-Medium',Helvetica] font-medium text-sm tracking-[0] leading-[normal]">
-                    Log In
-                </a>
-                <a href="/signup"
-                    class="inline-flex h-9 items-center justify-center px-5 py-0 relative rounded-md bg-sky-500 hover:bg-sky-400 shadow-[0px_0px_16px_#0ea5e94c] transition-colors [font-family:'Inter-SemiBold',Helvetica] font-semibold text-[#061323] text-sm tracking-[0] leading-[normal]">
-                    Sign Up
-                </a>
+
+                <!-- Mobile Hamburger Button -->
+                <button type="button" id="mobile-menu-toggle" class="lg:hidden flex items-center justify-center w-9 h-9 text-[#9aa6b3] hover:text-white hover:bg-[#ffffff10] rounded-lg transition-colors" aria-label="Toggle Navigation Menu">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
             </div>
+        </nav>
+    </div>
+
+    <!-- Mobile Slide-Down Drawer -->
+    <div id="mobile-menu-drawer" class="hidden lg:hidden border-t border-[#ffffff10] bg-[#0c0e12] px-4 py-4 transition-all duration-200">
+        <!-- Mobile Search Form -->
+        <form action="/browse" method="GET" class="flex md:hidden w-full items-center gap-2.5 px-3.5 py-2 mb-3 bg-[#151921] rounded-lg border border-[#ffffff14]">
+            <i class="fa-solid fa-magnifying-glass text-[#9aa6b3] text-xs"></i>
+            <input name="search" value="<%= (typeof query !== 'undefined' && query.search) ? query.search : '' %>"
+                class="bg-transparent border-none outline-none text-sm text-white placeholder:text-[#9aa6b3] w-full"
+                placeholder="Search games, editions..." type="text" />
+        </form>
+
+        <!-- Mobile Links List -->
+        <div class="flex flex-col gap-1">
+            <a href="/" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors <%= activeTab === 'home' ? 'bg-sky-500/15 text-sky-400 font-semibold' : 'text-[#9aa6b3] hover:text-white hover:bg-white/5' %>">
+                <i class="fa-solid fa-house w-5 text-center"></i>
+                <span>Home</span>
+            </a>
+            <a href="/browse" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors <%= activeTab === 'browse' ? 'bg-sky-500/15 text-sky-400 font-semibold' : 'text-[#9aa6b3] hover:text-white hover:bg-white/5' %>">
+                <i class="fa-solid fa-gamepad w-5 text-center"></i>
+                <span>Browse Store</span>
+            </a>
+            <a href="/offers" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors <%= activeTab === 'offers' ? 'bg-sky-500/15 text-sky-400 font-semibold' : 'text-[#9aa6b3] hover:text-white hover:bg-white/5' %>">
+                <i class="fa-solid fa-tags w-5 text-center"></i>
+                <span>Special Offers</span>
+            </a>
+            <% if (typeof user !== 'undefined' && user) { %>
+            <a href="/wallet" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors <%= activeTab === 'wallet' ? 'bg-sky-500/15 text-sky-400 font-semibold' : 'text-[#9aa6b3] hover:text-white hover:bg-white/5' %>">
+                <i class="fa-solid fa-wallet w-5 text-center"></i>
+                <span>PixelWallet</span>
+            </a>
+            <a href="/orders" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors <%= activeTab === 'orders' ? 'bg-sky-500/15 text-sky-400 font-semibold' : 'text-[#9aa6b3] hover:text-white hover:bg-white/5' %>">
+                <i class="fa-solid fa-box-archive w-5 text-center"></i>
+                <span>My Orders</span>
+            </a>
+            <a href="/profile" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors <%= activeTab === 'profile' ? 'bg-sky-500/15 text-sky-400 font-semibold' : 'text-[#9aa6b3] hover:text-white hover:bg-white/5' %>">
+                <i class="fa-solid fa-user w-5 text-center"></i>
+                <span>Account Profile</span>
+            </a>
             <% } %>
+            <a href="/support" class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors <%= activeTab === 'support' ? 'bg-sky-500/15 text-sky-400 font-semibold' : 'text-[#9aa6b3] hover:text-white hover:bg-white/5' %>">
+                <i class="fa-solid fa-headset w-5 text-center"></i>
+                <span>Support Center</span>
+            </a>
         </div>
-    </nav>
+
+        <% if (typeof user === 'undefined' || !user) { %>
+        <div class="flex items-center gap-3 pt-3 mt-3 border-t border-white/10 sm:hidden">
+            <a href="/login" class="flex-1 text-center py-2 rounded-md border border-white/20 text-sm font-medium text-white hover:bg-white/10 transition-colors">Log In</a>
+            <a href="/signup" class="flex-1 text-center py-2 rounded-md bg-sky-500 hover:bg-sky-400 text-sm font-semibold text-zinc-950 transition-colors">Sign Up</a>
+        </div>
+        <% } %>
+    </div>
 </header>
 
 <script>
@@ -416,6 +479,15 @@
             fetchNotifications();
           }
         }
+      });
+    }
+
+    // Mobile Hamburger Menu Toggle
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const mobileMenuDrawer = document.getElementById('mobile-menu-drawer');
+    if (mobileMenuToggle && mobileMenuDrawer) {
+      mobileMenuToggle.addEventListener('click', () => {
+        mobileMenuDrawer.classList.toggle('hidden');
       });
     }
   });
