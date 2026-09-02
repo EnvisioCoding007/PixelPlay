@@ -14,6 +14,7 @@ const __dirname = path.dirname(__filename);
 await connectDB();
 
 const app = express();
+app.set('trust proxy',1);
 const server = createServer(app);
 const port = process.env.PORT || 4090;
 
