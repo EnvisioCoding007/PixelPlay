@@ -3,6 +3,8 @@ import Product from '../../models/Product.js';
 import Category from '../../models/Category.js';
 import Platform from '../../models/Platform.js';
 import { getActiveOffers, calculateBestOfferForProduct } from '../shared/offerHelper.js';
+import { uploadToCloudinary } from '../../config/cloudinary.js';
+import * as categoryService from './categoryService.js';
 
 export const getAllAdminProducts = async (search = '', filters = {}, sort = 'latest', page = 1, limit = 10) => {
     try {
@@ -199,5 +201,196 @@ export const updateProduct = async (id, productData) => {
         console.error('[productService.updateProduct] Error:', error);
         throw error;
     }
+};
+
+const fallbackValue = (val, defaultValue) => {
+    if (val === undefined || val === null || String(val).trim() === '') {
+        return defaultValue;
+    }
+    return String(val).trim();
+};
+
+const parsePlatformStockAndRequirements = (body) => {
+    const platformsRaw = body['platforms[]'] || body.platforms || [];
+    const platforms = Array.isArray(platformsRaw) ? platformsRaw : [platformsRaw];
+
+    const platform_stock = [];
+    let calculatedTotalStock = 0;
+    for (const platform of platforms) {
+        const stockKey = `platform_stock_${platform}`;
+        const priceKey = `platform_price_${platform}`;
+        const pStock = Number(body[stockKey]);
+        const pPrice = Number(body[priceKey]);
+        if (isNaN(pStock) || pStock < 0) {
+            const err = new Error(`Stock for platform ${platform} must be a non-negative number.`);
+            err.statusCode = 400;
+            throw err;
+        }
+        if (isNaN(pPrice) || pPrice < 10000) {
+            const err = new Error(`Price for platform ${platform} must be at least ₹100.00.`);
+            err.statusCode = 400;
+            throw err;
+        }
+        platform_stock.push({ platform, stock: pStock, price: pPrice });
+        calculatedTotalStock += pStock;
+    }
+
+    const system_requirements = {
+        minimum: {
+            architecture: fallbackValue(body['system_requirements.minimum.architecture'], '64-bit'),
+            os: fallbackValue(body['system_requirements.minimum.os'], 'N/A'),
+            processor: fallbackValue(body['system_requirements.minimum.processor'], 'N/A'),
+            memory: fallbackValue(body['system_requirements.minimum.memory'], 'N/A'),
+            graphics: fallbackValue(body['system_requirements.minimum.graphics'], 'N/A'),
+            storage: fallbackValue(body['system_requirements.minimum.storage'], 'N/A'),
+            sound_card: body['system_requirements.minimum.sound_card'] || null,
+            additional_notes: body['system_requirements.minimum.additional_notes'] || null
+        },
+        recommended: {
+            architecture: fallbackValue(body['system_requirements.recommended.architecture'], '64-bit'),
+            os: fallbackValue(body['system_requirements.recommended.os'], 'N/A'),
+            processor: fallbackValue(body['system_requirements.recommended.processor'], 'N/A'),
+            memory: fallbackValue(body['system_requirements.recommended.memory'], 'N/A'),
+            graphics: fallbackValue(body['system_requirements.recommended.graphics'], 'N/A'),
+            storage: fallbackValue(body['system_requirements.recommended.storage'], 'N/A'),
+            sound_card: body['system_requirements.recommended.sound_card'] || null,
+            additional_notes: body['system_requirements.recommended.additional_notes'] || null
+        }
+    };
+
+    return { platforms, platform_stock, calculatedTotalStock, system_requirements };
+};
+
+export const processAndCreateProduct = async (body, files) => {
+    const { title, publisher, release_year, gst_rate, price, category, edition_type, description } = body;
+    const { platforms, platform_stock, calculatedTotalStock, system_requirements } = parsePlatformStockAndRequirements(body);
+
+    const coverFiles = files && files.cover_image ? files.cover_image : [];
+    const galleryFiles = files && files.gallery ? files.gallery : [];
+
+    const categoryDetails = await categoryService.getCategoryDetailsAdmin(category);
+    if (!categoryDetails || !categoryDetails.category) {
+        const err = new Error('Selected category does not exist.');
+        err.statusCode = 400;
+        throw err;
+    }
+    const selectedCategory = categoryDetails.category;
+    if (selectedCategory.status === 'Hidden') {
+        const err = new Error('Cannot list a game under an unlisted category. Please change the game category to list the game.');
+        err.statusCode = 400;
+        throw err;
+    }
+
+    if (coverFiles.length === 0) {
+        const err = new Error('Cover image is required.');
+        err.statusCode = 400;
+        throw err;
+    }
+    if (galleryFiles.length < 3) {
+        const err = new Error('Game gallery must have at least 3 images/videos.');
+        err.statusCode = 400;
+        throw err;
+    }
+    if (galleryFiles.length > 5) {
+        const err = new Error('Game gallery image limit must be capped to 5.');
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const coverUploadResult = await uploadToCloudinary(coverFiles[0], 'pixelplay_uploads');
+    const cover_image = coverUploadResult.secure_url;
+
+    const galleryUploadPromises = galleryFiles.map(file => uploadToCloudinary(file, 'pixelplay_uploads'));
+    const galleryUploadResults = await Promise.all(galleryUploadPromises);
+    const gallery = galleryUploadResults.map(res => res.secure_url);
+
+    return await createProduct({
+        title,
+        publisher,
+        release_year: Number(release_year),
+        gst_rate: Number(gst_rate),
+        price: Number(price),
+        stock: calculatedTotalStock,
+        platform_stock,
+        category,
+        platforms,
+        edition_type,
+        description,
+        cover_image,
+        gallery,
+        system_requirements
+    });
+};
+
+export const processAndUpdateProduct = async (id, body, files) => {
+    const { title, publisher, release_year, gst_rate, price, category, edition_type, description, status } = body;
+    const { platforms, platform_stock, calculatedTotalStock, system_requirements } = parsePlatformStockAndRequirements(body);
+
+    const existingProduct = await getProductById(id);
+    if (!existingProduct) {
+        const err = new Error('Game not found.');
+        err.statusCode = 404;
+        throw err;
+    }
+
+    const categoryDetails = await categoryService.getCategoryDetailsAdmin(category);
+    if (!categoryDetails || !categoryDetails.category) {
+        const err = new Error('Selected category does not exist.');
+        err.statusCode = 400;
+        throw err;
+    }
+    const selectedCategory = categoryDetails.category;
+    if (status === 'Live' && selectedCategory.status === 'Hidden') {
+        const err = new Error('Cannot list a game under an unlisted category. Please change the game category to list the game.');
+        err.statusCode = 400;
+        throw err;
+    }
+
+    const existingGalleryRaw = body.existing_gallery || body['existing_gallery[]'] || [];
+    const existingGallery = Array.isArray(existingGalleryRaw) ? existingGalleryRaw : [existingGalleryRaw];
+    const galleryFiles = files && files.gallery ? files.gallery : [];
+
+    const totalGalleryCount = existingGallery.filter(url => url && url.trim() !== '').length + galleryFiles.length;
+    if (totalGalleryCount < 3) {
+        const err = new Error('Game gallery must have at least 3 images/videos.');
+        err.statusCode = 400;
+        throw err;
+    }
+    if (totalGalleryCount > 5) {
+        const err = new Error('Game gallery image limit must be capped to 5.');
+        err.statusCode = 400;
+        throw err;
+    }
+
+    let cover_image = existingProduct.cover_image;
+    const coverFiles = files && files.cover_image ? files.cover_image : [];
+    if (coverFiles.length > 0) {
+        const coverUploadResult = await uploadToCloudinary(coverFiles[0], 'pixelplay_uploads');
+        cover_image = coverUploadResult.secure_url;
+    }
+
+    const newGalleryUploadPromises = galleryFiles.map(file => uploadToCloudinary(file, 'pixelplay_uploads'));
+    const newGalleryUploadResults = await Promise.all(newGalleryUploadPromises);
+    const newGalleryUrls = newGalleryUploadResults.map(res => res.secure_url);
+
+    const gallery = [...existingGallery.filter(url => url && url.trim() !== ''), ...newGalleryUrls];
+
+    return await updateProduct(id, {
+        title,
+        publisher,
+        release_year: Number(release_year),
+        gst_rate: Number(gst_rate),
+        price: Number(price),
+        stock: calculatedTotalStock,
+        platform_stock,
+        category,
+        platforms,
+        edition_type,
+        description,
+        cover_image,
+        gallery,
+        system_requirements,
+        status: status || 'Live'
+    });
 };
 

@@ -1,4 +1,32 @@
 import User from '../../models/User.js';
+import bcrypt from 'bcrypt';
+
+export const authenticateAdmin = async (email, password) => {
+    try {
+        if (!email || !password) {
+            throw new Error('Email and password are required.');
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
+        if (!user) {
+            throw new Error('Invalid credentials.');
+        }
+
+        if (user.role !== 'admin') {
+            throw new Error('Access denied. Admins only.');
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (!isMatch) {
+            throw new Error('Invalid credentials.');
+        }
+
+        return user;
+    } catch (error) {
+        console.error('[userService.authenticateAdmin] Error:', error);
+        throw error;
+    }
+};
 
 export const getUserByEmail = async (email) => {
     try {

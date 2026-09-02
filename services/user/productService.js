@@ -397,12 +397,17 @@ export const getProductDetailsForUser = async (productId, userId = null, primary
             }
         }
         product.categoryName = catObj ? catObj.name : 'N/A';
+        let targetPlat = 'PC';
+        if (product.platforms && product.platforms.length > 0) {
+            targetPlat = (product.platforms.find(p => p.toLowerCase() === primaryPlatform.toLowerCase()))
+                || (product.platforms.find(p => p.toLowerCase() === 'pc'))
+                || (product.platforms[0])
+                || 'PC';
+        }
+        product.defaultPlatform = targetPlat;
+
         let basePrice = product.price || 0;
         if (product.platform_stock && product.platform_stock.length > 0) {
-            const targetPlat = (product.platforms && product.platforms.find(p => p.toLowerCase() === primaryPlatform.toLowerCase()))
-                || (product.platforms && product.platforms.find(p => p.toLowerCase() === 'pc'))
-                || (product.platforms && product.platforms[0])
-                || 'PC';
             const platStock = product.platform_stock.find(ps => ps.platform.toLowerCase() === targetPlat.toLowerCase());
             if (platStock && typeof platStock.price === 'number') {
                 basePrice = platStock.price;
@@ -416,6 +421,8 @@ export const getProductDetailsForUser = async (productId, userId = null, primary
         product.offerDiscount = offerResult.discountPercentage;
         product.categoryDiscount = offerResult.discountPercentage;
         product.discountedPrice = offerResult.discountedPrice;
+        product.displayPrice = offerResult.discountedPrice;
+        product.hasDiscount = offerResult.discountPercentage > 0;
         product.appliedOffer = offerResult.appliedOffer;
 
         let user = null;

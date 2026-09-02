@@ -1,7 +1,7 @@
 import * as cartService from '../../services/user/cartService.js';
 import * as userService from '../../services/user/userService.js';
 import * as couponService from '../../services/user/couponService.js';
-import { getWalletBalance } from '../../services/shared/walletHelper.js';
+import { getWalletBalance } from '../../services/user/walletService.js';
 
 export const getCart = async (req, res) => {
     try {

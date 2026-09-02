@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import * as userService from '../../services/admin/userService.js';
 
 export const getAdminLogin = (req, res) => {
@@ -9,24 +8,7 @@ export const adminLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-            return res.render('admin/login', { error: 'Email and password are required.' });
-        }
-
-        const user = await userService.getUserByEmail(email);
-
-        if (!user) {
-            return res.render('admin/login', { error: 'Invalid credentials.' });
-        }
-
-        if (user.role !== 'admin') {
-            return res.render('admin/login', { error: 'Access denied. Admins only.' });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password_hash);
-        if (!isMatch) {
-            return res.render('admin/login', { error: 'Invalid credentials.' });
-        }
+        const user = await userService.authenticateAdmin(email, password);
 
         req.session.regenerate((regenErr) => {
             if (regenErr) {
@@ -46,7 +28,7 @@ export const adminLogin = async (req, res) => {
         });
     } catch (err) {
         console.error('[adminLogin]', err);
-        return res.render('admin/login', { error: 'An unexpected error occurred. Please try again.' });
+        return res.render('admin/login', { error: err.message || 'An unexpected error occurred. Please try again.' });
     }
 };
 

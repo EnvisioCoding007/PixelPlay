@@ -25,16 +25,10 @@
     : [fallbackCover];
   const firstMedia = gallery[0];
 
-  // Reviews calculation
+  // Precomputed reviews metrics passed from controller/service
   const productReviews = (typeof reviews !== 'undefined' && reviews) ? reviews : [];
-  let avgRating = 0;
-  let totalReviews = productReviews.length;
-  if (totalReviews > 0) {
-    const sum = productReviews.reduce((acc, rev) => acc + (rev.rating || 0), 0);
-    avgRating = (sum / totalReviews).toFixed(1);
-  } else {
-    avgRating = '0.0';
-  }
+  const finalAvgRating = (typeof avgRating !== 'undefined' && avgRating !== null) ? avgRating : (product.avgRating ? Number(product.avgRating).toFixed(1) : '0.0');
+  const finalTotalReviews = (typeof totalReviews !== 'undefined' && totalReviews !== null) ? totalReviews : productReviews.length;
 
   // Star rendering helper
   const renderStars = (rating, sizeClass = 'w-4 h-4') => {
@@ -50,14 +44,6 @@
     return starsHtml;
   };
 
-  // Similar games dynamic mock fallback list
-  const mockSimilarGames = [
-    { title: 'Neon Override 2077', categoryName: 'Action RPG', platforms: ['PS5'], price: 59.99, coverImageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDzScuMskdeHwISgiKZni6Bys9tpCgt3qQWL1XpI5leVfzy3xd2OXe_jjBfvKRsE6nA4ybe58aoD3858tWVdsXa4DBZjKEI_5IH88TdQFPjU66XIGqexO8rbnIrAem_WpePpp7ne9x0Ty-twdpVIX8ccC7-PM-cnsklO04QvxmkFK7te2TwPy1ZHHiHNbQ4MynOfHkjEbAeMsHn4phqSexVbjOKFsLNZobw7acge1yppFQFR4IiV303vdbwTAb6ps-GFthh13YkP0ze', edition_type: 'STANDARD' },
-    { title: 'Void Breach: Signa', categoryName: 'Shooter', platforms: ['Xbox Series X'], price: 49.99, coverImageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDp8m9QPJAc4rCfHv_8FbGfjugPXa0OXA1ghpQCwCjPWIYfpzoJKocnaCcEZed48bxu65DI07Vp4_TCYzGoRLPBRvl9we7rwdPYUnQigWDj9b_axhUPws4cbdZiLLutSfanaCpaFE4HjjCojw1qa_b12KOK4ytEKhWa0QkOiZz-ZJ40joRLVHbOIkQym4Cxf97s9oOEnjzCsFHH-SfhMiKG7zkY1KPhDdB4EG-EWC2A5Y54UsDJkJbSqaxmgufirGVBZrHALRo92bYa', edition_type: 'STANDARD' },
-    { title: 'Chronicles of Aethelgard', categoryName: 'Legends Vault', platforms: ['PS5'], price: 119.99, coverImageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCigZK8yN1e5ru98LTuD63NsU6b-4ckp-CGypvoDgTyGILKZFN3SFTxBWS2eqzUm7VEd7xgz6Ct05ubK21wU_WUvND__T6gCEywkhw28JdfNovBxKptkU4da91JDNZoSaGfMBzzxrvKTerW-cqQ2XZ61VDLn3hR-QiC0MqqX_pg4fS_J--3cAEm9Ka9fh-pVPz1QImdshOMWM-GhBPbt78AHl9acEJLbqirwCAhRXnCqxMwhuAl-Ug03OsST1iUh1RBHr3bpsClxd9f', edition_type: 'LEGENDARY' },
-    { title: 'Aether Chronicles', categoryName: 'Adventure', platforms: ['Nintendo Switch'], price: 44.99, coverImageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAtKd3MlNGyLm-mx6Rv0q9x5em_SMRJLLJqB2ZSH_u-0XD7DuZZJEUb8j4iei5Hv4cXxqM7F3DfNWmz3eO4qfSWk4xv_nsKEw5aq2h2vc-lE4OAfBmeaWi3fXdUqW4QIZb133S0uS6-sZAmFT_xSLg9ex3R2dg-JRsW9syXIUS8hXhQ7y_9lqXTYBpVM_DZYcpDlW3fad7W6TecyFxx-hu8sCdJZ5p_uLXjdfBiLC2eyAKVHv3nDHJl39zVBP4lXwDGyRjBCOB4-a4t', edition_type: 'STANDARD' },
-    { title: "Hollow Knight's Oath", categoryName: 'Horror RPG', platforms: ['Xbox Series X'], price: 39.99, coverImageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBTWSpv07GHjoWX_guqMgCaecXP4DISyOFyP8ax0RsUPeoawgH6G-vmQWVOMtoPuEGtwcI0oNenXvyzGKUNbtNh-FSSCQPihYH8SVmpwtS44to3ctWY65KLoC7dK_A1NomWcOGwjww58KFr2fttJH0b54x2StLDEcuecBfc92MhXM3kmuAovi6j4ReaTkAUNrrQ1N4K12aYTDC_lglSZQrgUtUi1BmL4gMiyJ7lF_7fPtu0ItXOP2WzKmWovkwNB529SjrfDt9eKl4d', edition_type: 'STANDARD' }
-  ];
   const similarGamesList = (typeof similarGames !== 'undefined' && similarGames) ? similarGames : [];
 
   // Helper to get platform stock
@@ -69,45 +55,12 @@
     return product.stock || 0;
   };
 
-  // Target Platform calculation based on user's selected primary platform
-  const userPrimary = (typeof primaryPlatform !== 'undefined' && primaryPlatform) ? primaryPlatform : 'PC';
-  let defaultPlat = 'PC';
-
-  if (product.platforms && product.platforms.length > 0) {
-    // 1. Check if the game has the user's selected primary platform
-    const primaryMatch = product.platforms.find(plat => plat.toLowerCase() === userPrimary.toLowerCase());
-    if (primaryMatch) {
-      defaultPlat = primaryMatch;
-    } else {
-      // 2. If the game does not have the selected primary platform, default to PC if available
-      const pcMatch = product.platforms.find(plat => plat.toLowerCase() === 'pc');
-      if (pcMatch) {
-        defaultPlat = pcMatch;
-      } else {
-        // 3. Fallback to the first available platform
-        defaultPlat = product.platforms[0];
-      }
-    }
-  } else {
-    defaultPlat = 'PC';
-  }
-
-  // Price & Offer handling for the default platform
-  let initialBasePrice = product.price || 0;
-  if (product.platform_stock && product.platform_stock.length > 0) {
-    const defaultPlatStock = product.platform_stock.find(ps => ps.platform.toLowerCase() === defaultPlat.toLowerCase());
-    if (defaultPlatStock && typeof defaultPlatStock.price === 'number') {
-      initialBasePrice = defaultPlatStock.price;
-    } else {
-      const firstPlat = product.platform_stock[0];
-      if (firstPlat && typeof firstPlat.price === 'number') {
-        initialBasePrice = firstPlat.price;
-      }
-    }
-  }
+  // Precomputed default platform and pricing
+  const defaultPlat = product.defaultPlatform || (typeof primaryPlatform !== 'undefined' ? primaryPlatform : 'PC');
+  const initialBasePrice = product.price || 0;
   const discount = typeof product.categoryDiscount !== 'undefined' ? product.categoryDiscount : 0;
-  const displayPrice = discount > 0 ? Math.max(0, initialBasePrice - (initialBasePrice * (discount / 100))) : initialBasePrice;
-  const hasDiscount = discount > 0;
+  const displayPrice = typeof product.displayPrice !== 'undefined' ? product.displayPrice : (discount > 0 ? Math.max(0, initialBasePrice - (initialBasePrice * (discount / 100))) : initialBasePrice);
+  const hasDiscount = typeof product.hasDiscount !== 'undefined' ? product.hasDiscount : (discount > 0);
 %>
 
 <style>
@@ -239,10 +192,10 @@
         <!-- Rating -->
         <div class="flex items-center space-x-2 text-sm">
           <div class="flex space-x-0.5">
-            <%- renderStars(avgRating, 'w-4 h-4') %>
+            <%- renderStars(finalAvgRating, 'w-4 h-4') %>
           </div>
-          <span class="text-pixel-white font-medium"><%= avgRating %></span>
-          <span class="text-xs text-gray-500">(<%= totalReviews %> active <%= totalReviews === 1 ? 'transmission/review' : 'transmissions/reviews' %>)</span>
+          <span class="text-pixel-white font-medium"><%= finalAvgRating %></span>
+          <span class="text-xs text-gray-500">(<%= finalTotalReviews %> active <%= finalTotalReviews === 1 ? 'transmission/review' : 'transmissions/reviews' %>)</span>
         </div>
       </div>
 
@@ -539,11 +492,11 @@
       <!-- Summary Card -->
       <div class="md:col-span-4 lg:col-span-4 space-y-4">
         <div class="bg-pixel-panel border border-gray-800 rounded-lg p-6 flex flex-col items-center justify-center text-center">
-          <span class="text-5xl font-extrabold text-pixel-white mb-2"><%= avgRating %></span>
+          <span class="text-5xl font-extrabold text-pixel-white mb-2"><%= finalAvgRating %></span>
           <div class="flex mb-3 space-x-1">
-            <%- renderStars(avgRating, 'w-5 h-5') %>
+            <%- renderStars(finalAvgRating, 'w-5 h-5') %>
           </div>
-          <p class="text-xs text-gray-400 font-medium">Based on <%= totalReviews %> <%= totalReviews === 1 ? 'verified review' : 'verified reviews' %></p>
+          <p class="text-xs text-gray-400 font-medium">Based on <%= finalTotalReviews %> <%= finalTotalReviews === 1 ? 'verified review' : 'verified reviews' %></p>
         </div>
 
         <!-- Review Submission Card / Eligibility Box -->

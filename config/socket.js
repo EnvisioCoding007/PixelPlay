@@ -27,8 +27,10 @@ export const initSocket = (server, sessionMiddleware) => {
         }
 
         socket.on('register_user', (userId) => {
-            if (userId) {
-                socket.join(`user_${userId}`);
+            const sessionUser = req.session && req.session.user;
+            const authenticatedId = sessionUser ? (sessionUser._id || sessionUser.id || sessionUser).toString() : null;
+            if (authenticatedId && userId && authenticatedId === userId.toString()) {
+                socket.join(`user_${authenticatedId}`);
             }
         });
     });

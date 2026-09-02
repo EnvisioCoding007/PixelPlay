@@ -32,7 +32,7 @@ import { injectCartCount } from './middleware/cartMiddleware.js';
 import { injectNotificationCount } from './middleware/notificationMiddleware.js';
 
 const sessionMiddleware = session({
-    secret: process.env.SESSION_SECRET || 'pixelplay_secret',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -65,6 +65,26 @@ app.use((req, res) => {
     const isAdminContext = req.originalUrl.startsWith('/admin');
     res.status(404).render('404', {
         title: '404 - Page Not Found | PixelPlay',
+        isAdminContext,
+        url: req.originalUrl
+    });
+});
+
+// Centralized Global Error Handler
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+    console.error('[Global Error Handler]:', err);
+    const isAjax = req.xhr || req.headers['accept']?.includes('application/json');
+    const statusCode = err.status || err.statusCode || 500;
+    if (isAjax) {
+        return res.status(statusCode).json({
+            success: false,
+            message: err.message || 'An unexpected internal error occurred.'
+        });
+    }
+    const isAdminContext = req.originalUrl.startsWith('/admin');
+    res.status(statusCode).render('404', {
+        title: `${statusCode} - Server Error | PixelPlay`,
         isAdminContext,
         url: req.originalUrl
     });

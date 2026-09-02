@@ -1,18 +1,36 @@
 import * as userService from '../services/user/userService.js';
+import * as adminUserService from '../services/admin/userService.js';
 import passport from 'passport';
 import * as authController from '../controllers/user/authController.js';
 
 
 export const isUserAuth = async (req, res, next) => {
+    const isAjax =
+        req.xhr ||
+        req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+        (req.headers['accept'] && req.headers['accept'].includes('application/json'));
+
     if (!req.session.user) {
+        if (isAjax) {
+            return res.status(401).json({
+                success: false,
+                message: 'Authentication required. Please log in.',
+            });
+        }
         return res.redirect('/login');
     }
     try {
-        const userId = req.session.user.id || req.session.user;
+        const userId = req.session.user.id || req.session.user._id || req.session.user;
         const user = await userService.getUserById(userId);
 
         if (!user || user.is_blocked || user.role === 'admin') {
             return req.session.destroy(() => {
+                if (isAjax) {
+                    return res.status(401).json({
+                        success: false,
+                        message: user?.is_blocked ? 'Account is suspended.' : 'Unauthorized access.',
+                    });
+                }
                 res.redirect('/login');
             });
         }
@@ -20,6 +38,9 @@ export const isUserAuth = async (req, res, next) => {
         next();
     } catch (err) {
         console.error('[isUserAuth]', err);
+        if (isAjax) {
+            return res.status(500).json({ success: false, message: 'Authentication verification error.' });
+        }
         res.redirect('/login');
     }
 };
@@ -36,7 +57,7 @@ export const isUserUnAuth = (req, res, next) => {
 export const isAdminAuth = async (req, res, next) => {
     if (req.session.admin && req.session.admin.role === 'admin') {
         try {
-            const adminUser = await userService.getUserById(req.session.admin._id);
+            const adminUser = await adminUserService.getUserById(req.session.admin._id);
             if (!adminUser || adminUser.role !== 'admin') {
                 return req.session.destroy(() => {
                     res.redirect('/admin/login');

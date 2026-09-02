@@ -185,11 +185,17 @@ export const getProductDetails = async (req, res) => {
         }
 
         const reviews = await reviewService.getReviewsForProduct(id);
+        const totalReviews = reviews.length;
+        const avgRating = totalReviews > 0
+            ? (reviews.reduce((acc, rev) => acc + (rev.rating || 0), 0) / totalReviews).toFixed(1)
+            : '0.0';
         const eligibility = userId ? await reviewService.checkReviewEligibility(userId, id) : { isEligible: false, existingReview: null };
 
         res.render('user/game-details', {
             product: details.product,
             reviews,
+            avgRating,
+            totalReviews,
             isEligible: eligibility.isEligible,
             existingReview: eligibility.existingReview,
             user: details.user,

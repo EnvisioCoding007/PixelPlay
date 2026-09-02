@@ -1,6 +1,5 @@
 import * as userService from '../../services/user/userService.js';
 import * as orderService from '../../services/user/orderService.js';
-import { uploadToCloudinary } from '../../config/cloudinary.js';
 
 export const getProfile = async (req, res) => {
     try {
@@ -179,30 +178,5 @@ export const deleteAddress = async (req, res) => {
         res.status(200).json({ success: true, message: 'Address removed successfully.' });
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
-    }
-};
-
-export const updateAvatar = async(req,res)=>{
-    try{
-        if(!req.file){
-            return res.status(400).json({
-                success:false,
-                message:'No file uploaded.'
-            });
-        }
-        const userId = req.session.user.id || req.session.user;
-        const uploadResult = await uploadToCloudinary(req.file, 'pixelplay_uploads');
-        const secureCloudUrl = uploadResult.secure_url;
-
-        const updatedUser = await userService.updateUserProfileImage(userId, secureCloudUrl);
-
-        return res.status(200).json({
-            success:true,
-            message: 'Profile picture update successfully!',
-            url: updatedUser.profile_image
-        });
-    } catch(error){
-        console.error('[userController.updateAvatar Error]:',error);
-        return res.status(500).json({success:false, message: 'Internal Server Upload Error'});
     }
 };

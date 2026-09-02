@@ -1,4 +1,6 @@
-import { getOrCreateWallet, addTransaction } from '../shared/walletHelper.js';
+import { getOrCreateWallet, addTransaction, getWalletBalance } from '../shared/walletHelper.js';
+
+export { getWalletBalance };
 
 /**
  * Retrieves user wallet details with formatted rupee amounts, period analytics,
