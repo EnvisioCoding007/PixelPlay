@@ -2,10 +2,12 @@
   const isChecked = (field, val) => {
     if (!query || !query[field]) return false;
     const active = query[field];
+    const normalize = (v) => String(v).trim().replace(/₹/g, '').replace(/\s+/g, '').toLowerCase();
+    const target = normalize(val);
     if (Array.isArray(active)) {
-      return active.includes(val);
+      return active.some(item => item === val || normalize(item) === target);
     }
-    return active === val;
+    return active === val || normalize(active) === target;
   };
 %>
 
@@ -67,20 +69,20 @@
     <h3 class="text-xs font-bold text-gray-500 tracking-wider mb-4 uppercase">Price Range</h3>
     <div class="space-y-3">
       <label class="flex items-center gap-3 cursor-pointer group">
-        <input name="price" value="under-20" class="form-checkbox" type="checkbox" <%= isChecked('price', 'under-20') ? 'checked' : '' %>/>
-        <span class="text-sm text-gray-300 group-hover:text-white transition-colors">Under ₹20</span>
+        <input name="price" value="under-500" class="form-checkbox" type="checkbox" <%= isChecked('price', 'under-500') ? 'checked' : '' %>/>
+        <span class="text-sm text-gray-300 group-hover:text-white transition-colors">Under ₹500</span>
       </label>
       <label class="flex items-center gap-3 cursor-pointer group">
-        <input name="price" value="20-40" class="form-checkbox" type="checkbox" <%= isChecked('price', '20-40') ? 'checked' : '' %>/>
-        <span class="text-sm text-gray-300 group-hover:text-white transition-colors">₹20 - ₹40</span>
+        <input name="price" value="500-1000" class="form-checkbox" type="checkbox" <%= isChecked('price', '500-1000') ? 'checked' : '' %>/>
+        <span class="text-sm text-gray-300 group-hover:text-white transition-colors">₹500 - ₹1000</span>
       </label>
       <label class="flex items-center gap-3 cursor-pointer group">
-        <input name="price" value="40-70" class="form-checkbox" type="checkbox" <%= isChecked('price', '40-70') ? 'checked' : '' %>/>
-        <span class="text-sm text-gray-300 group-hover:text-white transition-colors">₹40 - ₹70</span>
+        <input name="price" value="1000-2000" class="form-checkbox" type="checkbox" <%= isChecked('price', '1000-2000') ? 'checked' : '' %>/>
+        <span class="text-sm text-gray-300 group-hover:text-white transition-colors">₹1000 - ₹2000</span>
       </label>
       <label class="flex items-center gap-3 cursor-pointer group">
-        <input name="price" value="70+" class="form-checkbox" type="checkbox" <%= isChecked('price', '70+') ? 'checked' : '' %>/>
-        <span class="text-sm text-gray-300 group-hover:text-white transition-colors">₹70+</span>
+        <input name="price" value="2000+" class="form-checkbox" type="checkbox" <%= isChecked('price', '2000+') ? 'checked' : '' %>/>
+        <span class="text-sm text-gray-300 group-hover:text-white transition-colors">₹2000+</span>
       </label>
     </div>
   </div>

@@ -111,15 +111,21 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
             products = products.filter(p => selectedPublishers.includes(p.publisher));
         }
 
-        // Price Filter (Comparison in Paisa: e.g. 20 rupees = 2000 paisa)
+        // Price Filter (Comparison in Paisa using price after discount: e.g. ₹500 = 50000 paisa)
         const selectedPrices = Array.isArray(filters.price) ? filters.price : (filters.price ? [filters.price] : []);
         if (selectedPrices.length > 0) {
             products = products.filter(p => {
+                const effectivePrice = typeof p.discountedPrice === 'number' ? p.discountedPrice : p.price;
                 return selectedPrices.some(range => {
-                    if (range === 'under-20') return p.price < 2000;
-                    if (range === '20-40') return p.price >= 2000 && p.price <= 4000;
-                    if (range === '40-70') return p.price >= 4000 && p.price <= 7000;
-                    if (range === '70+') return p.price > 7000;
+                    const cleanRange = String(range).trim().replace(/₹/g, '').replace(/\s+/g, '').toLowerCase();
+                    if (cleanRange === 'under-500' || cleanRange === 'under500' || cleanRange === '<500') return effectivePrice < 50000;
+                    if (cleanRange === '500-1000') return effectivePrice >= 50000 && effectivePrice <= 100000;
+                    if (cleanRange === '1000-2000') return effectivePrice >= 100000 && effectivePrice <= 200000;
+                    if (cleanRange === '2000+' || cleanRange === '>2000' || cleanRange === '2000plus') return effectivePrice > 200000;
+                    if (cleanRange === 'under-20') return effectivePrice < 2000;
+                    if (cleanRange === '20-40') return effectivePrice >= 2000 && effectivePrice <= 4000;
+                    if (cleanRange === '40-70') return effectivePrice >= 4000 && effectivePrice <= 7000;
+                    if (cleanRange === '70+') return effectivePrice > 7000;
                     return false;
                 });
             });
