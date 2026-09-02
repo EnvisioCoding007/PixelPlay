@@ -397,8 +397,22 @@ export const getProductDetailsForUser = async (productId, userId = null, primary
             }
         }
         product.categoryName = catObj ? catObj.name : 'N/A';
+        let basePrice = product.price || 0;
+        if (product.platform_stock && product.platform_stock.length > 0) {
+            const targetPlat = (product.platforms && product.platforms.find(p => p.toLowerCase() === primaryPlatform.toLowerCase()))
+                || (product.platforms && product.platforms.find(p => p.toLowerCase() === 'pc'))
+                || (product.platforms && product.platforms[0])
+                || 'PC';
+            const platStock = product.platform_stock.find(ps => ps.platform.toLowerCase() === targetPlat.toLowerCase());
+            if (platStock && typeof platStock.price === 'number') {
+                basePrice = platStock.price;
+            } else if (product.platform_stock[0] && typeof product.platform_stock[0].price === 'number') {
+                basePrice = product.platform_stock[0].price;
+            }
+        }
+        product.price = basePrice;
         const activeOffers = await getActiveOffers();
-        const offerResult = calculateBestOfferForProduct(product, activeOffers, product.price);
+        const offerResult = calculateBestOfferForProduct(product, activeOffers, basePrice);
         product.offerDiscount = offerResult.discountPercentage;
         product.categoryDiscount = offerResult.discountPercentage;
         product.discountedPrice = offerResult.discountedPrice;

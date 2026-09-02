@@ -69,19 +69,33 @@
     return product.stock || 0;
   };
 
-  // Find first platform that is in stock
-  let defaultPlat = '';
+  // Target Platform calculation based on user's selected primary platform
+  const userPrimary = (typeof primaryPlatform !== 'undefined' && primaryPlatform) ? primaryPlatform : 'PC';
+  let defaultPlat = 'PC';
+
   if (product.platforms && product.platforms.length > 0) {
-    const inStockPlat = product.platforms.find(plat => getPlatformStock(plat) > 0);
-    defaultPlat = inStockPlat || product.platforms[0];
+    // 1. Check if the game has the user's selected primary platform
+    const primaryMatch = product.platforms.find(plat => plat.toLowerCase() === userPrimary.toLowerCase());
+    if (primaryMatch) {
+      defaultPlat = primaryMatch;
+    } else {
+      // 2. If the game does not have the selected primary platform, default to PC if available
+      const pcMatch = product.platforms.find(plat => plat.toLowerCase() === 'pc');
+      if (pcMatch) {
+        defaultPlat = pcMatch;
+      } else {
+        // 3. Fallback to the first available platform
+        defaultPlat = product.platforms[0];
+      }
+    }
   } else {
     defaultPlat = 'PC';
   }
 
-  // Price & Offer handling
+  // Price & Offer handling for the default platform
   let initialBasePrice = product.price || 0;
   if (product.platform_stock && product.platform_stock.length > 0) {
-    const defaultPlatStock = product.platform_stock.find(ps => ps.platform === defaultPlat);
+    const defaultPlatStock = product.platform_stock.find(ps => ps.platform.toLowerCase() === defaultPlat.toLowerCase());
     if (defaultPlatStock && typeof defaultPlatStock.price === 'number') {
       initialBasePrice = defaultPlatStock.price;
     } else {
@@ -858,7 +872,7 @@
 
     function updatePlatformSelection(selectedPlatform) {
       document.querySelectorAll('.platform-btn').forEach(btn => {
-        const isSelected = btn.dataset.platform === selectedPlatform;
+        const isSelected = (btn.dataset.platform || '').toLowerCase() === (selectedPlatform || '').toLowerCase();
         const checkIcon = btn.querySelector('.check-icon');
         
         if (isSelected) {
@@ -874,7 +888,7 @@
 
       const heartIcon = document.querySelector('button[onclick*="toggleWishlist"] svg');
       if (heartIcon) {
-        if (wishlistPlatforms.includes(selectedPlatform.toLowerCase())) {
+        if (wishlistPlatforms.includes((selectedPlatform || '').toLowerCase())) {
           heartIcon.setAttribute('fill', 'currentColor');
           heartIcon.classList.remove('text-gray-400');
           heartIcon.classList.add('fill-red-500', 'text-red-500');
@@ -887,7 +901,7 @@
 
       let stock = 0;
       if (gameData.platformStock && gameData.platformStock.length > 0) {
-        const found = gameData.platformStock.find(ps => ps.platform === selectedPlatform);
+        const found = gameData.platformStock.find(ps => (ps.platform || '').toLowerCase() === (selectedPlatform || '').toLowerCase());
         if (found) stock = found.stock;
       } else {
         stock = gameData.globalStock;
@@ -902,7 +916,7 @@
       const categoryDiscount = <%= product.categoryDiscount || 0 %>;
       let basePrice = 0;
       if (gameData.platformStock && gameData.platformStock.length > 0) {
-        const found = gameData.platformStock.find(ps => ps.platform === selectedPlatform);
+        const found = gameData.platformStock.find(ps => (ps.platform || '').toLowerCase() === (selectedPlatform || '').toLowerCase());
         if (found) {
           basePrice = found.price || 0;
         } else {

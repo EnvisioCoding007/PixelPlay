@@ -173,7 +173,7 @@ export const getProductDetails = async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.session.user ? (req.session.user._id || req.session.user.id || req.session.user) : null;
-        const primaryPlatform = req.session.primaryPlatform || 'PC';
+        const primaryPlatform = req.query.platform || req.session.primaryPlatform || 'PC';
 
         const details = await productService.getProductDetailsForUser(id, userId, primaryPlatform);
         if (!details) {
