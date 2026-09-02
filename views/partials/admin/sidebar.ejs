@@ -7,49 +7,45 @@
     <!-- Navigation Links -->
     <nav class="mt-6 flex flex-col gap-1 px-4">
       <% 
-        const currentTab = typeof activeTab !== 'undefined' ? activeTab : '';
+        const selectedTab = (typeof activeTab !== 'undefined' && activeTab) ? activeTab : (typeof currentTab !== 'undefined' && currentTab ? currentTab : '');
       %>
-      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'dashboard' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/dashboard">
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= selectedTab === 'dashboard' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/dashboard">
         <i class="fa-solid fa-border-all w-5 text-center"></i>
         <span>Dashboard</span>
       </a>
-      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'listed-games' || currentTab === 'products' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/products">
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= selectedTab === 'listed-games' || selectedTab === 'products' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/products">
         <i class="fa-solid fa-gamepad w-5 text-center"></i>
         <span>Games</span>
       </a>
-      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'publishers' ? 'bg-[#1a2432] text-accent border-l-[3px] border-accent font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/publishers">
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= selectedTab === 'publishers' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/publishers">
         <i class="fa-solid fa-building w-5 text-center"></i>
         <span>Publishers</span>
       </a>
-      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'order-management' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/orders">
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= selectedTab === 'order-management' || selectedTab === 'orders' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/orders">
         <i class="fa-solid fa-cart-shopping w-5 text-center"></i>
         <span>Order Management</span>
       </a>
-      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'customers' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/customers">
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= selectedTab === 'customers' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/customers">
         <i class="fa-solid fa-users w-5 text-center"></i>
         <span>Customers</span>
       </a>
-      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'reviews' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/reviews">
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= selectedTab === 'reviews' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/reviews">
         <i class="fa-regular fa-star w-5 text-center"></i>
         <span>Reviews</span>
       </a>
-      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'offers' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/offers">
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= selectedTab === 'offers' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/offers">
         <i class="fa-solid fa-tags w-5 text-center"></i>
         <span>Offers</span>
       </a>
-      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'banners' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="#">
-        <i class="fa-regular fa-image w-5 text-center"></i>
-        <span>Banners</span>
-      </a>
-      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'coupons' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/coupons">
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= selectedTab === 'coupons' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/coupons">
         <i class="fa-solid fa-ticket w-5 text-center"></i>
         <span>Coupons</span>
       </a>
-      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'categories' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/categories">
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= selectedTab === 'categories' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/categories">
         <i class="fa-solid fa-layer-group w-5 text-center"></i>
         <span>Categories</span>
       </a>
-      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= currentTab === 'wallet-oversight' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/wallet-oversight">
+      <a class="flex items-center gap-3 px-4 py-2.5 rounded transition-colors <%= selectedTab === 'wallet-oversight' || selectedTab === 'wallet' ? 'bg-[#1a2432] text-[#0ea5e9] border-l-[3px] border-[#0ea5e9] font-medium' : 'text-gray-400 hover:text-gray-200 hover:bg-[#1a2432]' %>" href="/admin/wallet-oversight">
         <i class="fa-solid fa-wallet w-5 text-center"></i>
         <span>Wallet Oversight</span>
       </a>

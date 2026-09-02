@@ -478,7 +478,7 @@ export const getStorefrontActiveOffers = async (primaryPlatform = 'PC') => {
         };
 
         const enrichedOffers = await Promise.all(activeOffers.map(async (offer) => {
-            let discountDisplay = '';
+            let discountDisplay;
             if (offer.discountType === 'percentage') {
                 discountDisplay = `${offer.discountValue}% OFF`;
             } else {

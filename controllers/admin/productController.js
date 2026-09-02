@@ -84,7 +84,6 @@ export const editProduct = async (req, res) => {
             release_year,
             gst_rate,
             price,
-            stock,
             category,
             edition_type,
             description,
@@ -234,7 +233,6 @@ export const addProduct = async (req, res) => {
             release_year,
             gst_rate,
             price,
-            stock,
             category,
             edition_type,
             description

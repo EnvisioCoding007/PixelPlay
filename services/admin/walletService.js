@@ -1,6 +1,6 @@
 import Wallet from '../../models/Wallet.js';
 import User from '../../models/User.js';
-import { addTransaction, getOrCreateWallet } from '../shared/walletHelper.js';
+import { addTransaction } from '../shared/walletHelper.js';
 
 /**
  * Retrieves platform-wide wallet statistics, user wallets, and global transaction audit logs for admin oversight.
@@ -33,7 +33,7 @@ export const getWalletOversight = async (search = '', page = 1, limit = 10) => {
         ];
     }
 
-    const [wallets, totalCount, totalLiabilityAgg] = await Promise.all([
+    const [wallets, totalCount, totalLiabilityAgg, allUsers] = await Promise.all([
         Wallet.find(filter)
             .sort({ updatedAt: -1 })
             .skip(skip)
@@ -43,7 +43,11 @@ export const getWalletOversight = async (search = '', page = 1, limit = 10) => {
         Wallet.countDocuments(filter),
         Wallet.aggregate([
             { $group: { _id: null, totalBalance: { $sum: '$balance' }, totalTxns: { $sum: { $size: '$transactions' } } } }
-        ])
+        ]),
+        User.find({ role: { $ne: 'admin' } })
+            .select('username email _id')
+            .sort({ username: 1 })
+            .lean()
     ]);
 
     const totalLiabilityPaisa = totalLiabilityAgg.length > 0 ? totalLiabilityAgg[0].totalBalance : 0;
@@ -62,6 +66,7 @@ export const getWalletOversight = async (search = '', page = 1, limit = 10) => {
 
     return {
         wallets: formattedWallets,
+        allUsers,
         totalCount,
         totalPages,
         currentPage: pageNum,

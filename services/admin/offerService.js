@@ -125,7 +125,7 @@ export const getAdminOffers = async (search = '', targetTypeFilter = 'all', stat
 
     const formattedOffers = offers.map(o => {
         const isExpired = new Date(o.expiryDate) < now;
-        let discountDisplay = '';
+        let discountDisplay;
         if (o.discountType === 'percentage') {
             discountDisplay = `${o.discountValue}% OFF`;
         } else {

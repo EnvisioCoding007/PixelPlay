@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import Product from '../../models/Product.js';
 import Category from '../../models/Category.js';
-import Publisher from '../../models/Publisher.js';
 import Platform from '../../models/Platform.js';
 import { getActiveOffers, calculateBestOfferForProduct } from '../shared/offerHelper.js';
 

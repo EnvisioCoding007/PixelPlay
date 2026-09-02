@@ -1,5 +1,4 @@
 import Order from '../../models/Order.js';
-import Product from '../../models/Product.js';
 import PDFDocument from 'pdfkit';
 import path from 'path';
 
@@ -108,8 +107,6 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
 
     // Draw Items
     doc.font('Helvetica').fontSize(8.5).fillColor('#374151');
-    let computedSubtotal = 0;
-    let computedTotalTax = 0;
     let cancelledRefundRupees = 0;
     let returnedRefundRupees = 0;
     
@@ -149,9 +146,6 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
         const itemTotalTaxExclusive = taxExclusivePriceRupees * item.quantity;
         const itemTotalInclusive = (itemUnitInclusivePaisa * item.quantity) / 100;
         const gstAmountRupees = Number((itemTotalInclusive - itemTotalTaxExclusive).toFixed(2));
-        
-        computedSubtotal += itemTotalTaxExclusive;
-        computedTotalTax += gstAmountRupees;
 
         const itemNetUnitPaisa = Math.max(0, itemUnitInclusivePaisa - couponPerUnitPaisa + shippingPerUnitPaisa);
         const itemNetRefundRupees = (itemNetUnitPaisa * item.quantity) / 100;

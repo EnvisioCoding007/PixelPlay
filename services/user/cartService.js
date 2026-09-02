@@ -1,8 +1,6 @@
 import Cart from '../../models/Cart.js';
-import Category from '../../models/Category.js';
 import Product from '../../models/Product.js';
 import Wishlist from '../../models/Wishlist.js';
-import mongoose from 'mongoose';
 import { validateCouponEligibility } from '../shared/couponHelper.js';
 import { getActiveOffers, calculateBestOfferForProduct } from '../shared/offerHelper.js';
 
@@ -35,15 +33,6 @@ export const getCartDetails = async (userId, appliedCouponCode = null) => {
             item.product = { ...item.product };
             if (item.product.status === 'Hidden') {
                 hasUnavailableProduct = true;
-            }
-
-            let catObj = null;
-            if (item.product.category) {
-                if (mongoose.Types.ObjectId.isValid(item.product.category)) {
-                    catObj = await Category.findById(item.product.category).lean();
-                } else {
-                    catObj = await Category.findOne({ name: item.product.category }).lean();
-                }
             }
 
             gst_rate = item.product.gst_rate || 18;

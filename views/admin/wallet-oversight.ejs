@@ -1,239 +1,255 @@
-<!DOCTYPE html>
-<html lang="en">
+<%- include('../partials/admin/header') %>
 
-<head>
-    <link rel="icon" type="image/png" href="/icons/brand_logo/pixelplay-logo.png">
-    <link rel="shortcut icon" type="image/png" href="/icons/brand_logo/pixelplay-logo.png">
-  <meta charset="utf-8" />
-  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title>Wallet Oversight · Admin Panel</title>
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            bgDark: '#0f0f11',
-            sidebarDark: '#141416',
-            cardDark: '#1a1a1d',
-            borderDark: '#2a2a30',
-            textMuted: '#8b8b93',
-            neonYellow: '#d6b840',
-            neonBlue: '#00a8e8',
-            neonRed: '#ff3366',
-            neonGreen: '#39ff14',
-            accentGold: '#c5a365',
-            accentTeal: '#00ced1'
-          },
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          }
-        }
-      }
-    }
-  </script>
-</head>
-
-<body class="flex h-screen overflow-hidden bg-bgDark antialiased text-gray-300 font-sans">
+<body class="bg-pixel-bg text-gray-300 min-h-screen flex text-sm font-sans">
   <!-- BEGIN: Sidebar Navigation -->
-  <%- include('../partials/admin/sidebar', { currentTab: 'wallet-oversight' }) %>
+  <%- include('../partials/admin/sidebar', { activeTab: 'wallet-oversight' }) %>
   <!-- END: Sidebar Navigation -->
 
   <!-- BEGIN: Main Content Area -->
-  <main class="flex-1 overflow-y-auto" data-purpose="main-content">
-    <div class="w-full p-6 lg:p-8 2xl:p-12">
-      <!-- Header -->
-      <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 class="text-2xl font-bold text-white flex items-center gap-3">
-            <i class="fa-solid fa-wallet text-neonBlue"></i> Wallet Oversight &amp; Audit
-          </h1>
-          <p class="text-xs text-textMuted mt-1">Monitor user platform balances, audit transaction ledgers, and issue manual adjustments.</p>
-        </div>
-        <button type="button" id="open-adjust-modal-btn"
-          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-neonBlue hover:bg-sky-400 text-bgDark font-semibold rounded-lg shadow-lg shadow-neonBlue/20 transition-all cursor-pointer text-sm">
-          <i class="fa-solid fa-sliders"></i> Manual Balance Adjustment
-        </button>
-      </header>
+  <main class="content-bg flex-1 flex flex-col overflow-hidden relative">
+    <!-- Header -->
+    <header class="h-20 bg-sidebar-bg/60 backdrop-blur-md border-b border-border-dark flex items-center justify-between px-6 lg:px-8 2xl:px-12 shrink-0 sticky top-0 z-20">
+      <div>
+        <h1 class="text-xl font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-wallet text-pixel-blue"></i>
+          <span>Wallet Oversight &amp; Audit</span>
+        </h1>
+        <p class="text-xs text-gray-400 mt-0.5">Monitor user platform balances, audit transaction ledgers, and issue manual adjustments</p>
+      </div>
+      <button type="button" id="open-adjust-modal-btn"
+        class="bg-pixel-blue hover:bg-pixel-blue-hover text-background-dark font-semibold px-4 py-2.5 rounded-lg text-sm transition-all shadow-lg hover:shadow-pixel-blue/20 flex items-center gap-2 cursor-pointer whitespace-nowrap">
+        <i class="fa-solid fa-sliders text-xs"></i>
+        <span>Manual Balance Adjustment</span>
+      </button>
+    </header>
 
-      <!-- BEGIN: Summary Cards -->
-      <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Total Liability -->
-        <div class="bg-cardDark border border-borderDark rounded-xl p-6 relative overflow-hidden">
-          <div class="absolute right-0 top-0 w-32 h-32 bg-neonBlue/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-          <h3 class="text-xs font-semibold text-textMuted tracking-wider uppercase mb-2">Total System Liability</h3>
-          <p class="text-3xl font-mono font-bold text-neonBlue">₹<%= totalLiabilityRupees %></p>
-          <span class="text-[11px] text-textMuted mt-1 block">Sum of all active user balances</span>
-        </div>
+    <!-- Scrollable Content Area -->
+    <div class="flex-1 overflow-y-auto p-6 lg:p-8 2xl:p-12">
+      <div class="max-w-[1720px] 2xl:max-w-[1920px] mx-auto space-y-6">
 
-        <!-- Monitored Wallets -->
-        <div class="bg-cardDark border border-borderDark rounded-xl p-6 relative overflow-hidden">
-          <h3 class="text-xs font-semibold text-textMuted tracking-wider uppercase mb-2">Active Wallets</h3>
-          <p class="text-3xl font-mono font-bold text-white"><%= totalCount %></p>
-          <span class="text-[11px] text-textMuted mt-1 block">Total user accounts with initialized wallet</span>
-        </div>
-
-        <!-- Total Ledger Entries -->
-        <div class="bg-cardDark border border-borderDark rounded-xl p-6 relative overflow-hidden">
-          <h3 class="text-xs font-semibold text-textMuted tracking-wider uppercase mb-2">Ledger Transactions</h3>
-          <p class="text-3xl font-mono font-bold text-neonYellow"><%= totalTransactionsCount %></p>
-          <span class="text-[11px] text-textMuted mt-1 block">Total credit and debit audit entries</span>
-        </div>
-      </section>
-      <!-- END: Summary Cards -->
-
-      <!-- BEGIN: Filters and Table Section -->
-      <section class="bg-cardDark border border-borderDark rounded-xl p-6 flex flex-col min-h-[500px]">
-        <!-- Toolbar -->
-        <form action="/admin/wallet-oversight" method="GET" class="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <div class="flex flex-wrap items-center gap-3">
-            <!-- Search Input -->
-            <div class="relative w-72">
-              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-textMuted"></i>
-              <input type="text" name="search" placeholder="Search Username, Email or Order ID..." 
-                     class="w-full bg-bgDark border border-borderDark rounded-lg pl-9 pr-4 py-2 text-sm text-gray-300 focus:border-neonBlue focus:ring-1 focus:ring-neonBlue focus:outline-none transition-colors"
-                     value="<%= typeof search !== 'undefined' ? search : '' %>">
-            </div>
-            <% if (search) { %>
-              <a href="/admin/wallet-oversight" class="px-4 py-2 bg-bgDark border border-borderDark rounded-lg text-sm text-gray-400 hover:text-white transition-colors">
-                Clear Search
-              </a>
-            <% } %>
+        <!-- BEGIN: Summary Cards -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Total Liability -->
+          <div class="bg-card-bg border border-border-dark rounded-xl p-6 relative overflow-hidden shadow-lg">
+            <div class="absolute right-0 top-0 w-32 h-32 bg-pixel-blue/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+            <h3 class="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-2">Total System Liability</h3>
+            <p class="text-3xl font-mono font-bold text-pixel-blue">₹<%= totalLiabilityRupees %></p>
+            <span class="text-[11px] text-gray-500 mt-1 block">Sum of all active user balances</span>
           </div>
-        </form>
 
-        <!-- Table Container -->
-        <div class="flex-1 overflow-x-auto border border-borderDark rounded-lg bg-bgDark">
-          <table class="w-full text-left text-sm whitespace-nowrap">
-            <thead class="bg-sidebarDark border-b border-borderDark text-xs font-semibold text-textMuted uppercase tracking-wider">
-              <tr>
-                <th class="px-6 py-4" scope="col">User</th>
-                <th class="px-6 py-4" scope="col">Email</th>
-                <th class="px-6 py-4" scope="col">Current Balance (₹)</th>
-                <th class="px-6 py-4" scope="col">Total Txns</th>
-                <th class="px-6 py-4" scope="col">Latest Transaction</th>
-                <th class="px-6 py-4 text-center" scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-borderDark text-gray-300">
-              <% if (wallets && wallets.length > 0) { %>
-                <% wallets.forEach(function(w) { %>
-                  <tr class="hover:bg-white/5 transition-colors">
-                    <td class="px-6 py-4 font-medium text-white flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-full bg-neonBlue/10 text-neonBlue flex items-center justify-center font-bold text-xs">
-                        <%= w.userId && w.userId.username ? w.userId.username.charAt(0).toUpperCase() : 'U' %>
-                      </div>
-                      <span><%= w.userId ? w.userId.username : 'Unknown User' %></span>
-                    </td>
-                    <td class="px-6 py-4 text-textMuted">
-                      <%= w.userId ? w.userId.email : 'N/A' %>
-                    </td>
-                    <td class="px-6 py-4 font-mono font-bold text-neonBlue">
-                      ₹<%= w.balanceRupees %>
-                    </td>
-                    <td class="px-6 py-4 font-mono">
-                      <%= (w.transactions || []).length %>
-                    </td>
-                    <td class="px-6 py-4 text-xs">
-                      <% if (w.transactions && w.transactions.length > 0) { %>
-                        <% const latest = w.transactions[0]; %>
-                        <span class="inline-flex items-center gap-1.5">
-                          <span class="<%= latest.type === 'credit' ? 'text-emerald-400' : 'text-red-400' %> font-mono font-bold">
-                            <%= latest.type === 'credit' ? '+' : '-' %>₹<%= (latest.amount / 100).toFixed(2) %>
+          <!-- Monitored Wallets -->
+          <div class="bg-card-bg border border-border-dark rounded-xl p-6 relative overflow-hidden shadow-lg">
+            <h3 class="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-2">Active Wallets</h3>
+            <p class="text-3xl font-mono font-bold text-white"><%= totalCount %></p>
+            <span class="text-[11px] text-gray-500 mt-1 block">Total user accounts with initialized wallet</span>
+          </div>
+
+          <!-- Total Ledger Entries -->
+          <div class="bg-card-bg border border-border-dark rounded-xl p-6 relative overflow-hidden shadow-lg">
+            <h3 class="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-2">Ledger Transactions</h3>
+            <p class="text-3xl font-mono font-bold text-pixel-yellow"><%= totalTransactionsCount %></p>
+            <span class="text-[11px] text-gray-500 mt-1 block">Total credit and debit audit entries</span>
+          </div>
+        </section>
+        <!-- END: Summary Cards -->
+
+        <!-- BEGIN: Filters and Table Section -->
+        <section class="bg-card-bg border border-border-dark rounded-xl p-6 flex flex-col min-h-[500px] shadow-lg">
+          <!-- Toolbar -->
+          <form action="/admin/wallet-oversight" method="GET" class="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div class="flex flex-wrap items-center gap-3">
+              <!-- Search Input -->
+              <div class="relative w-72">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                <input type="text" name="search" placeholder="Search Username, Email or Order ID..." 
+                       class="w-full bg-content-bg border border-input-dark-border rounded-lg pl-9 pr-4 py-2 text-sm text-gray-200 focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue focus:outline-none transition-colors"
+                       value="<%= typeof search !== 'undefined' ? search : '' %>">
+              </div>
+              <% if (search) { %>
+                <a href="/admin/wallet-oversight" class="px-4 py-2 bg-content-bg border border-input-dark-border rounded-lg text-sm text-gray-400 hover:text-white transition-colors">
+                  Clear Search
+                </a>
+              <% } %>
+            </div>
+          </form>
+
+          <!-- Table Container -->
+          <div class="flex-1 overflow-x-auto border border-border-dark rounded-lg bg-content-bg">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+              <thead class="bg-sidebar-bg border-b border-border-dark text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4" scope="col">User</th>
+                  <th class="px-6 py-4" scope="col">Email</th>
+                  <th class="px-6 py-4" scope="col">Current Balance (₹)</th>
+                  <th class="px-6 py-4" scope="col">Total Txns</th>
+                  <th class="px-6 py-4" scope="col">Latest Transaction</th>
+                  <th class="px-6 py-4 text-center" scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border-dark text-gray-300">
+                <% if (wallets && wallets.length > 0) { %>
+                  <% wallets.forEach(function(w) { %>
+                    <tr class="hover:bg-white/5 transition-colors">
+                      <td class="px-6 py-4 font-medium text-white flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-pixel-blue/10 text-pixel-blue border border-pixel-blue/20 flex items-center justify-center font-bold text-xs">
+                          <%= w.userId && w.userId.username ? w.userId.username.charAt(0).toUpperCase() : 'U' %>
+                        </div>
+                        <span><%= w.userId ? w.userId.username : 'Unknown User' %></span>
+                      </td>
+                      <td class="px-6 py-4 text-gray-400">
+                        <%= w.userId ? w.userId.email : 'N/A' %>
+                      </td>
+                      <td class="px-6 py-4 font-mono font-bold text-pixel-blue">
+                        ₹<%= w.balanceRupees %>
+                      </td>
+                      <td class="px-6 py-4 font-mono">
+                        <%= (w.transactions || []).length %>
+                      </td>
+                      <td class="px-6 py-4 text-xs">
+                        <% if (w.transactions && w.transactions.length > 0) { %>
+                          <% const latest = w.transactions[0]; %>
+                          <span class="inline-flex items-center gap-1.5">
+                            <span class="<%= latest.type === 'credit' ? 'text-emerald-400' : 'text-red-400' %> font-mono font-bold">
+                              <%= latest.type === 'credit' ? '+' : '-' %>₹<%= (latest.amount / 100).toFixed(2) %>
+                            </span>
+                            <span class="text-gray-400">• <%= latest.description %></span>
                           </span>
-                          <span class="text-textMuted">• <%= latest.description %></span>
-                        </span>
-                      <% } else { %>
-                        <span class="text-textMuted">No transactions</span>
-                      <% } %>
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                      <button type="button" class="adjust-user-btn px-3 py-1.5 bg-bgDark border border-borderDark hover:border-neonBlue hover:text-neonBlue rounded text-xs transition-colors"
-                        data-user-id="<%= w.userId ? w.userId._id : '' %>"
-                        data-username="<%= w.userId ? w.userId.username : '' %>"
-                        data-balance="<%= w.balanceRupees %>">
-                        <i class="fa-solid fa-pen-to-square"></i> Adjust
-                      </button>
+                        <% } else { %>
+                          <span class="text-gray-500">No transactions</span>
+                        <% } %>
+                      </td>
+                      <td class="px-6 py-4 text-center">
+                        <button type="button" class="adjust-user-btn px-3 py-1.5 bg-card-bg border border-input-dark-border hover:border-pixel-blue hover:text-pixel-blue rounded text-xs transition-colors cursor-pointer"
+                          data-user-id="<%= w.userId ? w.userId._id : '' %>"
+                          data-username="<%= w.userId ? w.userId.username : '' %>"
+                          data-email="<%= w.userId ? w.userId.email : '' %>"
+                          data-balance="<%= w.balanceRupees %>">
+                          <i class="fa-solid fa-pen-to-square"></i> Adjust
+                        </button>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                      <i class="fa-solid fa-wallet text-4xl mb-2 block text-gray-600"></i>
+                      No user wallets found.
                     </td>
                   </tr>
-                <% }); %>
-              <% } else { %>
-                <tr>
-                  <td colspan="6" class="px-6 py-12 text-center text-textMuted">
-                    <i class="fa-solid fa-wallet text-4xl mb-2 block"></i>
-                    No user wallets found.
-                  </td>
-                </tr>
-              <% } %>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination -->
-        <% if (totalPages > 1) { %>
-          <div class="mt-4 flex items-center justify-between text-sm text-textMuted">
-            <div>Showing page <span class="font-medium text-white"><%= currentPage %></span> of <span class="font-medium text-white"><%= totalPages %></span></div>
-            <div class="flex items-center space-x-1">
-              <% if (currentPage > 1) { %>
-                <a href="/admin/wallet-oversight?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(search) %>" class="px-3 py-1.5 rounded bg-bgDark border border-borderDark text-gray-300 hover:text-white">Previous</a>
-              <% } %>
-              <% if (currentPage < totalPages) { %>
-                <a href="/admin/wallet-oversight?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(search) %>" class="px-3 py-1.5 rounded bg-bgDark border border-borderDark text-gray-300 hover:text-white">Next</a>
-              <% } %>
-            </div>
+                <% } %>
+              </tbody>
+            </table>
           </div>
-        <% } %>
-      </section>
-      <!-- END: Filters and Table Section -->
 
+          <!-- Pagination -->
+          <% if (totalPages > 1) { %>
+            <div class="mt-4 flex items-center justify-between text-sm text-gray-400">
+              <div>Showing page <span class="font-medium text-white"><%= currentPage %></span> of <span class="font-medium text-white"><%= totalPages %></span></div>
+              <div class="flex items-center space-x-1">
+                <% if (currentPage > 1) { %>
+                  <a href="/admin/wallet-oversight?page=<%= currentPage - 1 %>&search=<%= encodeURIComponent(search) %>" class="px-3 py-1.5 rounded bg-content-bg border border-input-dark-border text-gray-300 hover:text-white transition-colors">Previous</a>
+                <% } %>
+                <% if (currentPage < totalPages) { %>
+                  <a href="/admin/wallet-oversight?page=<%= currentPage + 1 %>&search=<%= encodeURIComponent(search) %>" class="px-3 py-1.5 rounded bg-content-bg border border-input-dark-border text-gray-300 hover:text-white transition-colors">Next</a>
+                <% } %>
+              </div>
+            </div>
+          <% } %>
+        </section>
+        <!-- END: Filters and Table Section -->
+
+      </div>
     </div>
   </main>
 
   <!-- Adjustment Modal -->
   <div id="adjust-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-cardDark border border-borderDark rounded-2xl max-w-md w-full p-6 shadow-2xl relative text-gray-200">
-      <button type="button" id="close-adjust-modal" class="absolute top-4 right-4 text-textMuted hover:text-white text-lg">
+    <div class="bg-card-bg border border-border-dark rounded-2xl max-w-md w-full p-6 shadow-2xl relative text-gray-200">
+      <button type="button" id="close-adjust-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white text-lg bg-transparent border-0 cursor-pointer">
         <i class="fa-solid fa-xmark"></i>
       </button>
       <h3 class="text-xl font-bold text-white mb-1 flex items-center gap-2">
-        <i class="fa-solid fa-sliders text-neonBlue"></i> Adjust Wallet Balance
+        <i class="fa-solid fa-sliders text-pixel-blue"></i>
+        <span>Adjust Wallet Balance</span>
       </h3>
-      <p class="text-xs text-textMuted mb-6">Issue an administrative credit or debit transaction to a user's wallet.</p>
+      <p class="text-xs text-gray-400 mb-6">Issue an administrative credit or debit transaction to a user's wallet.</p>
 
       <form action="/admin/wallet-oversight/adjust" method="POST" id="adjust-form">
-        <input type="hidden" name="userId" id="modal-user-id" />
+        <!-- Target User Searchable Combobox -->
+        <div class="mb-4 relative" id="user-combobox-wrapper">
+          <label for="user-search-input" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+            Target User <span class="text-pixel-red">*</span>
+          </label>
+          <input type="hidden" name="userId" id="modal-user-id" required />
+          
+          <div class="relative">
+            <i class="fa-solid fa-user-tag absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs pointer-events-none"></i>
+            <input type="text" id="user-search-input" placeholder="Type name or email to search user..." autocomplete="off"
+                   class="w-full bg-content-bg border border-input-dark-border rounded-lg pl-9 pr-9 py-2.5 text-sm text-gray-200 focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue outline-none transition-colors" />
+            <button type="button" id="clear-user-btn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white bg-transparent border-0 cursor-pointer">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </div>
 
-        <div class="mb-4">
-          <label class="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-1">Target User</label>
-          <input type="text" id="modal-username-display" readonly class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-sm font-bold text-neonBlue outline-none cursor-not-allowed" />
+          <!-- Dropdown Options List -->
+          <div id="user-dropdown-list" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-card-bg border border-border-dark rounded-xl shadow-2xl max-h-52 overflow-y-auto z-50 divide-y divide-border-dark">
+            <% 
+              const userList = (typeof allUsers !== 'undefined' && allUsers && allUsers.length > 0) 
+                ? allUsers 
+                : (typeof wallets !== 'undefined' && wallets ? wallets.map(w => w.userId).filter(Boolean) : []);
+            %>
+            <% if (userList && userList.length > 0) { %>
+              <% userList.forEach(function(u) { %>
+                <div class="user-option-item px-3 py-2.5 hover:bg-content-bg cursor-pointer flex items-center justify-between transition-colors group"
+                     data-user-id="<%= u._id %>"
+                     data-username="<%= u.username %>"
+                     data-email="<%= u.email %>">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-7 h-7 rounded-full bg-pixel-blue/10 text-pixel-blue border border-pixel-blue/20 flex items-center justify-center font-bold text-xs shrink-0 group-hover:border-pixel-blue">
+                      <%= u.username ? u.username.charAt(0).toUpperCase() : 'U' %>
+                    </div>
+                    <div class="flex flex-col text-left truncate">
+                      <span class="text-white text-xs font-semibold truncate"><%= u.username %></span>
+                      <span class="text-[11px] text-gray-400 truncate"><%= u.email %></span>
+                    </div>
+                  </div>
+                  <i class="fa-solid fa-check text-pixel-blue text-xs hidden user-item-check shrink-0"></i>
+                </div>
+              <% }); %>
+            <% } %>
+            <div id="user-no-results" class="hidden px-4 py-3 text-xs text-gray-500 text-center">
+              <i class="fa-solid fa-magnifying-glass mr-1.5 text-gray-600"></i> No user found matching "<span id="no-result-query"></span>"
+            </div>
+          </div>
+          <p id="user-validation-msg" class="hidden text-xs text-pixel-red mt-1">Please select a target user from the search results.</p>
         </div>
 
         <div class="mb-4">
-          <label for="adjust-type" class="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-1">Adjustment Type</label>
-          <select name="type" id="adjust-type" required class="w-full bg-bgDark border border-borderDark rounded-lg px-3 py-2 text-sm text-gray-300 focus:border-neonBlue outline-none">
-            <option value="credit">Credit (+ Add Funds)</option>
-            <option value="debit">Debit (- Deduct Funds)</option>
-          </select>
+          <label for="adjust-type" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Adjustment Type</label>
+          <div class="relative">
+            <select name="type" id="adjust-type" required class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue outline-none cursor-pointer appearance-none pr-10">
+              <option value="credit">Credit (+ Add Funds)</option>
+              <option value="debit">Debit (- Deduct Funds)</option>
+            </select>
+            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs pointer-events-none"></i>
+          </div>
         </div>
 
         <div class="mb-4">
-          <label for="adjust-amount" class="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-1">Amount (₹)</label>
+          <label for="adjust-amount" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Amount (₹)</label>
           <input type="number" name="amount" id="adjust-amount" min="1" step="0.01" placeholder="e.g. 500" required
-            class="w-full bg-bgDark border border-borderDark focus:border-neonBlue rounded-lg px-3 py-2 text-sm font-mono text-white outline-none" />
+            class="w-full bg-content-bg border border-input-dark-border focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue rounded-lg px-3 py-2.5 text-sm font-mono text-white outline-none" />
         </div>
 
         <div class="mb-6">
-          <label for="adjust-desc" class="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-1">Reason / Description</label>
+          <label for="adjust-desc" class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Reason / Description</label>
           <input type="text" name="description" id="adjust-desc" placeholder="e.g. Promotional credit / Support adjustment" required
-            class="w-full bg-bgDark border border-borderDark focus:border-neonBlue rounded-lg px-3 py-2 text-sm text-gray-300 outline-none" />
+            class="w-full bg-content-bg border border-input-dark-border focus:border-pixel-blue focus:ring-1 focus:ring-pixel-blue rounded-lg px-3 py-2.5 text-sm text-gray-200 outline-none" />
         </div>
 
         <div class="flex items-center justify-end gap-3">
-          <button type="button" id="cancel-adjust-modal" class="px-4 py-2 bg-bgDark border border-borderDark rounded-lg text-sm text-gray-300 hover:text-white">Cancel</button>
-          <button type="submit" class="px-5 py-2 bg-neonBlue hover:bg-sky-400 text-bgDark font-bold rounded-lg text-sm transition-all shadow-md">Apply Adjustment</button>
+          <button type="button" id="cancel-adjust-modal" class="px-4 py-2.5 bg-content-bg border border-input-dark-border rounded-lg text-sm text-gray-300 hover:text-white cursor-pointer transition-colors">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 bg-pixel-blue hover:bg-pixel-blue-hover text-background-dark font-bold rounded-lg text-sm transition-all shadow-md cursor-pointer">Apply Adjustment</button>
         </div>
       </form>
     </div>
@@ -246,44 +262,180 @@
       const cancelBtn = document.getElementById('cancel-adjust-modal');
       const adjustBtns = document.querySelectorAll('.adjust-user-btn');
       const openTopBtn = document.getElementById('open-adjust-modal-btn');
+      const adjustForm = document.getElementById('adjust-form');
 
+      // Combobox elements
       const modalUserId = document.getElementById('modal-user-id');
-      const modalUsername = document.getElementById('modal-username-display');
+      const userSearchInput = document.getElementById('user-search-input');
+      const clearUserBtn = document.getElementById('clear-user-btn');
+      const userDropdownList = document.getElementById('user-dropdown-list');
+      const userNoResults = document.getElementById('user-no-results');
+      const noResultQuery = document.getElementById('no-result-query');
+      const userOptionItems = document.querySelectorAll('.user-option-item');
+      const userValidationMsg = document.getElementById('user-validation-msg');
 
-      const openModal = (userId = '', username = '') => {
+      // Highlight selected item in dropdown
+      const setSelectedItemUI = (userId) => {
+        userOptionItems.forEach(item => {
+          const isSelected = item.dataset.userId === userId;
+          const checkIcon = item.querySelector('.user-item-check');
+          if (isSelected) {
+            item.classList.add('bg-content-bg', 'text-pixel-blue');
+            if (checkIcon) checkIcon.classList.remove('hidden');
+          } else {
+            item.classList.remove('bg-content-bg', 'text-pixel-blue');
+            if (checkIcon) checkIcon.classList.add('hidden');
+          }
+        });
+      };
+
+      // Filter dropdown list based on search query
+      const filterUserList = (query = '') => {
+        const q = query.trim().toLowerCase();
+        let matchCount = 0;
+
+        userOptionItems.forEach(item => {
+          const username = (item.dataset.username || '').toLowerCase();
+          const email = (item.dataset.email || '').toLowerCase();
+          const matches = !q || username.includes(q) || email.includes(q);
+
+          if (matches) {
+            item.classList.remove('hidden');
+            matchCount++;
+          } else {
+            item.classList.add('hidden');
+          }
+        });
+
+        if (matchCount === 0) {
+          if (noResultQuery) noResultQuery.textContent = query;
+          userNoResults.classList.remove('hidden');
+        } else {
+          userNoResults.classList.add('hidden');
+        }
+      };
+
+      // Select a user
+      const selectUser = (userId, username, email) => {
         modalUserId.value = userId;
-        modalUsername.value = username ? username : 'Select or search user';
+        userSearchInput.value = username ? (email ? `${username} (${email})` : username) : '';
+        setSelectedItemUI(userId);
+        userDropdownList.classList.add('hidden');
+        userValidationMsg.classList.add('hidden');
+        userSearchInput.classList.remove('border-pixel-red');
+        if (userId) {
+          clearUserBtn.classList.remove('hidden');
+        } else {
+          clearUserBtn.classList.add('hidden');
+        }
+      };
+
+      // Open Modal
+      const openModal = (userId = '', username = '', email = '') => {
+        selectUser(userId, username, email);
+        document.getElementById('adjust-amount').value = '';
+        document.getElementById('adjust-desc').value = '';
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        filterUserList('');
       };
 
       const closeModal = () => {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        userDropdownList.classList.add('hidden');
       };
 
-      adjustBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          openModal(btn.dataset.userId, btn.dataset.username);
+      // Search Input Events
+      userSearchInput.addEventListener('focus', () => {
+        filterUserList(userSearchInput.value);
+        userDropdownList.classList.remove('hidden');
+      });
+
+      userSearchInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        modalUserId.value = ''; // Invalidate selection while typing
+        setSelectedItemUI('');
+        if (val.trim().length > 0) {
+          clearUserBtn.classList.remove('hidden');
+        } else {
+          clearUserBtn.classList.add('hidden');
+        }
+        filterUserList(val);
+        userDropdownList.classList.remove('hidden');
+      });
+
+      // Clear button
+      clearUserBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectUser('', '', '');
+        filterUserList('');
+        userSearchInput.focus();
+        userDropdownList.classList.remove('hidden');
+      });
+
+      // User option item click
+      userOptionItems.forEach(item => {
+        item.addEventListener('click', () => {
+          selectUser(item.dataset.userId, item.dataset.username, item.dataset.email);
         });
       });
 
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        const wrapper = document.getElementById('user-combobox-wrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+          userDropdownList.classList.add('hidden');
+        }
+      });
+
+      // Form validation
+      if (adjustForm) {
+        adjustForm.addEventListener('submit', (e) => {
+          if (!modalUserId.value || modalUserId.value.trim() === '') {
+            e.preventDefault();
+            userValidationMsg.classList.remove('hidden');
+            userSearchInput.classList.add('border-pixel-red');
+            userSearchInput.focus();
+            userDropdownList.classList.remove('hidden');
+            return false;
+          }
+        });
+      }
+
+      // Row buttons
+      adjustBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          openModal(btn.dataset.userId || '', btn.dataset.username || '', btn.dataset.email || '');
+        });
+      });
+
+      // Top button
       if (openTopBtn) {
         openTopBtn.addEventListener('click', () => {
-          // If wallets exist, pick first user as default target
-          const firstBtn = document.querySelector('.adjust-user-btn');
-          if (firstBtn) {
-            openModal(firstBtn.dataset.userId, firstBtn.dataset.username);
-          } else {
-            openModal('', '');
-          }
+          openModal('', '', '');
         });
       }
 
       if (closeBtn) closeBtn.addEventListener('click', closeModal);
       if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
     });
   </script>
-</body>
 
+  <% if (typeof error !== 'undefined' && error) { %>
+    <script>
+      Swal.fire({ title: 'Error', text: '<%= error %>', icon: 'error', confirmButtonColor: '#0ea5e9' });
+    </script>
+  <% } %>
+
+  <% if (typeof success !== 'undefined' && success) { %>
+    <script>
+      Swal.fire({ title: 'Success', text: '<%= success %>', icon: 'success', confirmButtonColor: '#0ea5e9' });
+    </script>
+  <% } %>
+</body>
 </html>

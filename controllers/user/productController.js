@@ -1,6 +1,5 @@
 import * as productService from '../../services/user/productService.js';
 import * as categoryService from '../../services/admin/categoryService.js';
-import * as publisherService from '../../services/admin/publisherService.js';
 import * as userService from '../../services/user/userService.js';
 import * as wishlistService from '../../services/user/wishlistService.js';
 import * as cartService from '../../services/user/cartService.js';

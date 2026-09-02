@@ -1,6 +1,6 @@
 import Platform from '../../models/Platform.js';
 import Product from '../../models/Product.js';
-import { validatePlatformData, getAllPlatforms } from '../shared/platformHelper.js';
+import { validatePlatformData } from '../shared/platformHelper.js';
 
 const DEFAULT_PLATFORMS = [
     { name: 'PC', abbreviation: 'PC', description: 'Personal Computer / Windows Gaming' },

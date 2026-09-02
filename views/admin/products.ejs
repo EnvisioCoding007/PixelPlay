@@ -3,15 +3,22 @@
 <%- include('../partials/admin/sidebar', { activeTab: 'listed-games' }) %>
 <main class="content-bg flex-1 flex flex-col overflow-hidden relative">
   <!-- Header -->
-  <header>
-    <h1 class="text-2xl font-semibold text-gray-100">Listed Games Management</h1>
-    <a href="/admin/products/new" class="bg-pixel-blue hover:bg-pixel-blue-hover text-white px-5 py-2.5 rounded flex items-center gap-2 font-medium transition-colors">
-      <i class="fa-solid fa-plus text-xs"></i> Add New Game
+  <header class="h-20 bg-sidebar-bg/60 backdrop-blur-md border-b border-border-dark flex items-center justify-between px-6 lg:px-8 2xl:px-12 shrink-0 sticky top-0 z-20">
+    <div>
+      <h1 class="text-xl font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-gamepad text-pixel-blue"></i>
+        <span>Listed Games Management</span>
+      </h1>
+      <p class="text-xs text-gray-400 mt-0.5">Manage game inventory, platform variants, and catalog status</p>
+    </div>
+    <a href="/admin/products/new" class="bg-pixel-blue hover:bg-pixel-blue-hover text-white text-sm font-semibold px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-lg shadow-pixel-blue/20 transition-all duration-200 cursor-pointer whitespace-nowrap">
+      <i class="fa-solid fa-plus text-xs"></i>
+      <span>Add New Game</span>
     </a>
   </header>
 
   <!-- Content Area -->
-  <div class="flex-1 overflow-y-auto px-6 lg:px-8 2xl:px-12 pb-8">
+  <div class="flex-1 overflow-y-auto px-6 lg:px-8 2xl:px-12 py-6">
     <!-- Filter & Search Form -->
     <form action="/admin/products" method="get" class="bg-card-bg rounded-lg border border-border-dark p-4 mb-6 flex flex-col gap-4">
       <div class="flex flex-col md:flex-row gap-4">

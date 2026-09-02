@@ -54,7 +54,7 @@ export const updateProfile = async (req, res) => {
             const userId = req.session.user.id || req.session.user;
             const user = await userService.getUserProfile(userId);
             return res.status(400).render('user/profile-edit', { user, error: error.message });
-        } catch (innerErr) {
+        } catch {
             return res.status(500).send(error.message || 'Internal Server Error');
         }
     }

@@ -180,7 +180,7 @@ export const generateSalesPDFReport = async (options = {}, writeStream) => {
     const logoPath = path.join(process.cwd(), 'public', 'icons', 'brand_logo', 'pixelplay-logo.png');
     try {
         doc.image(logoPath, 35, 30, { width: 45 });
-    } catch (e) {
+    } catch {
         doc.circle(57, 50, 20).fill('#0ea5e9');
     }
 

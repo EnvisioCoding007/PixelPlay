@@ -12,6 +12,7 @@ export const getWalletOversightPage = async (req, res) => {
         const oversightData = await getWalletOversight(search, page, limit);
 
         res.render('admin/wallet-oversight', {
+            activeTab: 'wallet-oversight',
             currentTab: 'wallet-oversight',
             search,
             ...oversightData,
@@ -22,9 +23,11 @@ export const getWalletOversightPage = async (req, res) => {
     } catch (error) {
         console.error('Error rendering Admin Wallet Oversight page:', error);
         res.status(500).render('admin/wallet-oversight', {
+            activeTab: 'wallet-oversight',
             currentTab: 'wallet-oversight',
             search: '',
             wallets: [],
+            allUsers: [],
             totalCount: 0,
             totalPages: 1,
             currentPage: 1,

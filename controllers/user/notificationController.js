@@ -33,7 +33,7 @@ export const markAsRead = async (req, res) => {
 export const markAllAsRead = async (req, res) => {
     try {
         const userId = req.session.user._id || req.session.user.id || req.session.user;
-        const result = await notificationService.markAllAsRead(userId);
+        await notificationService.markAllAsRead(userId);
         return res.status(200).json({ success: true, unreadCount: 0 });
     } catch (error) {
         console.error('[markAllAsRead] Error:', error);

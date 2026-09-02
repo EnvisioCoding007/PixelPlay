@@ -47,8 +47,8 @@ export const createCoupon = async (data) => {
     }
 
     let parsedExpiry;
-    if (typeof expiryDate === 'string' && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(expiryDate.trim())) {
-        const [day, month, year] = expiryDate.trim().split(/[\/\-]/);
+    if (typeof expiryDate === 'string' && /^\d{1,2}[/-]\d{1,2}[/-]\d{4}$/.test(expiryDate.trim())) {
+        const [day, month, year] = expiryDate.trim().split(/[/-]/);
         parsedExpiry = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10), 23, 59, 59);
     } else {
         parsedExpiry = new Date(expiryDate);
@@ -225,8 +225,8 @@ export const updateCoupon = async (couponId, data) => {
     }
 
     let parsedExpiry;
-    if (typeof expiryDate === 'string' && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(expiryDate.trim())) {
-        const [day, month, year] = expiryDate.trim().split(/[\/\-]/);
+    if (typeof expiryDate === 'string' && /^\d{1,2}[/-]\d{1,2}[/-]\d{4}$/.test(expiryDate.trim())) {
+        const [day, month, year] = expiryDate.trim().split(/[/-]/);
         parsedExpiry = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10), 23, 59, 59);
     } else {
         parsedExpiry = new Date(expiryDate);

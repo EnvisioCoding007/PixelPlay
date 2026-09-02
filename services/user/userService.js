@@ -5,7 +5,7 @@ import { sendEmail } from '../../utils/emailSender.js';
 import { uploadToCloudinary } from '../../config/cloudinary.js';
 import { generateUniqueReferralCode } from '../shared/userHelper.js';
 
-const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9][a-zA-Z0-9.\-]*\.[a-zA-Z]{2,}$/;
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$/;
 const USERNAME_REGEX = /^(?=.*[a-zA-Z])[a-zA-Z0-9][a-zA-Z0-9_ -]{2,49}$/;
 const FULL_NAME_REGEX = /^[a-zA-Z][a-zA-Z ]{1,49}$/;
 

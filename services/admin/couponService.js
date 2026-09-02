@@ -183,7 +183,7 @@ export const getAdminCoupons = async (search = '', page = 1, limit = 10, statusF
 
     const formattedCoupons = coupons.map(c => {
         const isExpired = new Date(c.expiryDate) < now;
-        let discountDisplay = '';
+        let discountDisplay;
         if (c.discountType === 'percentage') {
             discountDisplay = `${c.discountValue}%`;
             if (c.maxDiscountAmount) {
