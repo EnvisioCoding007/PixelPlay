@@ -66,7 +66,7 @@ export const getCheckout = async (req, res) => {
         }
 
         // Fetch available coupons, wallet balance, and evaluate highest savings coupon (bestCoupon)
-        const subtotalWithTax = initialCartDetails.subtotal + initialCartDetails.tax;
+        const subtotalWithTax = initialCartDetails.grossSubtotal || initialCartDetails.subtotal;
         const [couponData, walletBalance] = await Promise.all([
             couponService.getAvailableCouponsForCheckout(userId, subtotalWithTax),
             getWalletBalance(userId)
@@ -212,7 +212,7 @@ export const applyCoupon = async (req, res) => {
 
         const cleanCode = couponCode.trim().toUpperCase();
         const initialCartDetails = await cartService.getCartDetails(userId);
-        const subtotalWithTax = initialCartDetails.subtotal + initialCartDetails.tax;
+        const subtotalWithTax = initialCartDetails.grossSubtotal || initialCartDetails.subtotal;
         const result = await couponService.verifyAndApplyCoupon(cleanCode, userId, subtotalWithTax);
 
         if (!result.success) {

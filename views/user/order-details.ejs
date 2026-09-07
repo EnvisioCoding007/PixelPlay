@@ -396,7 +396,7 @@
                                     }
                                 %>
                                 <div class="flex justify-between text-gray-400">
-                                    <span>GST (<%= effectiveGstRate %>%)</span>
+                                    <span>GST (<%= effectiveGstRate %>%) <span class="text-xs text-gray-500">(Included in subtotal)</span></span>
                                     <span class="font-mono text-white">₹<%= (order.tax / 100).toFixed(2) %></span>
                                 </div>
                                 <div class="flex justify-between text-gray-400">
@@ -416,26 +416,28 @@
                                 let allCancelled = true;
                                 let allReturned = true;
 
-                                const totalOrderUnits = (order.items && order.items.length > 0)
-                                    ? order.items.reduce((sum, i) => sum + (i.quantity || 0), 0)
-                                    : 0;
-
-                                const couponDiscountVal = (typeof order.couponDiscount === 'number') ? order.couponDiscount : (order.discount || 0);
-                                const couponPerUnit = (couponDiscountVal > 0 && totalOrderUnits > 0)
-                                    ? Math.floor(couponDiscountVal / totalOrderUnits)
-                                    : 0;
-
-                                const shippingFeeVal = order.shipping || 0;
-                                const shippingPerUnit = (shippingFeeVal > 0 && totalOrderUnits > 0)
-                                    ? Math.floor(shippingFeeVal / totalOrderUnits)
-                                    : 0;
+                                const distItems = (typeof refundDistribution !== 'undefined' && refundDistribution && refundDistribution.items)
+                                    ? refundDistribution.items
+                                    : [];
 
                                 if (order.items && order.items.length > 0) {
-                                    order.items.forEach(item => {
-                                        const itemGstRate = item.gst_rate || (item.product && item.product.gst_rate) || 18;
-                                        const taxInclusiveUnit = Math.round((item.price * 100) / (100 - itemGstRate));
-                                        const netRefundUnit = Math.max(0, taxInclusiveUnit - couponPerUnit + shippingPerUnit);
-                                        const itemNetRefundTotal = netRefundUnit * item.quantity;
+                                    order.items.forEach((item, idx) => {
+                                        const itemId = item._id ? item._id.toString() : null;
+                                        const itemProdId = item.product ? (item.product._id ? item.product._id.toString() : item.product.toString()) : null;
+                                        const distItem = distItems.find(di => (itemId && di.id === itemId) || (itemProdId && di.productId === itemProdId && (!item.platform || di.platform === item.platform))) || distItems[idx];
+
+                                        let itemNetRefundTotal = 0;
+                                        if (typeof item.refundAmount === 'number' && item.refundAmount > 0) {
+                                            itemNetRefundTotal = item.refundAmount;
+                                        } else if (distItem) {
+                                            itemNetRefundTotal = distItem.netRefundAmount;
+                                        } else {
+                                            const itemGross = item.price * item.quantity;
+                                            const orderSubtotal = order.subtotal || itemGross;
+                                            const couponDiscount = (typeof order.couponDiscount === 'number') ? order.couponDiscount : (order.discount || 0);
+                                            const allocDiscount = orderSubtotal > 0 ? Math.round((couponDiscount * itemGross) / orderSubtotal) : 0;
+                                            itemNetRefundTotal = Math.max(0, itemGross - allocDiscount);
+                                        }
 
                                         if (item.status === 'Cancelled') {
                                             totalCancelledAmount += itemNetRefundTotal;
@@ -453,14 +455,33 @@
                                     allReturned = false;
                                 }
 
-                                const netFinalPaisa = (allCancelled || allReturned)
+                                const orderTotalPaisa = order.grandTotal || order.finalAmount || 0;
+                                const allInactive = order.items && order.items.length > 0 && order.items.every(i => i.status === 'Cancelled' || i.status === 'Returned');
+                                if (allInactive) {
+                                    const sumDeductions = totalCancelledAmount + totalReturnedAmount;
+                                    if (sumDeductions !== orderTotalPaisa && sumDeductions > 0) {
+                                        if (totalReturnedAmount > 0) {
+                                            totalReturnedAmount = Math.max(0, orderTotalPaisa - totalCancelledAmount);
+                                        } else if (totalCancelledAmount > 0) {
+                                            totalCancelledAmount = orderTotalPaisa;
+                                        }
+                                    } else if (sumDeductions === 0 && orderTotalPaisa > 0) {
+                                        if (order.items.some(i => i.status === 'Returned')) {
+                                            totalReturnedAmount = orderTotalPaisa;
+                                        } else {
+                                            totalCancelledAmount = orderTotalPaisa;
+                                        }
+                                    }
+                                }
+
+                                const netFinalPaisa = allInactive
                                     ? 0
-                                    : Math.max(0, (order.grandTotal || order.finalAmount || 0) - totalCancelledAmount - totalReturnedAmount);
+                                    : Math.max(0, orderTotalPaisa - totalCancelledAmount - totalReturnedAmount);
                             %>
                             <% if (allCancelled) { %>
                                 <div class="mt-3 flex justify-between items-center text-pixelplay-red text-sm">
                                     <span>Cancelled Item(s) Deduction</span>
-                                    <span class="font-mono font-bold">-₹<%= ((order.grandTotal || order.finalAmount || 0) / 100).toFixed(2) %></span>
+                                    <span class="font-mono font-bold">-₹<%= ((orderTotalPaisa) / 100).toFixed(2) %></span>
                                 </div>
                                 <div class="mt-3 pt-3 border-t border-dashed border-pixelplay-border flex justify-between items-center text-green-400">
                                     <span class="font-bold text-white">Net Final Amount</span>

@@ -1,6 +1,8 @@
 import Order from '../../models/Order.js';
 import PDFDocument from 'pdfkit';
 import path from 'path';
+import { extractTaxFromGross } from '../shared/taxHelper.js';
+import { calculateOrderRefundDistribution } from '../shared/refundService.js';
 
 /**
  * Service to fetch order details, validate ownership and state, and generate a PDF invoice streamed directly.
@@ -105,22 +107,13 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
 
     y += 20;
 
+    // Precalculate weighted refund distribution for accurate ledger values
+    const refundDist = calculateOrderRefundDistribution(dbOrder, { isFullReturn: false });
+
     // Draw Items
     doc.font('Helvetica').fontSize(8.5).fillColor('#374151');
     let cancelledRefundRupees = 0;
     let returnedRefundRupees = 0;
-    
-    const totalOrderUnits = (dbOrder.items && dbOrder.items.length > 0)
-        ? dbOrder.items.reduce((sum, i) => sum + (i.quantity || 0), 0)
-        : 0;
-
-    const couponPerUnitPaisa = (dbOrder.discount && totalOrderUnits > 0)
-        ? Math.floor(dbOrder.discount / totalOrderUnits)
-        : 0;
-
-    const shippingPerUnitPaisa = (dbOrder.shipping && totalOrderUnits > 0)
-        ? Math.floor(dbOrder.shipping / totalOrderUnits)
-        : 0;
 
     for (let item of dbOrder.items) {
         // Find base/original price of the platform version from the product
@@ -138,17 +131,22 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
         }
 
         const itemGstRate = item.gst_rate || (item.product && item.product.gst_rate) || 18;
-        const origBaseRupees = originalBasePrice / 100;
-        const itemUnitInclusivePaisa = Math.round((item.price * 100) / (100 - itemGstRate));
-        const categoryDiscountPercent = Math.max(0, Math.round((originalBasePrice - itemUnitInclusivePaisa) / originalBasePrice * 100)) || 0;
-        
-        const taxExclusivePriceRupees = item.price / 100;
-        const itemTotalTaxExclusive = taxExclusivePriceRupees * item.quantity;
-        const itemTotalInclusive = (itemUnitInclusivePaisa * item.quantity) / 100;
-        const gstAmountRupees = Number((itemTotalInclusive - itemTotalTaxExclusive).toFixed(2));
+        const grossUnitPricePaisa = item.price;
+        const { basePrice: baseUnitPricePaisa, taxAmount: taxUnitPaisa } = extractTaxFromGross(grossUnitPricePaisa, itemGstRate);
 
-        const itemNetUnitPaisa = Math.max(0, itemUnitInclusivePaisa - couponPerUnitPaisa + shippingPerUnitPaisa);
-        const itemNetRefundRupees = (itemNetUnitPaisa * item.quantity) / 100;
+        const basePriceRupees = baseUnitPricePaisa / 100;
+        const itemTotalInclusiveRupees = (grossUnitPricePaisa * item.quantity) / 100;
+        const gstAmountRupees = (taxUnitPaisa * item.quantity) / 100;
+        const categoryDiscountPercent = Math.max(0, Math.round((originalBasePrice - grossUnitPricePaisa) / originalBasePrice * 100)) || 0;
+
+        // Lookup exact item refund distribution from weighted calculation engine
+        const itemId = item._id ? item._id.toString() : null;
+        const itemProdId = item.product ? (item.product._id ? item.product._id.toString() : item.product.toString()) : null;
+        const distItem = refundDist.items.find(di => (itemId && di.id === itemId) || (itemProdId && di.productId === itemProdId && (!item.platform || di.platform === item.platform)));
+        const itemNetRefundPaisa = (typeof item.refundAmount === 'number' && item.refundAmount > 0)
+            ? item.refundAmount
+            : (distItem ? distItem.netRefundAmount : 0);
+        const itemNetRefundRupees = itemNetRefundPaisa / 100;
 
         if (item.status === 'Cancelled') {
             cancelledRefundRupees += itemNetRefundRupees;
@@ -182,10 +180,12 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
             if (dbOrder.paymentMethod === 'COD') {
                 subText = 'Refund: Cancelled (COD - No Refund)';
             } else {
-                subText = `Refund: Refunded to PixelWallet (₹${itemTotalInclusive.toFixed(2)})`;
+                subText = `Refund: Refunded to PixelWallet (₹${itemNetRefundRupees.toFixed(2)})`;
             }
         } else if (item.status === 'Return Requested') {
-            subText = 'Refund: Return Requested (Refund Pending)';
+            subText = `Refund: Return Requested (₹${itemNetRefundRupees.toFixed(2)} Pending)`;
+        } else if (item.status === 'Returned') {
+            subText = `Refund: Return Approved (₹${itemNetRefundRupees.toFixed(2)} Refunded)`;
         }
 
         if (subText) {
@@ -202,10 +202,10 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
 
         doc.text(item.platform.toUpperCase(), 220, y + 6, { width: 80 })
            .text(item.quantity.toString(), 305, y + 6, { width: 20, align: 'center' })
-           .text(`₹${origBaseRupees.toFixed(2)}`, 330, y + 6, { width: 50, align: 'right' })
+           .text(`₹${basePriceRupees.toFixed(2)}`, 330, y + 6, { width: 50, align: 'right' })
            .text(`${categoryDiscountPercent}%`, 385, y + 6, { width: 40, align: 'right' })
            .text(`₹${gstAmountRupees.toFixed(2)}`, 430, y + 6, { width: 50, align: 'right' })
-           .text(`₹${itemTotalInclusive.toFixed(2)}`, 485, y + 6, { width: 55, align: 'right' });
+           .text(`₹${itemTotalInclusiveRupees.toFixed(2)}`, 485, y + 6, { width: 55, align: 'right' });
 
         y += subText ? 30 : 20;
     }
@@ -219,14 +219,25 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
     const summaryX = 350;
     doc.fontSize(9).font('Helvetica');
 
-    // Subtotal (excl. tax)
-    doc.fillColor('#4b5563').text('Subtotal (excl. Tax):', summaryX, y);
-    doc.fillColor('#111827').text(`₹${(dbOrder.subtotal / 100).toFixed(2)}`, 485, y, { align: 'right' });
+    // Base Subtotal (excl. tax)
+    const baseSubtotalPaisa = dbOrder.items.reduce((acc, itm) => {
+        const rate = itm.gst_rate || (itm.product && itm.product.gst_rate) || 18;
+        const { basePrice } = extractTaxFromGross(itm.price, rate);
+        return acc + (basePrice * itm.quantity);
+    }, 0);
+
+    doc.fillColor('#4b5563').text('Base Subtotal (excl. Tax):', summaryX, y);
+    doc.fillColor('#111827').text(`₹${(baseSubtotalPaisa / 100).toFixed(2)}`, 485, y, { align: 'right' });
     y += 15;
 
     // CGST + SGST
     doc.fillColor('#4b5563').text(`GST (${effectiveGstRate}%):`, summaryX, y);
     doc.fillColor('#111827').text(`₹${(dbOrder.tax / 100).toFixed(2)}`, 485, y, { align: 'right' });
+    y += 15;
+
+    // Items Subtotal (Gross)
+    doc.fillColor('#4b5563').text('Items Subtotal (Gross):', summaryX, y);
+    doc.fillColor('#111827').text(`₹${(dbOrder.subtotal / 100).toFixed(2)}`, 485, y, { align: 'right' });
     y += 15;
 
     // Delivery/Shipping Charges
@@ -248,16 +259,25 @@ export const generateInvoicePDF = async (orderId, loggedInUserId, writeStream) =
     const originalGrandTotalRupees = dbOrder.finalAmount / 100;
     const allCancelled = dbOrder.items.length > 0 && dbOrder.items.every(item => item.status === 'Cancelled');
     const allReturned = dbOrder.items.length > 0 && dbOrder.items.every(item => item.status === 'Returned');
+    const allCancelledOrReturned = dbOrder.items.length > 0 && dbOrder.items.every(item => item.status === 'Cancelled' || item.status === 'Returned');
 
     if (allCancelled) {
         cancelledRefundRupees = originalGrandTotalRupees;
-    }
-    if (allReturned) {
+    } else if (allReturned) {
         returnedRefundRupees = originalGrandTotalRupees;
+    } else if (allCancelledOrReturned) {
+        const totalRefundSoFar = cancelledRefundRupees + returnedRefundRupees;
+        if (totalRefundSoFar !== originalGrandTotalRupees) {
+            if (returnedRefundRupees > 0) {
+                returnedRefundRupees = Math.max(0, originalGrandTotalRupees - cancelledRefundRupees);
+            } else {
+                cancelledRefundRupees = originalGrandTotalRupees;
+            }
+        }
     }
 
     const finalAmountPaidRupees = Math.max(0, originalGrandTotalRupees - cancelledRefundRupees);
-    const netAmountPaidRupees = Math.max(0, finalAmountPaidRupees - returnedRefundRupees);
+    const netAmountPaidRupees = allCancelledOrReturned ? 0 : Math.max(0, finalAmountPaidRupees - returnedRefundRupees);
 
     if (cancelledRefundRupees > 0 || returnedRefundRupees > 0) {
         // Show detailed breakdown

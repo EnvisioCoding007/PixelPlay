@@ -2,6 +2,7 @@ import * as orderService from '../../services/user/orderService.js';
 import * as userService from '../../services/user/userService.js';
 import * as cartService from '../../services/user/cartService.js';
 import * as invoiceService from '../../services/user/invoiceService.js';
+import { calculateOrderRefundDistribution, calculateItemRefundAmount } from '../../services/shared/refundService.js';
 
 export const postPlaceOrder = async (req, res) => {
     try {
@@ -159,7 +160,10 @@ export const getOrderDetails = async (req, res) => {
             cancellationComments: dbOrder.cancellationComments
         };
 
-        res.render('user/order-details', { order: mappedOrder, user, cartCount });
+        const isOrderAllCancelledOrReturned = dbOrder.items && dbOrder.items.length > 0 && dbOrder.items.every(i => i.status === 'Cancelled' || i.status === 'Returned');
+        const refundDistribution = calculateOrderRefundDistribution(dbOrder, { isFullReturn: isOrderAllCancelledOrReturned });
+
+        res.render('user/order-details', { order: mappedOrder, user, cartCount, refundDistribution });
     } catch (error) {
         console.error('[getOrderDetails] Error:', error);
         return res.status(404).render('404', {
@@ -340,12 +344,15 @@ export const getCancelItem = async (req, res) => {
             items: dbOrder.items
         };
 
+        const expectedRefundAmount = calculateItemRefundAmount(dbOrder, item, item.quantity, { isFullReturn: false });
+
         res.render('user/order-cancel', {
             order: mappedOrder,
             product: item.product,
             item: item,
             user,
             cartCount,
+            expectedRefundAmount,
             error: req.query.error || null
         });
     } catch (error) {

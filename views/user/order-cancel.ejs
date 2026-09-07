@@ -86,10 +86,14 @@
 
                 <% 
                    let refundVal = order.grandTotal;
-                   if (typeof product !== 'undefined' && product && typeof item !== 'undefined' && item) {
-                       const itemGst = item.gst_rate || (product && product.gst_rate) || 18;
-                       const unitTaxInclusive = Math.round((item.price * 100) / (100 - itemGst));
-                       refundVal = unitTaxInclusive * item.quantity;
+                   if (typeof expectedRefundAmount === 'number') {
+                       refundVal = expectedRefundAmount;
+                   } else if (typeof product !== 'undefined' && product && typeof item !== 'undefined' && item) {
+                       const itemGross = item.price * item.quantity;
+                       const orderSub = order.subtotal || itemGross;
+                       const couponDisc = order.couponDiscount || order.discount || 0;
+                       const allocDisc = orderSub > 0 ? Math.round((couponDisc * itemGross) / orderSub) : 0;
+                       refundVal = Math.max(0, itemGross - allocDisc);
                    }
                 %>
                 <div class="flex items-center text-green-500 bg-green-500/10 px-2.5 py-1 rounded-md font-medium text-xs mt-1">
@@ -284,12 +288,13 @@
             const policyRefundDisplay = document.getElementById('policy-refund-display');
 
             const itemPrice = parseFloat('<%= typeof item !== "undefined" && item ? item.price : 0 %>');
-            const itemGstRate = parseFloat('<%= typeof item !== "undefined" && item ? (item.gst_rate || (typeof product !== "undefined" && product && product.gst_rate) || 18) : 18 %>');
+            const totalItemQty = parseInt('<%= typeof item !== "undefined" && item ? item.quantity : 1 %>') || 1;
+            const fullItemRefund = parseFloat('<%= typeof expectedRefundAmount === "number" ? expectedRefundAmount : (typeof refundVal !== "undefined" ? refundVal : 0) %>');
 
             function updateRefund(qty) {
-                if (itemPrice > 0) {
-                    const unitTaxInclusive = Math.round((itemPrice * 100) / (100 - itemGstRate));
-                    const totalRefund = (unitTaxInclusive * qty) / 100;
+                if (fullItemRefund > 0 && totalItemQty > 0) {
+                    const proportionalRefundPaisa = Math.round((fullItemRefund * qty) / totalItemQty);
+                    const totalRefund = proportionalRefundPaisa / 100;
                     const text = '₹' + totalRefund.toFixed(2);
                     if (refundDisplay) refundDisplay.textContent = text;
                     if (policyRefundDisplay) policyRefundDisplay.textContent = text;

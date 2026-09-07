@@ -66,6 +66,10 @@ const orderSchema = new mongoose.Schema({
         adminReturnComment: {
             type: String,
             default: null
+        },
+        refundAmount: {
+            type: Number,
+            default: 0
         }
     }],
     deliveryAddress: {
@@ -138,10 +142,35 @@ const orderSchema = new mongoose.Schema({
     cancellationComments: {
         type: String,
         default: null
+    },
+    shippingRefunded: {
+        type: Boolean,
+        default: false
+    },
+    netFinalAmount: {
+        type: Number,
+        default: function() {
+            return this.finalAmount;
+        }
     }
 }, {
     timestamps: true
 });
+
+orderSchema.virtual('grandTotal').get(function() {
+    return this.finalAmount;
+}).set(function(v) {
+    this.finalAmount = v;
+});
+
+orderSchema.virtual('shippingCharges').get(function() {
+    return this.shipping;
+}).set(function(v) {
+    this.shipping = v;
+});
+
+orderSchema.set('toJSON', { virtuals: true });
+orderSchema.set('toObject', { virtuals: true });
 
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ userId: 1, createdAt: -1 });

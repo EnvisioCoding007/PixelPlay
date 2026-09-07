@@ -1,4 +1,5 @@
 import * as orderService from '../../services/admin/orderService.js';
+import { calculateOrderRefundDistribution } from '../../services/shared/refundService.js';
 
 export const renderOrderManagement = async (req, res) => {
     try {
@@ -49,10 +50,14 @@ export const renderAdminOrderDetails = async (req, res) => {
             });
         }
 
+        const isOrderAllCancelledOrReturned = details.order.items && details.order.items.length > 0 && details.order.items.every(i => i.status === 'Cancelled' || i.status === 'Returned');
+        const refundDistribution = calculateOrderRefundDistribution(details.order, { isFullReturn: isOrderAllCancelledOrReturned });
+
         res.render('admin/order-details', {
             order: details.order,
             lifetimeOrdersCount: details.lifetimeOrdersCount,
-            user: req.session.admin || null
+            user: req.session.admin || null,
+            refundDistribution
         });
     } catch (err) {
         console.error('[renderAdminOrderDetails]', err);

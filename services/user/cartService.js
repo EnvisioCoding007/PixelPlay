@@ -3,6 +3,7 @@ import Product from '../../models/Product.js';
 import Wishlist from '../../models/Wishlist.js';
 import { validateCouponEligibility } from '../shared/couponHelper.js';
 import { getActiveOffers, calculateBestOfferForProduct } from '../shared/offerHelper.js';
+import { extractTaxFromGross } from '../shared/taxHelper.js';
 
 export const getCartItemCount = async (userId) => {
     if (!userId) return 0;
@@ -19,13 +20,15 @@ export const getCartDetails = async (userId, appliedCouponCode = null) => {
         cart = { items: [] };
     }
 
-    let subtotal = 0;
+    let subtotal = 0; // Gross subtotal (customer display)
+    let baseSubtotal = 0; // Tax-exclusive base subtotal
+    let totalTax = 0; // Itemized GST
     let discount = 0;
     let appliedCoupon = null;
     let hasUnavailableProduct = false;
     let hasInsufficientStockProduct = false;
 
-    let gst_rate = 0;
+    let gst_rate = 18;
     const activeOffers = await getActiveOffers();
 
     for (let item of cart.items) {
@@ -63,22 +66,28 @@ export const getCartDetails = async (userId, appliedCouponCode = null) => {
             item.product.offerDiscount = offerResult.discountPercentage;
             item.product.appliedOffer = offerResult.appliedOffer;
             
+            // Treat active price as gross tax-inclusive price and extract base and GST
             const activePrice = offerResult.discountedPrice;
-            const cartPrice = Math.round(activePrice * (100 - gst_rate)/100);
-            item.product.price = cartPrice;
+            const { basePrice: itemBasePrice, taxAmount: itemTaxAmount } = extractTaxFromGross(activePrice, gst_rate);
+
+            item.product.price = activePrice; // Gross tax-inclusive price
             item.product.displayPrice = activePrice;
-            subtotal += cartPrice * item.quantity;
+            item.product.basePrice = itemBasePrice;
+            item.product.taxAmount = itemTaxAmount;
+
+            subtotal += activePrice * item.quantity;
+            baseSubtotal += itemBasePrice * item.quantity;
+            totalTax += itemTaxAmount * item.quantity;
         }
     }
 
     const roundedSubtotal = Math.round(subtotal);
-    const tax = Math.round(subtotal * (gst_rate / (100 - gst_rate)));
-    const subtotalWithTax = roundedSubtotal + tax;
+    const tax = Math.round(totalTax);
 
     let couponError = null;
-    // Apply Coupon Discount if coupon code is passed and order total including tax > 0
-    if (appliedCouponCode && subtotalWithTax > 0) {
-        const validation = await validateCouponEligibility(appliedCouponCode, userId, subtotalWithTax);
+    // Apply Coupon Discount if coupon code is passed and order total > 0
+    if (appliedCouponCode && roundedSubtotal > 0) {
+        const validation = await validateCouponEligibility(appliedCouponCode, userId, roundedSubtotal);
         if (validation.valid) {
             discount = validation.discountPaisa;
             appliedCoupon = {
@@ -96,11 +105,14 @@ export const getCartDetails = async (userId, appliedCouponCode = null) => {
     }
 
     const shipping = cart.items.length > 0 ? 10000 : 0;
-    const grandTotal = Math.max(0, roundedSubtotal - Math.round(discount) + tax + shipping);
+    // Since subtotal is already gross tax-inclusive:
+    const grandTotal = Math.max(0, roundedSubtotal - Math.round(discount) + shipping);
 
     return {
         cart,
         subtotal: roundedSubtotal,
+        grossSubtotal: roundedSubtotal,
+        baseSubtotal: Math.round(baseSubtotal),
         tax: Math.round(tax),
         gst_rate: gst_rate,
         shipping: Math.round(shipping),
@@ -263,6 +275,8 @@ export const updateCartQuantity = async (userId, productId, platform, action) =>
                 quantity: item.quantity,
                 price: item.product.price,
                 displayPrice: item.product.displayPrice,
+                basePrice: item.product.basePrice,
+                taxAmount: item.product.taxAmount,
                 itemSubtotal: itemSubtotal,
                 isMinQty: item.quantity <= 1,
                 isMaxQty: item.quantity >= 3 || item.quantity >= item.product.stock,
@@ -275,6 +289,7 @@ export const updateCartQuantity = async (userId, productId, platform, action) =>
         return {
             cartCount,
             subtotal: cartDetails.subtotal,
+            baseSubtotal: cartDetails.baseSubtotal,
             tax: cartDetails.tax,
             shipping: cartDetails.shipping,
             grandTotal: cartDetails.grandTotal,

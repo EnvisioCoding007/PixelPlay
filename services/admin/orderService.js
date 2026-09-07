@@ -150,13 +150,19 @@ export const approveItemReturn = async (orderId, productId, adminComment, platfo
         itemGstRate = (prod && prod.gst_rate) ? prod.gst_rate : 18;
     }
     const refundAmount = calculateItemRefundAmount(order, item, item.quantity, itemGstRate);
+    item.refundAmount = refundAmount;
+    
+    const allCancelledOrReturned = order.items.every(i => i.status === 'Cancelled' || i.status === 'Returned');
+    const desc = allCancelledOrReturned
+        ? `Refund for Final Returned Item in Order #${order.orderId} (incl. Shipping Charge)`
+        : `Refund for Approved Return of Item in Order #${order.orderId}`;
     
     if (refundAmount > 0) {
         await addTransaction(order.userId, {
             amount: refundAmount,
             type: 'credit',
             orderId: order.orderId,
-            description: `Refund for Approved Return of Item in Order #${order.orderId}`,
+            description: desc,
             status: 'Success'
         });
     }
@@ -178,9 +184,27 @@ export const approveItemReturn = async (orderId, productId, adminComment, platfo
         }
     }
 
-    const allCancelledOrReturned = order.items.every(i => i.status === 'Cancelled' || i.status === 'Returned');
     if (allCancelledOrReturned) {
         order.orderStatus = 'Returned';
+
+        // Guarantee that shipping charge is credited to user's PixelWallet if not already refunded
+        const shippingFee = (typeof order.shippingCharges === 'number')
+            ? Math.max(0, Math.round(order.shippingCharges))
+            : Math.max(0, Math.round(Number(order.shipping) || 0));
+
+        if (!order.shippingRefunded && shippingFee > 0) {
+            await addTransaction(order.userId, {
+                amount: shippingFee,
+                type: 'credit',
+                orderId: order.orderId,
+                description: `Shipping Fee Refund for Returned Order #${order.orderId}`,
+                status: 'Success'
+            });
+            order.shippingRefunded = true;
+        }
+
+        order.shippingRefunded = true;
+        order.netFinalAmount = 0;
     } else {
         const hasPendingReturns = order.items.some(i => i.status === 'Return Requested');
         if (!hasPendingReturns) {

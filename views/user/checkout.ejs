@@ -402,7 +402,7 @@
                         <span class="text-white" id="summary-subtotal-display">₹<%= (cart.subtotal / 100).toFixed(2) %></span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-text-secondary">GST (<%= (typeof cart !== 'undefined' && cart.items && cart.items.length > 0 && cart.items[0].product && cart.items[0].product.gst_rate) ? cart.items[0].product.gst_rate : (typeof gst_rate !== 'undefined' ? gst_rate : 18) %>%)</span>
+                        <span class="text-text-secondary">GST (<%= (typeof cart !== 'undefined' && cart.items && cart.items.length > 0 && cart.items[0].product && cart.items[0].product.gst_rate) ? cart.items[0].product.gst_rate : (typeof gst_rate !== 'undefined' ? gst_rate : 18) %>%) <span class="text-xs text-text-tertiary">(Included)</span></span>
                         <span class="text-white" id="summary-tax-display">₹<%= (cart.tax / 100).toFixed(2) %></span>
                     </div>
                     <div class="flex justify-between items-center">

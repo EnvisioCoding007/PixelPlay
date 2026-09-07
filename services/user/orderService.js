@@ -8,7 +8,7 @@ import { processWalletPayment, processWalletRefund } from './walletService.js';
 import { getWalletBalance } from '../shared/walletHelper.js';
 import { recordCouponUsage } from '../shared/couponHelper.js';
 import { createRazorpayOrder, verifyRazorpaySignature, getRazorpayKeyId } from '../shared/razorpayHelper.js';
-import { calculateItemRefundAmount, processReferralRewardsOnFirstOrder } from '../shared/orderHelper.js';
+import { calculateItemRefundAmount, calculateOrderRefundDistribution, processReferralRewardsOnFirstOrder } from '../shared/orderHelper.js';
 import { createNotificationForUser, checkAndNotifyRestock, checkAndNotifyLowStock } from '../shared/notificationHelper.js';
 
 export const createRazorpayPaymentOrder = async (userId, addressId, couponCode = null) => {
@@ -489,17 +489,27 @@ export const cancelOrder = async (orderId, userId, reason, comments) => {
     order.cancellationDate = new Date();
     order.cancellationReason = reason;
     order.cancellationComments = comments;
+    order.shippingRefunded = true;
+    order.netFinalAmount = 0;
 
     if (order.paymentMethod !== 'COD') {
         await processWalletRefund(order.userId, order.finalAmount, order.orderId, `Refund for Cancelled Order #${order.orderId}`);
     }
 
+    const refundDist = calculateOrderRefundDistribution(order, { isFullReturn: true });
     for (const item of order.items) {
         if (item.status !== 'Cancelled') {
             item.status = 'Cancelled';
             item.cancellationDate = new Date();
             item.cancellationReason = reason;
             item.cancellationComments = comments;
+
+            const itemId = item._id ? item._id.toString() : null;
+            const itemProdId = item.product ? (item.product._id ? item.product._id.toString() : item.product.toString()) : null;
+            const distItem = refundDist.items.find(di => (itemId && di.id === itemId) || (itemProdId && di.productId === itemProdId && (!item.platform || di.platform === item.platform)));
+            if (distItem) {
+                item.refundAmount = distItem.netRefundAmount;
+            }
 
             const product = await Product.findById(item.product);
             if (product) {
@@ -616,21 +626,40 @@ export const cancelItem = async (orderId, userId, productId, reason, comments, c
             itemGstRate = (prod && prod.gst_rate) ? prod.gst_rate : 18;
         }
         const refundAmount = calculateItemRefundAmount(order, targetItem, qtyToCancel, itemGstRate);
+        targetItem.refundAmount = refundAmount;
+        
+        const allCancelledOrReturned = order.items.every(i => i.status === 'Cancelled' || i.status === 'Returned');
+        const desc = allCancelledOrReturned && order.shippingRefunded
+            ? `Refund for Final Item in Order #${order.orderId} (incl. Shipping Charge)`
+            : `Refund for Cancelled Item in Order #${order.orderId}`;
+
         if (refundAmount > 0) {
-            await processWalletRefund(order.userId, refundAmount, order.orderId, `Refund for Cancelled Item in Order #${order.orderId}`);
+            await processWalletRefund(order.userId, refundAmount, order.orderId, desc);
         }
     }
 
-    const allCancelled = order.items.every(i => i.status === 'Cancelled');
-    if (allCancelled) {
-        order.orderStatus = 'Cancelled';
-        order.cancellationDate = new Date();
-        order.cancellationReason = 'All items cancelled';
-        order.cancellationComments = 'Cancelled because all items were individually cancelled.';
-
-        if (order.paymentMethod !== 'COD' && order.shipping > 0) {
-            await processWalletRefund(order.userId, order.shipping, order.orderId, `Shipping Refund for Cancelled Order #${order.orderId}`);
+    const allCancelledOrReturned = order.items.every(i => i.status === 'Cancelled' || i.status === 'Returned');
+    if (allCancelledOrReturned) {
+        const allCancelled = order.items.every(i => i.status === 'Cancelled');
+        if (allCancelled) {
+            order.orderStatus = 'Cancelled';
+            order.cancellationDate = new Date();
+            order.cancellationReason = 'All items cancelled';
+            order.cancellationComments = 'Cancelled because all items were individually cancelled.';
+        } else {
+            order.orderStatus = 'Returned';
         }
+
+        const shippingFee = (typeof order.shippingCharges === 'number')
+            ? Math.max(0, Math.round(order.shippingCharges))
+            : Math.max(0, Math.round(Number(order.shipping) || 0));
+
+        if (order.paymentMethod !== 'COD' && shippingFee > 0 && !order.shippingRefunded) {
+            await processWalletRefund(order.userId, shippingFee, order.orderId, `Shipping Fee Refund for Order #${order.orderId}`);
+            order.shippingRefunded = true;
+        }
+        order.shippingRefunded = true;
+        order.netFinalAmount = 0;
     }
 
     await order.save();
