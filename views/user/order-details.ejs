@@ -147,6 +147,7 @@
                         <h3 class="font-semibold text-white">Physical Disks in This Order</h3>
                         <% 
                             let orderedQty = 0;
+                            let shippedQty = 0;
                             let deliveredQty = 0;
                             let returnRequestedQty = 0;
                             let returnedQty = 0;
@@ -155,51 +156,53 @@
                             if (order.items && order.items.length > 0) {
                                 order.items.forEach(item => {
                                     const qty = item.quantity;
-                                    if (item.status === 'Cancelled') {
+                                    const itmStatus = (item.status === 'Ordered' || !item.status) ? (order.status || 'Processing') : item.status;
+                                    if (itmStatus === 'Cancelled') {
                                         cancelledQty += qty;
-                                    } else if (item.status === 'Return Requested') {
+                                    } else if (itmStatus === 'Return Requested') {
                                         returnRequestedQty += qty;
-                                    } else if (item.status === 'Returned') {
+                                    } else if (itmStatus === 'Returned') {
                                         returnedQty += qty;
+                                    } else if (itmStatus === 'Delivered') {
+                                        deliveredQty += qty;
+                                    } else if (itmStatus === 'Shipped') {
+                                        shippedQty += qty;
                                     } else {
-                                        // status is 'Ordered' or undefined
-                                        if (order.status === 'Delivered' || order.status === 'Return Requested' || order.status === 'Returned') {
-                                            deliveredQty += qty;
-                                        } else {
-                                            orderedQty += qty;
-                                        }
+                                        orderedQty += qty;
                                     }
                                 });
                             }
                         %>
                         <div class="flex gap-2 flex-wrap">
-                            <% if (order.status === 'Processing' || order.status === 'Shipped') { %>
-                                <% const displayStatus = order.status; %>
-                                <% const badgeClass = displayStatus === 'Shipped' ? 'bg-pixelplay-accent/10 border border-pixelplay-accent/30 text-pixelplay-accent' : 'bg-pixelplay-gold/10 border border-pixelplay-gold/30 text-pixelplay-gold'; %>
-                                <span class="px-3 py-1 <%= badgeClass %> text-xs font-medium rounded-full">
-                                    <%= orderedQty %> <%= orderedQty === 1 ? 'Disk' : 'Disks' %> - <%= displayStatus %>
+                            <% if (orderedQty > 0) { %>
+                                <span class="px-3 py-1 bg-pixelplay-gold/10 border border-pixelplay-gold/30 text-pixelplay-gold text-xs font-medium rounded-full">
+                                    <%= orderedQty %> <%= orderedQty === 1 ? 'Disk' : 'Disks' %> - Processing
                                 </span>
-                            <% } else if (order.status === 'Cancelled') { %>
+                            <% } %>
+                            <% if (shippedQty > 0) { %>
+                                <span class="px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-medium rounded-full">
+                                    <%= shippedQty %> <%= shippedQty === 1 ? 'Disk' : 'Disks' %> - Shipped
+                                </span>
+                            <% } %>
+                            <% if (deliveredQty > 0) { %>
+                                <span class="px-3 py-1 bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-medium rounded-full">
+                                    <%= deliveredQty %> <%= deliveredQty === 1 ? 'Disk' : 'Disks' %> - Delivered
+                                </span>
+                            <% } %>
+                            <% if (cancelledQty > 0) { %>
                                 <span class="px-3 py-1 bg-pixelplay-red/10 border border-pixelplay-red/30 text-pixelplay-red text-xs font-medium rounded-full">
                                     <%= cancelledQty %> <%= cancelledQty === 1 ? 'Disk' : 'Disks' %> - Cancelled
                                 </span>
-                            <% } else { %>
-                                <!-- Delivered, Return Requested, or Returned orders -->
-                                <% if (deliveredQty > 0) { %>
-                                    <span class="px-3 py-1 bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-medium rounded-full">
-                                        <%= deliveredQty %> <%= deliveredQty === 1 ? 'Disk' : 'Disks' %> - Delivered
-                                    </span>
-                                <% } %>
-                                <% if (returnRequestedQty > 0) { %>
-                                    <span class="px-3 py-1 bg-pixelplay-gold/10 border border-pixelplay-gold/30 text-pixelplay-gold text-xs font-medium rounded-full">
-                                        <%= returnRequestedQty %> <%= returnRequestedQty === 1 ? 'Disk' : 'Disks' %> - Return Requested
-                                    </span>
-                                <% } %>
-                                <% if (returnedQty > 0) { %>
-                                    <span class="px-3 py-1 bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-medium rounded-full">
-                                        <%= returnedQty %> <%= returnedQty === 1 ? 'Disk' : 'Disks' %> - Returned
-                                    </span>
-                                <% } %>
+                            <% } %>
+                            <% if (returnRequestedQty > 0) { %>
+                                <span class="px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-medium rounded-full">
+                                    <%= returnRequestedQty %> <%= returnRequestedQty === 1 ? 'Disk' : 'Disks' %> - Return Requested
+                                </span>
+                            <% } %>
+                            <% if (returnedQty > 0) { %>
+                                <span class="px-3 py-1 bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-medium rounded-full">
+                                    <%= returnedQty %> <%= returnedQty === 1 ? 'Disk' : 'Disks' %> - Returned
+                                </span>
                             <% } %>
                         </div>
                     </div>
@@ -266,7 +269,7 @@
                                                 <p class="text-xs text-gray-400">Reason: <span class="text-gray-300"><%= item.returnReason === 'other' ? item.returnComments : item.returnReason %></span></p>
                                             <% } %>
                                         </div>
-                                    <% } else if (item.status === 'Ordered' && item.adminReturnComment) { %>
+                                    <% } else if ((item.status === 'Delivered' || item.status === 'Ordered') && item.adminReturnComment) { %>
                                         <div class="flex flex-col gap-1.5">
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-pixelplay-red/10 border border-pixelplay-red/30 text-pixelplay-red text-xs font-semibold rounded-full select-none w-fit">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
@@ -279,20 +282,21 @@
                                                 <span class="font-bold block mb-1 uppercase tracking-wider text-[10px] text-pixelplay-red">Rejection Reason</span>
                                                 <span class="text-gray-300 font-sans"><%= item.adminReturnComment %></span>
                                             </div>
-                                            <% if (order.status === 'Delivered' || order.status === 'Return Requested' || order.status === 'Returned') { %>
-                                                <button onclick="window.location.href='/orders/<%= order._id %>/items/<%= item.product._id %>/returns?platform=<%= encodeURIComponent(item.platform) %>'"
-                                                    class="mt-2 px-4 py-1.5 text-xs font-medium text-pixelplay-gold border border-pixelplay-gold/40 rounded-md hover:bg-pixelplay-gold/10 transition-colors flex items-center gap-1.5 w-fit">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                                        <path d="M16 15v-6a4 4 0 00-4-4H4m12 10l3-3m-3 3l-3-3"
-                                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                                    </svg>
-                                                    Retry Return
-                                                </button>
-                                            <% } %>
+                                            <button onclick="window.location.href='/orders/<%= order._id %>/items/<%= item.product._id %>/returns?platform=<%= encodeURIComponent(item.platform) %>'"
+                                                class="mt-2 px-4 py-1.5 text-xs font-medium text-pixelplay-gold border border-pixelplay-gold/40 rounded-md hover:bg-pixelplay-gold/10 transition-colors flex items-center gap-1.5 w-fit">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                                    <path d="M16 15v-6a4 4 0 00-4-4H4m12 10l3-3m-3 3l-3-3"
+                                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                </svg>
+                                                Retry Return
+                                            </button>
                                         </div>
                                     <% } else { %>
                                         <div class="flex flex-col gap-2">
-                                            <% if (order.status === 'Processing') { %>
+                                            <% 
+                                                const effectiveStatus = (item.status === 'Ordered' || !item.status) ? (order.status || 'Processing') : item.status;
+                                            %>
+                                            <% if (effectiveStatus === 'Processing') { %>
                                                 <button onclick="window.location.href='/orders/<%= order._id %>/items/<%= item.product._id %>/cancellation?platform=<%= encodeURIComponent(item.platform) %>'"
                                                     class="px-4 py-1.5 text-xs font-medium text-pixelplay-red border border-pixelplay-red/40 rounded-md hover:bg-pixelplay-red/10 transition-colors flex items-center gap-1.5 w-fit">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
@@ -301,17 +305,24 @@
                                                     </svg>
                                                     Cancel Item
                                                 </button>
-                                            <% } else if (order.status === 'Shipped') { %>
-                                                <!-- No buttons or links for Shipped status -->
-                                            <% } else if (order.status === 'Delivered' || order.status === 'Return Requested' || order.status === 'Returned') { %>
-                                                <button onclick="window.location.href='/orders/<%= order._id %>/items/<%= item.product._id %>/returns?platform=<%= encodeURIComponent(item.platform) %>'"
-                                                    class="px-4 py-1.5 text-xs font-medium text-pixelplay-gold border border-pixelplay-gold/40 rounded-md hover:bg-pixelplay-gold/10 transition-colors flex items-center gap-1.5 w-fit">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                                        <path d="M16 15v-6a4 4 0 00-4-4H4m12 10l3-3m-3 3l-3-3"
-                                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                                    </svg>
-                                                    Return This Disk
-                                                </button>
+                                            <% } else if (effectiveStatus === 'Shipped') { %>
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold rounded-full select-none w-fit">
+                                                    <i class="fa-solid fa-truck-fast text-xs"></i> Shipped - In Transit
+                                                </span>
+                                            <% } else if (effectiveStatus === 'Delivered') { %>
+                                                <div class="flex items-center gap-3 flex-wrap">
+                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-semibold rounded-full select-none w-fit">
+                                                        <i class="fa-solid fa-check text-xs"></i> Item Delivered
+                                                    </span>
+                                                    <button onclick="window.location.href='/orders/<%= order._id %>/items/<%= item.product._id %>/returns?platform=<%= encodeURIComponent(item.platform) %>'"
+                                                        class="px-4 py-1.5 text-xs font-medium text-pixelplay-gold border border-pixelplay-gold/40 rounded-md hover:bg-pixelplay-gold/10 transition-colors flex items-center gap-1.5 w-fit">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+                                                            <path d="M16 15v-6a4 4 0 00-4-4H4m12 10l3-3m-3 3l-3-3"
+                                                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                                        </svg>
+                                                        Return This Item
+                                                    </button>
+                                                </div>
                                             <% } %>
                                         </div>
                                     <% } %>
@@ -517,6 +528,21 @@
                                     </button>
                                 </div>
                             <% } %>
+
+                            <%
+                                const hasShippedOrDelivered = order.items && order.items.some(i => ['Shipped', 'Delivered', 'Return Requested', 'Returned'].includes(i.status));
+                                const hasCancellableItems = order.items && order.items.some(i => i.status === 'Processing' || i.status === 'Ordered' || (!i.status && (order.status === 'Processing' || order.status === 'Pending')));
+                                const canCancelEntireOrder = (order.status === 'Processing' || order.status === 'Pending') && !hasShippedOrDelivered && hasCancellableItems;
+                            %>
+                            <% if (canCancelEntireOrder) { %>
+                                <div class="mt-4 pt-4 border-t border-pixelplay-border">
+                                    <button onclick="confirmCancelOrder('<%= order._id %>')" 
+                                        class="w-full bg-pixelplay-red/10 hover:bg-pixelplay-red/20 border border-pixelplay-red/30 text-pixelplay-red font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm shadow-sm">
+                                        <i class="fa-regular fa-circle-xmark text-xs"></i>
+                                        Cancel Order
+                                    </button>
+                                </div>
+                            <% } %>
                         </div>
                         <% if (order.status !== 'Shipped' && order.status !== 'Delivered') { %>
                         <!-- Notice -->
@@ -556,6 +582,25 @@
     <!-- END: MainContent -->
 
     <script>
+        function confirmCancelOrder(orderId) {
+            Swal.fire({
+                title: 'Cancel Entire Order?',
+                text: 'Disclaimer: All products in this order will be cancelled on clicking the confirm button. If you wish to cancel only one product, you may cancel the item individually.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ff3366',
+                cancelButtonColor: '#8a8a93',
+                confirmButtonText: 'Confirm',
+                cancelButtonText: 'Cancel',
+                background: '#15161a',
+                color: '#e2e4eb'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/orders/${orderId}/cancellation`;
+                }
+            });
+        }
+
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
             const notification = urlParams.get('notification');

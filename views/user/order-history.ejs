@@ -320,7 +320,13 @@
                                             <i class="fa-solid fa-download text-xs"></i>
                                             Download Invoice
                                         </button>
-                                    <% } else if (status === 'PROCESSING' || status === 'PENDING') { %>
+                                    <% } %>
+                                    <% 
+                                        const hasShippedOrDelivered = order.items && order.items.some(i => ['Shipped', 'Delivered', 'Return Requested', 'Returned'].includes(i.status));
+                                        const hasCancellableItems = order.items && order.items.some(i => i.status === 'Processing' || i.status === 'Ordered' || (!i.status && (status === 'PROCESSING' || status === 'PENDING')));
+                                        const canCancelEntireOrder = (status === 'PROCESSING' || status === 'PENDING') && !hasShippedOrDelivered && hasCancellableItems;
+                                    %>
+                                    <% if (canCancelEntireOrder) { %>
                                         <button onclick="confirmCancelOrder('<%= order._id %>')" class="text-sm text-muted hover:text-red-main transition-colors flex items-center gap-2">
                                             <i class="fa-regular fa-circle-xmark text-xs"></i>
                                             Cancel Order

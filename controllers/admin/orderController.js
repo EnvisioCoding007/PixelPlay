@@ -142,3 +142,46 @@ export const handleItemReturn = async (req, res) => {
         return res.status(500).json({ success: false, message: err.message || 'Failed to process return request.' });
     }
 };
+
+export const updateAdminItemStatus = async (req, res) => {
+    try {
+        const { orderId, itemId } = req.params;
+        const { itemStatus } = req.body;
+
+        if (!itemStatus) {
+            return res.status(400).json({ success: false, message: 'Item status is required.' });
+        }
+
+        const { order, item } = await orderService.updateOrderItemStatus(orderId, itemId, itemStatus);
+
+        const isAjax =
+            req.xhr ||
+            req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+            (req.headers['accept'] && req.headers['accept'].includes('application/json'));
+
+        if (isAjax) {
+            return res.status(200).json({
+                success: true,
+                message: `Item status updated to ${item.status}.`,
+                itemStatus: item.status,
+                orderStatus: order.orderStatus,
+                paymentStatus: order.paymentStatus
+            });
+        }
+
+        res.redirect(`/admin/orders/${orderId}`);
+    } catch (err) {
+        console.error('[updateAdminItemStatus]', err);
+        const isAjax =
+            req.xhr ||
+            req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+            (req.headers['accept'] && req.headers['accept'].includes('application/json'));
+
+        if (isAjax) {
+            return res.status(400).json({ success: false, message: err.message || 'Failed to update item status.' });
+        }
+
+        res.status(500).send('Internal Server Error');
+    }
+};
+

@@ -3,7 +3,7 @@ import Order from '../../models/Order.js';
 import User from '../../models/User.js';
 import Product from '../../models/Product.js';
 import { addTransaction } from '../shared/walletHelper.js';
-import { calculateItemRefundAmount } from '../shared/orderHelper.js';
+import { calculateItemRefundAmount, syncOrderStatus } from '../shared/orderHelper.js';
 import { createNotificationForUser, checkAndNotifyRestock } from '../shared/notificationHelper.js';
 
 export const getAllOrdersAdminPaginated = async (search = '', status = '', paymentMethod = '', sort = 'newest', page = 1, limit = 10) => {
@@ -76,6 +76,8 @@ export const getAdminOrderStats = async () => {
     };
 };
 
+export { syncOrderStatus };
+
 export const updateOrderStatus = async (id, status) => {
     const order = await Order.findById(id);
     if (!order) {
@@ -102,7 +104,19 @@ export const updateOrderStatus = async (id, status) => {
 
     order.orderStatus = status;
 
-    if (status === 'Delivered') {
+    // Cascade whole-order status update to eligible items
+    if (status === 'Shipped') {
+        order.items.forEach(i => {
+            if (i.status === 'Processing' || i.status === 'Ordered' || !i.status) {
+                i.status = 'Shipped';
+            }
+        });
+    } else if (status === 'Delivered') {
+        order.items.forEach(i => {
+            if (['Processing', 'Shipped', 'Ordered'].includes(i.status) || !i.status) {
+                i.status = 'Delivered';
+            }
+        });
         order.paymentStatus = 'Paid';
     }
 
@@ -117,6 +131,71 @@ export const updateOrderStatus = async (id, status) => {
     }).catch(err => console.error('[updateOrderStatus Notification Error]', err));
 
     return order;
+};
+
+export const updateOrderItemStatus = async (orderId, itemId, newStatus) => {
+    const order = await Order.findById(orderId).populate('items.product');
+    if (!order) {
+        throw new Error('Order not found');
+    }
+
+    if (!newStatus || !['Processing', 'Shipped', 'Delivered'].includes(newStatus)) {
+        throw new Error('Invalid status update requested');
+    }
+
+    if (['Cancelled', 'Returned', 'Return Requested'].includes(newStatus)) {
+        throw new Error('This status can only be initiated from the user side');
+    }
+
+    const item = (order.items.id && order.items.id(itemId)) || order.items.find(i => {
+        const itemIdStr = i._id ? i._id.toString() : '';
+        const prodIdStr = (i.product && i.product._id) ? i.product._id.toString() : (i.product ? i.product.toString() : '');
+        return itemIdStr === itemId.toString() || prodIdStr === itemId.toString();
+    });
+
+    if (!item) {
+        throw new Error('Item not found in this order');
+    }
+
+    const currentItemStatus = (item.status === 'Ordered' || !item.status)
+        ? (order.orderStatus || 'Processing')
+        : item.status;
+
+    // Irreversible state transitions
+    if (currentItemStatus === 'Delivered') {
+        throw new Error('Cannot change the status of a delivered item');
+    }
+    if (currentItemStatus === 'Cancelled') {
+        throw new Error('Cannot change the status of a cancelled item');
+    }
+    if (currentItemStatus === 'Returned' || currentItemStatus === 'Return Requested') {
+        throw new Error('Cannot change the status of a returned or return requested item');
+    }
+    if (currentItemStatus === 'Shipped' && newStatus === 'Processing') {
+        throw new Error('Cannot revert status from Shipped back to Processing');
+    }
+
+    if (currentItemStatus === newStatus) {
+        return { order, item };
+    }
+
+    item.status = newStatus;
+
+    // Synchronize parent order status
+    syncOrderStatus(order);
+
+    await order.save();
+
+    const productTitle = (item.product && item.product.title) ? item.product.title : 'Item';
+    createNotificationForUser(order.userId, {
+        type: 'order_status',
+        title: 'Item Status Updated',
+        message: `The item "${productTitle}" (${item.platform}) in order #${order.orderId} status is now "${newStatus}".`,
+        link: `/orders/${order._id}`,
+        metadata: { orderId: order.orderId, orderDbId: order._id, itemId: item._id, status: newStatus }
+    }).catch(err => console.error('[updateOrderItemStatus Notification Error]', err));
+
+    return { order, item };
 };
 
 export const getOrderDetailsAdmin = async (id) => {
@@ -239,7 +318,7 @@ export const rejectItemReturn = async (orderId, productId, adminComment, platfor
         throw new Error('Return request not found for this item');
     }
 
-    item.status = 'Ordered';
+    item.status = 'Delivered';
     item.adminReturnComment = adminComment;
 
     const hasPendingReturns = order.items.some(i => i.status === 'Return Requested');

@@ -242,8 +242,9 @@ export const getCancelOrder = async (req, res) => {
             return res.redirect('/orders');
         }
 
-        if (dbOrder.orderStatus !== 'Processing' && dbOrder.orderStatus !== 'Pending') {
-            return res.redirect(`/orders/${orderId}`);
+        const hasShippedOrDelivered = dbOrder.items && dbOrder.items.some(i => ['Shipped', 'Delivered', 'Return Requested', 'Returned'].includes(i.status));
+        if (hasShippedOrDelivered || (dbOrder.orderStatus !== 'Processing' && dbOrder.orderStatus !== 'Pending')) {
+            return res.redirect(`/orders/${orderId}?error=Order cannot be cancelled as one or more items have already been shipped or delivered.`);
         }
 
         const cartCount = await cartService.getCartItemCount(loggedInUserId);
@@ -297,7 +298,7 @@ export const postCancelOrder = async (req, res) => {
         res.redirect(`/orders/${orderId}?notification=Order cancelled successfully`);
     } catch (error) {
         console.error('[postCancelOrder] Error:', error);
-        res.redirect('/orders');
+        res.redirect(`/orders/${req.params.orderId}?error=${encodeURIComponent(error.message || 'Failed to cancel order')}`);
     }
 };
 
@@ -401,16 +402,16 @@ export const getReturnOrder = async (req, res) => {
             return res.redirect('/orders');
         }
 
-        if (dbOrder.orderStatus !== 'Delivered' && dbOrder.orderStatus !== 'Return Requested' && dbOrder.orderStatus !== 'Returned') {
+        const item = dbOrder.items.find(i => {
+            const itemProdId = i.product && i.product._id ? i.product._id.toString() : i.product.toString();
+            const isDelivered = i.status === 'Delivered' || ((i.status === 'Ordered' || !i.status) && (dbOrder.orderStatus === 'Delivered' || dbOrder.orderStatus === 'Return Requested' || dbOrder.orderStatus === 'Returned'));
+            return itemProdId === productId.toString() && (!platform || i.platform === platform) && isDelivered;
+        });
+        if (!item) {
             return res.redirect(`/orders/${orderId}`);
         }
 
         const cartCount = await cartService.getCartItemCount(loggedInUserId);
-
-        const item = dbOrder.items.find(i => i.product._id.toString() === productId.toString() && (!platform || i.platform === platform) && (i.status === 'Ordered' || !i.status));
-        if (!item) {
-            return res.redirect(`/orders/${orderId}`);
-        }
 
         const mappedOrder = {
             _id: dbOrder._id,
@@ -448,13 +449,13 @@ export const postReturnOrder = async (req, res) => {
         const returnQty = parseInt(quantity, 10) || 1;
 
         if (!return_reason) {
-            return res.redirect(`/orders/${orderId}/items/${productId}/returns?error=Return reason is required`);
+            return res.redirect(`/orders/${orderId}/items/${productId}/returns?error=Return reason is required${platform ? '&platform=' + encodeURIComponent(platform) : ''}`);
         }
         if (return_reason === 'other' && (!additional_details || additional_details.trim().length < 10)) {
-            return res.redirect(`/orders/${orderId}/items/${productId}/returns?error=Additional comments must be at least 10 characters long for "Other reason"`);
+            return res.redirect(`/orders/${orderId}/items/${productId}/returns?error=Additional comments must be at least 10 characters long for "Other reason"${platform ? '&platform=' + encodeURIComponent(platform) : ''}`);
         }
         if (additional_details && additional_details.trim().length > 100) {
-            return res.redirect(`/orders/${orderId}/items/${productId}/returns?error=Additional comments cannot exceed 100 characters`);
+            return res.redirect(`/orders/${orderId}/items/${productId}/returns?error=Additional comments cannot exceed 100 characters${platform ? '&platform=' + encodeURIComponent(platform) : ''}`);
         }
 
         const loggedInUserId = req.session.user.id || req.session.user;
@@ -464,7 +465,7 @@ export const postReturnOrder = async (req, res) => {
         res.redirect(`/orders/${orderId}?notification=Return requested successfully`);
     } catch (error) {
         console.error('[postReturnOrder] Error:', error);
-        res.redirect('/orders');
+        res.redirect(`/orders/${req.params.orderId}?error=${encodeURIComponent(error.message || 'Failed to request return')}`);
     }
 };
 
@@ -519,7 +520,7 @@ export const getEntireOrderReturn = async (req, res) => {
             items: dbOrder.items
         };
 
-        const returnableItems = (dbOrder.items || []).filter(i => i.status === 'Ordered' || !i.status);
+        const returnableItems = (dbOrder.items || []).filter(i => i.status === 'Delivered' || i.status === 'Ordered' || !i.status);
         let selectedProduct = null;
         let selectedItem = null;
 

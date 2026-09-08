@@ -77,6 +77,7 @@ router.put('/admin/publishers/:id', upload.single('logo'), publisherController.e
 router.get('/admin/orders', orderController.renderOrderManagement);
 router.get('/admin/orders/:id', orderController.renderAdminOrderDetails);
 router.patch('/admin/orders/:id/status', orderController.updateAdminOrderStatus);
+router.patch('/admin/orders/:orderId/items/:itemId/status', orderController.updateAdminItemStatus);
 router.patch('/admin/orders/:orderId/items/:productId/returns', orderController.handleItemReturn);
 
 // Admin Coupon Management Routes

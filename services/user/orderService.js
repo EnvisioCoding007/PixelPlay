@@ -8,7 +8,7 @@ import { processWalletPayment, processWalletRefund } from './walletService.js';
 import { getWalletBalance } from '../shared/walletHelper.js';
 import { recordCouponUsage } from '../shared/couponHelper.js';
 import { createRazorpayOrder, verifyRazorpaySignature, getRazorpayKeyId } from '../shared/razorpayHelper.js';
-import { calculateItemRefundAmount, calculateOrderRefundDistribution, processReferralRewardsOnFirstOrder } from '../shared/orderHelper.js';
+import { calculateItemRefundAmount, calculateOrderRefundDistribution, processReferralRewardsOnFirstOrder, syncOrderStatus } from '../shared/orderHelper.js';
 import { createNotificationForUser, checkAndNotifyRestock, checkAndNotifyLowStock } from '../shared/notificationHelper.js';
 
 export const createRazorpayPaymentOrder = async (userId, addressId, couponCode = null) => {
@@ -485,6 +485,11 @@ export const cancelOrder = async (orderId, userId, reason, comments) => {
         throw new Error('Order cannot be cancelled at this stage');
     }
 
+    const hasShippedOrDelivered = order.items && order.items.some(i => ['Shipped', 'Delivered', 'Return Requested', 'Returned'].includes(i.status));
+    if (hasShippedOrDelivered) {
+        throw new Error('Order cannot be cancelled as one or more items have already been shipped or delivered.');
+    }
+
     order.orderStatus = 'Cancelled';
     order.cancellationDate = new Date();
     order.cancellationReason = reason;
@@ -560,16 +565,16 @@ export const cancelItem = async (orderId, userId, productId, reason, comments, c
         throw new Error('Order is already cancelled');
     }
 
-    if (order.orderStatus !== 'Processing' && order.orderStatus !== 'Pending') {
-        throw new Error('Order cannot be cancelled at this stage');
+    if (order.orderStatus === 'Delivered') {
+        throw new Error('Delivered orders cannot be cancelled');
     }
 
     const item = order.items.find(i => {
         const itemProdId = i.product && i.product._id ? i.product._id.toString() : i.product.toString();
-        return itemProdId === productId.toString() && (!platform || i.platform === platform) && i.status !== 'Cancelled';
+        return itemProdId === productId.toString() && (!platform || i.platform === platform) && (i.status === 'Processing' || i.status === 'Ordered' || (!i.status && order.orderStatus === 'Processing'));
     });
     if (!item) {
-        throw new Error('Item not found in this order');
+        throw new Error('Item not found or cannot be cancelled at this stage');
     }
 
     const qtyToCancel = Math.min(cancelQty, item.quantity);
@@ -660,6 +665,8 @@ export const cancelItem = async (orderId, userId, productId, reason, comments, c
         }
         order.shippingRefunded = true;
         order.netFinalAmount = 0;
+    } else {
+        syncOrderStatus(order);
     }
 
     await order.save();
@@ -688,22 +695,20 @@ export const requestItemReturn = async (orderId, userId, productId, reason, comm
         throw new Error('Order not found');
     }
 
-    if (order.orderStatus !== 'Delivered' && order.orderStatus !== 'Return Requested' && order.orderStatus !== 'Returned') {
-        throw new Error('Only delivered orders can be returned');
-    }
-
     let item = order.items.find(i => {
         const itemProdId = i.product && i.product._id ? i.product._id.toString() : i.product.toString();
-        return itemProdId === productId.toString() && (!platform || i.platform === platform) && i.status === 'Ordered' && i.adminReturnComment;
+        const isDelivered = i.status === 'Delivered' || ((i.status === 'Ordered' || !i.status) && (order.orderStatus === 'Delivered' || order.orderStatus === 'Return Requested' || order.orderStatus === 'Returned'));
+        return itemProdId === productId.toString() && (!platform || i.platform === platform) && isDelivered && i.adminReturnComment;
     });
     if (!item) {
         item = order.items.find(i => {
             const itemProdId = i.product && i.product._id ? i.product._id.toString() : i.product.toString();
-            return itemProdId === productId.toString() && (!platform || i.platform === platform) && (i.status === 'Ordered' || !i.status);
+            const isDelivered = i.status === 'Delivered' || ((i.status === 'Ordered' || !i.status) && (order.orderStatus === 'Delivered' || order.orderStatus === 'Return Requested' || order.orderStatus === 'Returned'));
+            return itemProdId === productId.toString() && (!platform || i.platform === platform) && isDelivered;
         });
     }
     if (!item) {
-        throw new Error('Item not found or already returned/cancelled');
+        throw new Error('Item not found or cannot be returned at this stage');
     }
 
     const qtyToReturn = Math.min(returnQty, item.quantity);
@@ -735,7 +740,7 @@ export const requestItemReturn = async (orderId, userId, productId, reason, comm
         item.adminReturnComment = null;
     }
 
-    order.orderStatus = 'Return Requested';
+    syncOrderStatus(order);
     await order.save();
     return order;
 };
@@ -759,7 +764,7 @@ export const requestOrderReturn = async (orderId, userId, reason, comments) => {
 
     let hasReturnableItems = false;
     order.items.forEach(item => {
-        if (item.status === 'Ordered' || !item.status) {
+        if (item.status === 'Delivered' || item.status === 'Ordered' || !item.status) {
             item.status = 'Return Requested';
             item.returnDate = new Date();
             item.returnReason = reason;

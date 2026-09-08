@@ -64,6 +64,53 @@ export const processReferralRewardsOnFirstOrder = async (userId, currentOrderId)
     }
 };
 
+/**
+ * Synchronizes order-level orderStatus based on the statuses of its individual items.
+ * 
+ * @param {Object} order - The Order document
+ * @returns {string} The updated orderStatus
+ */
+export const syncOrderStatus = (order) => {
+    if (!order.items || order.items.length === 0) return order.orderStatus;
+
+    const allCancelled = order.items.every(i => i.status === 'Cancelled');
+    if (allCancelled) {
+        order.orderStatus = 'Cancelled';
+        return order.orderStatus;
+    }
+
+    const allCancelledOrReturned = order.items.every(i => i.status === 'Cancelled' || i.status === 'Returned');
+    if (allCancelledOrReturned) {
+        order.orderStatus = 'Returned';
+        return order.orderStatus;
+    }
+
+    // Active items (excluding Cancelled and Returned)
+    const activeItems = order.items.filter(i => i.status !== 'Cancelled' && i.status !== 'Returned');
+
+    const allDelivered = activeItems.every(i => i.status === 'Delivered');
+    if (allDelivered) {
+        order.orderStatus = 'Delivered';
+        order.paymentStatus = 'Paid';
+        return order.orderStatus;
+    }
+
+    const allShippedOrDelivered = activeItems.every(i => i.status === 'Shipped' || i.status === 'Delivered');
+    if (allShippedOrDelivered) {
+        order.orderStatus = 'Shipped';
+        return order.orderStatus;
+    }
+
+    const hasReturnRequested = activeItems.some(i => i.status === 'Return Requested');
+    if (hasReturnRequested) {
+        order.orderStatus = 'Return Requested';
+        return order.orderStatus;
+    }
+
+    order.orderStatus = 'Processing';
+    return order.orderStatus;
+};
+
 export {
     calculateItemWeightageRatio,
     calculateOrderRefundDistribution,
