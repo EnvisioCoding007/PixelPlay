@@ -52,7 +52,8 @@ export const getAvailableCouponsForCheckout = async (userId, cartSubtotalPaisa =
             }
         }
 
-        const isMinimumMet = cartSubtotal >= coupon.minOrderAmount;
+        const isFlatValid = coupon.discountType !== 'flat' || (coupon.minOrderAmount >= coupon.discountValue + 10000);
+        const isMinimumMet = isFlatValid && (cartSubtotal >= coupon.minOrderAmount);
         const discountPaisa = isMinimumMet ? calculateDiscountAmount(coupon, cartSubtotal) : 0;
         const minRupeesNeeded = !isMinimumMet ? ((coupon.minOrderAmount - cartSubtotal) / 100).toFixed(2) : '0.00';
 

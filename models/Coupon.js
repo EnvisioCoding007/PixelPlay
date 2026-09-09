@@ -33,7 +33,12 @@ const couponSchema = new mongoose.Schema({
     discountValue: {
         type: Number, // Percentage value (e.g. 20 for 20%) OR Flat amount in Paisa (integer)
         required: true,
-        min: 0
+        validate: {
+            validator: function(val) {
+                return typeof val === 'number' && !isNaN(val) && val > 0;
+            },
+            message: 'Discount value must be greater than 0'
+        }
     },
     minOrderAmount: {
         type: Number, // Stored in Paisa (integer)
@@ -42,7 +47,13 @@ const couponSchema = new mongoose.Schema({
     },
     maxDiscountAmount: {
         type: Number, // Stored in Paisa (integer), applicable for percentage discounts
-        default: null
+        default: null,
+        validate: {
+            validator: function(val) {
+                return val === null || val === undefined || (typeof val === 'number' && !isNaN(val) && val > 0);
+            },
+            message: 'Maximum discount amount must be greater than 0'
+        }
     },
     startDate: {
         type: Date,
@@ -78,6 +89,27 @@ const couponSchema = new mongoose.Schema({
     }
 }, {
     timestamps: true
+});
+
+couponSchema.pre('validate', function() {
+    if (this.discountType === 'flat') {
+        if (this.discountValue <= 0) {
+            this.invalidate('discountValue', 'Discount amount must be greater than 0');
+        }
+        if (this.minOrderAmount < this.discountValue + 10000) {
+            this.invalidate('minOrderAmount', 'Minimum order amount must be at least ₹100 greater than the flat discount amount');
+        }
+    } else if (this.discountType === 'percentage') {
+        if (this.discountValue <= 0) {
+            this.invalidate('discountValue', 'Discount percentage must be greater than 0%');
+        }
+        if (this.discountValue > 100) {
+            this.invalidate('discountValue', 'Discount percentage cannot exceed 100%');
+        }
+        if (this.maxDiscountAmount !== null && this.maxDiscountAmount !== undefined && this.maxDiscountAmount <= 0) {
+            this.invalidate('maxDiscountAmount', 'Maximum discount amount must be greater than 0');
+        }
+    }
 });
 
 couponSchema.index({ isActive: 1, expiryDate: 1 });

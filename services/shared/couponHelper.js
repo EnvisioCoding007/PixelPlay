@@ -9,20 +9,26 @@ import Coupon from '../../models/Coupon.js';
  */
 export const calculateDiscountAmount = (coupon, subtotalPaisa) => {
     const subtotal = Math.max(0, Math.round(Number(subtotalPaisa) || 0));
+    if (subtotal <= 0) return 0;
     let rawDiscount = 0;
 
     if (coupon.discountType === 'percentage') {
-        rawDiscount = Math.round((subtotal * Number(coupon.discountValue)) / 100);
-        if (coupon.maxDiscountAmount !== null && coupon.maxDiscountAmount !== undefined && coupon.maxDiscountAmount > 0) {
-            rawDiscount = Math.min(rawDiscount, Number(coupon.maxDiscountAmount));
+        const pct = Number(coupon.discountValue);
+        if (pct > 0) {
+            rawDiscount = Math.round((subtotal * pct) / 100);
+            if (coupon.maxDiscountAmount !== null && coupon.maxDiscountAmount !== undefined && coupon.maxDiscountAmount > 0) {
+                rawDiscount = Math.min(rawDiscount, Number(coupon.maxDiscountAmount));
+            }
         }
     } else if (coupon.discountType === 'flat') {
         rawDiscount = Number(coupon.discountValue);
     }
 
-    // Discount cannot exceed the subtotal
-    const discountPaisa = Math.min(Math.max(0, rawDiscount), subtotal);
-    return discountPaisa;
+    if (rawDiscount <= 0) return 0;
+
+    // Discount cannot exceed the subtotal, and cannot hit zero or negative
+    const discountPaisa = Math.min(rawDiscount, subtotal);
+    return Math.max(0, discountPaisa);
 };
 
 /**
@@ -62,6 +68,13 @@ export const validateCouponEligibility = async (couponCode, userId, subtotalPais
         return { valid: false, message: 'Coupon global usage limit reached' };
     }
 
+    if (coupon.discountType === 'flat' && coupon.minOrderAmount < coupon.discountValue + 10000) {
+        return { 
+            valid: false, 
+            message: 'This coupon requires minimum order amount to be at least ₹100 greater than the discount amount' 
+        };
+    }
+
     const subtotal = Math.max(0, Math.round(Number(subtotalPaisa) || 0));
     if (subtotal < coupon.minOrderAmount) {
         const minRupees = (coupon.minOrderAmount / 100).toFixed(2);
@@ -82,6 +95,10 @@ export const validateCouponEligibility = async (couponCode, userId, subtotalPais
     }
 
     const discountPaisa = calculateDiscountAmount(coupon, subtotal);
+    if (discountPaisa <= 0) {
+        return { valid: false, message: 'Coupon discount amount must be greater than zero' };
+    }
+
     const finalAmountPaisa = Math.max(0, subtotal - discountPaisa);
 
     return {

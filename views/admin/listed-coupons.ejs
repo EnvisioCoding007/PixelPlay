@@ -290,11 +290,12 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label id="addDiscountValueLabel" class="block text-xs font-medium text-gray-400 mb-1">Discount Percentage (%) <span class="text-pixel-red">*</span></label>
-          <input type="number" step="0.01" min="0.01" name="discountValue" required placeholder="e.g. 20" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+          <input type="number" step="0.01" min="0.01" id="addDiscountValue" name="discountValue" required placeholder="e.g. 20" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1">Minimum Order Amount (₹)</label>
-          <input type="number" step="0.01" min="0" name="minOrderAmountRupees" value="0" placeholder="e.g. 500" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+          <input type="number" step="0.01" min="0" id="addMinOrderAmountRupees" name="minOrderAmountRupees" value="0" placeholder="e.g. 500" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+          <p id="addMinOrderHint" class="text-[11px] text-gray-400 mt-1 hidden"></p>
         </div>
       </div>
 
@@ -379,6 +380,7 @@
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1">Minimum Order Amount (₹)</label>
           <input type="number" step="0.01" min="0" id="editMinOrderAmountRupees" name="minOrderAmountRupees" class="w-full bg-content-bg border border-input-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-pixel-blue">
+          <p id="editMinOrderHint" class="text-[11px] text-gray-400 mt-1 hidden"></p>
         </div>
       </div>
 
@@ -461,7 +463,56 @@
     if (btn) btn.addEventListener('click', () => addCouponModal.classList.add('hidden'));
   });
 
-  // Toggle Max Discount Cap visibility based on Discount Type
+  // Helper to dynamically update minimum order hint based on discount type and value
+  const updateMinOrderHint = (typeSelect, valInput, hintEl) => {
+    if (!typeSelect || !hintEl) return;
+    if (typeSelect.value === 'flat') {
+      const val = parseFloat(valInput?.value) || 0;
+      const minRequired = val > 0 ? (val + 100).toFixed(2) : '100.00';
+      hintEl.textContent = `For flat discounts, min order must be at least ₹100 more than discount (Min: ₹${minRequired})`;
+      hintEl.classList.remove('hidden');
+      hintEl.classList.add('text-amber-400');
+    } else {
+      hintEl.textContent = '';
+      hintEl.classList.add('hidden');
+      hintEl.classList.remove('text-amber-400');
+    }
+  };
+
+  // Client-side coupon validation before submitting
+  const validateCouponForm = (data) => {
+    const discType = data.discountType;
+    const discVal = parseFloat(data.discountValue);
+    const minOrder = parseFloat(data.minOrderAmountRupees) || 0;
+
+    if (isNaN(discVal) || discVal <= 0) {
+      return 'Discount value must be greater than 0.';
+    }
+
+    if (discType === 'percentage') {
+      if (discVal > 100) {
+        return 'Discount percentage cannot exceed 100%.';
+      }
+      if (data.maxDiscountAmountRupees) {
+        const maxD = parseFloat(data.maxDiscountAmountRupees);
+        if (isNaN(maxD) || maxD <= 0) {
+          return 'Maximum discount cap must be greater than 0.';
+        }
+      }
+    } else if (discType === 'flat') {
+      const minRequired = discVal + 100;
+      if (minOrder < minRequired) {
+        return `For flat discount coupons, minimum order amount must be at least ₹100 more than the discount amount (Minimum: ₹${minRequired.toFixed(2)}).`;
+      }
+    }
+
+    return null;
+  };
+
+  const addDiscountValueInput = document.getElementById('addDiscountValue');
+  const addMinOrderHint = document.getElementById('addMinOrderHint');
+
+  // Toggle Max Discount Cap visibility and update min order hint based on Discount Type
   if (addDiscountType) {
     addDiscountType.addEventListener('change', function() {
       if (this.value === 'flat') {
@@ -471,6 +522,13 @@
         addDiscountValueLabel.innerHTML = 'Discount Percentage (%) <span class="text-pixel-red">*</span>';
         addMaxDiscountGroup.classList.remove('opacity-40', 'pointer-events-none');
       }
+      updateMinOrderHint(addDiscountType, addDiscountValueInput, addMinOrderHint);
+    });
+  }
+
+  if (addDiscountValueInput) {
+    addDiscountValueInput.addEventListener('input', function() {
+      updateMinOrderHint(addDiscountType, addDiscountValueInput, addMinOrderHint);
     });
   }
 
@@ -481,6 +539,17 @@
       e.preventDefault();
       const formData = new FormData(this);
       const data = Object.fromEntries(formData.entries());
+
+      const validationError = validateCouponForm(data);
+      if (validationError) {
+        Swal.fire({
+          title: 'Validation Error',
+          text: validationError,
+          icon: 'warning',
+          confirmButtonColor: '#0ea5e9'
+        });
+        return;
+      }
 
       try {
         const response = await fetch('/admin/coupons', {
@@ -527,6 +596,8 @@
   const cancelEditCouponBtn = document.getElementById('cancelEditCouponBtn');
   const editDiscountType = document.getElementById('editDiscountType');
   const editDiscountValueLabel = document.getElementById('editDiscountValueLabel');
+  const editDiscountValueInput = document.getElementById('editDiscountValue');
+  const editMinOrderHint = document.getElementById('editMinOrderHint');
   const editMaxDiscountGroup = document.getElementById('editMaxDiscountGroup');
 
   [closeEditCouponModalBtn, cancelEditCouponBtn].forEach(btn => {
@@ -542,6 +613,13 @@
         editDiscountValueLabel.innerHTML = 'Discount Percentage (%) <span class="text-pixel-red">*</span>';
         editMaxDiscountGroup.classList.remove('opacity-40', 'pointer-events-none');
       }
+      updateMinOrderHint(editDiscountType, editDiscountValueInput, editMinOrderHint);
+    });
+  }
+
+  if (editDiscountValueInput) {
+    editDiscountValueInput.addEventListener('input', function() {
+      updateMinOrderHint(editDiscountType, editDiscountValueInput, editMinOrderHint);
     });
   }
 
@@ -581,8 +659,9 @@
           document.getElementById('editUsageLimit').value = c.usageLimit || '';
           document.getElementById('editDescription').value = c.description || '';
 
-          // Trigger change event to format labels
+          // Trigger change event to format labels and hints
           editDiscountType.dispatchEvent(new Event('change'));
+          updateMinOrderHint(editDiscountType, editDiscountValueInput, editMinOrderHint);
 
           editCouponModal.classList.remove('hidden');
         } else {
@@ -603,6 +682,17 @@
       const couponId = document.getElementById('editCouponId').value;
       const formData = new FormData(this);
       const data = Object.fromEntries(formData.entries());
+
+      const validationError = validateCouponForm(data);
+      if (validationError) {
+        Swal.fire({
+          title: 'Validation Error',
+          text: validationError,
+          icon: 'warning',
+          confirmButtonColor: '#0ea5e9'
+        });
+        return;
+      }
 
       try {
         const response = await fetch(`/admin/coupons/${couponId}`, {

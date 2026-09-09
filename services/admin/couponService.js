@@ -78,8 +78,16 @@ export const createCoupon = async (data) => {
         throw new Error('Discount value must be greater than 0');
     }
 
-    if (discountType === 'percentage' && numValue > 100) {
-        throw new Error('Percentage discount cannot exceed 100%');
+    if (discountType === 'percentage') {
+        if (numValue > 100) {
+            throw new Error('Percentage discount cannot exceed 100%');
+        }
+        if (maxDiscountAmountRupees !== null && maxDiscountAmountRupees !== undefined && maxDiscountAmountRupees !== '') {
+            const maxD = Number(maxDiscountAmountRupees);
+            if (isNaN(maxD) || maxD <= 0) {
+                throw new Error('Maximum discount cap must be greater than 0');
+            }
+        }
     }
 
     if (!expiryDate) {
@@ -98,13 +106,17 @@ export const createCoupon = async (data) => {
 
     // Convert rupee inputs to Paisa integers
     const minOrderAmountPaisa = Math.max(0, Math.round((Number(minOrderAmountRupees) || 0) * 100));
-    const maxDiscountPaisa = maxDiscountAmountRupees !== null && maxDiscountAmountRupees !== undefined && maxDiscountAmountRupees !== ''
+    const maxDiscountPaisa = (discountType === 'percentage' && maxDiscountAmountRupees !== null && maxDiscountAmountRupees !== undefined && maxDiscountAmountRupees !== '')
         ? Math.max(0, Math.round(Number(maxDiscountAmountRupees) * 100))
         : null;
 
     const discountValueStored = discountType === 'flat' 
         ? Math.round(numValue * 100) 
         : numValue;
+
+    if (discountType === 'flat' && minOrderAmountPaisa < discountValueStored + 10000) {
+        throw new Error('Minimum order amount must be at least ₹100 greater than the flat discount amount');
+    }
 
     const newCoupon = new Coupon({
         code: normalizedCode,
@@ -262,33 +274,67 @@ export const updateCoupon = async (couponId, updateData) => {
         coupon.code = newCode;
     }
 
-    if (updateData.discountType) {
-        if (!['percentage', 'flat'].includes(updateData.discountType)) {
-            throw new Error('Invalid discount type');
-        }
-        coupon.discountType = updateData.discountType;
+    const targetDiscountType = updateData.discountType || coupon.discountType;
+    if (!['percentage', 'flat'].includes(targetDiscountType)) {
+        throw new Error('Invalid discount type');
     }
 
+    let targetDiscountValue = coupon.discountValue;
     if (updateData.discountValue !== undefined) {
         const numVal = Number(updateData.discountValue);
         if (isNaN(numVal) || numVal <= 0) {
             throw new Error('Discount value must be greater than 0');
         }
-        if (coupon.discountType === 'percentage' && numVal > 100) {
+        if (targetDiscountType === 'percentage' && numVal > 100) {
             throw new Error('Percentage discount cannot exceed 100%');
         }
-        coupon.discountValue = coupon.discountType === 'flat' ? Math.round(numVal * 100) : numVal;
+        targetDiscountValue = targetDiscountType === 'flat' ? Math.round(numVal * 100) : numVal;
+    } else if (updateData.discountType && updateData.discountType !== coupon.discountType) {
+        if (targetDiscountType === 'percentage' && targetDiscountValue > 100) {
+            throw new Error('Percentage discount cannot exceed 100%');
+        }
     }
 
+    let targetMinOrderAmount = coupon.minOrderAmount;
     if (updateData.minOrderAmountRupees !== undefined) {
-        coupon.minOrderAmount = Math.max(0, Math.round((Number(updateData.minOrderAmountRupees) || 0) * 100));
+        targetMinOrderAmount = Math.max(0, Math.round((Number(updateData.minOrderAmountRupees) || 0) * 100));
     }
 
+    let targetMaxDiscountAmount = coupon.maxDiscountAmount;
     if (updateData.maxDiscountAmountRupees !== undefined) {
-        coupon.maxDiscountAmount = updateData.maxDiscountAmountRupees !== '' && updateData.maxDiscountAmountRupees !== null
-            ? Math.max(0, Math.round(Number(updateData.maxDiscountAmountRupees) * 100))
-            : null;
+        if (updateData.maxDiscountAmountRupees !== '' && updateData.maxDiscountAmountRupees !== null) {
+            const maxD = Number(updateData.maxDiscountAmountRupees);
+            if (isNaN(maxD) || maxD <= 0) {
+                throw new Error('Maximum discount cap must be greater than 0');
+            }
+            targetMaxDiscountAmount = Math.round(maxD * 100);
+        } else {
+            targetMaxDiscountAmount = null;
+        }
     }
+
+    // Cross-field constraints
+    if (targetDiscountType === 'flat') {
+        if (targetDiscountValue <= 0) {
+            throw new Error('Discount value must be greater than 0');
+        }
+        if (targetMinOrderAmount < targetDiscountValue + 10000) {
+            throw new Error('Minimum order amount must be at least ₹100 greater than the flat discount amount');
+        }
+        targetMaxDiscountAmount = null;
+    } else if (targetDiscountType === 'percentage') {
+        if (targetDiscountValue <= 0 || targetDiscountValue > 100) {
+            throw new Error('Percentage discount must be greater than 0% and at most 100%');
+        }
+        if (targetMaxDiscountAmount !== null && targetMaxDiscountAmount <= 0) {
+            throw new Error('Maximum discount cap must be greater than 0');
+        }
+    }
+
+    coupon.discountType = targetDiscountType;
+    coupon.discountValue = targetDiscountValue;
+    coupon.minOrderAmount = targetMinOrderAmount;
+    coupon.maxDiscountAmount = targetMaxDiscountAmount;
 
     if (updateData.expiryDate) {
         const exp = new Date(updateData.expiryDate);
