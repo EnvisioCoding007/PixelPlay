@@ -98,6 +98,10 @@ export const getHome = async (req, res) => {
 export const getBrowsePage = async (req, res) => {
     try {
         const { search, genre, platform, price, rating, publisher, sort, vault, page, notification } = req.query;
+        const error = req.query.error || (req.session && req.session.errorMessage ? req.session.errorMessage : null);
+        if (req.session && req.session.errorMessage) {
+            delete req.session.errorMessage;
+        }
 
         const queryGenre = Array.isArray(genre) ? genre : (genre ? [genre] : []);
         const queryPlatform = Array.isArray(platform) ? platform : (platform ? [platform] : []);
@@ -147,6 +151,7 @@ export const getBrowsePage = async (req, res) => {
             categories: result.dbCategories,
             primaryPlatform,
             notification: notification || null,
+            error: error || null,
             query: {
                 search: search || '',
                 genre: queryGenre,
@@ -177,6 +182,14 @@ export const getProductDetails = async (req, res) => {
 
         const details = await productService.getProductDetailsForUser(id, userId, primaryPlatform);
         if (!details) {
+            const status = await productService.getProductStatus(id);
+            if (status && status !== 'Live') {
+                const message = 'The game is currently unavailable.';
+                if (req.session) {
+                    req.session.errorMessage = message;
+                }
+                return res.redirect(`/browse?error=${encodeURIComponent(message)}`);
+            }
             return res.status(404).render('404', {
                 title: '404 - Game Not Found | PixelPlay',
                 isAdminContext: false,
@@ -206,6 +219,16 @@ export const getProductDetails = async (req, res) => {
         });
     } catch (error) {
         console.error('[getProductDetails] Error:', error);
+        try {
+            const status = await productService.getProductStatus(req.params.id);
+            if (status && status !== 'Live') {
+                const message = 'The game is currently unavailable.';
+                if (req.session) {
+                    req.session.errorMessage = message;
+                }
+                return res.redirect(`/browse?error=${encodeURIComponent(message)}`);
+            }
+        } catch (_) {}
         return res.status(404).render('404', {
             title: '404 - Page Not Found | PixelPlay',
             isAdminContext: false,
@@ -219,7 +242,11 @@ export const checkProductStatus = async (req, res) => {
         const { id } = req.params;
         const status = await productService.getProductStatus(id);
         if (!status || status === 'Hidden') {
-            return res.status(200).json({ status: 'Hidden', redirectUrl: '/browse' });
+            const message = 'The game is currently unavailable.';
+            return res.status(200).json({ 
+                status: 'Hidden', 
+                redirectUrl: `/browse?error=${encodeURIComponent(message)}` 
+            });
         }
         return res.status(200).json({ status: 'Live' });
     } catch (error) {

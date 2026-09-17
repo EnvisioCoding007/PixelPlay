@@ -622,12 +622,44 @@
       try {
         const url = new URL(window.location);
         url.searchParams.delete('notification');
-        window.history.replaceState({}, document.title, url.toString());
+        const newSearch = url.searchParams.toString();
+        window.history.replaceState({}, document.title, url.pathname + (newSearch ? '?' + newSearch : ''));
       } catch (e) {
         console.error('Error clearing notification query param:', e);
       }
     });
   <% } %>
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get('error') || (<%- JSON.stringify(typeof error !== 'undefined' && error ? error : null) %>);
+    
+    if (errorParam) {
+      const message = (errorParam === 'unavailable' || errorParam === 'true')
+        ? 'The game is currently unavailable.'
+        : errorParam;
+
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Unavailable',
+          text: message,
+          background: '#141416',
+          color: '#fff',
+          confirmButtonColor: '#00b4ff'
+        });
+      }
+
+      try {
+        const url = new URL(window.location);
+        url.searchParams.delete('error');
+        const newSearch = url.searchParams.toString();
+        window.history.replaceState({}, document.title, url.pathname + (newSearch ? '?' + newSearch : ''));
+      } catch (e) {
+        console.error('Error clearing error query param:', e);
+      }
+    }
+  });
 </script>
 
 <%- include('../partials/user/footer') %>
