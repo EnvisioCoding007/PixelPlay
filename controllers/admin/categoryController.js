@@ -82,6 +82,7 @@ export const toggleCategoryStatus = async (req, res) => {
 export const renderEditCategory = async (req, res) => {
     try {
         const { id } = req.params;
+        const { error, success } = req.query;
         const details = await categoryService.getCategoryDetailsAdmin(id);
         if (!details) {
             return res.status(404).render('404', {
@@ -94,7 +95,9 @@ export const renderEditCategory = async (req, res) => {
         res.render('admin/edit-category', {
             category: details.category,
             linkedGamesCount: details.linkedGamesCount,
-            user: req.session.admin || null
+            user: req.session.admin || null,
+            error: error || null,
+            success: success || null
         });
     } catch (err) {
         console.error('[renderEditCategory]', err);
@@ -107,8 +110,9 @@ export const renderEditCategory = async (req, res) => {
 };
 
 export const editCategory = async (req, res) => {
+    const { id } = req.params;
+    const isAjax = req.xhr || req.headers.accept?.includes('application/json') || req.headers['x-requested-with'] === 'XMLHttpRequest';
     try {
-        const { id } = req.params;
         const { name, description, status } = req.body;
 
         let iconUrl = undefined;
@@ -123,10 +127,25 @@ export const editCategory = async (req, res) => {
             status,
             icon: iconUrl
         });
+
+        if (isAjax) {
+            return res.status(200).json({
+                success: true,
+                message: 'Category updated successfully.',
+                redirectUrl: '/admin/categories?success=Category updated successfully.'
+            });
+        }
         res.redirect('/admin/categories?success=Category updated successfully.');
     } catch (err) {
         console.error('[editCategory]', err);
-        res.status(500).send(err.message || 'Internal Server Error');
+        const errorMessage = err.message || 'Failed to update category.';
+        if (isAjax) {
+            return res.status(400).json({
+                success: false,
+                message: errorMessage
+            });
+        }
+        res.redirect(`/admin/categories/${id}/edit?error=${encodeURIComponent(errorMessage)}`);
     }
 };
 

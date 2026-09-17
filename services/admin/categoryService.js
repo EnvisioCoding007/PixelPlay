@@ -87,7 +87,8 @@ export const createCategory = async ({ name, description, icon }) => {
             throw new Error('Category description cannot exceed 500 characters.');
         }
 
-        const existing = await Category.findOne({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
+        const escapedName = name.trim().replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const existing = await Category.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } });
         if (existing) {
             throw new Error('Category already exists.');
         }
@@ -174,8 +175,9 @@ export const updateCategory = async (id, { name, description, status, icon }) =>
             await Product.updateMany({ category: id }, { status: 'Hidden' });
         }
 
+        const escapedName = name.trim().replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
         const conflict = await Category.findOne({ 
-            name: { $regex: new RegExp(`^${name.trim()}$`, 'i') }, 
+            name: { $regex: new RegExp(`^${escapedName}$`, 'i') }, 
             _id: { $ne: id } 
         });
         if (conflict) {
