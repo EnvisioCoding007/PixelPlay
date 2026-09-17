@@ -709,3 +709,64 @@ export const deleteAddress = async (userId, addressId) => {
         throw error;
     }
 };
+
+export const verifyUserPassword = async (userId, password) => {
+    try {
+        if (!password || typeof password !== 'string') {
+            throw new Error('Password is required.');
+        }
+        const user = await User.findById(userId).select('password_hash google_id').lean();
+        if (!user) {
+            throw new Error('User not found.');
+        }
+        if (user.google_id || !user.password_hash) {
+            throw new Error('Password verification is not available for Google OAuth accounts.');
+        }
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (!isMatch) {
+            throw new Error('Incorrect password. Please try again.');
+        }
+        return true;
+    } catch (error) {
+        console.error('[userService.verifyUserPassword] Error:', error);
+        throw error;
+    }
+};
+
+export const initiateEmailUpdate = async (userId, newEmail) => {
+    try {
+        const cleanEmail = newEmail ? newEmail.trim().toLowerCase() : '';
+        if (!cleanEmail) {
+            throw new Error('Email address is required.');
+        }
+        if (!EMAIL_REGEX.test(cleanEmail)) {
+            throw new Error('Please enter a valid email address.');
+        }
+        if (cleanEmail.length > 100) {
+            throw new Error('Email cannot exceed 100 characters.');
+        }
+
+        const currentUser = await User.findById(userId).select('email google_id password_hash').lean();
+        if (!currentUser) {
+            throw new Error('User not found.');
+        }
+        if (currentUser.google_id || !currentUser.password_hash) {
+            throw new Error('Google OAuth accounts cannot change their email address.');
+        }
+        if (cleanEmail === currentUser.email) {
+            throw new Error('New email address must be different from your current email.');
+        }
+
+        const conflict = await User.findOne({ email: cleanEmail, _id: { $ne: userId } }).lean();
+        if (conflict) {
+            throw new Error('This email address is already in use by another account.');
+        }
+
+        await User.findByIdAndUpdate(userId, { pending_email: cleanEmail });
+        await generateOTP(cleanEmail, 'email_update');
+        return cleanEmail;
+    } catch (error) {
+        console.error('[userService.initiateEmailUpdate] Error:', error);
+        throw error;
+    }
+};

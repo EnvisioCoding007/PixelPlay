@@ -118,15 +118,15 @@
                                         class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#c0c0c8] text-sm tracking-[0] leading-[normal]"
                                         for="email-address">Email Address</label>
                                     <% if (!user.google_id && user.password_hash) { %>
-                                    <button type="button" id="email-edit-btn"
-                                        title="Edit email address"
+                                    <a href="/profile/change-email/verify-password" id="email-edit-btn"
+                                        title="Change email address"
                                         class="flex items-center gap-1 text-zinc-500 hover:text-sky-400 transition-colors text-xs [font-family:'Inter-Medium',Helvetica]">
                                         <!-- Pencil icon -->
                                         <svg id="email-pen-icon" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828A2 2 0 019.5 16.5H8v-1.5a2 2 0 01.586-1.414z" />
                                         </svg>
                                         <span id="email-edit-label">Change</span>
-                                    </button>
+                                    </a>
                                     <% } %>
                                 </div>
                                 <div id="email-input-wrapper"
@@ -339,53 +339,7 @@
             closeCropper();
         });
 
-        // Email edit toggle
-        const editBtn    = document.getElementById('email-edit-btn');
-        const editLabel  = document.getElementById('email-edit-label');
-        const penIcon    = document.getElementById('email-pen-icon');
-        const lockIcon   = document.getElementById('email-lock-icon');
-        const wrapper    = document.getElementById('email-input-wrapper');
-        const input      = document.getElementById('email-address');
-        const hint       = document.getElementById('email-edit-hint');
-        const originalEmail = input ? input.value : '';
 
-        let isEditing = false;
-
-        function enableEdit() {
-            if (!input || !wrapper || !lockIcon || !penIcon || !editLabel || !hint) return;
-            isEditing = true;
-            input.readOnly = false;
-            input.classList.remove('text-zinc-400', 'cursor-not-allowed');
-            input.classList.add('text-zinc-100', 'cursor-text');
-            wrapper.classList.remove('opacity-60', 'border-zinc-700');
-            wrapper.classList.add('border-sky-500', 'shadow-[0px_0px_0px_1px_#0ea5e9]');
-            lockIcon.classList.add('hidden');
-            penIcon.classList.add('text-sky-400');
-            editLabel.textContent = 'Cancel';
-            hint.classList.remove('hidden');
-            input.focus();
-        }
-
-        function disableEdit() {
-            if (!input || !wrapper || !lockIcon || !penIcon || !editLabel || !hint) return;
-            isEditing = false;
-            input.readOnly = true;
-            input.value = originalEmail;
-            input.classList.remove('text-zinc-100', 'cursor-text');
-            input.classList.add('text-zinc-400', 'cursor-not-allowed');
-            wrapper.classList.remove('border-sky-500', 'shadow-[0px_0px_0px_1px_#0ea5e9]');
-            wrapper.classList.add('opacity-60', 'border-zinc-700');
-            lockIcon.classList.remove('hidden');
-            penIcon.classList.remove('text-sky-400');
-            editLabel.textContent = 'Change';
-            hint.classList.add('hidden');
-        }
-
-        if (editBtn) {
-            editBtn.addEventListener('click', () => {
-                isEditing ? disableEdit() : enableEdit();
-            });
-        }
 
         const profileForm = document.getElementById('profile-edit-form');
         if (profileForm) {

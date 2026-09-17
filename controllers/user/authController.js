@@ -43,6 +43,17 @@ export const sendVerificationOtp = async (req, res) => {
         const VALID_PURPOSES = ['signup', 'forgot', 'email_update'];
         const otpPurpose = VALID_PURPOSES.includes(purpose) ? purpose : 'signup';
 
+        if (otpPurpose === 'email_update') {
+            if (!req.session.user) {
+                return res.status(401).json({ success: false, message: 'Authentication required.' });
+            }
+            const userId = req.session.user.id || req.session.user;
+            const pendingEmail = await userService.getPendingEmail(userId);
+            if (!pendingEmail || pendingEmail.toLowerCase() !== email.trim().toLowerCase()) {
+                return res.status(400).json({ success: false, message: 'Invalid email update request.' });
+            }
+        }
+
         await userService.generateOTP(email, otpPurpose);
 
         res.status(200).json({ success: true, message: 'Verification code sent to your mail.' });

@@ -40,7 +40,6 @@ router.post('/support', supportController.submitSupportRequest);
 router.use([
     '/signup',
     '/login',
-    '/send-otp',
     '/verify-email',
     '/forgot-password',
     '/reset-password-otp',
@@ -48,9 +47,11 @@ router.use([
     '/auth/google'
 ], isUserUnAuth);
 
+// OTP generation (serves guest signup & forgot-password flows, as well as authenticated email update)
+router.post('/send-otp', authController.sendVerificationOtp);
+
 router.get('/signup', authController.getSignupPage);
 router.post('/signup', authController.signup);
-router.post('/send-otp', authController.sendVerificationOtp);
 router.get('/verify-email', authController.getVerifyEmailPage);
 router.post('/verify-email', authController.verifyOtp);
 
@@ -91,6 +92,13 @@ router.use([
 router.get('/profile', userController.getProfile);
 router.get('/profile/edit', userController.getProfileEdit);
 router.patch('/profile', upload.single('profile_image'), userController.updateProfile);
+
+// Change Email Flow (Password verification step followed by new email entry)
+router.get('/profile/change-email/verify-password', userController.getChangeEmailVerifyPassword);
+router.post('/profile/change-email/verify-password', userController.postChangeEmailVerifyPassword);
+router.get('/profile/change-email', userController.getChangeEmail);
+router.post('/profile/change-email', userController.postChangeEmail);
+
 router.get('/verify-email-update', userController.getVerifyEmailUpdate);
 router.post('/verify-email-update', userController.verifyEmailUpdate);
 router.get('/profile/password', userController.getProfilePassword);

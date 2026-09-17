@@ -207,8 +207,20 @@
                         <div class="grid grid-cols-2 gap-5 p-6 w-full bg-[#071827] rounded-md border border-solid border-[#00000014]">
                             <!-- Email — full width -->
                             <div class="col-span-2 flex flex-col gap-2">
-                                <label for="profile-email"
-                                    class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-[13px]">Email Address</label>
+                                <div class="flex items-center justify-between">
+                                    <label for="profile-email"
+                                        class="[font-family:'Inter-Medium',Helvetica] font-medium text-[#bfeaf6] text-[13px]">Email Address</label>
+                                    <% if (!user.google_id && user.password_hash) { %>
+                                    <a href="/profile/change-email/verify-password"
+                                        class="text-xs text-sky-400 hover:text-sky-300 font-medium flex items-center gap-1 transition-colors"
+                                        title="Change email address">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828A2 2 0 019.5 16.5H8v-1.5a2 2 0 01.586-1.414z" />
+                                        </svg>
+                                        <span>Change Email</span>
+                                    </a>
+                                    <% } %>
+                                </div>
                                 <input id="profile-email" name="email-address" type="email"
                                     value="<%= user.email %>"
                                     readonly

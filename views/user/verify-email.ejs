@@ -233,9 +233,9 @@
                     body: JSON.stringify({ email: currentEmail, otp: otpCode, purpose })
                 });
 
-                const data = await response.json();
+                const data = await response.json().catch(() => null);
 
-                if (response.ok) {
+                if (response.ok && data && data.success) {
                     displayAlert(data.message || 'Verification successful.', 'success');
                     // Clear storage so next flows don't inherit stale values
                     sessionStorage.removeItem('otpTimerExpiry');
@@ -246,7 +246,7 @@
                         window.location.href = data.redirectUrl || fallbackRedirect;
                     }, 1000);
                 } else {
-                    displayAlert(data.message || 'Verification failed. Please try again.', 'error');
+                    displayAlert((data && data.message) || 'Verification failed. Please try again.', 'error');
                     clearOtpInputs();
                     submitBtn.disabled = false;
                     submitBtn.style.opacity = '1';
@@ -345,9 +345,9 @@
                     body: JSON.stringify({ email: currentEmail, purpose })
                 });
 
-                const data = await response.json();
+                const data = await response.json().catch(() => null);
 
-                if (response.ok) {
+                if (response.ok && data && data.success) {
                     resendButton.textContent = 'Resend OTP';
                     resendButton.style.pointerEvents = 'auto';
                     
@@ -362,7 +362,7 @@
                     clearOtpInputs();
                     displayAlert(data.message || 'OTP resent successfully.', 'success');
                 } else {
-                    displayAlert(data.message || 'Failed to resend code.', 'error');
+                    displayAlert((data && data.message) || 'Failed to resend code.', 'error');
                     resendButton.textContent = 'Resend OTP';
                     resendButton.style.pointerEvents = 'auto';
                 }

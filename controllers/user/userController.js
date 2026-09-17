@@ -59,6 +59,107 @@ export const updateProfile = async (req, res) => {
     }
 };
 
+export const getChangeEmailVerifyPassword = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const user = await userService.getUserById(userId);
+        if (!user) return res.redirect('/login');
+        if (user.google_id || !user.password_hash) {
+            return res.redirect('/profile');
+        }
+
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        res.render('user/change-email-verify-password', { user, error: null });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const postChangeEmailVerifyPassword = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const { password } = req.body;
+
+        if (!password) {
+            return res.status(400).json({ success: false, message: 'Password is required.' });
+        }
+
+        await userService.verifyUserPassword(userId, password);
+
+        req.session.emailChangePasswordVerified = true;
+        req.session.emailChangePasswordVerifiedAt = Date.now();
+
+        res.status(200).json({
+            success: true,
+            message: 'Password verified successfully.',
+            redirectUrl: '/profile/change-email'
+        });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message || 'Incorrect password. Please try again.' });
+    }
+};
+
+export const getChangeEmail = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+        const user = await userService.getUserById(userId);
+        if (!user) return res.redirect('/login');
+        if (user.google_id || !user.password_hash) {
+            return res.redirect('/profile');
+        }
+
+        const isVerified = req.session.emailChangePasswordVerified;
+        const verifiedAt = req.session.emailChangePasswordVerifiedAt;
+        const isRecent = verifiedAt && (Date.now() - verifiedAt < 15 * 60 * 1000);
+
+        if (!isVerified || !isRecent) {
+            req.session.emailChangePasswordVerified = false;
+            return res.redirect('/profile/change-email/verify-password');
+        }
+
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        res.render('user/change-email', { user, error: null });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const postChangeEmail = async (req, res) => {
+    try {
+        const userId = req.session.user.id || req.session.user;
+
+        const isVerified = req.session.emailChangePasswordVerified;
+        const verifiedAt = req.session.emailChangePasswordVerifiedAt;
+        const isRecent = verifiedAt && (Date.now() - verifiedAt < 15 * 60 * 1000);
+
+        if (!isVerified || !isRecent) {
+            return res.status(403).json({
+                success: false,
+                message: 'Password verification required before changing email.',
+                redirectUrl: '/profile/change-email/verify-password'
+            });
+        }
+
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ success: false, message: 'New email address is required.' });
+        }
+
+        await userService.initiateEmailUpdate(userId, email);
+
+        req.session.emailChangePasswordVerified = false;
+        delete req.session.emailChangePasswordVerifiedAt;
+
+        res.status(200).json({
+            success: true,
+            message: 'Verification code sent to your new email address.',
+            redirectUrl: '/verify-email-update'
+        });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
 export const getVerifyEmailUpdate = async (req, res) => {
     try {
         const userId = req.session.user.id || req.session.user;
@@ -79,6 +180,11 @@ export const verifyEmailUpdate = async (req, res) => {
 
         await userService.otpCheck(email, otp, 'email_update');
         await userService.applyPendingEmail(req.session.user);
+
+        if (req.session.emailChangePasswordVerified) {
+            delete req.session.emailChangePasswordVerified;
+            delete req.session.emailChangePasswordVerifiedAt;
+        }
 
         res.status(200).json({
             success: true,
