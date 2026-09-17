@@ -454,21 +454,24 @@
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-fullName">Full Name *</label>
-                        <input type="text" id="add-fullName" name="fullName" required
+                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-fullName">Full Name</label>
+                        <input type="text" id="add-fullName" name="fullName"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                     <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-phone">Phone Number *</label>
-                        <input type="tel" id="add-phone" name="phone" required
+                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-phone">Phone Number</label>
+                        <input type="tel" id="add-phone" name="phone"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-addressLine1">Address Line 1 *</label>
-                    <input type="text" id="add-addressLine1" name="addressLine1" required placeholder="Street address, P.O. box, company name"
+                    <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-addressLine1">Address Line 1</label>
+                    <input type="text" id="add-addressLine1" name="addressLine1" placeholder="Street address, P.O. box, company name"
                         class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                    <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                 </div>
                 
                 <div>
@@ -479,27 +482,31 @@
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-city">City *</label>
-                        <input type="text" id="add-city" name="city" required
+                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-city">City</label>
+                        <input type="text" id="add-city" name="city"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                     <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-state">State *</label>
-                        <input type="text" id="add-state" name="state" required
+                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-state">State</label>
+                        <input type="text" id="add-state" name="state"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-postal_code">Postal Code *</label>
-                        <input type="text" id="add-postal_code" name="postal_code" required maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-postal_code">Postal Code</label>
+                        <input type="text" id="add-postal_code" name="postal_code" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                     <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-country">Country *</label>
-                        <input type="text" id="add-country" name="country" required value="India"
+                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="add-country">Country</label>
+                        <input type="text" id="add-country" name="country" value="India"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                 </div>
                 
@@ -553,21 +560,24 @@
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-fullName">Full Name *</label>
-                        <input type="text" id="edit-fullName" name="fullName" required
+                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-fullName">Full Name</label>
+                        <input type="text" id="edit-fullName" name="fullName"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                     <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-phone">Phone Number *</label>
-                        <input type="tel" id="edit-phone" name="phone" required
+                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-phone">Phone Number</label>
+                        <input type="tel" id="edit-phone" name="phone"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-addressLine1">Address Line 1 *</label>
-                    <input type="text" id="edit-addressLine1" name="addressLine1" required placeholder="Street address, P.O. box, company name"
+                    <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-addressLine1">Address Line 1</label>
+                    <input type="text" id="edit-addressLine1" name="addressLine1" placeholder="Street address, P.O. box, company name"
                         class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                    <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                 </div>
                 
                 <div>
@@ -578,27 +588,31 @@
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-city">City *</label>
-                        <input type="text" id="edit-city" name="city" required
+                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-city">City</label>
+                        <input type="text" id="edit-city" name="city"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                     <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-state">State *</label>
-                        <input type="text" id="edit-state" name="state" required
+                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-state">State</label>
+                        <input type="text" id="edit-state" name="state"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-postal_code">Postal Code *</label>
-                        <input type="text" id="edit-postal_code" name="postal_code" required maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-postal_code">Postal Code</label>
+                        <input type="text" id="edit-postal_code" name="postal_code" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                     <div class="col-span-2 sm:col-span-1">
-                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-country">Country *</label>
-                        <input type="text" id="edit-country" name="country" required
+                        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2" for="edit-country">Country</label>
+                        <input type="text" id="edit-country" name="country" value="India"
                             class="w-full px-3.5 py-2.5 bg-zinc-900 border border-zinc-800 rounded text-sm text-zinc-100 placeholder-zinc-600 focus:border-sky-500 focus:outline-none transition-colors" />
+                        <span class="validation-error text-red-500 text-xs mt-1 hidden font-medium block"></span>
                     </div>
                 </div>
                 
@@ -683,6 +697,14 @@
                 addBtn.addEventListener('click', () => {
                     addForm.reset();
                     addError.classList.add('hidden');
+                    addForm.querySelectorAll('.validation-error').forEach(span => {
+                        span.textContent = '';
+                        span.classList.add('hidden');
+                    });
+                    addForm.querySelectorAll('input').forEach(input => {
+                        input.classList.remove('border-red-500');
+                        input.classList.add('border-zinc-800');
+                    });
                     addModal.classList.remove('hidden');
                     addModal.classList.add('flex');
                     document.body.classList.add('overflow-hidden');
@@ -737,6 +759,14 @@
             // Populate and open edit modal
             window.openEditModal = function(address) {
                 editError.classList.add('hidden');
+                editForm.querySelectorAll('.validation-error').forEach(span => {
+                    span.textContent = '';
+                    span.classList.add('hidden');
+                });
+                editForm.querySelectorAll('input').forEach(input => {
+                    input.classList.remove('border-red-500');
+                    input.classList.add('border-zinc-800');
+                });
                 
                 document.getElementById('edit-id').value = address._id || '';
                 document.getElementById('edit-fullName').value = address.fullName || '';
@@ -766,40 +796,120 @@
                 });
             });
 
+            // Bind input and focus listeners for real-time field error clearing
+            [addForm, editForm].forEach(form => {
+                if (!form) return;
+                form.querySelectorAll('input, select').forEach(input => {
+                    ['focus', 'input', 'change'].forEach(evt => {
+                        input.addEventListener(evt, () => {
+                            const errorSpan = input.parentNode.querySelector('.validation-error');
+                            if (errorSpan) {
+                                errorSpan.textContent = '';
+                                errorSpan.classList.add('hidden');
+                            }
+                            input.classList.remove('border-red-500');
+                            input.classList.add('border-zinc-800');
+                            if (form === addForm) addError.classList.add('hidden');
+                            if (form === editForm) editError.classList.add('hidden');
+                        });
+                    });
+                });
+            });
+
             // Form validation helper
             function validateAddressForm(form, errorDiv) {
-                const fullName = form.querySelector('[name="fullName"]').value.trim();
-                const phone = form.querySelector('[name="phone"]').value.trim();
-                const addressLine1 = form.querySelector('[name="addressLine1"]').value.trim();
-                const city = form.querySelector('[name="city"]').value.trim();
-                const state = form.querySelector('[name="state"]').value.trim();
-                const postal_code = form.querySelector('[name="postal_code"]').value.trim();
-                const country = form.querySelector('[name="country"]').value.trim();
+                // Clear general error
+                errorDiv.textContent = '';
+                errorDiv.classList.add('hidden');
 
-                if (!fullName || !phone || !addressLine1 || !city || !state || !postal_code || !country) {
-                    errorDiv.textContent = 'Please fill in all required fields marked with *';
-                    errorDiv.classList.remove('hidden');
-                    return false;
+                // Clear all field-specific errors
+                const errorSpans = form.querySelectorAll('.validation-error');
+                errorSpans.forEach(span => {
+                    span.textContent = '';
+                    span.classList.add('hidden');
+                });
+
+                // Clear input highlight borders
+                const inputs = form.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.classList.remove('border-red-500');
+                    input.classList.add('border-zinc-800');
+                });
+
+                let isValid = true;
+
+                function markFieldError(input, msg) {
+                    const errorSpan = input.parentNode.querySelector('.validation-error');
+                    if (errorSpan) {
+                        errorSpan.textContent = msg;
+                        errorSpan.classList.remove('hidden');
+                    }
+                    input.classList.remove('border-zinc-800');
+                    input.classList.add('border-red-500');
+                    isValid = false;
                 }
 
+                const fullNameInput = form.querySelector('[name="fullName"]');
+                const phoneInput = form.querySelector('[name="phone"]');
+                const addressLine1Input = form.querySelector('[name="addressLine1"]');
+                const cityInput = form.querySelector('[name="city"]');
+                const stateInput = form.querySelector('[name="state"]');
+                const postalCodeInput = form.querySelector('[name="postal_code"]');
+                const countryInput = form.querySelector('[name="country"]');
+
+                const fullName = fullNameInput ? fullNameInput.value.trim() : '';
+                const phone = phoneInput ? phoneInput.value.trim() : '';
+                const addressLine1 = addressLine1Input ? addressLine1Input.value.trim() : '';
+                const city = cityInput ? cityInput.value.trim() : '';
+                const state = stateInput ? stateInput.value.trim() : '';
+                const postal_code = postalCodeInput ? postalCodeInput.value.trim() : '';
+                const country = countryInput ? countryInput.value.trim() : '';
+
+                // Full Name Validation
                 const fullNameRegex = /^[a-zA-Z][a-zA-Z ]{1,49}$/;
-                if (!fullNameRegex.test(fullName)) {
-                    errorDiv.textContent = 'Full name must be 2-50 characters long and contain only letters and spaces';
-                    errorDiv.classList.remove('hidden');
-                    return false;
+                if (!fullName) {
+                    markFieldError(fullNameInput, 'Full Name is required.');
+                } else if (!fullNameRegex.test(fullName)) {
+                    markFieldError(fullNameInput, 'Full name must be 2-50 characters long and contain only letters and spaces');
                 }
 
+                // Phone Validation
                 const cleanPhone = phone.replace(/[\s-]/g, '');
                 const phoneRegex = /^(?:\+91|91|0)?[6-9]\d{9}$/;
-                if (!phoneRegex.test(cleanPhone)) {
-                    errorDiv.textContent = 'Please enter a valid phone number (10 to 12 digits, optional +91)';
-                    errorDiv.classList.remove('hidden');
-                    return false;
+                if (!phone) {
+                    markFieldError(phoneInput, 'Phone number is required.');
+                } else if (!phoneRegex.test(cleanPhone)) {
+                    markFieldError(phoneInput, 'Please enter a valid phone number (10 to 12 digits, optional +91)');
                 }
 
-                if (!/^\d{6}$/.test(postal_code)) {
-                    errorDiv.textContent = 'Postal code must be exactly 6 digits';
-                    errorDiv.classList.remove('hidden');
+                // Address Line 1 Validation
+                if (!addressLine1) {
+                    markFieldError(addressLine1Input, 'Address line 1 is required.');
+                }
+
+                // City Validation
+                if (!city) {
+                    markFieldError(cityInput, 'City is required.');
+                }
+
+                // State Validation
+                if (!state) {
+                    markFieldError(stateInput, 'State is required.');
+                }
+
+                // Postal Code Validation
+                if (!postal_code) {
+                    markFieldError(postalCodeInput, 'Postal code is required.');
+                } else if (!/^\d{6}$/.test(postal_code)) {
+                    markFieldError(postalCodeInput, 'Postal code must be exactly 6 digits');
+                }
+
+                // Country Validation
+                if (!country) {
+                    markFieldError(countryInput, 'Country is required.');
+                }
+
+                if (!isValid) {
                     return false;
                 }
 
@@ -811,7 +921,7 @@
                     addressLine2: form.querySelector('[name="addressLine2"]').value.trim(),
                     city,
                     state,
-                    postal_code: postal_code,
+                    postal_code,
                     country,
                     address_type: form.querySelector('[name="address_type"]').value,
                     isDefault: form.querySelector('[name="isDefault"]').checked

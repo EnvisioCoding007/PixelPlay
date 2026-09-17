@@ -95,8 +95,8 @@
                                 <label
                                     class="relative flex items-center w-[66.11px] h-3 mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#e5e1e4] text-xs tracking-[1.20px] leading-3 whitespace-nowrap"
                                     for="username">Full Name</label>
-                                <div
-                                    class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b]">
+                                <div id="username-wrapper"
+                                    class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b] transition-colors">
                                     <div class="flex flex-col items-start relative flex-1 grow">
                                         <input
                                             class="relative flex items-center self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb80] text-base tracking-[0] leading-[normal] [background:transparent] border-[none] p-0 outline-none"
@@ -104,27 +104,28 @@
                                             autocomplete="name" />
                                     </div>
                                 </div>
+                                <span id="username-error" class="validation-error text-red-500 text-xs hidden font-medium block"></span>
                             </div>
                             <div class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
                                 <label
                                     class="relative flex items-center w-[95.63px] h-3 mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#e5e1e4] text-xs tracking-[1.20px] leading-3 whitespace-nowrap"
                                     for="email">Email Address</label>
-                                <div
-                                    class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b]">
+                                <div id="email-wrapper"
+                                    class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b] transition-colors">
                                     <input
                                         class="relative grow border-[none] [background:none] self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb80] text-base tracking-[0] leading-[normal] p-0 outline-none"
                                         placeholder="transmission@node.net" type="email" id="email" name="email"
                                         autocomplete="email" />
                                 </div>
+                                <span id="email-error" class="validation-error text-red-500 text-xs hidden font-medium block"></span>
                             </div>
                             <div class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
                                 <label
                                     class="relative flex items-center w-[65.08px] h-3 mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#e5e1e4] text-xs tracking-[1.20px] leading-3 whitespace-nowrap"
                                     for="password">Password</label>
-                                <div
-                                    class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto] rounded-sm">
-                                    <div
-                                        class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b]">
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto] rounded-sm">
+                                    <div id="password-wrapper"
+                                        class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b] transition-colors">
                                         <input
                                             class="relative grow border-[none] [background:none] self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb80] text-base tracking-[0] leading-[normal] p-0 pr-10 outline-none"
                                             placeholder="Enter your password" type="password" id="password"
@@ -139,17 +140,20 @@
                                         </span>
                                     </button>
                                 </div>
+                                <span id="password-error" class="validation-error text-red-500 text-xs hidden font-medium block"></span>
                             </div>
                             <div class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
                                 <label
                                     class="relative flex items-center w-[123.03px] h-3 mt-[-1.00px] [font-family:'Space_Grotesk-Bold',Helvetica] font-bold text-[#e5e1e4] text-xs tracking-[1.20px] leading-3 whitespace-nowrap"
                                     for="confirmPassword">Confirm Password</label>
-                                <div
-                                    class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b]">
-                                    <input
-                                        class="relative grow border-[none] [background:none] self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb80] text-base tracking-[0] leading-[normal] p-0 pr-10 outline-none"
-                                        placeholder="Confirm Password" type="password" id="confirmPassword"
-                                        name="confirmPassword" autocomplete="new-password" />
+                                <div class="flex flex-col items-start relative self-stretch w-full flex-[0_0_auto] rounded-sm">
+                                    <div id="confirm-password-wrapper"
+                                        class="flex items-start justify-center px-4 py-3.5 relative self-stretch w-full flex-[0_0_auto] bg-[#1c1b1d] rounded-sm overflow-hidden border border-solid border-[#3b494b] transition-colors">
+                                        <input
+                                            class="relative grow border-[none] [background:none] self-stretch mt-[-1.00px] [font-family:'Inter-Regular',Helvetica] font-normal text-[#b9cacb80] text-base tracking-[0] leading-[normal] p-0 pr-10 outline-none"
+                                            placeholder="Confirm Password" type="password" id="confirmPassword"
+                                            name="confirmPassword" autocomplete="new-password" />
+                                    </div>
                                     <button type="button" id="toggle-confirm-password"
                                         class="inline-flex flex-col items-center justify-center absolute h-[30.61%] top-[34.69%] right-3"
                                         aria-label="Show confirm password">
@@ -159,6 +163,7 @@
                                         </span>
                                     </button>
                                 </div>
+                                <span id="confirm-password-error" class="validation-error text-red-500 text-xs hidden font-medium block"></span>
                             </div>
                             <div class="flex flex-col items-start gap-2 relative self-stretch w-full flex-[0_0_auto]">
                                 <label
@@ -224,26 +229,84 @@
 
         // Password complexity: ≥8 chars, ≥1 uppercase, ≥1 lowercase, ≥1 digit, ≥1 special char.
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+        const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 
         const alertEl = document.getElementById('alert-message');
+        const usernameInput = document.getElementById('username');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+
+        const usernameWrapper = document.getElementById('username-wrapper');
+        const emailWrapper = document.getElementById('email-wrapper');
+        const passwordWrapper = document.getElementById('password-wrapper');
+        const confirmPasswordWrapper = document.getElementById('confirm-password-wrapper');
+
+        const usernameError = document.getElementById('username-error');
+        const emailError = document.getElementById('email-error');
+        const passwordError = document.getElementById('password-error');
+        const confirmPasswordError = document.getElementById('confirm-password-error');
 
         function showAlert(msg) {
             alertEl.textContent = msg;
             alertEl.classList.remove('hidden');
         }
 
-        // Clear the alert as soon as the user starts correcting input
-        document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]')
-            .forEach(function (input) {
-                ['focus', 'input'].forEach(function (evt) {
-                    input.addEventListener(evt, function () {
+        function setFieldError(errorEl, wrapper, msg) {
+            if (errorEl) {
+                errorEl.textContent = msg;
+                errorEl.classList.remove('hidden');
+            }
+            if (wrapper) {
+                wrapper.classList.remove('border-[#3b494b]');
+                wrapper.classList.add('border-red-500');
+            }
+        }
+
+        function clearFieldError(errorEl, wrapper) {
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.classList.add('hidden');
+            }
+            if (wrapper) {
+                wrapper.classList.remove('border-red-500');
+                wrapper.classList.add('border-[#3b494b]');
+            }
+        }
+
+        function clearAllFieldErrors() {
+            [usernameError, emailError, passwordError, confirmPasswordError].forEach(el => {
+                if (el) {
+                    el.textContent = '';
+                    el.classList.add('hidden');
+                }
+            });
+            [usernameWrapper, emailWrapper, passwordWrapper, confirmPasswordWrapper].forEach(wrapper => {
+                if (wrapper) {
+                    wrapper.classList.remove('border-red-500');
+                    wrapper.classList.add('border-[#3b494b]');
+                }
+            });
+        }
+
+        // Clear field error & alert as soon as the user starts correcting input
+        [
+            { input: usernameInput, error: usernameError, wrapper: usernameWrapper },
+            { input: emailInput, error: emailError, wrapper: emailWrapper },
+            { input: passwordInput, error: passwordError, wrapper: passwordWrapper },
+            { input: confirmPasswordInput, error: confirmPasswordError, wrapper: confirmPasswordWrapper }
+        ].forEach(item => {
+            if (item.input) {
+                ['focus', 'input'].forEach(evt => {
+                    item.input.addEventListener(evt, () => {
+                        clearFieldError(item.error, item.wrapper);
                         alertEl.classList.add('hidden');
                     });
                 });
-            });
+            }
+        });
 
         const togglePasswordBtn = document.getElementById('toggle-password');
-        const passwordInput = document.getElementById('password');
         if (togglePasswordBtn && passwordInput) {
             togglePasswordBtn.addEventListener('click', function () {
                 const img = togglePasswordBtn.querySelector('img');
@@ -260,7 +323,6 @@
         }
 
         const toggleConfirmPasswordBtn = document.getElementById('toggle-confirm-password');
-        const confirmPasswordInput = document.getElementById('confirmPassword');
         if (toggleConfirmPasswordBtn && confirmPasswordInput) {
             toggleConfirmPasswordBtn.addEventListener('click', function () {
                 const img = toggleConfirmPasswordBtn.querySelector('img');
@@ -279,42 +341,54 @@
         // ── Form submit handler ───────────────────────────────────────────────────
         document.getElementById('signupForm').addEventListener('submit', async function (e) {
             e.preventDefault();
+            clearAllFieldErrors();
+            alertEl.classList.add('hidden');
 
-            const username = document.getElementById('username').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+            const username = usernameInput.value.trim();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
             const referralCode = document.getElementById('referralCode').value.trim();
 
-            // Client-side validation
+            let isValid = true;
+
+            // Full Name validation
             if (!username) {
-                showAlert('Username is required.');
-                return;
+                setFieldError(usernameError, usernameWrapper, 'Full Name is required.');
+                isValid = false;
+            } else if (!usernameRegex.test(username)) {
+                setFieldError(usernameError, usernameWrapper, 'Full name must start with a letter and cannot be purely numeric or begin with a symbol/space.');
+                isValid = false;
             }
-            if (!usernameRegex.test(username)) {
-                showAlert('Username must start with a letter and cannot be purely numeric or begin with a symbol/space.');
-                return;
-            }
+
+            // Email validation
             if (!email) {
-                showAlert('Email address is required.');
-                return;
+                setFieldError(emailError, emailWrapper, 'Email address is required.');
+                isValid = false;
+            } else if (!emailRegex.test(email)) {
+                setFieldError(emailError, emailWrapper, 'Please enter a valid email address (e.g. user@example.com).');
+                isValid = false;
             }
-            // Strict email format — rejects ".@g", "@domain", "abc@", etc.
-            const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
-            if (!emailRegex.test(email)) {
-                showAlert('Please enter a valid email address (e.g. user@example.com).');
-                return;
-            }
+
+            // Password validation
             if (!password) {
-                showAlert('Password is required.');
-                return;
+                setFieldError(passwordError, passwordWrapper, 'Password is required.');
+                isValid = false;
+            } else if (!passwordRegex.test(password)) {
+                setFieldError(passwordError, passwordWrapper, 'Password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character.');
+                isValid = false;
             }
-            if (!passwordRegex.test(password)) {
-                showAlert('Password must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character.');
-                return;
+
+            // Confirm Password validation
+            if (!confirmPassword) {
+                setFieldError(confirmPasswordError, confirmPasswordWrapper, 'Please confirm your password.');
+                isValid = false;
+            } else if (password !== confirmPassword) {
+                setFieldError(confirmPasswordError, confirmPasswordWrapper, 'Passwords do not match.');
+                isValid = false;
             }
-            if (password !== confirmPassword) {
-                showAlert('Passwords do not match.');
+
+            if (!isValid) {
                 return;
             }
 
