@@ -12,6 +12,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style data-purpose="custom-fonts">
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
@@ -82,7 +83,12 @@
             let bannerText = 'text-pixelplay-gold';
             let bannerDot = 'bg-pixelplay-gold';
 
-            if (order.status === 'Processing' || order.status === 'Return Requested') {
+            if (order.status === 'Payment Failed' || (order.paymentStatus === 'Failed' && order.status !== 'Cancelled')) {
+                bannerBg = 'bg-[#2a0e0e] border-[#471515]';
+                bannerIcon = 'bg-pixelplay-red/20 text-pixelplay-red';
+                bannerText = 'text-pixelplay-red';
+                bannerDot = 'bg-pixelplay-red';
+            } else if (order.status === 'Processing' || order.status === 'Return Requested') {
                 bannerBg = 'bg-[#2a220c] border-[#4a3a14]';
                 bannerIcon = 'bg-pixelplay-gold/20 text-pixelplay-gold';
                 bannerText = 'text-pixelplay-gold';
@@ -115,10 +121,12 @@
             <div>
                 <h3 class="<%= bannerText %> font-semibold text-lg flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full <%= bannerDot %> animate-pulse"></span>
-                    Status: <%= order.status %>
+                    Status: <%= (order.status === 'Payment Failed' || (order.paymentStatus === 'Failed' && order.status !== 'Cancelled')) ? 'Payment Failed' : order.status %>
                 </h3>
                 <p class="text-gray-300 mt-1 text-sm">
-                    <% if (order.status === 'Processing') { %>
+                    <% if (order.status === 'Payment Failed' || (order.paymentStatus === 'Failed' && order.status !== 'Cancelled')) { %>
+                        Payment for this order was not completed. All ordered items, quantities, and applied coupons are preserved. You can complete payment using Razorpay, PixelWallet, or Cash on Delivery (COD) below.
+                    <% } else if (order.status === 'Processing') { %>
                         Our team is currently packing your physical disks. You can cancel items before they are assigned to a courier.
                     <% } else if (order.status === 'Shipped') { %>
                         Your package has been handed over to the courier and is on its way to you.
@@ -296,7 +304,11 @@
                                             <% 
                                                 const effectiveStatus = (item.status === 'Ordered' || !item.status) ? (order.status || 'Processing') : item.status;
                                             %>
-                                            <% if (effectiveStatus === 'Processing') { %>
+                                            <% if (effectiveStatus === 'Payment Failed' || order.status === 'Payment Failed') { %>
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold rounded-full select-none w-fit">
+                                                    <i class="fa-solid fa-circle-exclamation text-xs"></i> Payment Failed
+                                                </span>
+                                            <% } else if (effectiveStatus === 'Processing') { %>
                                                 <button onclick="window.location.href='/orders/<%= order._id %>/items/<%= item.product._id %>/cancellation?platform=<%= encodeURIComponent(item.platform) %>'"
                                                     class="px-4 py-1.5 text-xs font-medium text-pixelplay-red border border-pixelplay-red/40 rounded-md hover:bg-pixelplay-red/10 transition-colors flex items-center gap-1.5 w-fit">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
@@ -530,9 +542,10 @@
                             <% } %>
 
                             <%
+                                const isPaymentFailed = order.status === 'Payment Failed' || (order.paymentStatus === 'Failed' && order.status !== 'Cancelled');
                                 const hasShippedOrDelivered = order.items && order.items.some(i => ['Shipped', 'Delivered', 'Return Requested', 'Returned'].includes(i.status));
                                 const hasCancellableItems = order.items && order.items.some(i => i.status === 'Processing' || i.status === 'Ordered' || (!i.status && (order.status === 'Processing' || order.status === 'Pending')));
-                                const canCancelEntireOrder = (order.status === 'Processing' || order.status === 'Pending') && !hasShippedOrDelivered && hasCancellableItems;
+                                const canCancelEntireOrder = !isPaymentFailed && (order.status === 'Processing' || order.status === 'Pending') && !hasShippedOrDelivered && hasCancellableItems;
                             %>
                             <% if (canCancelEntireOrder) { %>
                                 <div class="mt-4 pt-4 border-t border-pixelplay-border">
@@ -541,6 +554,51 @@
                                         <i class="fa-regular fa-circle-xmark text-xs"></i>
                                         Cancel Order
                                     </button>
+                                </div>
+                            <% } %>
+
+                            <% if (isPaymentFailed) { %>
+                                <!-- Payment Failed Retry Action Card -->
+                                <div class="mt-6 pt-6 border-t border-pixelplay-border space-y-4">
+                                    <div class="p-4 rounded-xl bg-red-950/20 border border-red-500/30 space-y-3">
+                                        <div class="flex items-center gap-2 text-sm font-bold text-red-400">
+                                            <i class="fa-solid fa-rotate-right"></i> Complete Order Payment
+                                        </div>
+                                        <p class="text-xs text-gray-300">
+                                            Payment was unsuccessful. Retry now using Razorpay or switch to another method without re-adding products.
+                                        </p>
+                                        <button type="button" id="details-retry-rzp-btn" class="w-full bg-pixelplay-accent hover:bg-pixelplay-accentHover text-black font-bold py-2.5 px-4 rounded-lg transition-all flex items-center justify-center gap-2 text-sm shadow-md cursor-pointer">
+                                            <i class="fa-solid fa-bolt"></i> Retry Online Payment (₹<%= (order.grandTotal / 100).toFixed(2) %>)
+                                        </button>
+                                    </div>
+
+                                    <div class="p-4 rounded-xl bg-[#14161a] border border-pixelplay-border space-y-3">
+                                        <span class="text-xs font-bold text-gray-300 uppercase tracking-wider block">Or Switch Payment Method:</span>
+                                        <div class="space-y-2">
+                                            <label class="flex items-center justify-between p-2.5 rounded-lg border border-pixelplay-border bg-[#101216] cursor-pointer hover:border-pixelplay-accent/50 transition-colors text-xs">
+                                                <div class="flex items-center gap-2">
+                                                    <input type="radio" name="detailsPaymentMethod" value="COD" checked class="text-pixelplay-accent focus:ring-pixelplay-accent bg-gray-900 border-gray-700" />
+                                                    <span class="text-white font-medium">Cash On Delivery (COD)</span>
+                                                </div>
+                                                <i class="fa-solid fa-money-bill-wave text-emerald-400"></i>
+                                            </label>
+                                            <label class="flex items-center justify-between p-2.5 rounded-lg border border-pixelplay-border bg-[#101216] cursor-pointer hover:border-pixelplay-accent/50 transition-colors text-xs">
+                                                <div class="flex items-center gap-2">
+                                                    <input type="radio" name="detailsPaymentMethod" value="PixelWallet" class="text-pixelplay-accent focus:ring-pixelplay-accent bg-gray-900 border-gray-700" />
+                                                    <span class="text-white font-medium">PixelWallet (Bal: ₹<%= ((walletBalance || 0) / 100).toFixed(2) %>)</span>
+                                                </div>
+                                                <i class="fa-solid fa-wallet text-sky-400"></i>
+                                            </label>
+                                        </div>
+                                        <% if ((walletBalance || 0) < order.grandTotal) { %>
+                                            <div id="details-wallet-warning" class="hidden text-xs text-amber-400 bg-amber-950/40 border border-amber-500/20 p-2.5 rounded-lg">
+                                                <i class="fa-solid fa-circle-exclamation mr-1"></i> PixelWallet balance is less than total due.
+                                            </div>
+                                        <% } %>
+                                        <button type="button" id="details-switch-method-btn" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 px-4 rounded-lg transition-all border border-gray-700 flex items-center justify-center gap-2 text-xs cursor-pointer">
+                                            Confirm with Selected Method
+                                        </button>
+                                    </div>
                                 </div>
                             <% } %>
                         </div>
@@ -602,6 +660,149 @@
         }
 
         (function() {
+            const orderDbId = '<%= order._id %>';
+            const grandTotalPaisa = <%= order.grandTotal %>;
+            const walletBalPaisa = <%= walletBalance || 0 %>;
+
+            const retryRzpBtn = document.getElementById('details-retry-rzp-btn');
+            const switchMethodBtn = document.getElementById('details-switch-method-btn');
+            const walletWarning = document.getElementById('details-wallet-warning');
+
+            document.querySelectorAll('input[name="detailsPaymentMethod"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    if (e.target.value === 'PixelWallet' && walletBalPaisa < grandTotalPaisa) {
+                        if (walletWarning) walletWarning.classList.remove('hidden');
+                    } else {
+                        if (walletWarning) walletWarning.classList.add('hidden');
+                    }
+                });
+            });
+
+            if (retryRzpBtn) {
+                retryRzpBtn.addEventListener('click', async () => {
+                    retryRzpBtn.disabled = true;
+                    retryRzpBtn.innerText = 'Initiating Secure Payment...';
+
+                    try {
+                        const createRes = await fetch(`/orders/${orderDbId}/retry-razorpay`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        const createData = await createRes.json();
+                        if (!createRes.ok || !createData.success) {
+                            Swal.fire({ icon: 'error', title: 'Payment Initiation Failed', text: createData.message || 'Could not initiate online payment.' });
+                            retryRzpBtn.disabled = false;
+                            retryRzpBtn.innerText = `Retry Online Payment (₹${(grandTotalPaisa / 100).toFixed(2)})`;
+                            return;
+                        }
+
+                        const options = {
+                            key: createData.razorpayKeyId,
+                            amount: createData.amount,
+                            currency: createData.currency || 'INR',
+                            name: 'PixelPlay',
+                            description: 'Game Order Purchase',
+                            order_id: createData.razorpayOrderId,
+                            handler: async function (response) {
+                                retryRzpBtn.innerText = 'Verifying Payment...';
+                                try {
+                                    const verifyRes = await fetch(`/orders/${orderDbId}/verify-retry`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            razorpay_order_id: response.razorpay_order_id,
+                                            razorpay_payment_id: response.razorpay_payment_id,
+                                            razorpay_signature: response.razorpay_signature
+                                        })
+                                    });
+
+                                    const verifyData = await verifyRes.json();
+                                    if (verifyRes.ok && verifyData.success) {
+                                        Swal.fire({ icon: 'success', title: 'Payment Successful!', text: 'Order confirmed!', timer: 1500, showConfirmButton: false }).then(() => {
+                                            window.location.href = `/orders/success/${orderDbId}`;
+                                        });
+                                    } else {
+                                        Swal.fire({ icon: 'error', title: 'Verification Failed', text: verifyData.message || 'Signature verification failed.' });
+                                        retryRzpBtn.disabled = false;
+                                        retryRzpBtn.innerText = `Retry Online Payment (₹${(grandTotalPaisa / 100).toFixed(2)})`;
+                                    }
+                                } catch (err) {
+                                    Swal.fire({ icon: 'error', title: 'Error', text: 'Network error during verification.' });
+                                    retryRzpBtn.disabled = false;
+                                    retryRzpBtn.innerText = `Retry Online Payment (₹${(grandTotalPaisa / 100).toFixed(2)})`;
+                                }
+                            },
+                            prefill: {
+                                name: '<%= user ? (user.username || "") : "" %>',
+                                email: '<%= user ? (user.email || "") : "" %>'
+                            },
+                            theme: { color: '#00b0ff' },
+                            modal: {
+                                ondismiss: function () {
+                                    retryRzpBtn.disabled = false;
+                                    retryRzpBtn.innerText = `Retry Online Payment (₹${(grandTotalPaisa / 100).toFixed(2)})`;
+                                    Swal.fire({ icon: 'info', title: 'Payment Closed', text: 'Payment window was closed.' });
+                                }
+                            }
+                        };
+
+                        const rzp = new Razorpay(options);
+                        rzp.on('payment.failed', function (response) {
+                            const errorMsg = response.error?.description || response.error?.reason || 'Payment failed on Razorpay gateway.';
+                            Swal.fire({ icon: 'error', title: 'Payment Failed', text: errorMsg });
+                            retryRzpBtn.disabled = false;
+                            retryRzpBtn.innerText = `Retry Online Payment (₹${(grandTotalPaisa / 100).toFixed(2)})`;
+                        });
+                        rzp.open();
+                    } catch (err) {
+                        Swal.fire({ icon: 'error', title: 'Network Error', text: 'Failed to connect to payment server.' });
+                        retryRzpBtn.disabled = false;
+                        retryRzpBtn.innerText = `Retry Online Payment (₹${(grandTotalPaisa / 100).toFixed(2)})`;
+                    }
+                });
+            }
+
+            if (switchMethodBtn) {
+                switchMethodBtn.addEventListener('click', async () => {
+                    const selectedMethod = document.querySelector('input[name="detailsPaymentMethod"]:checked')?.value;
+                    if (!selectedMethod) {
+                        Swal.fire({ icon: 'warning', title: 'Select Method', text: 'Please select COD or PixelWallet.' });
+                        return;
+                    }
+
+                    if (selectedMethod === 'PixelWallet' && walletBalPaisa < grandTotalPaisa) {
+                        Swal.fire({ icon: 'error', title: 'Insufficient Balance', text: `Your wallet balance (₹${(walletBalPaisa/100).toFixed(2)}) is less than total due.` });
+                        return;
+                    }
+
+                    switchMethodBtn.disabled = true;
+                    switchMethodBtn.innerText = 'Processing Order...';
+
+                    try {
+                        const res = await fetch(`/orders/${orderDbId}/switch-payment`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ paymentMethod: selectedMethod })
+                        });
+
+                        const data = await res.json();
+                        if (res.ok && data.success) {
+                            Swal.fire({ icon: 'success', title: 'Order Confirmed!', text: data.message, timer: 1500, showConfirmButton: false }).then(() => {
+                                window.location.href = `/orders/success/${orderDbId}`;
+                            });
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Failed', text: data.message || 'Could not switch payment method.' });
+                            switchMethodBtn.disabled = false;
+                            switchMethodBtn.innerText = 'Confirm with Selected Method';
+                        }
+                    } catch (err) {
+                        Swal.fire({ icon: 'error', title: 'Network Error', text: 'Failed to process request.' });
+                        switchMethodBtn.disabled = false;
+                        switchMethodBtn.innerText = 'Confirm with Selected Method';
+                    }
+                });
+            }
+
             const urlParams = new URLSearchParams(window.location.search);
             const notification = urlParams.get('notification');
             const error = urlParams.get('error');

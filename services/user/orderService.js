@@ -41,7 +41,56 @@ export const createRazorpayPaymentOrder = async (userId, addressId, couponCode =
     const receiptId = `rcpt_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     const rzpOrder = await createRazorpayOrder(cartDetails.grandTotal, receiptId);
 
+    // 4. Map order items with status 'Payment Failed'
+    const orderItems = cartDetails.cart.items.map(item => {
+        if (!item.product) {
+            throw new Error('Product not found in cart.');
+        }
+        return {
+            product: item.product._id,
+            platform: item.platform,
+            quantity: item.quantity,
+            price: item.product.price,
+            gst_rate: item.product.gst_rate || 18,
+            status: 'Payment Failed'
+        };
+    });
+
+    // 5. Generate unique orderId
+    const orderId = `PX-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    // 6. Record order in database with Payment Failed status
+    const order = new Order({
+        userId,
+        orderId,
+        items: orderItems,
+        deliveryAddress: {
+            fullName: address.fullName,
+            phone: address.phone,
+            addressLine1: address.addressLine1,
+            addressLine2: address.addressLine2,
+            city: address.city,
+            state: address.state,
+            postal_code: address.postal_code,
+            country: address.country
+        },
+        paymentMethod: 'Razorpay',
+        paymentStatus: 'Failed',
+        orderStatus: 'Payment Failed',
+        subtotal: cartDetails.subtotal,
+        tax: cartDetails.tax,
+        shipping: cartDetails.shipping,
+        discount: cartDetails.discount,
+        couponCode: cartDetails.appliedCoupon ? cartDetails.appliedCoupon.code : null,
+        finalAmount: cartDetails.grandTotal,
+        transactionId: rzpOrder.id
+    });
+
+    await order.save();
+
     return {
+        orderDbId: order._id,
+        orderId: order.orderId,
         razorpayOrderId: rzpOrder.id,
         razorpayKeyId: getRazorpayKeyId(),
         amount: rzpOrder.amount,
@@ -50,14 +99,99 @@ export const createRazorpayPaymentOrder = async (userId, addressId, couponCode =
     };
 };
 
-export const verifyAndCompleteRazorpayOrder = async (userId, addressId, couponCode, razorpayOrderId, razorpayPaymentId, razorpaySignature) => {
+export const verifyAndCompleteRazorpayOrder = async (userId, addressId, couponCode, razorpayOrderId, razorpayPaymentId, razorpaySignature, orderDbId = null) => {
     // 1. Verify Razorpay HMAC signature
     const isValid = verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
     if (!isValid) {
         throw new Error('Razorpay payment signature verification failed.');
     }
 
-    // 2. Retrieve cart and user
+    // 2. Try to locate existing recorded order (by orderDbId or transactionId)
+    let order = null;
+    if (orderDbId) {
+        order = await Order.findOne({ _id: orderDbId, userId });
+    }
+    if (!order) {
+        order = await Order.findOne({ transactionId: razorpayOrderId, userId });
+    }
+
+    if (order) {
+        if (order.paymentStatus === 'Paid') {
+            return order;
+        }
+
+        // Validate stock availability
+        for (let item of order.items) {
+            const product = await Product.findById(item.product).populate('category');
+            if (!product || product.status !== 'Live' || (product.category && product.category.status === 'Hidden')) {
+                throw new Error(`Product "${product ? product.title : 'Unknown'}" is no longer available.`);
+            }
+            let availableStock = product.stock;
+            if (product.platform_stock && product.platform_stock.length > 0) {
+                const ps = product.platform_stock.find(p => p.platform.toLowerCase() === (item.platform || '').toLowerCase());
+                if (ps) availableStock = ps.stock;
+            }
+            if (availableStock < item.quantity) {
+                throw new Error(`Insufficient stock for "${product.title}" on ${(item.platform || '').toUpperCase()}. Only ${availableStock} left.`);
+            }
+        }
+
+        // Decrement stock for order items
+        for (let item of order.items) {
+            const product = await Product.findById(item.product);
+            if (product) {
+                const oldStock = product.stock || 0;
+                product.stock = Math.max(0, (product.stock || 0) - item.quantity);
+                if (product.platform_stock && product.platform_stock.length > 0) {
+                    const ps = product.platform_stock.find(p => p.platform.toLowerCase() === (item.platform || '').toLowerCase());
+                    if (ps) {
+                        ps.stock = Math.max(0, (ps.stock || 0) - item.quantity);
+                    }
+                }
+                await product.save();
+
+                if (oldStock >= 5 && product.stock < 5 && product.stock > 0) {
+                    checkAndNotifyLowStock(product._id, oldStock, product.stock, product.title).catch(err => console.error('[verifyAndCompleteRazorpayOrder LowStock Error]', err));
+                }
+            }
+        }
+
+        // Update order status to Paid / Processing
+        order.paymentStatus = 'Paid';
+        order.orderStatus = 'Processing';
+        order.paymentMethod = 'Razorpay';
+        order.transactionId = razorpayPaymentId;
+        order.items.forEach(i => {
+            i.status = 'Processing';
+        });
+
+        await order.save();
+
+        if (order.couponCode) {
+            const Coupon = (await import('../../models/Coupon.js')).default;
+            const couponDoc = await Coupon.findOne({ code: order.couponCode });
+            if (couponDoc) {
+                await recordCouponUsage(couponDoc._id, userId);
+            }
+        }
+
+        await processReferralRewardsOnFirstOrder(userId, order._id);
+
+        // Clear user's cart upon payment success
+        await Cart.deleteOne({ userId });
+
+        createNotificationForUser(userId, {
+            type: 'order_status',
+            title: 'Order Placed Successfully',
+            message: `Your order #${order.orderId} has been placed successfully!`,
+            link: `/orders/${order._id}`,
+            metadata: { orderId: order.orderId, orderDbId: order._id }
+        }).catch(err => console.error('[Order Created Notification Error]', err));
+
+        return order;
+    }
+
+    // Fallback: If no pre-created order found, create and finalize now
     const cartDetails = await getCartDetails(userId, couponCode);
     if (!cartDetails.cart || cartDetails.cart.items.length === 0) {
         throw new Error('Your cart is empty.');
@@ -75,7 +209,6 @@ export const verifyAndCompleteRazorpayOrder = async (userId, addressId, couponCo
         throw new Error('Invalid delivery address selected.');
     }
 
-    // 3. Map order items
     const orderItems = cartDetails.cart.items.map(item => {
         if (!item.product) {
             throw new Error('Product not found in cart.');
@@ -85,15 +218,14 @@ export const verifyAndCompleteRazorpayOrder = async (userId, addressId, couponCo
             platform: item.platform,
             quantity: item.quantity,
             price: item.product.price,
-            gst_rate: item.product.gst_rate || 18
+            gst_rate: item.product.gst_rate || 18,
+            status: 'Processing'
         };
     });
 
-    // 4. Generate unique orderId
     const orderId = `PX-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // 5. Create Order document with paymentStatus: Paid
-    const order = new Order({
+    const newOrder = new Order({
         userId,
         orderId,
         items: orderItems,
@@ -119,7 +251,6 @@ export const verifyAndCompleteRazorpayOrder = async (userId, addressId, couponCo
         transactionId: razorpayPaymentId
     });
 
-    // 6. Decrement stock for order items
     for (let item of cartDetails.cart.items) {
         if (item.product) {
             const product = await Product.findById(item.product._id);
@@ -141,27 +272,25 @@ export const verifyAndCompleteRazorpayOrder = async (userId, addressId, couponCo
         }
     }
 
-    await order.save();
+    await newOrder.save();
 
     if (cartDetails.appliedCoupon && cartDetails.appliedCoupon.id) {
         await recordCouponUsage(cartDetails.appliedCoupon.id, userId);
     }
 
-    // Process referral reward bonus if first order
-    await processReferralRewardsOnFirstOrder(userId, order._id);
+    await processReferralRewardsOnFirstOrder(userId, newOrder._id);
 
-    // 7. Clear user's cart
     await Cart.deleteOne({ userId });
 
     createNotificationForUser(userId, {
         type: 'order_status',
         title: 'Order Placed Successfully',
-        message: `Your order #${order.orderId} has been placed successfully!`,
-        link: `/orders/${order._id}`,
-        metadata: { orderId: order.orderId, orderDbId: order._id }
+        message: `Your order #${newOrder.orderId} has been placed successfully!`,
+        link: `/orders/${newOrder._id}`,
+        metadata: { orderId: newOrder.orderId, orderDbId: newOrder._id }
     }).catch(err => console.error('[Order Created Notification Error]', err));
 
-    return order;
+    return newOrder;
 };
 
 export const retryRazorpayOrder = async (orderId, userId) => {
@@ -171,6 +300,22 @@ export const retryRazorpayOrder = async (orderId, userId) => {
     }
     if (order.paymentStatus === 'Paid') {
         throw new Error('Order is already paid.');
+    }
+
+    // Validate stock availability for all items in order
+    for (let item of order.items) {
+        const product = await Product.findById(item.product).populate('category');
+        if (!product || product.status !== 'Live' || (product.category && product.category.status === 'Hidden')) {
+            throw new Error(`Product "${product ? product.title : 'Unknown'}" is no longer available.`);
+        }
+        let availableStock = product.stock;
+        if (product.platform_stock && product.platform_stock.length > 0) {
+            const ps = product.platform_stock.find(p => p.platform.toLowerCase() === (item.platform || '').toLowerCase());
+            if (ps) availableStock = ps.stock;
+        }
+        if (availableStock < item.quantity) {
+            throw new Error(`Insufficient stock for "${product.title}" on ${(item.platform || '').toUpperCase()}. Only ${availableStock} left.`);
+        }
     }
 
     const receiptId = `rcpt_retry_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -190,28 +335,34 @@ export const retryRazorpayOrder = async (orderId, userId) => {
     };
 };
 
-export const changeOrderPaymentMethod = async (orderId, userId, newPaymentMethod) => {
+export const verifyAndCompleteRazorpayRetry = async (orderId, userId, razorpayOrderId, razorpayPaymentId, razorpaySignature) => {
+    const isValid = verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
+    if (!isValid) {
+        throw new Error('Razorpay payment signature verification failed.');
+    }
+
     const order = await Order.findOne({ _id: orderId, userId });
     if (!order) {
         throw new Error('Order not found.');
     }
     if (order.paymentStatus === 'Paid') {
-        throw new Error('Order is already paid.');
+        return order;
     }
 
-    if (newPaymentMethod === 'PixelWallet') {
-        const balance = await getWalletBalance(userId);
-        if (balance < order.finalAmount) {
-            throw new Error(`Insufficient PixelWallet balance. You need ₹${(order.finalAmount / 100).toFixed(2)} but only have ₹${(balance / 100).toFixed(2)}.`);
+    // Check stock availability
+    for (let item of order.items) {
+        const product = await Product.findById(item.product).populate('category');
+        if (!product || product.status !== 'Live' || (product.category && product.category.status === 'Hidden')) {
+            throw new Error(`Product "${product ? product.title : 'Unknown'}" is no longer available.`);
         }
-        await processWalletPayment(userId, order.finalAmount, order.orderId);
-        order.paymentMethod = 'PixelWallet';
-        order.paymentStatus = 'Paid';
-    } else if (newPaymentMethod === 'COD') {
-        order.paymentMethod = 'COD';
-        order.paymentStatus = 'Pending';
-    } else {
-        throw new Error('Invalid payment method selected.');
+        let availableStock = product.stock;
+        if (product.platform_stock && product.platform_stock.length > 0) {
+            const ps = product.platform_stock.find(p => p.platform.toLowerCase() === (item.platform || '').toLowerCase());
+            if (ps) availableStock = ps.stock;
+        }
+        if (availableStock < item.quantity) {
+            throw new Error(`Insufficient stock for "${product.title}" on ${(item.platform || '').toUpperCase()}. Only ${availableStock} left.`);
+        }
     }
 
     // Decrement stock for order items
@@ -229,10 +380,18 @@ export const changeOrderPaymentMethod = async (orderId, userId, newPaymentMethod
             await product.save();
 
             if (oldStock >= 5 && product.stock < 5 && product.stock > 0) {
-                checkAndNotifyLowStock(product._id, oldStock, product.stock, product.title).catch(err => console.error('[changeOrderPaymentMethod LowStock Error]', err));
+                checkAndNotifyLowStock(product._id, oldStock, product.stock, product.title).catch(err => console.error('[verifyAndCompleteRazorpayRetry LowStock Error]', err));
             }
         }
     }
+
+    order.paymentMethod = 'Razorpay';
+    order.paymentStatus = 'Paid';
+    order.orderStatus = 'Processing';
+    order.transactionId = razorpayPaymentId;
+    order.items.forEach(i => {
+        i.status = 'Processing';
+    });
 
     await order.save();
 
@@ -244,7 +403,110 @@ export const changeOrderPaymentMethod = async (orderId, userId, newPaymentMethod
         }
     }
 
+    await processReferralRewardsOnFirstOrder(userId, order._id);
+
+    // Empty the user's cart upon payment success
     await Cart.deleteOne({ userId });
+
+    createNotificationForUser(userId, {
+        type: 'order_status',
+        title: 'Payment Successful',
+        message: `Your payment for order #${order.orderId} succeeded! The order is now being processed.`,
+        link: `/orders/${order._id}`,
+        metadata: { orderId: order.orderId, orderDbId: order._id }
+    }).catch(err => console.error('[Order Retry Notification Error]', err));
+
+    return order;
+};
+
+export const changeOrderPaymentMethod = async (orderId, userId, newPaymentMethod) => {
+    const order = await Order.findOne({ _id: orderId, userId });
+    if (!order) {
+        throw new Error('Order not found.');
+    }
+    if (order.paymentStatus === 'Paid') {
+        throw new Error('Order is already paid.');
+    }
+
+    // Validate stock availability for all items in order
+    for (let item of order.items) {
+        const product = await Product.findById(item.product).populate('category');
+        if (!product || product.status !== 'Live' || (product.category && product.category.status === 'Hidden')) {
+            throw new Error(`Product "${product ? product.title : 'Unknown'}" is no longer available.`);
+        }
+        let availableStock = product.stock;
+        if (product.platform_stock && product.platform_stock.length > 0) {
+            const ps = product.platform_stock.find(p => p.platform.toLowerCase() === (item.platform || '').toLowerCase());
+            if (ps) availableStock = ps.stock;
+        }
+        if (availableStock < item.quantity) {
+            throw new Error(`Insufficient stock for "${product.title}" on ${(item.platform || '').toUpperCase()}. Only ${availableStock} left.`);
+        }
+    }
+
+    if (newPaymentMethod === 'PixelWallet') {
+        const balance = await getWalletBalance(userId);
+        if (balance < order.finalAmount) {
+            throw new Error(`Insufficient PixelWallet balance. You need ₹${(order.finalAmount / 100).toFixed(2)} but only have ₹${(balance / 100).toFixed(2)}.`);
+        }
+        await processWalletPayment(userId, order.finalAmount, order.orderId);
+        order.paymentMethod = 'PixelWallet';
+        order.paymentStatus = 'Paid';
+        order.orderStatus = 'Processing';
+    } else if (newPaymentMethod === 'COD') {
+        order.paymentMethod = 'COD';
+        order.paymentStatus = 'Pending';
+        order.orderStatus = 'Processing';
+    } else {
+        throw new Error('Invalid payment method selected.');
+    }
+
+    // Decrement stock for order items
+    for (let item of order.items) {
+        const product = await Product.findById(item.product);
+        if (product) {
+            const oldStock = product.stock || 0;
+            product.stock = Math.max(0, (product.stock || 0) - item.quantity);
+            if (product.platform_stock && product.platform_stock.length > 0) {
+                const ps = product.platform_stock.find(p => p.platform.toLowerCase() === (item.platform || '').toLowerCase());
+                if (ps) {
+                    ps.stock = Math.max(0, (ps.stock || 0) - item.quantity);
+                }
+            }
+            await product.save();
+
+            if (oldStock >= 5 && product.stock < 5 && product.stock > 0) {
+                checkAndNotifyLowStock(product._id, oldStock, product.stock, product.title).catch(err => console.error('[changeOrderPaymentMethod LowStock Error]', err));
+            }
+        }
+    }
+
+    order.items.forEach(i => {
+        i.status = 'Processing';
+    });
+
+    await order.save();
+
+    if (order.couponCode) {
+        const Coupon = (await import('../../models/Coupon.js')).default;
+        const couponDoc = await Coupon.findOne({ code: order.couponCode });
+        if (couponDoc) {
+            await recordCouponUsage(couponDoc._id, userId);
+        }
+    }
+
+    await processReferralRewardsOnFirstOrder(userId, order._id);
+
+    // Empty the user's cart
+    await Cart.deleteOne({ userId });
+
+    createNotificationForUser(userId, {
+        type: 'order_status',
+        title: 'Order Placed Successfully',
+        message: `Your order #${order.orderId} has been placed successfully via ${newPaymentMethod}!`,
+        link: `/orders/${order._id}`,
+        metadata: { orderId: order.orderId, orderDbId: order._id }
+    }).catch(err => console.error('[changeOrderPaymentMethod Notification Error]', err));
 
     return order;
 };
@@ -414,8 +676,8 @@ export const getOrdersByUserPaginated = async (userId, page = 1, limit = 5, sort
     }
 
     if (viewType === 'items') {
-        // Fetch all matching orders sorted (excluding failed payments)
-        const orders = await Order.find({ userId, paymentStatus: { $ne: 'Failed' } })
+        // Fetch all matching orders sorted (including failed orders)
+        const orders = await Order.find({ userId })
             .sort(sortObject)
             .populate('items.product')
             .lean();
@@ -424,7 +686,7 @@ export const getOrdersByUserPaginated = async (userId, page = 1, limit = 5, sort
         const items = [];
         orders.forEach(order => {
             order.items.forEach(item => {
-                const rawStatus = item.status || (order.orderStatus === 'Cancelled' ? 'Cancelled' : 'Ordered');
+                const rawStatus = item.status || (order.orderStatus === 'Cancelled' ? 'Cancelled' : (order.orderStatus === 'Payment Failed' ? 'Payment Failed' : 'Ordered'));
                 const itemStatus = rawStatus === 'Ordered' ? (order.orderStatus || 'Processing') : rawStatus;
                 if (filterStatus === 'All' || (itemStatus && itemStatus.toUpperCase() === filterStatus.toUpperCase())) {
                     items.push({
@@ -446,7 +708,7 @@ export const getOrdersByUserPaginated = async (userId, page = 1, limit = 5, sort
 
         return { items: paginatedItems, totalPages, currentPage: page, viewType };
     } else {
-        const query = { userId, paymentStatus: { $ne: 'Failed' } };
+        const query = { userId };
         if (filterStatus && filterStatus !== 'All') {
             query.orderStatus = filterStatus;
         }

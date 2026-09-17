@@ -49,6 +49,19 @@
     <%- include('../partials/user/navbar', { activeTab: '', user: user, cartCount: cartCount }) %>
 
     <main class="flex-1 max-w-[1720px] 2xl:max-w-[1840px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 w-full py-6 sm:py-10 space-y-8">
+        <% 
+            const hasRecordedOrder = typeof order !== 'undefined' && order && order._id;
+            const currentOrderId = hasRecordedOrder ? order.orderId : null;
+            const currentOrderDbId = hasRecordedOrder ? order._id : '';
+            const totalDuePaisa = hasRecordedOrder ? order.finalAmount : cart.grandTotal;
+            const subtotalPaisa = hasRecordedOrder ? order.subtotal : cart.subtotal;
+            const discountPaisa = hasRecordedOrder ? (order.discount || 0) : (cart.discount || 0);
+            const couponCodeName = hasRecordedOrder ? order.couponCode : (cart.appliedCoupon ? cart.appliedCoupon.code : null);
+            const taxPaisa = hasRecordedOrder ? order.tax : cart.tax;
+            const shippingPaisa = hasRecordedOrder ? order.shipping : cart.shipping;
+            const displayItems = (hasRecordedOrder && order.items && order.items.length > 0) ? order.items : (cart.items || []);
+        %>
+
         <!-- Failure Hero Header -->
         <div class="glass-panel p-8 rounded-2xl border border-rose-500/30 shadow-2xl relative overflow-hidden">
             <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -56,13 +69,25 @@
                 <div class="space-y-2">
                     <div class="inline-flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold px-3 py-1 rounded-full">
                         <i class="fa-solid fa-triangle-exclamation text-xs animate-pulse"></i>
-                        <span>ORDER UNPLACED · PAYMENT FAILED</span>
+                        <% if (hasRecordedOrder) { %>
+                            <span>ORDER #<%= currentOrderId %> · PAYMENT FAILED</span>
+                        <% } else { %>
+                            <span>ORDER UNPLACED · PAYMENT FAILED</span>
+                        <% } %>
                     </div>
                     <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center gap-3">
-                        Online Payment Unsuccessful
+                        <% if (hasRecordedOrder) { %>
+                            Payment Failed for Order #<%= currentOrderId %>
+                        <% } else { %>
+                            Online Payment Unsuccessful
+                        <% } %>
                     </h1>
                     <p class="text-text-secondary text-sm">
-                        No order was placed and your items remain saved safely in your cart.
+                        <% if (hasRecordedOrder) { %>
+                            This order is recorded as <strong>Payment Failed</strong> in your <a href="/orders" class="text-cyber-blue hover:underline">Order History</a>. All products remain in your cart, and you can retry payment using this exact same Order ID below.
+                        <% } else { %>
+                            No order was placed and your items remain saved safely in your cart.
+                        <% } %>
                     </p>
                 </div>
 
@@ -72,7 +97,7 @@
                     </div>
                     <div>
                         <span class="text-xs text-text-tertiary block font-medium uppercase tracking-wider">Total Amount Due</span>
-                        <span class="text-xl font-bold font-mono text-cyber-blue">₹<%= (cart.grandTotal / 100).toFixed(2) %></span>
+                        <span class="text-xl font-bold font-mono text-cyber-blue">₹<%= (totalDuePaisa / 100).toFixed(2) %></span>
                     </div>
                 </div>
             </div>
@@ -92,7 +117,7 @@
             <div class="lg:col-span-7 space-y-6">
                 <div class="glass-panel p-6 md:p-8 rounded-2xl space-y-6 border border-dark-border shadow-xl">
                     <h2 class="text-lg font-bold text-white flex items-center gap-2 uppercase tracking-wider">
-                        <i class="fa-solid fa-rotate-right text-cyber-blue"></i> Choose Payment Method To Complete Order
+                        <i class="fa-solid fa-rotate-right text-cyber-blue"></i> Retry Payment For This Order
                     </h2>
 
                     <!-- Action 1: Retry Razorpay Online Payment -->
@@ -104,10 +129,14 @@
                             <span class="text-[10px] bg-cyber-blue/20 text-cyber-blue font-bold px-2.5 py-0.5 rounded border border-cyber-blue/30">Razorpay Gateway</span>
                         </div>
                         <p class="text-xs text-text-secondary">
-                            Re-launch the Razorpay secure payment modal using Credit/Debit Card, Netbanking, or UPI.
+                            <% if (hasRecordedOrder) { %>
+                                Retry online payment for Order <strong>#<%= currentOrderId %></strong> using Credit/Debit Card, Netbanking, or UPI.
+                            <% } else { %>
+                                Re-launch the Razorpay secure payment modal using Credit/Debit Card, Netbanking, or UPI.
+                            <% } %>
                         </p>
                         <button type="button" id="retry-razorpay-btn" class="w-full bg-cyber-blue hover:bg-blue-400 text-black font-bold py-3.5 rounded-xl transition-all shadow-[0_0_15px_rgba(0,176,255,0.3)] cursor-pointer flex items-center justify-center gap-2 text-sm">
-                            <i class="fa-solid fa-bolt"></i> Retry Online Payment (₹<%= (cart.grandTotal / 100).toFixed(2) %>)
+                            <i class="fa-solid fa-bolt"></i> Retry Online Payment (₹<%= (totalDuePaisa / 100).toFixed(2) %>)
                         </button>
                     </div>
 
@@ -117,7 +146,11 @@
                             <i class="fa-solid fa-repeat text-amber-400"></i> Switch Payment Method
                         </div>
                         <p class="text-xs text-text-secondary">
-                            Prefer not to pay online? Place your order using Cash On Delivery or your PixelWallet balance.
+                            <% if (hasRecordedOrder) { %>
+                                Pay for Order <strong>#<%= currentOrderId %></strong> using Cash On Delivery or your PixelWallet balance.
+                            <% } else { %>
+                                Prefer not to pay online? Place your order using Cash On Delivery or your PixelWallet balance.
+                            <% } %>
                         </p>
 
                         <!-- Method Options selector -->
@@ -147,40 +180,40 @@
                             </label>
                         </div>
 
-                        <% if (walletBalance < cart.grandTotal) { %>
+                        <% if (walletBalance < totalDuePaisa) { %>
                             <div id="wallet-warning" class="hidden text-xs text-amber-400 bg-amber-950/40 border border-amber-500/20 p-3 rounded-lg">
-                                <i class="fa-solid fa-circle-exclamation mr-1"></i> Your PixelWallet balance (₹<%= (walletBalance / 100).toFixed(2) %>) is less than order total (₹<%= (cart.grandTotal / 100).toFixed(2) %>). Please select COD or Retry Online Payment.
+                                <i class="fa-solid fa-circle-exclamation mr-1"></i> Your PixelWallet balance (₹<%= (walletBalance / 100).toFixed(2) %>) is less than order total (₹<%= (totalDuePaisa / 100).toFixed(2) %>). Please select COD or Retry Online Payment.
                             </div>
                         <% } %>
 
                         <button type="button" id="change-method-btn" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3.5 rounded-xl border border-zinc-700 transition-all cursor-pointer text-sm">
-                            Switch Payment Method &amp; Place Order
+                            Switch Payment Method &amp; Complete Order
                         </button>
                     </div>
 
                     <!-- Navigation Links -->
                     <div class="flex items-center justify-between pt-2">
-                        <a href="/cart" class="text-xs text-text-secondary hover:text-white transition-colors flex items-center gap-1.5">
-                            <i class="fa-solid fa-cart-shopping"></i> Return to Shopping Cart
+                        <a href="/orders" class="text-xs text-text-secondary hover:text-white transition-colors flex items-center gap-1.5">
+                            <i class="fa-solid fa-clock-rotate-left"></i> View in Order History
                         </a>
-                        <a href="/checkout" class="text-xs text-cyber-blue hover:underline flex items-center gap-1.5">
-                            Modify Delivery Address <i class="fa-solid fa-arrow-right"></i>
+                        <a href="/cart" class="text-xs text-cyber-blue hover:underline flex items-center gap-1.5">
+                            <i class="fa-solid fa-cart-shopping"></i> Return to Shopping Cart
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Cart Breakdown & Shipping Address -->
+            <!-- Right Column: Cart / Order Breakdown & Shipping Address -->
             <div class="lg:col-span-5 space-y-6">
                 <div class="glass-panel p-6 rounded-2xl border border-dark-border shadow-xl space-y-6">
                     <h3 class="font-bold text-xs tracking-widest text-text-secondary uppercase border-b border-dark-border pb-3">
-                        CART ITEMS &amp; BREAKDOWN
+                        <%= hasRecordedOrder ? `ORDER ITEMS (#${currentOrderId})` : 'CART ITEMS & BREAKDOWN' %>
                     </h3>
 
-                    <!-- Cart Items -->
+                    <!-- Items -->
                     <div class="space-y-4">
-                        <% if (cart.items && cart.items.length > 0) { %>
-                            <% cart.items.forEach(item => { %>
+                        <% if (displayItems && displayItems.length > 0) { %>
+                            <% displayItems.forEach(item => { %>
                                 <div class="flex items-center gap-3">
                                     <% if (item.product && (item.product.cover_image || item.product.coverImage)) { %>
                                         <img src="<%= item.product.cover_image || item.product.coverImage %>" alt="<%= item.product.title %>" class="w-12 h-16 object-cover rounded-lg border border-dark-border shrink-0" />
@@ -192,7 +225,7 @@
                                     <div class="min-w-0 flex-1">
                                         <h4 class="text-xs font-bold text-white truncate"><%= item.product ? item.product.title : 'Game Item' %></h4>
                                         <p class="text-[11px] text-text-tertiary uppercase font-mono mt-0.5"><%= item.platform %> Edition (x<%= item.quantity %>)</p>
-                                        <p class="text-xs text-cyber-blue font-semibold mt-1">₹<%= ((item.product.price * item.quantity) / 100).toFixed(2) %></p>
+                                        <p class="text-xs text-cyber-blue font-semibold mt-1">₹<%= (((item.price || (item.product ? item.product.price : 0)) * item.quantity) / 100).toFixed(2) %></p>
                                     </div>
                                 </div>
                             <% }); %>
@@ -203,25 +236,25 @@
                     <div class="space-y-2.5 text-xs font-mono border-t border-dark-border pt-4 text-text-secondary">
                         <div class="flex justify-between">
                             <span>Subtotal</span>
-                            <span class="text-white">₹<%= (cart.subtotal / 100).toFixed(2) %></span>
+                            <span class="text-white">₹<%= (subtotalPaisa / 100).toFixed(2) %></span>
                         </div>
-                        <% if (cart.discount > 0 && cart.appliedCoupon) { %>
+                        <% if (discountPaisa > 0 && couponCodeName) { %>
                             <div class="flex justify-between text-cyber-green">
-                                <span>Discount (<%= cart.appliedCoupon.code %>)</span>
-                                <span>-₹<%= (cart.discount / 100).toFixed(2) %></span>
+                                <span>Discount (<%= couponCodeName %>)</span>
+                                <span>-₹<%= (discountPaisa / 100).toFixed(2) %></span>
                             </div>
                         <% } %>
                         <div class="flex justify-between">
                             <span>GST Tax</span>
-                            <span class="text-white">₹<%= (cart.tax / 100).toFixed(2) %></span>
+                            <span class="text-white">₹<%= (taxPaisa / 100).toFixed(2) %></span>
                         </div>
                         <div class="flex justify-between">
                             <span>Shipping</span>
-                            <span class="text-white">₹<%= (cart.shipping / 100).toFixed(2) %></span>
+                            <span class="text-white">₹<%= (shippingPaisa / 100).toFixed(2) %></span>
                         </div>
                         <div class="flex justify-between text-sm font-bold text-white pt-2 border-t border-dark-border">
                             <span>Total Due</span>
-                            <span class="text-cyber-blue font-mono">₹<%= (cart.grandTotal / 100).toFixed(2) %></span>
+                            <span class="text-cyber-blue font-mono">₹<%= (totalDuePaisa / 100).toFixed(2) %></span>
                         </div>
                     </div>
 
@@ -243,9 +276,10 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const selectedAddressId = '<%= selectedAddress ? selectedAddress._id : "" %>';
-            const appliedCouponCode = '<%= cart.appliedCoupon ? cart.appliedCoupon.code : "" %>';
-            const grandTotalPaisa = <%= cart.grandTotal %>;
+            const recordedOrderDbId = '<%= currentOrderDbId %>';
+            const selectedAddressId = '<%= selectedAddress ? (selectedAddress._id || "") : "" %>';
+            const appliedCouponCode = '<%= couponCodeName || "" %>';
+            const grandTotalPaisa = <%= totalDuePaisa %>;
             const walletBalPaisa = <%= walletBalance || 0 %>;
 
             const retryBtn = document.getElementById('retry-razorpay-btn');
@@ -266,25 +300,35 @@
             // Action 1: Retry Online Payment via Razorpay
             if (retryBtn) {
                 retryBtn.addEventListener('click', async () => {
-                    if (!selectedAddressId) {
-                        Swal.fire({ icon: 'warning', title: 'Address Required', text: 'Please select a delivery address on the checkout page.' });
-                        return;
-                    }
-
                     retryBtn.disabled = true;
                     retryBtn.innerText = 'Initiating Secure Payment...';
 
                     try {
-                        const createRes = await fetch('/orders/razorpay-create', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                addressId: selectedAddressId,
-                                couponCode: appliedCouponCode
-                            })
-                        });
+                        let createRes, createData;
+                        if (recordedOrderDbId) {
+                            // Retry payment on existing failed order (preserves exact same orderId)
+                            createRes = await fetch(`/orders/${recordedOrderDbId}/retry-razorpay`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' }
+                            });
+                        } else {
+                            if (!selectedAddressId) {
+                                Swal.fire({ icon: 'warning', title: 'Address Required', text: 'Please select a delivery address.' });
+                                retryBtn.disabled = false;
+                                retryBtn.innerText = `Retry Online Payment (₹${(grandTotalPaisa / 100).toFixed(2)})`;
+                                return;
+                            }
+                            createRes = await fetch('/orders/razorpay-create', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    addressId: selectedAddressId,
+                                    couponCode: appliedCouponCode
+                                })
+                            });
+                        }
 
-                        const createData = await createRes.json();
+                        createData = await createRes.json();
                         if (!createRes.ok || !createData.success) {
                             const isCouponError = createData.isCouponExpired || (createData.message && (createData.message.toLowerCase().includes('coupon') || createData.message.toLowerCase().includes('expired')));
                             if (isCouponError) {
@@ -306,6 +350,7 @@
                             return;
                         }
 
+                        const targetDbId = recordedOrderDbId || createData.orderDbId;
                         const options = {
                             key: createData.razorpayKeyId,
                             amount: createData.amount,
@@ -316,22 +361,35 @@
                             handler: async function (response) {
                                 retryBtn.innerText = 'Verifying Payment...';
                                 try {
-                                    const verifyRes = await fetch('/orders/razorpay-verify', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({
-                                            addressId: selectedAddressId,
-                                            couponCode: appliedCouponCode,
-                                            razorpay_order_id: response.razorpay_order_id,
-                                            razorpay_payment_id: response.razorpay_payment_id,
-                                            razorpay_signature: response.razorpay_signature
-                                        })
-                                    });
+                                    let verifyRes;
+                                    if (targetDbId) {
+                                        verifyRes = await fetch(`/orders/${targetDbId}/verify-retry`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                razorpay_order_id: response.razorpay_order_id,
+                                                razorpay_payment_id: response.razorpay_payment_id,
+                                                razorpay_signature: response.razorpay_signature
+                                            })
+                                        });
+                                    } else {
+                                        verifyRes = await fetch('/orders/razorpay-verify', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                addressId: selectedAddressId,
+                                                couponCode: appliedCouponCode,
+                                                razorpay_order_id: response.razorpay_order_id,
+                                                razorpay_payment_id: response.razorpay_payment_id,
+                                                razorpay_signature: response.razorpay_signature
+                                            })
+                                        });
+                                    }
 
                                     const verifyData = await verifyRes.json();
                                     if (verifyRes.ok && verifyData.success) {
-                                        Swal.fire({ icon: 'success', title: 'Payment Successful!', timer: 1500, showConfirmButton: false }).then(() => {
-                                            window.location.href = `/orders/success/${verifyData.orderId}`;
+                                        Swal.fire({ icon: 'success', title: 'Payment Successful!', text: 'Order confirmed and cart updated!', timer: 1500, showConfirmButton: false }).then(() => {
+                                            window.location.href = `/orders/success/${verifyData.orderId || targetDbId}`;
                                         });
                                     } else {
                                         Swal.fire({ icon: 'error', title: 'Verification Failed', text: verifyData.message || 'Signature verification failed.' });
@@ -353,7 +411,7 @@
                                 ondismiss: function () {
                                     retryBtn.disabled = false;
                                     retryBtn.innerText = `Retry Online Payment (₹${(grandTotalPaisa / 100).toFixed(2)})`;
-                                    Swal.fire({ icon: 'info', title: 'Payment Closed', text: 'Payment window was closed. Order was not placed.' });
+                                    Swal.fire({ icon: 'info', title: 'Payment Closed', text: 'Payment window was closed. Order remains recorded as Payment Failed.' });
                                 }
                             }
                         };
@@ -391,11 +449,6 @@
                         return;
                     }
 
-                    if (!selectedAddressId) {
-                        Swal.fire({ icon: 'warning', title: 'Address Required', text: 'Please select a delivery address.' });
-                        return;
-                    }
-
                     if (selectedMethod === 'PixelWallet' && walletBalPaisa < grandTotalPaisa) {
                         Swal.fire({ icon: 'error', title: 'Insufficient Balance', text: `Your wallet balance (₹${(walletBalPaisa/100).toFixed(2)}) is less than total due.` });
                         return;
@@ -405,30 +458,46 @@
                     changeBtn.innerText = 'Processing Order...';
 
                     try {
-                        const res = await fetch('/orders', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                paymentMethod: selectedMethod,
-                                addressId: selectedAddressId,
-                                couponCode: appliedCouponCode
-                            })
-                        });
+                        let res, data;
+                        if (recordedOrderDbId) {
+                            // Switch payment method on existing failed order
+                            res = await fetch(`/orders/${recordedOrderDbId}/switch-payment`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ paymentMethod: selectedMethod })
+                            });
+                        } else {
+                            if (!selectedAddressId) {
+                                Swal.fire({ icon: 'warning', title: 'Address Required', text: 'Please select a delivery address.' });
+                                changeBtn.disabled = false;
+                                changeBtn.innerText = 'Switch Payment Method & Complete Order';
+                                return;
+                            }
+                            res = await fetch('/orders', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ 
+                                    paymentMethod: selectedMethod,
+                                    addressId: selectedAddressId,
+                                    couponCode: appliedCouponCode
+                                })
+                            });
+                        }
 
-                        const data = await res.json();
+                        data = await res.json();
                         if (res.ok && data.success) {
-                            Swal.fire({ icon: 'success', title: 'Order Placed!', text: data.message, timer: 1500, showConfirmButton: false }).then(() => {
-                                window.location.href = `/orders/success/${data.orderId}`;
+                            Swal.fire({ icon: 'success', title: 'Order Confirmed!', text: data.message, timer: 1500, showConfirmButton: false }).then(() => {
+                                window.location.href = `/orders/success/${data.orderId || recordedOrderDbId}`;
                             });
                         } else {
                             Swal.fire({ icon: 'error', title: 'Order Placement Failed', text: data.message || 'Could not place order.' });
                             changeBtn.disabled = false;
-                            changeBtn.innerText = 'Switch Payment Method & Place Order';
+                            changeBtn.innerText = 'Switch Payment Method & Complete Order';
                         }
                     } catch (err) {
                         Swal.fire({ icon: 'error', title: 'Network Error', text: 'Failed to process order.' });
                         changeBtn.disabled = false;
-                        changeBtn.innerText = 'Switch Payment Method & Place Order';
+                        changeBtn.innerText = 'Switch Payment Method & Complete Order';
                     }
                 });
             }

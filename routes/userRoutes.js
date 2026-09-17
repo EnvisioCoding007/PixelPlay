@@ -138,6 +138,9 @@ router.post('/wallet/razorpay-verify', walletController.verifyWalletRazorpayPaym
 router.post('/orders', orderController.postPlaceOrder);
 router.post('/orders/razorpay-create', orderController.createRazorpayOrder);
 router.post('/orders/razorpay-verify', orderController.verifyRazorpayPayment);
+router.post('/orders/:orderId/retry-razorpay', orderController.retryRazorpayOrder);
+router.post('/orders/:orderId/verify-retry', orderController.verifyRazorpayRetry);
+router.post('/orders/:orderId/switch-payment', orderController.switchOrderPaymentMethod);
 router.get('/orders/success/:orderId', orderController.getOrderSuccess);
 router.get('/orders/:orderId', orderController.getOrderDetails);
 router.get('/orders/:orderId/invoice', orderController.downloadInvoice);

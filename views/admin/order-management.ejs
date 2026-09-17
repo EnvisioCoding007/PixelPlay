@@ -181,6 +181,7 @@
                 <option value="Return Requested" <%= status === 'Return Requested' ? 'selected' : '' %>>Return Requested</option>
                 <option value="Returned" <%= status === 'Returned' ? 'selected' : '' %>>Returned</option>
                 <option value="Cancelled" <%= status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
+                <option value="Payment Failed" <%= status === 'Payment Failed' ? 'selected' : '' %>>Payment Failed</option>
               </select>
             </div>
 
@@ -267,7 +268,7 @@
                           badgeClass = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
                         } else if (orderStatus === 'Processing') {
                           badgeClass = 'bg-teal-500/10 text-teal-400 border-teal-500/20';
-                        } else if (orderStatus === 'Cancelled' || orderStatus === 'Returned') {
+                        } else if (orderStatus === 'Cancelled' || orderStatus === 'Returned' || orderStatus === 'Payment Failed') {
                           badgeClass = 'bg-red-500/10 text-red-500 border-red-500/20';
                         } else if (orderStatus === 'Return Requested') {
                           badgeClass = 'bg-amber-500/10 text-amber-500 border-amber-500/20';
@@ -291,7 +292,7 @@
                             <i class="fa-solid fa-eye text-xs"></i>
                             View Details
                           </a>
-                          <% if (orderStatus !== 'Delivered' && orderStatus !== 'Cancelled' && orderStatus !== 'Returned' && orderStatus !== 'Return Requested') { %>
+                          <% if (orderStatus !== 'Delivered' && orderStatus !== 'Cancelled' && orderStatus !== 'Returned' && orderStatus !== 'Return Requested' && orderStatus !== 'Payment Failed') { %>
                             <div class="border-t border-[#353437]"></div>
                             <div class="px-4 py-1.5 text-[10px] text-textMuted font-bold uppercase tracking-wider">Update Status</div>
                             <% 

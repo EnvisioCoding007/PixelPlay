@@ -36,7 +36,7 @@ const orderSchema = new mongoose.Schema({
         },
         status: {
             type: String,
-            enum: ['Processing', 'Shipped', 'Delivered', 'Ordered', 'Cancelled', 'Return Requested', 'Returned'],
+            enum: ['Processing', 'Shipped', 'Delivered', 'Ordered', 'Cancelled', 'Return Requested', 'Returned', 'Payment Failed'],
             default: 'Processing'
         },
         cancellationDate: {
@@ -100,7 +100,7 @@ const orderSchema = new mongoose.Schema({
     },
     orderStatus: {
         type: String,
-        enum: ['Processing', 'Shipped', 'Delivered', 'Return Requested', 'Returned', 'Cancelled'],
+        enum: ['Processing', 'Shipped', 'Delivered', 'Return Requested', 'Returned', 'Cancelled', 'Payment Failed'],
         default: 'Processing'
     },
     subtotal: {

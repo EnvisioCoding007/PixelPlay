@@ -2,6 +2,7 @@ import * as cartService from '../../services/user/cartService.js';
 import * as userService from '../../services/user/userService.js';
 import * as couponService from '../../services/user/couponService.js';
 import { getWalletBalance } from '../../services/user/walletService.js';
+import Order from '../../models/Order.js';
 
 export const getCart = async (req, res) => {
     try {
@@ -152,13 +153,28 @@ export const getCheckoutFailure = async (req, res) => {
         const userId = req.session.user.id || req.session.user;
         const user = await userService.getUserById(userId);
 
-        const activeCouponCode = req.session.appliedCouponCode || null;
+        const orderIdParam = req.query.orderId;
+        let failedOrder = null;
+        if (orderIdParam) {
+            try {
+                if (orderIdParam.length === 24) {
+                    failedOrder = await Order.findOne({ _id: orderIdParam, userId }).populate('items.product');
+                }
+                if (!failedOrder) {
+                    failedOrder = await Order.findOne({ orderId: orderIdParam, userId }).populate('items.product');
+                }
+            } catch (err) {
+                console.error('[getCheckoutFailure] Error fetching order:', err);
+            }
+        }
+
+        const activeCouponCode = req.session.appliedCouponCode || (failedOrder ? failedOrder.couponCode : null);
         const [cartDetails, walletBalance] = await Promise.all([
             cartService.getCartDetails(userId, activeCouponCode),
             getWalletBalance(userId)
         ]);
 
-        if (!cartDetails.cart || cartDetails.cart.items.length === 0) {
+        if (!failedOrder && (!cartDetails.cart || cartDetails.cart.items.length === 0)) {
             return res.redirect('/cart');
         }
 
@@ -171,17 +187,23 @@ export const getCheckoutFailure = async (req, res) => {
             if (addressId) {
                 selectedAddress = user.addresses.find(a => (a._id ? a._id.toString() : '') === addressId.toString());
             }
+            if (!selectedAddress && failedOrder && failedOrder.deliveryAddress) {
+                selectedAddress = failedOrder.deliveryAddress;
+            }
             if (!selectedAddress) {
                 let defaultAddressIndex = user.addresses.findIndex(addr => addr.isDefault);
                 if (defaultAddressIndex === -1) defaultAddressIndex = 0;
                 selectedAddress = user.addresses[defaultAddressIndex];
             }
+        } else if (failedOrder && failedOrder.deliveryAddress) {
+            selectedAddress = failedOrder.deliveryAddress;
         }
 
         res.render('user/order-failure', {
             user,
+            order: failedOrder,
             cart: {
-                items: cartDetails.cart.items,
+                items: cartDetails.cart ? cartDetails.cart.items : [],
                 subtotal: cartDetails.subtotal,
                 tax: cartDetails.tax,
                 shipping: cartDetails.shipping,

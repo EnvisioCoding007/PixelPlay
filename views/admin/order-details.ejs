@@ -136,7 +136,7 @@
                         } else if (currentStatus === 'Processing') {
                           badgeClass = 'border-cyan-500/50 text-cyan-400 bg-cyan-500/10';
                           spinClass = 'fa-spin';
-                        } else if (currentStatus === 'Cancelled' || currentStatus === 'Returned') {
+                        } else if (currentStatus === 'Cancelled' || currentStatus === 'Returned' || currentStatus === 'Payment Failed') {
                           badgeClass = 'border-red-500/50 text-red-400 bg-red-500/10';
                         } else if (currentStatus === 'Return Requested') {
                           badgeClass = 'border-amber-500/50 text-amber-400 bg-amber-500/10';
@@ -554,7 +554,7 @@
                                 <div class="relative">
                                     <select
                                         class="block w-full pl-3 pr-10 py-2.5 text-sm bg-gray-800 border-gray-700 text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 appearance-none cursor-pointer"
-                                        id="order-status-select" <%= (currentStatus === 'Cancelled' || currentStatus === 'Returned' || currentStatus === 'Return Requested' || currentStatus === 'Delivered') ? 'disabled' : '' %>>
+                                        id="order-status-select" <%= (currentStatus === 'Cancelled' || currentStatus === 'Returned' || currentStatus === 'Return Requested' || currentStatus === 'Delivered' || currentStatus === 'Payment Failed') ? 'disabled' : '' %>>
                                         <% 
                                            let allowedStatuses = ['Processing', 'Shipped', 'Delivered'];
                                            if (currentStatus === 'Shipped') {
@@ -570,7 +570,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <% if (currentStatus === 'Cancelled') { %>
+                            <% if (currentStatus === 'Payment Failed') { %>
+                                <div class="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 text-xs font-semibold mt-2 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> Payment failed orders cannot be modified. Customer can retry payment.
+                                </div>
+                            <% } else if (currentStatus === 'Cancelled') { %>
                                 <div class="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 text-xs font-semibold mt-2 flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-triangle-exclamation"></i> Cancelled orders cannot be modified.
                                 </div>

@@ -59,7 +59,7 @@ export const getAllOrdersAdminPaginated = async (search = '', status = '', payme
 
 export const getAdminOrderStats = async () => {
     const revenueResult = await Order.aggregate([
-        { $match: { orderStatus: { $ne: 'Cancelled' } } },
+        { $match: { orderStatus: { $nin: ['Cancelled', 'Payment Failed'] } } },
         { $group: { _id: null, total: { $sum: '$finalAmount' } } }
     ]);
     const totalRevenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
@@ -84,11 +84,14 @@ export const updateOrderStatus = async (id, status) => {
         throw new Error('Order not found');
     }
 
-    if (['Cancelled', 'Returned', 'Return Requested'].includes(status)) {
-        throw new Error('This status can only be initiated from the user side');
+    if (['Cancelled', 'Returned', 'Return Requested', 'Payment Failed'].includes(status)) {
+        throw new Error('This status cannot be set manually');
     }
 
     const oldStatus = order.orderStatus;
+    if (oldStatus === 'Payment Failed') {
+        throw new Error('Cannot change the status of an unpaid or failed order');
+    }
     if (oldStatus === 'Cancelled') {
         throw new Error('Cannot change the status of a cancelled order');
     }

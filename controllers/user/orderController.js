@@ -3,6 +3,7 @@ import * as userService from '../../services/user/userService.js';
 import * as cartService from '../../services/user/cartService.js';
 import * as invoiceService from '../../services/user/invoiceService.js';
 import { calculateOrderRefundDistribution, calculateItemRefundAmount } from '../../services/shared/refundService.js';
+import { getWalletBalance } from '../../services/shared/walletHelper.js';
 
 export const postPlaceOrder = async (req, res) => {
     try {
@@ -65,7 +66,7 @@ export const createRazorpayOrder = async (req, res) => {
 
 export const verifyRazorpayPayment = async (req, res) => {
     try {
-        const { addressId, couponCode, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+        const { addressId, couponCode, razorpay_order_id, razorpay_payment_id, razorpay_signature, orderDbId } = req.body;
         const userId = req.session.user.id || req.session.user;
 
         if (!addressId || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -79,7 +80,8 @@ export const verifyRazorpayPayment = async (req, res) => {
             effectiveCouponCode,
             razorpay_order_id,
             razorpay_payment_id,
-            razorpay_signature
+            razorpay_signature,
+            orderDbId
         );
 
         // Clear coupon session state after order is completed
@@ -99,6 +101,83 @@ export const verifyRazorpayPayment = async (req, res) => {
             req.session.couponRemoved = true;
         }
         res.status(400).json({ success: false, message: error.message, isCouponExpired: isCouponErr });
+    }
+};
+
+export const retryRazorpayOrder = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const userId = req.session.user.id || req.session.user;
+
+        const data = await orderService.retryRazorpayOrder(orderId, userId);
+
+        res.status(200).json({
+            success: true,
+            ...data
+        });
+    } catch (error) {
+        console.error('[retryRazorpayOrder] Error:', error);
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const verifyRazorpayRetry = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+        const userId = req.session.user.id || req.session.user;
+
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.status(400).json({ success: false, message: 'Invalid payment parameters.' });
+        }
+
+        const order = await orderService.verifyAndCompleteRazorpayRetry(
+            orderId,
+            userId,
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature
+        );
+
+        // Clear coupon session state if any
+        delete req.session.appliedCouponCode;
+        delete req.session.couponRemoved;
+
+        res.status(200).json({
+            success: true,
+            message: 'Payment verified and order confirmed successfully.',
+            orderId: order._id
+        });
+    } catch (error) {
+        console.error('[verifyRazorpayRetry] Error:', error);
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const switchOrderPaymentMethod = async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const { paymentMethod } = req.body;
+        const userId = req.session.user.id || req.session.user;
+
+        if (!paymentMethod) {
+            return res.status(400).json({ success: false, message: 'Payment method is required.' });
+        }
+
+        const order = await orderService.changeOrderPaymentMethod(orderId, userId, paymentMethod);
+
+        // Clear coupon session state if any
+        delete req.session.appliedCouponCode;
+        delete req.session.couponRemoved;
+
+        res.status(200).json({
+            success: true,
+            message: `Order confirmed successfully with ${paymentMethod}.`,
+            orderId: order._id
+        });
+    } catch (error) {
+        console.error('[switchOrderPaymentMethod] Error:', error);
+        res.status(400).json({ success: false, message: error.message });
     }
 };
 
@@ -134,7 +213,10 @@ export const getOrderDetails = async (req, res) => {
             });
         }
 
-        const cartCount = await cartService.getCartItemCount(loggedInUserId);
+        const [cartCount, walletBalance] = await Promise.all([
+            cartService.getCartItemCount(loggedInUserId),
+            getWalletBalance(loggedInUserId)
+        ]);
 
         let mappedStatus = dbOrder.orderStatus || 'Processing';
         if (mappedStatus.toUpperCase() === 'PENDING') {
@@ -146,6 +228,8 @@ export const getOrderDetails = async (req, res) => {
             orderId: dbOrder.orderId,
             createdAt: dbOrder.createdAt,
             status: mappedStatus,
+            orderStatus: dbOrder.orderStatus,
+            paymentStatus: dbOrder.paymentStatus,
             address: dbOrder.deliveryAddress,
             paymentMethod: dbOrder.paymentMethod,
             subtotal: dbOrder.subtotal,
@@ -163,7 +247,7 @@ export const getOrderDetails = async (req, res) => {
         const isOrderAllCancelledOrReturned = dbOrder.items && dbOrder.items.length > 0 && dbOrder.items.every(i => i.status === 'Cancelled' || i.status === 'Returned');
         const refundDistribution = calculateOrderRefundDistribution(dbOrder, { isFullReturn: isOrderAllCancelledOrReturned });
 
-        res.render('user/order-details', { order: mappedOrder, user, cartCount, refundDistribution });
+        res.render('user/order-details', { order: mappedOrder, user, cartCount, walletBalance, refundDistribution });
     } catch (error) {
         console.error('[getOrderDetails] Error:', error);
         return res.status(404).render('404', {

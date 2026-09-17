@@ -1375,6 +1375,7 @@
                             }
 
                             // Launch Razorpay Checkout Modal
+                            const orderDbId = createData.orderDbId;
                             const options = {
                                 key: createData.razorpayKeyId,
                                 amount: createData.amount,
@@ -1394,7 +1395,8 @@
                                                 couponCode: currentAppliedCouponCode,
                                                 razorpay_order_id: response.razorpay_order_id,
                                                 razorpay_payment_id: response.razorpay_payment_id,
-                                                razorpay_signature: response.razorpay_signature
+                                                razorpay_signature: response.razorpay_signature,
+                                                orderDbId
                                             })
                                         });
 
@@ -1405,10 +1407,10 @@
                                                 window.location.href = `/orders/success/${verifyData.orderId}`;
                                             }, 800);
                                         } else {
-                                            window.location.href = `/checkout/failure?reason=${encodeURIComponent(verifyData.message || 'Payment verification failed')}&addressId=${encodeURIComponent(addressId)}`;
+                                            window.location.href = `/checkout/failure?orderId=${orderDbId}&reason=${encodeURIComponent(verifyData.message || 'Payment verification failed')}&addressId=${encodeURIComponent(addressId)}`;
                                         }
                                     } catch (err) {
-                                        window.location.href = `/checkout/failure?reason=${encodeURIComponent('Network error during verification')}&addressId=${encodeURIComponent(addressId)}`;
+                                        window.location.href = `/checkout/failure?orderId=${orderDbId}&reason=${encodeURIComponent('Network error during verification')}&addressId=${encodeURIComponent(addressId)}`;
                                     }
                                 },
                                 prefill: {
@@ -1419,7 +1421,7 @@
                                 theme: { color: '#00b0ff' },
                                 modal: {
                                     ondismiss: function () {
-                                        window.location.href = `/checkout/failure?reason=${encodeURIComponent('Payment window closed by user before completing transaction')}&addressId=${encodeURIComponent(addressId)}`;
+                                        window.location.href = `/checkout/failure?orderId=${orderDbId}&reason=${encodeURIComponent('Payment window closed by user before completing transaction')}&addressId=${encodeURIComponent(addressId)}`;
                                     }
                                 }
                             };
@@ -1430,7 +1432,7 @@
                             rzp.on('payment.failed', function (response) {
                                 console.error('[Razorpay payment.failed]', response.error);
                                 const errorReason = response.error?.description || response.error?.reason || 'Payment failed on Razorpay gateway';
-                                window.location.href = `/checkout/failure?reason=${encodeURIComponent(errorReason)}&addressId=${encodeURIComponent(addressId)}`;
+                                window.location.href = `/checkout/failure?orderId=${orderDbId}&reason=${encodeURIComponent(errorReason)}&addressId=${encodeURIComponent(addressId)}`;
                             });
 
                             rzp.open();
