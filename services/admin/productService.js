@@ -71,6 +71,9 @@ export const getAllAdminProducts = async (search = '', filters = {}, sort = 'lat
             return {
                 ...game,
                 coverImageUrl: game.cover_image || game.coverImage || null,
+                bannerImageUrl: game.banner_image || game.bannerImage || null,
+                bannerImage: game.banner_image || game.bannerImage || null,
+                banner_image: game.banner_image || game.bannerImage || null,
                 categoryName: catObj ? catObj.name : 'N/A',
                 discountedPrice: offerResult.discountedPrice,
                 offerDiscount: offerResult.discountPercentage,
@@ -266,6 +269,7 @@ export const processAndCreateProduct = async (body, files) => {
     const { platforms, platform_stock, calculatedTotalStock, system_requirements } = parsePlatformStockAndRequirements(body);
 
     const coverFiles = files && files.cover_image ? files.cover_image : [];
+    const bannerFiles = files && (files.bannerImage || files.banner_image) ? (files.bannerImage || files.banner_image) : [];
     const galleryFiles = files && files.gallery ? files.gallery : [];
 
     const categoryDetails = await categoryService.getCategoryDetailsAdmin(category);
@@ -286,6 +290,11 @@ export const processAndCreateProduct = async (body, files) => {
         err.statusCode = 400;
         throw err;
     }
+    if (bannerFiles.length === 0) {
+        const err = new Error('Banner image is required.');
+        err.statusCode = 400;
+        throw err;
+    }
     if (galleryFiles.length < 3) {
         const err = new Error('Game gallery must have at least 3 images/videos.');
         err.statusCode = 400;
@@ -299,6 +308,9 @@ export const processAndCreateProduct = async (body, files) => {
 
     const coverUploadResult = await uploadToCloudinary(coverFiles[0], 'pixelplay_uploads');
     const cover_image = coverUploadResult.secure_url;
+
+    const bannerUploadResult = await uploadToCloudinary(bannerFiles[0], 'pixelplay_uploads');
+    const banner_image = bannerUploadResult.secure_url;
 
     const galleryUploadPromises = galleryFiles.map(file => uploadToCloudinary(file, 'pixelplay_uploads'));
     const galleryUploadResults = await Promise.all(galleryUploadPromises);
@@ -317,6 +329,8 @@ export const processAndCreateProduct = async (body, files) => {
         edition_type,
         description,
         cover_image,
+        banner_image,
+        bannerImage: banner_image,
         gallery,
         system_requirements
     });
@@ -369,6 +383,15 @@ export const processAndUpdateProduct = async (id, body, files) => {
         cover_image = coverUploadResult.secure_url;
     }
 
+    let banner_image = existingProduct.banner_image || existingProduct.bannerImage || null;
+    const bannerFiles = files && (files.bannerImage || files.banner_image) ? (files.bannerImage || files.banner_image) : [];
+    if (bannerFiles.length > 0) {
+        const bannerUploadResult = await uploadToCloudinary(bannerFiles[0], 'pixelplay_uploads');
+        banner_image = bannerUploadResult.secure_url;
+    } else if (body.existing_banner_image !== undefined) {
+        banner_image = body.existing_banner_image ? body.existing_banner_image : null;
+    }
+
     const newGalleryUploadPromises = galleryFiles.map(file => uploadToCloudinary(file, 'pixelplay_uploads'));
     const newGalleryUploadResults = await Promise.all(newGalleryUploadPromises);
     const newGalleryUrls = newGalleryUploadResults.map(res => res.secure_url);
@@ -388,6 +411,8 @@ export const processAndUpdateProduct = async (id, body, files) => {
         edition_type,
         description,
         cover_image,
+        banner_image,
+        bannerImage: banner_image,
         gallery,
         system_requirements,
         status: status || 'Live'

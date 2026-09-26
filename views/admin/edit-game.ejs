@@ -202,6 +202,45 @@
                   </div>
                   <input type="file" id="coverInput" accept="image/*" class="hidden bg-background-dark border border-border-dark text-white">
                 </div>
+
+                <!-- Banner Image (16:9 Carousel Banner) -->
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-text-muted">Banner Image (16:9 Ratio)</label>
+                    <span class="text-xs text-accent">Home Carousel Banner</span>
+                  </div>
+
+                  <% const currentBanner = product.banner_image || product.bannerImage || null; %>
+
+                  <!-- Empty dropzone state (shown if no current banner) -->
+                  <div id="bannerUploadContainer" onclick="document.getElementById('bannerImage').click()" class="<%= currentBanner ? 'hidden' : '' %> border-2 border-dashed border-border-dark rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-text-muted transition-colors bg-background-dark/50">
+                    <span class="material-icons-outlined text-4xl text-text-muted mb-2">panorama</span>
+                    <p class="text-sm font-medium text-white mb-1">Upload Banner Image</p>
+                    <p class="text-xs text-text-muted">16:9 Rectangular &bull; JPEG, PNG or WEBP (Max 5MB)</p>
+                  </div>
+
+                  <!-- Preview container (shown if current banner exists or after cropping) -->
+                  <div id="bannerPreviewContainer" class="<%= currentBanner ? '' : 'hidden' %> text-center">
+                    <div onclick="document.getElementById('bannerImage').click()" class="border-2 border-dashed border-border-dark rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-text-muted transition-colors bg-background-dark/50 relative overflow-hidden aspect-video max-h-56 mb-3 group">
+                      <img id="bannerPreview" class="absolute inset-0 w-full h-full object-cover" src="<%= currentBanner || '' %>" />
+                      <div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="material-icons-outlined text-4xl text-white mb-2">cloud_upload</span>
+                        <p class="text-sm font-medium text-white mb-1">Change Banner Image</p>
+                      </div>
+                    </div>
+                    <div class="flex gap-2 justify-center">
+                      <button type="button" id="replaceBannerBtn" class="px-3 py-1.5 text-xs bg-surface-dark border border-border-dark hover:bg-border-dark/50 text-white rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <span class="material-icons-outlined text-xs">cached</span> Replace
+                      </button>
+                      <button type="button" id="removeBannerBtn" class="px-3 py-1.5 text-xs bg-[#f92a40]/10 hover:bg-[#f92a40]/20 text-pixel-red rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <span class="material-icons-outlined text-xs">delete</span> Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  <input type="file" id="bannerImage" name="bannerImage" accept="image/*" class="hidden bg-background-dark border border-border-dark text-white">
+                  <input type="hidden" id="existingBannerImage" name="existing_banner_image" value="<%= currentBanner || '' %>">
+                </div>
                 
                 <!-- Media Gallery -->
                 <div>
@@ -623,6 +662,7 @@
   });
 
   let croppedCoverBlob = null;
+  let croppedBannerBlob = null;
   let croppedGalleryBlobs = [];
   let cropper = null;
   let currentCropType = 'cover';
@@ -637,9 +677,14 @@
   const saveCropBtn = document.getElementById('saveCropBtn');
 
   const coverInput = document.getElementById('coverInput');
+  const bannerInput = document.getElementById('bannerImage');
   const galleryInput = document.getElementById('galleryInput');
 
   const coverPreview = document.getElementById('coverPreview');
+  const bannerPreview = document.getElementById('bannerPreview');
+  const bannerPreviewContainer = document.getElementById('bannerPreviewContainer');
+  const bannerUploadContainer = document.getElementById('bannerUploadContainer');
+  const existingBannerImage = document.getElementById('existingBannerImage');
 
   function startCropper(imageSrc, type, index = 0) {
     currentCropType = type;
@@ -647,6 +692,8 @@
     
     if (type === 'cover') {
       cropperTitle.textContent = 'Crop Cover Image (3:4 Ratio)';
+    } else if (type === 'banner') {
+      cropperTitle.textContent = 'Crop Banner Image (16:9 Ratio)';
     } else {
       cropperTitle.textContent = `Crop Gallery Image ${index + 1} of ${galleryQueue.length} (16:9 Ratio)`;
     }
@@ -694,6 +741,33 @@
       };
       reader.readAsDataURL(file);
     }
+  });
+
+  bannerInput.addEventListener('change', function(e) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        startCropper(evt.target.result, 'banner');
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  document.getElementById('replaceBannerBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    bannerInput.click();
+  });
+
+  document.getElementById('removeBannerBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    croppedBannerBlob = null;
+    bannerInput.value = '';
+    existingBannerImage.value = '';
+    bannerPreview.src = '';
+    bannerPreviewContainer.classList.add('hidden');
+    bannerUploadContainer.classList.remove('hidden');
   });
 
   function updateGalleryAddBtnState() {
@@ -806,15 +880,31 @@
   saveCropBtn.addEventListener('click', function() {
     if (!cropper) return;
     
+    let canvasWidth = 1280;
+    let canvasHeight = 720;
+    if (currentCropType === 'cover') {
+      canvasWidth = 600;
+      canvasHeight = 800;
+    } else if (currentCropType === 'banner') {
+      canvasWidth = 1920;
+      canvasHeight = 1080;
+    }
+
     const canvas = cropper.getCroppedCanvas({
-      width: currentCropType === 'cover' ? 600 : 1280,
-      height: currentCropType === 'cover' ? 800 : 720
+      width: canvasWidth,
+      height: canvasHeight
     });
     
     canvas.toBlob(function(blob) {
       if (currentCropType === 'cover') {
         croppedCoverBlob = blob;
         coverPreview.src = URL.createObjectURL(blob);
+        closeCropper();
+      } else if (currentCropType === 'banner') {
+        croppedBannerBlob = blob;
+        bannerPreview.src = URL.createObjectURL(blob);
+        bannerPreviewContainer.classList.remove('hidden');
+        bannerUploadContainer.classList.add('hidden');
         closeCropper();
       } else {
         croppedGalleryBlobs.push(blob);
@@ -835,6 +925,8 @@
     closeCropper();
     if (currentCropType === 'cover') {
       coverInput.value = '';
+    } else if (currentCropType === 'banner') {
+      bannerInput.value = '';
     } else {
       galleryInput.value = '';
     }
@@ -844,6 +936,8 @@
     closeCropper();
     if (currentCropType === 'cover') {
       coverInput.value = '';
+    } else if (currentCropType === 'banner') {
+      bannerInput.value = '';
     } else {
       galleryInput.value = '';
     }
@@ -1601,6 +1695,11 @@
     if (croppedCoverBlob) {
       formData.append('cover_image', croppedCoverBlob, 'cover.png');
     }
+
+    if (croppedBannerBlob) {
+      formData.append('bannerImage', croppedBannerBlob, 'banner.png');
+    }
+    formData.append('existing_banner_image', existingBannerImage.value);
 
     croppedGalleryBlobs.forEach((blob, idx) => {
       if (blob instanceof File) {

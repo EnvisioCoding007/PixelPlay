@@ -77,6 +77,9 @@ export const getBrowseProductsAndFilters = async (search = '', filters = {}, sor
                 currentPlatformStock,
                 isEffectiveOutOfStock,
                 coverImageUrl: game.cover_image || game.coverImage || null,
+                bannerImageUrl: game.banner_image || game.bannerImage || null,
+                bannerImage: game.banner_image || game.bannerImage || null,
+                banner_image: game.banner_image || game.bannerImage || null,
                 categoryName: catObj ? catObj.name : 'N/A',
                 discountedPrice: offerResult.discountedPrice,
                 offerDiscount: offerResult.discountPercentage,
@@ -226,6 +229,9 @@ export const getProductsForHome = async (primaryPlatform = 'PC') => {
                 ...game,
                 price: basePrice,
                 coverImageUrl: game.cover_image || null,
+                bannerImageUrl: game.banner_image || game.bannerImage || null,
+                bannerImage: game.banner_image || game.bannerImage || null,
+                banner_image: game.banner_image || game.bannerImage || null,
                 categoryName: catObj ? catObj.name : 'N/A',
                 discountedPrice: offerResult.discountedPrice,
                 offerDiscount: offerResult.discountPercentage,
@@ -555,7 +561,10 @@ export const getStorefrontActiveOffers = async (primaryPlatform = 'PC') => {
                     price: basePrice,
                     discountedPrice: offerResult.discountedPrice,
                     offerDiscount: offerResult.discountPercentage,
-                    coverImageUrl: game.cover_image || game.coverImage || null
+                    coverImageUrl: game.cover_image || game.coverImage || null,
+                    bannerImageUrl: game.banner_image || game.bannerImage || null,
+                    bannerImage: game.banner_image || game.bannerImage || null,
+                    banner_image: game.banner_image || game.bannerImage || null
                 };
             });
 

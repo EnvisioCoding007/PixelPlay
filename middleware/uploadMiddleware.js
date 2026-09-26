@@ -2,6 +2,8 @@ import { upload } from '../config/cloudinary.js';
 
 const uploadFields = upload.fields([
     { name: 'cover_image', maxCount: 1 },
+    { name: 'bannerImage', maxCount: 1 },
+    { name: 'banner_image', maxCount: 1 },
     { name: 'gallery', maxCount: 5 }
 ]);
 

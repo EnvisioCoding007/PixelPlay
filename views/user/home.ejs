@@ -77,7 +77,7 @@
                 <section class="flex h-[480px] items-end relative self-stretch w-full rounded-xl overflow-hidden"
                     aria-labelledby="featured-release-title">
                     <div id="hero-bg" class="absolute w-full h-full top-0 left-0 bg-cover bg-[50%_50%] transition-all duration-700 ease-in-out"
-                        style="background-image: url('<%= initialGame ? (initialGame.coverImageUrl || initialGame.cover_image) : '/img/games/neon_override_hero.png' %>');"
+                        style="background-image: url('<%= initialGame ? (initialGame.bannerImageUrl || initialGame.bannerImage || initialGame.banner_image || initialGame.coverImageUrl || initialGame.cover_image) : '/img/games/neon_override_hero.png' %>');"
                         aria-hidden="true"></div>
                     <div class="absolute w-full h-full top-0 left-0 [background:linear-gradient(90deg,rgba(9,9,11,0.95)_0%,rgba(9,9,11,0.4)_50%,rgba(9,9,11,0)_100%),linear-gradient(0deg,rgba(9,9,11,0.95)_0%,rgba(9,9,11,0)_40%)]"
                         aria-hidden="true"></div>
@@ -1117,7 +1117,7 @@
                 const detailsBtn = document.getElementById('hero-details-btn');
 
                 if (bgEl) {
-                    bgEl.style.backgroundImage = `url('${slide.coverImageUrl || slide.cover_image || '/img/games/neon_override_hero.png'}')`;
+                    bgEl.style.backgroundImage = `url('${slide.bannerImageUrl || slide.bannerImage || slide.banner_image || slide.coverImageUrl || slide.cover_image || '/img/games/neon_override_hero.png'}')`;
                 }
                 if (titleEl) {
                     titleEl.textContent = slide.title || 'Neon Override 2077';
