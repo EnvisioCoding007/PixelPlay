@@ -123,11 +123,8 @@ const validateProductData = (productData) => {
         throw new Error('Description cannot exceed 2000 characters.');
     }
 
-    // Validate Stock Limit (max 300)
-    if (typeof productData.stock === 'number' && productData.stock > 300) {
-        throw new Error('Maximum product stock cannot exceed 300.');
-    }
-    if (productData.platform_stock) {
+    // Validate Stock Limit: each platform variant can have max 300 stock
+    if (productData.platform_stock && Array.isArray(productData.platform_stock)) {
         for (const ps of productData.platform_stock) {
             if (typeof ps.stock === 'number' && ps.stock > 300) {
                 throw new Error(`Maximum variant stock for platform ${ps.platform} cannot exceed 300.`);
@@ -226,6 +223,11 @@ const parsePlatformStockAndRequirements = (body) => {
         const pPrice = Number(body[priceKey]);
         if (isNaN(pStock) || pStock < 0) {
             const err = new Error(`Stock for platform ${platform} must be a non-negative number.`);
+            err.statusCode = 400;
+            throw err;
+        }
+        if (pStock > 300) {
+            const err = new Error(`Maximum variant stock for platform ${platform} cannot exceed 300.`);
             err.statusCode = 400;
             throw err;
         }

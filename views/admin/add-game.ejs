@@ -1236,7 +1236,7 @@
         <div class="flex items-center gap-4">
           <div class="flex items-center gap-1.5">
             <span class="text-xs text-text-muted">Stock:</span>
-            <input type="number" min="0" required 
+            <input type="number" min="0" max="300" required 
               data-platform="${platform}"
               data-field="stock"
               name="platform_stock_${platform}" 
@@ -1244,7 +1244,7 @@
               value="${savedStock}" 
               class="w-20 bg-surface-dark border border-border-dark rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-accent text-right" 
               placeholder="0"
-              oninput="if(this.value < 0) this.value = 0;" />
+              oninput="if(this.value < 0) this.value = 0; if(this.value > 300) this.value = 300;" />
           </div>
           <div class="flex items-center gap-1.5">
             <span class="text-xs text-text-muted">Price: ₹</span>
@@ -1392,6 +1392,10 @@
       if (isNaN(stockVal) || stockVal < 0) {
         validationFailed = true;
         validationMsg = `Stock for ${platform} cannot be less than 0.`;
+      }
+      if (stockVal > 300) {
+        validationFailed = true;
+        validationMsg = `Stock for ${platform} cannot exceed 300.`;
       }
       if (isNaN(priceVal) || priceVal < 100) {
         validationFailed = true;
